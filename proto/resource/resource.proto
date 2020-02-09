@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option go_package = "github.com/opentelco/go-swpx/proto/resource";
+import "networkelement/element.proto";
+
+
+package resource;
+
+message Empty {}
+
+
+message VersionResponse {
+  string version = 1;
+}
+
+message TechnicalPortInformationResponse {
+  string response = 1;
+}
+
+
+
+message NetworkElement {
+  string hostname = 1;
+  string ip = 2;  
+  string interface = 3;
+  int64 interface_index = 4;
+}
+
+message NetworkElementInterface {
+  int64 index = 1;
+  string description = 2;
+  string alias = 3;
+}
+
+service Resource {
+  rpc Version(Empty) returns (VersionResponse);
+  rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
+  rpc MapInterface(NetworkElement) returns (NetworkElementInterface);
+}
+

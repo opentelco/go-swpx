@@ -1,0 +1,19 @@
+
+
+snmp_community = "semipublic"
+
+driver "vrp" {
+  snmp_community = "sem1publ1c"
+}
+
+driver "raycore" {
+  snmp_community = "public"
+}
+
+driver "comware" {
+  snmp_community = "${snmp_community}"
+}
+
+
+docker-compose pollers up --scale=300
+

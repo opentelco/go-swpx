@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/opentelco/go-swpx/proto/resource";
+
+package resource;
+
+message Empty {}
+
+
+
+message PollNetworkElementRequest {
+  string version = 1;
+}
+
+// Responses in event queue
+message PollNetworkElement {
+  string version = 1;
+}
+

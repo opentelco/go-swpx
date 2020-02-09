@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = "github.com/opentelco/go-swpx/proto/provider";
+
+package provider;
+import "dnc/dnc.proto";
+
+
+message Empty{}
+
+// Name() (string, error)
+// Version() (string, error)
+
+// Match(string) (bool, error)
+// Lookup(string) (DNCRequest, error)
+// Weight() (int, error)
+
+message NameResponse {
+  string name = 1;
+}
+
+message VersionResponse {
+  string version = 1;
+}
+
+
+message MatchRequest {
+  string origin_id = 1;
+}
+
+message MatchResponse {
+  bool match = 1;
+}
+
+
+message WeightResponse {
+  int64 weight = 1;
+}
+
+service Provider {
+  rpc Name(Empty) returns (NameResponse);
+  rpc Version(Empty) returns (VersionResponse); 
+
+  rpc Match(MatchRequest) returns (MatchResponse);
+  rpc Lookup(dnc.LookupRequest) returns (dnc.LookupResponse);
+  rpc Weight(Empty) returns (WeightResponse);
+
+}
