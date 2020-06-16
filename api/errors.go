@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/opentelco/go-swpx/errors"
+	"git.liero.se/opentelco/go-swpx/errors"
 )
 
 // ErrorStatusInvalidAddr is the status response when the app cannot do anything about the host

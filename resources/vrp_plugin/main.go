@@ -3,24 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/opentelco/go-swpx/shared/oids"
+	"git.liero.se/opentelco/go-swpx/shared/oids"
 
+	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/nats-io/go-nats"
-	"github.com/opentelco/go-dnc/client"
-	"github.com/opentelco/go-dnc/models/protobuf/transport"
-	"github.com/opentelco/go-swpx/proto/networkelement"
-	proto "github.com/opentelco/go-swpx/proto/resource"
-
-	"github.com/opentelco/go-swpx/shared"
 )
 
 var VERSION *version.Version
@@ -187,10 +186,10 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				// case m.Oid == oids.SysObjectID:
 				case m.Oid == oids.SysUpTime:
 					ne.Uptime = m.GetStringValue()
-				
-				for _, metric := range metrics {
-					setValue(ne, Target, Value)
-				}c
+
+				// for _, metric := range metrics {
+				// 	setValue(ne, Target, Value)
+				// }
 
 				// Output
 				case strings.HasPrefix(m.Oid, oids.IfOutOctets):

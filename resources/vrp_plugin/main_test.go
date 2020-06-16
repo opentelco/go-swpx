@@ -1,10 +1,10 @@
 package main
 
 import (
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"testing"
 
-	"github.com/opentelco/go-dnc/models/protobuf/transport"
-	proto "github.com/opentelco/go-swpx/proto/resource"
+	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 )
 
 func TestMapInterface(t *testing.T) {

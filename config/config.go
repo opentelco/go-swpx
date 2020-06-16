@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/opentelco/go-swpx/shared"
+	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 type Config struct {

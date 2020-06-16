@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
+	"git.liero.se/opentelco/go-swpx/api"
+	"git.liero.se/opentelco/go-swpx/core"
+	"git.liero.se/opentelco/go-swpx/core/requestcache"
 	"github.com/google/uuid"
-	"github.com/opentelco/go-swpx/api"
-	"github.com/opentelco/go-swpx/core"
-	"github.com/opentelco/go-swpx/core/orchestrar"
 	"github.com/spf13/cobra"
 )
 
@@ -31,8 +31,7 @@ var Start = &cobra.Command{
 		c.Start()
 
 		// start API endpoint and add the queue
-		// the queue is initated in the core and n workers
-		// takes request from it.
+		// the queue is initated in the core and n workers takes request from it.
 		server := api.New(core.RequestQueue)
 		err := server.ListenAndServe(":1337")
 		if err != nil {
@@ -64,7 +63,7 @@ var Test = &cobra.Command{
 	Long:  `test is a command used under development to test libraries and other`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		orchester := orchestrar.New()
+		orchester := requestcache.New()
 		id, _ := uuid.NewUUID()
 
 		go func() {

@@ -1,6 +1,6 @@
 package core
 
-import "github.com/opentelco/go-swpx/proto/networkelement"
+import "git.liero.se/opentelco/go-swpx/proto/networkelement"
 
 type Response struct {
 	RequestObjectID string

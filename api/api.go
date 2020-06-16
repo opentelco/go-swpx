@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"git.liero.se/opentelco/go-swpx/core"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/gorilla/context"
-	"github.com/opentelco/go-swpx/core"
 
 	"github.com/go-chi/chi"
 )
@@ -44,7 +44,7 @@ func (s *Server) ListenAndServe(host string) error {
 // New creates and returnes a server.
 func New(requestQueue chan *core.Request) *Server {
 	if requestQueue == nil {
-		log.Fatal("Channel is nil, Requests needs to be handled..")
+		log.Fatal("channel is nil, requests needs to be handled..")
 	}
 	s := &Server{
 		Mux:      chi.NewRouter(),

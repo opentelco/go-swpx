@@ -3,16 +3,18 @@ package shared
 import (
 	"context"
 
+	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"github.com/hashicorp/go-plugin"
-	"github.com/opentelco/go-swpx/proto/networkelement"
-	proto "github.com/opentelco/go-swpx/proto/resource"
 	"google.golang.org/grpc"
 )
 
 // NetworkElementPlugin is the interface that we're exposing as a plugin.
 type Resource interface {
 	Version() (string, error)
+	// Gets all the technical information for a Port
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+	// From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterface, error)
 }
 

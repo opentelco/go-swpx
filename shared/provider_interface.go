@@ -3,9 +3,9 @@ package shared
 import (
 	"context"
 
+	dnc "git.liero.se/opentelco/go-swpx/proto/dnc"
+	proto "git.liero.se/opentelco/go-swpx/proto/provider"
 	"github.com/hashicorp/go-plugin"
-	dnc "github.com/opentelco/go-swpx/proto/dnc"
-	proto "github.com/opentelco/go-swpx/proto/provider"
 	"google.golang.org/grpc"
 )
 
@@ -56,7 +56,7 @@ func (p *ProviderGRPCClient) Weight() (int64, error) {
 
 }
 
-//
+
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {
 	Impl Provider

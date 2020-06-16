@@ -6,10 +6,10 @@ import (
 	"net"
 	"net/http"
 
+	"git.liero.se/opentelco/go-swpx/core"
+	"git.liero.se/opentelco/go-swpx/errors"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/opentelco/go-swpx/core"
-	"github.com/opentelco/go-swpx/errors"
 )
 
 // TechnicalInformationRequest is the request that holdes the TI request.
@@ -110,10 +110,11 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 	} else {
 		req.Type = core.GetTechnicalInformationElement
 	}
-	// Set timeot for the request
 
+	// send the request
 	s.requests <- req
 
+	// handle it
 	for {
 		select {
 		case resp := <-req.Response:

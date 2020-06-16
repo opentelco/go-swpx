@@ -3,8 +3,8 @@ package core
 import (
 	"sync"
 
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-plugin"
-	"github.com/opentelco/go-swpx/shared"
 )
 
 type providerMap map[string]shared.Provider
@@ -16,6 +16,7 @@ func (p providerMap) Slice() (ps []shared.Provider) {
 	return
 }
 
+// sorters
 type resourceMap map[string]shared.Resource
 type byWeight []shared.Provider
 

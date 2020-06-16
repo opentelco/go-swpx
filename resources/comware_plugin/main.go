@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/opentelco/go-swpx/shared"
+	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"

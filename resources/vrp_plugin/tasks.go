@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
+	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"time"
 
+	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/opentelco/go-dnc/models/protobuf/metric"
-	dnc_shared "github.com/opentelco/go-dnc/models/protobuf/shared"
-	"github.com/opentelco/go-dnc/models/protobuf/snmpc"
-	"github.com/opentelco/go-dnc/models/protobuf/transport"
-	proto "github.com/opentelco/go-swpx/proto/resource"
-	"github.com/opentelco/go-swpx/shared/oids"
 	"github.com/segmentio/ksuid"
 )
 
@@ -41,7 +41,7 @@ func createDiscoveryMsg(el *proto.NetworkElement) *transport.Message {
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  dnc_shared.Status_NEW,
+		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
 	return message
@@ -81,7 +81,7 @@ func createSinglePortMsg(index int64, el *proto.NetworkElement) *transport.Messa
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  dnc_shared.Status_NEW,
+		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
 	return message
@@ -118,7 +118,7 @@ func createTaskSystemInfo(el *proto.NetworkElement) *transport.Message {
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  dnc_shared.Status_NEW,
+		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
 	return message
@@ -165,7 +165,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement) *transport.Me
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  dnc_shared.Status_NEW,
+		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
 	return message
@@ -209,7 +209,7 @@ func createMsg() *transport.Message {
 		Target:  "10.9.0.10",
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  dnc_shared.Status_NEW,
+		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
 	return message

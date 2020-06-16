@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/opentelco/go-swpx/errors"
+	"git.liero.se/opentelco/go-swpx/errors"
 )
 
 // Response is the main struct that returns to the client

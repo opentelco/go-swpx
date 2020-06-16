@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/opentelco/go-swpx/proto/provider";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/provider";
 
 package provider;
 import "dnc/dnc.proto";

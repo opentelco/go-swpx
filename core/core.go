@@ -9,11 +9,10 @@ import (
 	"path"
 	"sort"
 
+	"git.liero.se/opentelco/go-swpx/shared"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-	"github.com/opentelco/go-swpx/core/transport/nats"
-	"github.com/opentelco/go-swpx/shared"
 )
 
 const (
@@ -32,8 +31,9 @@ const (
 	EventQueue   string = "opentelco.dnc.events"
 )
 
-// this contants should be moved to environment variables and arguments to CMD
+
 var (
+	// this contants should be moved to environment variables and arguments to CMD
 	EVENT_SERVERS []string    = []string{"nats://localhost:14222", "nats://localhost:24222", "nats://localhost:34222"}
 	TEST_CHAN     chan string = make(chan string, 0)
 )
@@ -42,6 +42,8 @@ var (
 	logger             hclog.Logger
 	VERSION            *version.Version
 	StopRequestHandler chan bool     = make(chan bool)
+
+	// Global request queue
 	RequestQueue       chan *Request = make(chan *Request, REQUEST_BUFFER_SIZE)
 )
 
@@ -81,19 +83,23 @@ func LoadPlugins(pluginPath string) (map[string]*plugin.Client, error) {
 	return loadedPlugins, nil
 }
 
-// Transport is the interface that talks down to the DNC
+// TODO Transport is the interface that talks down to the DNC
+// TODO not in use
 type Transport interface {
 	// Subscribe(queue string, requestChannel chan interface{}, responseChannel chan interface{}) error
 	Ping()
 	// Subscribe(subject string, queue string, channel chan interface{}) error
 }
 
+// core app
 type Core struct {
-	Swarm *swarm
+	// workers and queues
+	Swarm *workerPool
 
 	transport Transport
 }
 
+// start the core app
 func (c *Core) Start() {
 	c.Swarm.start(RequestQueue)
 
@@ -109,36 +115,43 @@ func (c *Core) Start() {
 
 }
 
+//
 func CreateCore() *Core {
 	var err error
 
-	t, err := nats.New(EVENT_SERVERS)
+	// not in use
+	//t, err := nats.New(EVENT_SERVERS)
 
-	_, err = t.BindRecvQueueChan("vrp-driver", "dispatchers", TEST_CHAN)
-	go func() {
-		for {
-			select {
-			case s := <-TEST_CHAN:
-				log.Println("got this string:", s)
-			}
-		}
-	}()
+
+	// not in use...
+	//_, err = t.BindRecvQueueChan("vrp-driver", "dispatchers", TEST_CHAN)
+	//go func() {
+	//	for {
+	//		select {
+	//		case s := <-TEST_CHAN:
+	//			log.Println("got this string:", s)
+	//		}
+	//	}
+	//}()
+
+	// create core
 	core := &Core{
-		Swarm:     newSwarm(WORKERS, MAX_REQUESTS),
-		transport: Transport(t),
+		Swarm: newWorkerPool(WORKERS, MAX_REQUESTS),
+		//transport: Transport(t),
 	}
 
-	// Create swarm, starts when Core is started.
 
-	// load all provider annd resource plugins (files)
+	// load all provider and resource plugins (files)
 	if availableProviders, err = LoadPlugins(path.Join(PLUGIN_PATH, PROVIDERS)); err != nil {
 		logger.Error(err.Error())
 	}
+	// load resource plugins, vrp etc
 	if availableResources, err = LoadPlugins(path.Join(PLUGIN_PATH, RESOURCES)); err != nil {
 		logger.Error(err.Error())
 	}
 
-	// interate the resources and connect.
+	// interate the resources and connect to the plugin
+	// TODO move to a function instead?
 	for name, p := range availableResources {
 		var raw interface{}
 		var err error
@@ -157,7 +170,7 @@ func CreateCore() *Core {
 				resources[name] = resource
 				logger.Error("something went wrong", "version", v, "error", err)
 			} else {
-				logger.Error("Type assertions failed. %s plugin does not implement Plugin", name)
+				logger.Error("type assertions failed. %s plugin does not implement Plugin", name)
 				os.Exit(1)
 			}
 
@@ -167,7 +180,9 @@ func CreateCore() *Core {
 		}
 
 	}
+
 	// iterate providers and connect to the plugin.
+	// TODO move to a function instead?
 	for name, p := range availableProviders {
 		var raw interface{}
 		var err error
@@ -182,6 +197,8 @@ func CreateCore() *Core {
 		raw, err = rpc.Dispense("provider")
 		if err == nil {
 			provider := raw.(shared.Provider)
+
+			// get information about the provider to use on request
 			var (
 				err error
 				n   string // name
@@ -211,7 +228,7 @@ func CreateCore() *Core {
 		}
 	}
 
-	// Sort the list of providers by Weight
+	// Sort the list of providers by their Weight()
 	sortedProviders = providers.Slice()
 	sort.Sort(byWeight(sortedProviders))
 	for n, p := range sortedProviders {
@@ -220,10 +237,11 @@ func CreateCore() *Core {
 		println(n, name, w)
 	}
 
+	// Disabled, not in use
 	// start the handler for Requests
 	// HandleRequests()
 
-	// start the swarm to handle incoming requests.
+	// start the workerPool to handle incoming requests.
 
 	// go func() {
 	// 	var i int
@@ -244,6 +262,7 @@ func CreateCore() *Core {
 	return core
 }
 
+// Disabled, not in use
 // HandleRequests handels the incoming jobs
 // func HandleRequests() error {
 // 	logger.Debug("request handler started")

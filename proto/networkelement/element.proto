@@ -3,7 +3,7 @@ package networkelement;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/opentelco/go-swpx/proto/networkelement";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/networkelement";
 
 message Element {  
   string hostname = 1;
