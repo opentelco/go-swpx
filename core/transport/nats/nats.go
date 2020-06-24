@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/nats-io/go-nats"
+	"github.com/nats-io/nats.go"
 )
 
 func init() {}

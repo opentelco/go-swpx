@@ -3,7 +3,7 @@ services:
 
   nats-1: 
     command: 
-      - "-D"
+      - "-DV"
       - "-p"
       - "4222"
       - "-cluster"
@@ -21,7 +21,7 @@ services:
     
   nats-2: 
     command: 
-      - "-D"
+      - "-DV"
       - "-p"
       - "4222"
       - "-cluster"
@@ -41,7 +41,7 @@ services:
 
   nats-3: 
     command: 
-      - "-D"
+      - "-DV"
       - "-p"
       - "4222"
       - "-cluster"

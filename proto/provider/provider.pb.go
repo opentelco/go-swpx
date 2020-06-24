@@ -291,11 +291,11 @@ var fileDescriptor_c90e022f12f82725 = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // ProviderClient is the client API for Provider service.
 //
@@ -309,10 +309,10 @@ type ProviderClient interface {
 }
 
 type providerClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewProviderClient(cc *grpc.ClientConn) ProviderClient {
+func NewProviderClient(cc grpc.ClientConnInterface) ProviderClient {
 	return &providerClient{cc}
 }
 

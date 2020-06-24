@@ -21,7 +21,7 @@ build:
 	# go build -o ./plugins/provider_ssab	_plug ./providers/ssab/main.go
 
 	# main
-	go build -o ./swpx main.go
+	go build -o ./bin/swpx main.go
 
 
 test:

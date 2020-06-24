@@ -18,8 +18,8 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-version"
-	"github.com/nats-io/go-nats"
+	 "github.com/hashicorp/go-version"
+	"github.com/nats-io/nats.go"
 )
 
 var VERSION *version.Version
@@ -27,6 +27,7 @@ var VERSION *version.Version
 const (
 	VERSION_BASE string = "1.0-beta"
 	DRIVER_NAME  string = "vrp-driver"
+	DISPATCHER_ADDR string = "127.0.0.1:50051"
 )
 
 var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
@@ -295,9 +296,13 @@ func main() {
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
+	dncClient,err := client.New(DISPATCHER_ADDR)
+	if err != nil {
+		log.Fatal(err)
+	}
 	driver := &VRPDriver{
 		logger: logger,
-		dnc:    client.New(":50051"),
+		dnc:    dncClient,
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

@@ -293,11 +293,11 @@ var fileDescriptor_478d904e0b4d43a1 = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // ResourceClient is the client API for Resource service.
 //
@@ -309,10 +309,10 @@ type ResourceClient interface {
 }
 
 type resourceClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewResourceClient(cc *grpc.ClientConn) ResourceClient {
+func NewResourceClient(cc grpc.ClientConnInterface) ResourceClient {
 	return &resourceClient{cc}
 }
 
