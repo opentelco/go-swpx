@@ -4,9 +4,10 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
-	"github.com/segmentio/ksuid"
 	"log"
 	"time"
+
+	"github.com/segmentio/ksuid"
 
 	"git.liero.se/opentelco/go-swpx/errors"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
@@ -210,7 +211,6 @@ type wresp struct {
 	OpsSecond  float64  `json:"operations_second"`
 }
 
-
 // start the worker and ready it to accept payloads
 func (w *worker) start(done chan *worker, res chan<- *Response) {
 	for {
@@ -219,86 +219,7 @@ func (w *worker) start(done chan *worker, res chan<- *Response) {
 			resp := &Response{RequestObjectID: msg.ObjectID}
 
 			// do work with payload
-			err := handle(msg.Context, msg, resp, func(msg *Request, resp *Response) error {
-				logger.Debug("worker has payload")
-				log.Printf("the user has sent in %s as provider", msg.Provider)
-
-				// check if a provider is selected in the request
-				if msg.Provider != "" {
-					provider := providers[msg.Provider]
-					if provider == nil {
-						resp.Error = errors.New("the provider is missing/does not exist", errors.ErrInvalidProvider)
-						return resp.Error
-					}
-					// run some provider funcs
-					providerFunc(provider, msg)
-
-				} else {
-					// no provider selected, walk all providers
-					for pname, provider := range providers {
-						logger.Debug("parsing provider", "provider", pname)
-						providerFunc(provider, msg)
-					}
-				}
-
-				// select resource-plugin to send the requests to
-				plugin := resources[msg.Resource]
-				if plugin == nil {
-					logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.Resource)
-					resp.Error = errors.New("selected driver is missing/does not exist", errors.ErrInvalidResource)
-					return nil
-				}
-
-
-				// implementation of different messages that SWP-X can handle right now
-				// TODO is this the best way to to this.. ?
-				switch msg.Type {
-				// Get full information of a Element
-				case GetTechnicalInformationElement:
-					ver, err := plugin.Version()
-					if err != nil {
-						logger.Error(err.Error())
-						return err
-					}
-					logger.Info("calling version ok", "version", ver)
-
-				// Get information related to the selected interface
-				case GetTechnicalInformationPort:
-					req := &proto.NetworkElement{
-						Hostname:  msg.NetworkElement,
-						Interface: *msg.NetworkElementInterface,
-					}
-
-					iface, err := plugin.MapInterface(msg.Context, req)
-					if err != nil {
-						logger.Error("error running map interrace", "err", err.Error())
-						resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
-						return err
-					}
-					// if the return is 0 somethng went wrong
-					if iface.Index == 0 {
-						logger.Error("error running map interrace", "err", "index is zero")
-						resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
-						return err
-					}
-
-					logger.Info("got back info from MapInterface", "index", iface.Index)
-
-					req.InterfaceIndex = iface.Index
-
-					ti, err := plugin.TechnicalPortInformation(msg.Context, req)
-					if err != nil {
-						logger.Error(err.Error())
-						return err
-					}
-					logger.Info("calling technical info ok ", "result", ti)
-					resp.NetworkElement = ti
-					return nil
-
-				}
-
-				return nil
-			})
+			err := handle(msg.Context, msg, resp, handleMsg)
 
 			if err != nil {
 				resp.Error = err
@@ -335,10 +256,6 @@ func providerFunc(provider shared.Provider, msg *Request) {
 		log.Println(err)
 	}
 
-	// m, err := provider.Match(strconv.Itoa(rand.Int()))
-	// if err != nil {
-	// 	log.Println(err)
-	// }
 	logger.Debug("this is coming back from the plugin", "id", l)
 	logger.Debug("data from provider plugin", "provider", name, "version", ver, "weight", weight)
 }
@@ -357,4 +274,132 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 		return err
 	}
 	return nil
+}
+
+func handleMsg(msg *Request, resp *Response) error {
+	logger.Debug("worker has payload")
+	log.Printf("the user has sent in %s as provider", msg.Provider)
+
+	// check if a provider is selected in the request
+	if msg.Provider != "" {
+		provider := providers[msg.Provider]
+		if provider == nil {
+			resp.Error = errors.New("the provider is missing/does not exist", errors.ErrInvalidProvider)
+			return resp.Error
+		}
+		// run some provider funcs
+		providerFunc(provider, msg)
+
+	} else {
+		// no provider selected, walk all providers
+		for pname, provider := range providers {
+			logger.Debug("parsing provider", "provider", pname)
+			providerFunc(provider, msg)
+		}
+	}
+
+	// select resource-plugin to send the requests to
+	plugin := resources[msg.Resource]
+	if plugin == nil {
+		logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.Resource)
+		resp.Error = errors.New("selected driver is missing/does not exist", errors.ErrInvalidResource)
+		return nil
+	}
+
+	// implementation of different messages that SWP-X can handle right now
+	// TODO is this the best way to to this.. ?
+	switch msg.Type {
+	case GetTechnicalInformationElement:
+		return handleGetTechnicalInformationElement(msg, resp, plugin)
+	case GetTechnicalInformationPort:
+		return handleGetTechnicalInformationPort(msg, resp, plugin)
+	case GetLinkStatus:
+		return handleGetLinkStatus(msg, resp, plugin)
+
+	}
+
+	return nil
+}
+
+// handleGetTechnicalInformationElement gets full information of a Element
+func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin shared.Resource) error {
+	ver, err := plugin.Version()
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	logger.Info("calling version ok", "version", ver)
+
+	return nil
+}
+
+// handleGetTechnicalInformationPort gets information related to the selected interface
+func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource) error {
+	fmt.Println("####### handleGetTechnicalInformationPort")
+	req := &proto.NetworkElement{
+		Hostname:  msg.NetworkElement,
+		Interface: *msg.NetworkElementInterface,
+	}
+
+	iface, err := plugin.MapInterface(msg.Context, req)
+	if err != nil {
+		logger.Error("error running map interrace", "err", err.Error())
+		resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+		return err
+	}
+	// if the return is 0 somethng went wrong
+	if iface.Index == 0 {
+		logger.Error("error running map interrace", "err", "index is zero")
+		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
+		return err
+	}
+
+	logger.Info("got back info from MapInterface", "index", iface.Index)
+
+	req.InterfaceIndex = iface.Index
+
+	ti, err := plugin.TechnicalPortInformation(msg.Context, req)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	logger.Info("calling technical info ok ", "result", ti)
+	resp.NetworkElement = ti
+	return nil
+
+}
+
+func handleGetLinkStatus(msg *Request, resp *Response, plugin shared.Resource) error {
+	fmt.Println("####### handleGetLinkStatus")
+	req := &proto.NetworkElement{
+		Hostname:  msg.NetworkElement,
+		Interface: *msg.NetworkElementInterface,
+	}
+
+	iface, err := plugin.MapInterface(msg.Context, req)
+	if err != nil {
+		logger.Error("error running map interface", "err", err.Error())
+		resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+		return err
+	}
+	// if the return is 0 something went wrong
+	if iface.Index == 0 {
+		logger.Error("error running map interface", "err", "index is zero")
+		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
+		return err
+	}
+
+	logger.Info("got back info from MapInterface", "index", iface.Index)
+
+	req.InterfaceIndex = iface.Index
+
+	ti, err := plugin.GetLinkStatus(msg.Context, req)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+	logger.Info("calling get link status info ok ", "result", ti)
+	resp.NetworkElement = ti
+	return nil
+
 }
