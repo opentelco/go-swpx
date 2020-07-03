@@ -51,11 +51,15 @@ const (
 	IfHCOutUcastPkts     = ".1.3.6.1.2.1.31.1.1.1.11"
 	IfHCOutMulticastPkts = ".1.3.6.1.2.1.31.1.1.1.12"
 	IfHCOutBroadcastPkts = ".1.3.6.1.2.1.31.1.1.1.13"
+
 	// Input HC
 	IfHCInOctets        = ".1.3.6.1.2.1.31.1.1.1.6"
 	IfHCInUcastPkts     = ".1.3.6.1.2.1.31.1.1.1.7"
 	IfHCInMulticastPkts = ".1.3.6.1.2.1.31.1.1.1.8"
 	IfHCInBroadcastPkts = ".1.3.6.1.2.1.31.1.1.1.9"
+
+	// ifXTable
+	IfLinkUpDownTrapEnable = ".1.3.6.1.2.1.31.1.1.1.14"
 )
 
 // OIDS that needs to be formatted with index
@@ -102,6 +106,9 @@ const (
 	IfHCInUcastPktsF     = ".1.3.6.1.2.1.31.1.1.1.7.%d"
 	IfHCInMulticastPktsF = ".1.3.6.1.2.1.31.1.1.1.8.%d"
 	IfHCInBroadcastPktsF = ".1.3.6.1.2.1.31.1.1.1.9.%d"
+
+	// ifXTable
+	IfLinkUpDownTrapEnableF = ".1.3.6.1.2.1.31.1.1.1.14.%d"
 )
 
 // Huawei OIDS

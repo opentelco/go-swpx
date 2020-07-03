@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 
@@ -18,15 +19,17 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	 "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
 	"github.com/nats-io/nats.go"
 )
 
 var VERSION *version.Version
 
+var logger hclog.Logger
+
 const (
-	VERSION_BASE string = "1.0-beta"
-	DRIVER_NAME  string = "vrp-driver"
+	VERSION_BASE    string = "1.0-beta"
+	DRIVER_NAME     string = "vrp-driver"
 	DISPATCHER_ADDR string = "127.0.0.1:50051"
 )
 
@@ -54,6 +57,15 @@ func init() {
 type VRPDriver struct {
 	logger hclog.Logger
 	dnc    client.Client
+	conf   shared.Configuration
+}
+
+func (d *VRPDriver) GetConfiguration() shared.Configuration {
+	return d.conf
+}
+
+func (d *VRPDriver) SetConfiguration(conf shared.Configuration) {
+	d.conf = conf
 }
 
 func (d *VRPDriver) Version() (string, error) {
@@ -80,7 +92,9 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	discoveryMap := make(map[int]*discoveryItem)
 	var index int
 
-	msg = createDiscoveryMsg(el)
+	conf := shared.Proto2conf(*el.Conf)
+
+	msg = createDiscoveryMsg(el, conf)
 	msg, err := d.dnc.Put(msg)
 	if err != nil {
 		d.logger.Error(err.Error())
@@ -137,15 +151,17 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	dncChan <- "ok"
 	d.logger.Info("running technical port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 
+	conf := shared.Proto2conf(*el.Conf)
+
 	var msgs []*transport.Message
 	if el.InterfaceIndex != 0 {
-		msgs = append(msgs, createSinglePortMsg(el.InterfaceIndex, el))
-		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el))
+		msgs = append(msgs, createSinglePortMsg(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
 	} else {
-		msgs = append(msgs, createMsg())
+		msgs = append(msgs, createMsg(conf))
 	}
 
-	msgs = append(msgs, createTaskSystemInfo(el))
+	msgs = append(msgs, createTaskSystemInfo(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
@@ -283,7 +299,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 // directory. It is a UX feature, not a security feature.
 
 func main() {
-	logger := hclog.New(&hclog.LoggerOptions{
+	logger = hclog.New(&hclog.LoggerOptions{
 		Name:       fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()),
 		Level:      hclog.Trace,
 		Output:     os.Stderr,
@@ -296,7 +312,7 @@ func main() {
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
-	dncClient,err := client.New(DISPATCHER_ADDR)
+	dncClient, err := client.New(DISPATCHER_ADDR)
 	if err != nil {
 		log.Fatal(err)
 	}

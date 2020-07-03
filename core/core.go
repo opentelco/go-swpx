@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,7 +32,6 @@ const (
 	EventQueue   string = "opentelco.dnc.events"
 )
 
-
 var (
 	// this contants should be moved to environment variables and arguments to CMD
 	EVENT_SERVERS []string    = []string{"nats://localhost:14222", "nats://localhost:24222", "nats://localhost:34222"}
@@ -41,10 +41,10 @@ var (
 var (
 	logger             hclog.Logger
 	VERSION            *version.Version
-	StopRequestHandler chan bool     = make(chan bool)
+	StopRequestHandler chan bool = make(chan bool)
 
 	// Global request queue
-	RequestQueue       chan *Request = make(chan *Request, REQUEST_BUFFER_SIZE)
+	RequestQueue chan *Request = make(chan *Request, REQUEST_BUFFER_SIZE)
 )
 
 func init() {
@@ -119,27 +119,11 @@ func (c *Core) Start() {
 func CreateCore() *Core {
 	var err error
 
-	// not in use
-	//t, err := nats.New(EVENT_SERVERS)
-
-
-	// not in use...
-	//_, err = t.BindRecvQueueChan("vrp-driver", "dispatchers", TEST_CHAN)
-	//go func() {
-	//	for {
-	//		select {
-	//		case s := <-TEST_CHAN:
-	//			log.Println("got this string:", s)
-	//		}
-	//	}
-	//}()
-
 	// create core
 	core := &Core{
 		Swarm: newWorkerPool(WORKERS, MAX_REQUESTS),
 		//transport: Transport(t),
 	}
-
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = LoadPlugins(path.Join(PLUGIN_PATH, PROVIDERS)); err != nil {
@@ -156,7 +140,7 @@ func CreateCore() *Core {
 		var raw interface{}
 		var err error
 
-		logger.Debug("connect to plugin", "name", name)
+		logger.Debug("connect to resource", "name", name)
 		rrpc, err := p.Client()
 		if err != nil {
 			logger.Error(err.Error())
@@ -170,7 +154,7 @@ func CreateCore() *Core {
 				resources[name] = resource
 				logger.Error("something went wrong", "version", v, "error", err)
 			} else {
-				logger.Error("type assertions failed. %s plugin does not implement Plugin", name)
+				logger.Error(fmt.Sprintf("type assertions failed. %s plugin does not implement Plugin %T", name, raw))
 				os.Exit(1)
 			}
 
@@ -237,85 +221,5 @@ func CreateCore() *Core {
 		println(n, name, w)
 	}
 
-	// Disabled, not in use
-	// start the handler for Requests
-	// HandleRequests()
-
-	// start the workerPool to handle incoming requests.
-
-	// go func() {
-	// 	var i int
-	// 	for {
-	// 		i++
-	// 		fmt.Printf("----------%d-------------", i)
-	// 		for n := 0; n < 10000; n++ {
-	// 			r := &Request{
-	// 				ObjectID: fmt.Sprintf("ZIT%d", rand.Int()),
-	// 			}
-	// 			// Add request to queue
-	// 			RequestQueue <- r
-
-	// 		}
-	// 		time.Sleep(time.Second * 30)
-	// 	}
-	// }()
 	return core
 }
-
-// Disabled, not in use
-// HandleRequests handels the incoming jobs
-// func HandleRequests() error {
-// 	logger.Debug("request handler started")
-// 	go func() {
-// 		for {
-// 			select {
-// 			case r := <-RequestQueue:
-// 				tx := &Response{}
-// 				log.Printf("the user has sent in %s as provider", r.Provider)
-// 				if r.Provider != "" {
-// 					provider := providers[r.Provider]
-
-// 					if provider == nil {
-// 						tx.Error = errors.New("the selected provider does not exist")
-// 						r.Response <- tx
-// 						break
-// 					}
-// 				}
-
-// 				for _, provider := range sortedProviders {
-// 					logger.Debug("parsing provider", "provider", provider.Name)
-
-// 					name, err := provider.Name()
-// 					if err != nil {
-// 						logger.Debug("getting provider name failed", "error", err)
-// 					}
-// 					ver, err := provider.Version()
-// 					if err != nil {
-// 						logger.Debug("getting provider name failed", "error", err)
-// 					}
-// 					weight, err := provider.Weight()
-// 					if err != nil {
-// 						logger.Debug("getting provider name failed", "error", err)
-// 					}
-
-// 					l, err := provider.Lookup(r.ObjectID)
-// 					if err != nil {
-// 						log.Println(err)
-// 					}
-
-// 					// m, err := provider.Match(strconv.Itoa(rand.Int()))
-// 					// if err != nil {
-// 					// 	log.Println(err)
-// 					// }
-// 					logger.Debug("this is coming back from the plugin", "id", l)
-// 					logger.Debug("data from provider plugin", "provider", name, "version", ver, "weight", weight)
-// 				}
-// 				logger.Debug("handler received a new request", "objectID", r.ObjectID)
-// 			case <-StopRequestHandler:
-// 				logger.Debug("go kill signal from something, exit.")
-// 				break
-// 			}
-// 		}
-// 	}()
-// 	return nil
-// }

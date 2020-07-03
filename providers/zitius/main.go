@@ -2,24 +2,28 @@ package main
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"log"
 	"os"
-
-	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"github.com/spf13/viper"
 )
 
 var VERSION *version.Version
 var logger hclog.Logger
 
 const (
-	VERSION_BASE  string = "1.0-beta"
-	PROVIDER_NAME string = "zitius_provider"
-	WEIGHT        int64  = 23
+	VERSION_BASE string = "1.0-beta"
+	//PROVIDER_NAME string = "zitius_provider"
+	WEIGHT int64 = 23
 )
+
+var PROVIDER_NAME = "zitius_provider"
+
+var conf shared.Configuration
 
 func init() {
 	var err error
@@ -56,7 +60,39 @@ func (p *Provider) Match(id string) (bool, error) {
 
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
+}
 
+func (p *Provider) GetConfiguration() (shared.Configuration, error) {
+	return conf, nil
+}
+
+func loadConfig(logger hclog.Logger) {
+
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("./" + PROVIDER_NAME)
+	viper.AddConfigPath("./config")
+	viper.AddConfigPath(".providers/" + PROVIDER_NAME)
+	viper.AddConfigPath("$HOME/." + PROVIDER_NAME)
+
+	defaultConf := shared.ConfigSNMP {
+		Community: "public",
+		Retries: 3,
+	}
+
+	viper.SetDefault("snmp", defaultConf)
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		return
+	}
+
+	err = viper.Unmarshal(&conf)
+	if err != nil {
+		panic(fmt.Errorf("Unable to decode Config: %s \n", err))
+	}
 }
 
 // handshakeConfigs are used to just do a basic handshake between
@@ -76,6 +112,8 @@ func main() {
 		Output:     os.Stderr,
 		JSONFormat: true,
 	})
+
+	loadConfig(logger)
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,

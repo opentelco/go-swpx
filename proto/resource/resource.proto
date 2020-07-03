@@ -2,6 +2,7 @@ syntax = "proto3";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/resource";
 import "networkelement/element.proto";
+import "provider/provider.proto";
 
 
 package resource;
@@ -17,13 +18,12 @@ message TechnicalPortInformationResponse {
   string response = 1;
 }
 
-
-
 message NetworkElement {
   string hostname = 1;
   string ip = 2;  
   string interface = 3;
   int64 interface_index = 4;
+  provider.Configuration conf = 5;
 }
 
 message NetworkElementInterface {
