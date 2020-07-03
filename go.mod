@@ -22,6 +22,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	google.golang.org/grpc v1.27.1
+	google.golang.org/protobuf v1.23.0
 
 )
 

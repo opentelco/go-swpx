@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 package networkelement;
 
@@ -103,6 +104,8 @@ message Interface {
   repeated MACEntry mac_address_table = 17;
   repeated DHCPEntry dhcp_table = 18;
   string config = 19; // text blob of current config
+
+  int64 interface_status = 20;
 }
 
 

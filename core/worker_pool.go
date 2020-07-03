@@ -279,6 +279,7 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 func handleMsg(msg *Request, resp *Response) error {
 	logger.Debug("worker has payload")
 	log.Printf("the user has sent in %s as provider", msg.Provider)
+	var conf shared.Configuration
 
 	// check if a provider is selected in the request
 	if msg.Provider != "" {
@@ -289,6 +290,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
+		conf, _ = provider.GetConfiguration()
 
 	} else {
 		// no provider selected, walk all providers
@@ -306,23 +308,22 @@ func handleMsg(msg *Request, resp *Response) error {
 		return nil
 	}
 
+	plugin.SetConfiguration(conf)
+
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case GetTechnicalInformationElement:
-		return handleGetTechnicalInformationElement(msg, resp, plugin)
+		return handleGetTechnicalInformationElement(msg, resp, plugin, conf)
 	case GetTechnicalInformationPort:
-		return handleGetTechnicalInformationPort(msg, resp, plugin)
-	case GetLinkStatus:
-		return handleGetLinkStatus(msg, resp, plugin)
-
+		return handleGetTechnicalInformationPort(msg, resp, plugin, conf)
 	}
 
 	return nil
 }
 
 // handleGetTechnicalInformationElement gets full information of a Element
-func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin shared.Resource) error {
+func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
 	ver, err := plugin.Version()
 	if err != nil {
 		logger.Error(err.Error())
@@ -334,11 +335,12 @@ func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin s
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource) error {
-	fmt.Println("####### handleGetTechnicalInformationPort")
+func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
+	protConf := shared.Conf2proto(conf)
 	req := &proto.NetworkElement{
 		Hostname:  msg.NetworkElement,
 		Interface: *msg.NetworkElementInterface,
+		Conf:      &protConf,
 	}
 
 	iface, err := plugin.MapInterface(msg.Context, req)
@@ -364,41 +366,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		return err
 	}
 	logger.Info("calling technical info ok ", "result", ti)
-	resp.NetworkElement = ti
-	return nil
-
-}
-
-func handleGetLinkStatus(msg *Request, resp *Response, plugin shared.Resource) error {
-	fmt.Println("####### handleGetLinkStatus")
-	req := &proto.NetworkElement{
-		Hostname:  msg.NetworkElement,
-		Interface: *msg.NetworkElementInterface,
-	}
-
-	iface, err := plugin.MapInterface(msg.Context, req)
-	if err != nil {
-		logger.Error("error running map interface", "err", err.Error())
-		resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
-		return err
-	}
-	// if the return is 0 something went wrong
-	if iface.Index == 0 {
-		logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
-		return err
-	}
-
-	logger.Info("got back info from MapInterface", "index", iface.Index)
-
-	req.InterfaceIndex = iface.Index
-
-	ti, err := plugin.GetLinkStatus(msg.Context, req)
-	if err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-	logger.Info("calling get link status info ok ", "result", ti)
 	resp.NetworkElement = ti
 	return nil
 

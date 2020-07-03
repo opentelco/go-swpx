@@ -10,17 +10,21 @@ import (
 )
 
 // NetworkElementPlugin is the interface that we're exposing as a plugin.
+
 type Resource interface {
 	Version() (string, error)
 	// Gets all the technical information for a Port
-	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
-	// From interface name/descr a SNMP index must be found. This functions helps to solve this problem
+	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterface, error)
+
+	SetConfiguration(conf Configuration)
+	GetConfiguration() Configuration
 }
 
 // Here is an implementation that talks over RPC
 type ResourceGRPCClient struct {
 	client proto.ResourceClient
+	conf   Configuration
 }
 
 // MapInterface is the client implmentation for the plugin-reosource. Connects to the RPC
@@ -31,6 +35,14 @@ func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.Ne
 // TechnicalPortInformation is the client implmentation
 func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.client.TechnicalPortInformation(ctx, proto)
+}
+
+func (rpc *ResourceGRPCClient) GetConfiguration() Configuration {
+	return rpc.conf
+}
+
+func (rpc *ResourceGRPCClient) SetConfiguration(conf Configuration) {
+	rpc.conf = conf
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
@@ -46,6 +58,7 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 type ResourceGRCServer struct {
 	// *plugin.MuxBroker
 	Impl Resource
+	conf Configuration
 }
 
 // Version returns the current version
@@ -62,6 +75,14 @@ func (rpc *ResourceGRCServer) TechnicalPortInformation(ctx context.Context, ne *
 //MapInterface has the purppose to map interface name to a index by asking the device
 func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
 	return rpc.Impl.MapInterface(ctx, ne)
+}
+
+func (rpc *ResourceGRCServer) GetConfiguration() Configuration {
+	return rpc.conf
+}
+
+func (rpc *ResourceGRCServer) SetConfiguration(conf Configuration) {
+	rpc.conf = conf
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this
