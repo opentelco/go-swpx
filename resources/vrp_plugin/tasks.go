@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
-
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
@@ -25,7 +23,7 @@ func createDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *tr
 			MaxIterations:      1,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(time.Second * 10),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKGET,
@@ -57,7 +55,7 @@ func createSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Conf
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(time.Second * 10),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -96,7 +94,7 @@ func createTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(time.Second * 10),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -133,7 +131,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.C
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(time.Second * 10),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -180,7 +178,7 @@ func createMsg(conf shared.Configuration) *transport.Message {
 			DynamicRepititions: true,
 			MaxIterations:      200,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(time.Second * 10),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKGET,

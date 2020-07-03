@@ -62,9 +62,6 @@ type ConfigSNMP struct {
 	Port               uint16        `json:"port" toml:"port" yaml:"port"`
 	Timeout            time.Duration `json:"timeout" toml:"timeout" yaml:"timeout"`
 	Retries            int32         `json:"retries" toml:"retries" yaml:"retries"`
-	MaxIterations      int32         `json:"max_iterations" yaml:"max_iterations" toml:"max_iterations" yaml:"max_iterations"`
-	MaxRepetitions     int32         `json:"max_repetitions" yaml:"max_repetitions" toml:"max_repetitions" yaml:"max_repetitions"`
-	NonRepeaters       int32         `json:"non_repeaters" yaml:"non_repeaters" toml:"non_repeaters" yaml:"non_repeaters"`
 	DynamicRepetitions bool          `json:"dynamic_repetitions" yaml:"dynamic_repetitions" toml:"dynamic_repetitions" yaml:"dynamic_repetitions"`
 }
 
@@ -81,9 +78,6 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			Port:               uint32(conf.SNMP.Port),
 			Timeout:            uint64(conf.SNMP.Timeout),
 			Retries:            int32(conf.SNMP.Retries),
-			MaxIterations:      int32(conf.SNMP.MaxIterations),
-			MaxRepetitions:     conf.SNMP.MaxRepetitions,
-			NonRepeaters:       conf.SNMP.NonRepeaters,
 			DynamicRepetitions: conf.SNMP.DynamicRepetitions,
 		},
 		Telnet: &proto.ConfigTelnet{
@@ -108,9 +102,6 @@ func Proto2conf(protoConf proto.Configuration) Configuration {
 			Port:               uint16(protoConf.SNMP.Port),
 			Timeout:            time.Duration(protoConf.SNMP.Timeout),
 			Retries:            int32(protoConf.SNMP.Retries),
-			MaxIterations:      int32(protoConf.SNMP.MaxIterations),
-			MaxRepetitions:     protoConf.SNMP.MaxRepetitions,
-			NonRepeaters:       protoConf.SNMP.NonRepeaters,
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
 		Telnet: ConfigTelnet{

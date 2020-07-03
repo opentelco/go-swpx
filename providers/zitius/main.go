@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"log"
 	"os"
-
-	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -77,6 +76,13 @@ func loadConfig(logger hclog.Logger) {
 	viper.AddConfigPath("./config")
 	viper.AddConfigPath(".providers/" + PROVIDER_NAME)
 	viper.AddConfigPath("$HOME/." + PROVIDER_NAME)
+
+	defaultConf := shared.ConfigSNMP {
+		Community: "public",
+		Retries: 3,
+	}
+
+	viper.SetDefault("snmp", defaultConf)
 
 	err := viper.ReadInConfig()
 	if err != nil {
