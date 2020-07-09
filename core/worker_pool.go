@@ -21,6 +21,7 @@ import (
 var start time.Time
 var mongoClient *mongo.Client
 var mongoCache *mongo.Collection
+var useCache bool
 
 func init() {
 	start = time.Now()
@@ -31,29 +32,28 @@ func init() {
 func initMongoCache() {
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
-	var err error
 	//TODO parametrize the URI (eg. read from config file)
-	mongoClient, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		log.Fatal("Error initializing Mongo client:", err)
+	var err error
+	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017")); err != nil {
+		logger.Error("Error initializing Mongo client:", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err = mongoClient.Connect(ctx)
-	if err != nil {
-		log.Fatal("Error connecting Mongo client:", err)
+	if err = mongoClient.Connect(ctx); err != nil {
+		logger.Error("Error connecting Mongo client:", err)
 	}
 
 	// Check the connection
-	err = mongoClient.Ping(context.TODO(), nil)
 
-	if err != nil {
-		log.Fatal("Can't ping Mongo client:", err)
+	if err = mongoClient.Ping(context.TODO(), nil); err != nil {
+		logger.Error("Can't ping Mongo client:", err)
 	}
 
 	ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
 	err = mongoClient.Ping(ctx, readpref.Primary())
+
+	useCache = true
 }
 
 // NetInterface which is cached in MongoDB
@@ -387,35 +387,31 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	}
 
 	var iface *proto.NetworkElementInterface
-
-	mongoCache = mongoClient.Database("test").Collection("myCollection")
-
 	var cacheResult bson.M
-	err := mongoCache.FindOne(context.Background(), bson.M{"host": req.Hostname, "interface": req.Interface}).Decode(&cacheResult)
+	var err error
 
-	if err == mongo.ErrNoDocuments { // cache miss, need to call MapInterface
-		iface, err = plugin.MapInterface(msg.Context, req)
+	if useCache {
+		mongoCache = mongoClient.Database("test").Collection("myCollection")
+		err = mongoCache.FindOne(context.Background(), bson.M{"host": req.Hostname, "interface": req.Interface}).Decode(&cacheResult)
+	}
 
-		if err != nil {
+	if err == mongo.ErrNoDocuments || !useCache {
+		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
 
 		// save in cache upon success
-		//todo sto je tocno ovdje kljuc? (hostname + interface??)
-		_, err = mongoCache.InsertOne(
-			msg.Context,
-			bson.M{"host": req.Hostname, "interface": req.Interface, "index": iface.Index},
-		)
-		if err != nil {
-			logger.Error("Error saving info in cache: ", err)
-			return err
+		if useCache {
+			if err = cache(req, iface); err != nil {
+				return err
+			}
 		}
 
 	} else if err != nil {
-			logger.Error("Error fetching from cache:", err)
-			return err
+		logger.Error("Error fetching from cache:", err)
+		return err
 	}
 
 	var ok bool
@@ -445,4 +441,16 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 	return nil
 
+}
+
+func cache(req *proto.NetworkElement, iface *proto.NetworkElementInterface) error {
+	_, err := mongoCache.InsertOne(
+		context.Background(),
+		bson.M{"host": req.Hostname, "interface": req.Interface, "index": iface.Index},
+	)
+	if err != nil {
+		logger.Error("Error saving info in cache: ", err)
+	}
+
+	return err
 }
