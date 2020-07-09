@@ -333,7 +333,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		conf, _ = provider.GetConfiguration()
+		conf, _ = provider.GetConfiguration(msg.Context)
 
 	} else {
 		// no provider selected, walk all providers
@@ -351,7 +351,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		return nil
 	}
 
-	plugin.SetConfiguration(conf)
+	plugin.SetConfiguration(msg.Context, conf)
 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?

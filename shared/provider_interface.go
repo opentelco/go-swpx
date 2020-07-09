@@ -18,7 +18,7 @@ type Provider interface {
 	Lookup(string) (string, error)
 	Weight() (int64, error)
 
-	GetConfiguration() (Configuration, error)
+	GetConfiguration(ctx context.Context) (Configuration, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -59,8 +59,8 @@ func (p *ProviderGRPCClient) Weight() (int64, error) {
 }
 
 // GetConfiguration returns the configuration of the Provider.
-func (p *ProviderGRPCClient) GetConfiguration() (Configuration, error) {
-	resp, err := p.client.GetConfiguration(context.Background(), &proto.Empty{})
+func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
+	resp, err := p.client.GetConfiguration(ctx, &proto.Empty{})
 	return Proto2conf(*resp), err
 }
 
@@ -97,7 +97,7 @@ func (rpc *ProviderGRPCServer) Weight(ctx context.Context, _ *proto.Empty) (*pro
 }
 
 func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context, _ *proto.Empty) (*proto.Configuration, error) {
-	res, err := rpc.Impl.GetConfiguration()
+	res, err := rpc.Impl.GetConfiguration(ctx)
 	protoConf := Conf2proto(res)
 	return &protoConf, err
 }

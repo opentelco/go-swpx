@@ -61,12 +61,14 @@ type VRPDriver struct {
 	conf   shared.Configuration
 }
 
-func (d *VRPDriver) GetConfiguration() shared.Configuration {
-	return d.conf
+func (d *VRPDriver) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+	return d.conf, nil
 }
 
-func (d *VRPDriver) SetConfiguration(conf shared.Configuration) {
+func (d *VRPDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
 	d.conf = conf
+
+	return nil
 }
 
 func (d *VRPDriver) Version() (string, error) {
