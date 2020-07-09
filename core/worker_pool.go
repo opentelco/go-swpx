@@ -4,10 +4,6 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"time"
 
@@ -19,49 +15,12 @@ import (
 )
 
 var start time.Time
-var mongoClient *mongo.Client
-var mongoCache *mongo.Collection
-var useCache bool
+
 
 func init() {
 	start = time.Now()
-
-	initMongoCache()
 }
 
-func initMongoCache() {
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-
-	//TODO parametrize the URI (eg. read from config file)
-	var err error
-	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017")); err != nil {
-		logger.Error("Error initializing Mongo client:", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err = mongoClient.Connect(ctx); err != nil {
-		logger.Error("Error connecting Mongo client:", err)
-	}
-
-	// Check the connection
-
-	if err = mongoClient.Ping(context.TODO(), nil); err != nil {
-		logger.Error("Can't ping Mongo client:", err)
-	}
-
-	ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
-	err = mongoClient.Ping(ctx, readpref.Primary())
-
-	useCache = true
-}
-
-// NetInterface which is cached in MongoDB
-type NetInterface struct {
-	Index       int64  `bson:"index,omitempty"`
-	Description string `bson:"description,omitempty"`
-	Alias       string `bson:"alias,omitempty"`
-}
 
 // worker that does the work
 type worker struct {
@@ -377,6 +336,7 @@ func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin s
 	return nil
 }
 
+
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
@@ -386,39 +346,39 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		Conf:      &protConf,
 	}
 
-	var iface *proto.NetworkElementInterface
-	var cacheResult bson.M
+	iface := &proto.NetworkElementInterface{}
+	var cachedInterface *CachedInterface
 	var err error
 
 	if useCache {
-		mongoCache = mongoClient.Database("test").Collection("myCollection")
-		err = mongoCache.FindOne(context.Background(), bson.M{"host": req.Hostname, "interface": req.Interface}).Decode(&cacheResult)
+		logger.Debug("cache enabled, pop object from cache")
+		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
+		if cachedInterface != nil {
+			iface.Index = cachedInterface.InterfaceIndex
+		}
 	}
 
-	if err == mongo.ErrNoDocuments || !useCache {
+	// dit not find cached item or cached is disabled
+	// todo: this should map/save the whole network element (all interaces and indexes) to the cache
+	if cachedInterface == nil || !useCache {
 		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
 
-		// save in cache upon success
+		// save in cache upon success (if enabled)
 		if useCache {
-			if err = cache(req, iface); err != nil {
+			if _, err = Cache.Set(req, iface); err != nil {
 				return err
 			}
 		}
 
 	} else if err != nil {
-		logger.Error("Error fetching from cache:", err)
+		logger.Error("error fetching from cache:", err)
 		return err
 	}
 
-	var ok bool
-	if _, ok = cacheResult["index"].(int64); ok {
-		iface = &proto.NetworkElementInterface{}
-		iface.Index = cacheResult["index"].(int64)
-	}
 
 	//if the return is 0 something went wrong
 	if iface.Index == 0 {
@@ -427,7 +387,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		return err
 	}
 
-	logger.Info("got back info from MapInterface", "index", iface.Index)
+	logger.Info("found index for selected interface", "index", iface.Index)
 
 	req.InterfaceIndex = iface.Index
 
@@ -443,14 +403,3 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 }
 
-func cache(req *proto.NetworkElement, iface *proto.NetworkElementInterface) error {
-	_, err := mongoCache.InsertOne(
-		context.Background(),
-		bson.M{"host": req.Hostname, "interface": req.Interface, "index": iface.Index},
-	)
-	if err != nil {
-		logger.Error("Error saving info in cache: ", err)
-	}
-
-	return err
-}

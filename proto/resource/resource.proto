@@ -18,6 +18,7 @@ message TechnicalPortInformationResponse {
   string response = 1;
 }
 
+// used in request
 message NetworkElement {
   string hostname = 1;
   string ip = 2;  

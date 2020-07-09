@@ -45,7 +45,13 @@ var (
 
 	// Global request queue
 	RequestQueue chan *Request = make(chan *Request, REQUEST_BUFFER_SIZE)
+
+	// if swpx has an established InterfaceCache
+	useCache bool
+
 )
+
+var Cache InterfaceCache
 
 func init() {
 	// Create an hclog.Logger
@@ -220,6 +226,25 @@ func CreateCore() *Core {
 		w, _ := p.Weight()
 		println(n, name, w)
 	}
+
+
+	// setup mongodb cache
+	mc, err := initMongoDB("mongodb://localhost:27017")
+	if err != nil {
+		logger.Warn("could not establish mongodb connection: %s",err.Error())
+		useCache = false
+		return core
+	}
+	Cache,err = NewCache(mc,logger)
+	if err != nil {
+		logger.Error("cannot set cache: %s",err.Error())
+		useCache = false
+		return core
+	}
+
+	useCache = true
+
+
 
 	return core
 }

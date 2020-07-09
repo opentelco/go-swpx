@@ -16,11 +16,12 @@ require (
 	github.com/nats-io/nats.go v1.10.0
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/ksuid v1.0.2
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
 	go.mongodb.org/mongo-driver v1.3.4
 	google.golang.org/grpc v1.27.1
-	google.golang.org/protobuf v1.23.0
+	google.golang.org/protobuf v1.23.0 // indirect
 
 )
 
