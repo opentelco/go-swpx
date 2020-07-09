@@ -2,6 +2,7 @@ package oids
 
 // System
 const (
+	SysPrefix       = ".1.3.6.1.2.1.1"
 	SysDescr        = ".1.3.6.1.2.1.1.1.0"
 	SysObjectID     = ".1.3.6.1.2.1.1.2.0"
 	SysUpTime       = ".1.3.6.1.2.1.1.3.0"
@@ -15,6 +16,8 @@ const (
 // Default ifTable Oids
 const (
 	// OIDS translations
+	IfXEntryPrefix            = ".1.3.6.1.2.1.31.1.1.1"
+	IfEntryPrefix             = ".1.3.6.1.2.1.2.2.1"
 	IfIndex            string = ".1.3.6.1.2.1.2.2.1.1"
 	IfDescr                   = ".1.3.6.1.2.1.2.2.1.2"
 	IfType                    = ".1.3.6.1.2.1.2.2.1.3"
@@ -113,6 +116,7 @@ const (
 
 // Huawei OIDS
 const (
+	HuaPrefix                       = "1.3.6.1.4.1.2011"
 	HuaIfEtherStatInCRCPkts  string = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.12"
 	HuaIfEtherStatInCRCPktsF        = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.12.%d"
 
