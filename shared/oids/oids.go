@@ -30,6 +30,7 @@ const (
 	IfAlias                   = ".1.3.6.1.2.1.31.1.1.1.18"
 	IfHighSpeed               = ".1.3.6.1.2.1.31.1.1.1.15"
 	IfConnectorPresent        = ".1.3.6.1.2.1.31.1.1.1.17"
+	IfEntPhysicalName		  = ".1.3.6.1.2.1.47.1.1.1.1.7"
 
 	// Input
 	IfInOctets        = ".1.3.6.1.2.1.2.2.1.10"

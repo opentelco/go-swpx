@@ -7,6 +7,7 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/shared"
+	"time"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
@@ -205,6 +206,35 @@ func createMsg(conf shared.Configuration) *transport.Message {
 	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  "10.9.0.10",
+		Type:    transport.Type_SNMP,
+		Task:    &transport.Message_Snmpc{Snmpc: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+}
+
+func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) transport.Message {
+	task := &snmpc.Task{
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: true,
+			MaxIterations:      1,
+			NonRepeaters:       0,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            ptypes.DurationProto(10 * time.Second + 1 * time.Nanosecond), // added nanos because of snmpc.go:78
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_WALK,
+		Oids: []*snmpc.Oid{
+			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metric.MetricType_STRING},
+		},
+	}
+
+	// task.Parameters = params
+	message := transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,

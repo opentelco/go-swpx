@@ -16,11 +16,9 @@ import (
 
 var start time.Time
 
-
 func init() {
 	start = time.Now()
 }
-
 
 // worker that does the work
 type worker struct {
@@ -336,7 +334,6 @@ func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin s
 	return nil
 }
 
-
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
@@ -355,12 +352,22 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			iface.Index = cachedInterface.InterfaceIndex
+			findPhysicalPort(cachedInterface.PhysicalPortInformation.Data, req, resp)
 		}
 	}
 
-	// dit not find cached item or cached is disabled
-	// todo: this should map/save the whole network element (all interaces and indexes) to the cache
+	// did not find cached item or cached is disabled
+	// todo: this should map/save the whole network element (all interfaces and indexes) to the cache
 	if cachedInterface == nil || !useCache {
+		var physPortResponse *proto.PhysicalPortinformationResponse
+		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
+			logger.Error("error running getphysport", "err", err.Error())
+			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+			return err
+		}
+
+		findPhysicalPort(physPortResponse.Data, req, resp)
+
 		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
@@ -369,7 +376,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		// save in cache upon success (if enabled)
 		if useCache {
-			if _, err = Cache.Set(req, iface); err != nil {
+			if _, err = Cache.Set(req, iface, physPortResponse); err != nil {
 				return err
 			}
 		}
@@ -378,7 +385,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		logger.Error("error fetching from cache:", err)
 		return err
 	}
-
 
 	//if the return is 0 something went wrong
 	if iface.Index == 0 {
@@ -400,6 +406,12 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	resp.NetworkElement = ti
 
 	return nil
-
 }
 
+func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
+	for _, element := range data {
+		if element.Value == req.Interface {
+			resp.PhysicalPort = element
+		}
+	}
+}

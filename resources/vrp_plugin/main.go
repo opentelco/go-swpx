@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
+	"github.com/pkg/errors"
 	"log"
 	"os"
 	"regexp"
@@ -87,6 +88,34 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 		}
 	}
 	return nil, fmt.Errorf("%s was not found on network element", port)
+}
+
+// Find matching OID for port
+func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+	conf := shared.Proto2conf(*el.Conf)
+
+	msg1 := createPortInformationMsg(el, conf)
+	msg, err := d.dnc.Put(&msg1)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		data := make([]*proto.PhysicalPortInformation, len(task.Snmpc.Metrics))
+
+		for i, m := range task.Snmpc.Metrics {
+			data[i] = &proto.PhysicalPortInformation{
+				Name:  m.Name,
+				Oid:   m.Oid,
+				Value: m.GetStringValue(),
+			}
+		}
+
+		return &proto.PhysicalPortinformationResponse{Data: data}, nil
+	}
+	return nil, errors.Errorf("Unsupported message type")
 }
 
 func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
