@@ -33,9 +33,21 @@ message NetworkElementInterface {
   string alias = 3;
 }
 
+message PhysicalPortInformation {
+  string name = 1;
+  string oid = 2;
+  string value = 3;
+
+}
+
+message PhysicalPortinformationResponse {
+  repeated PhysicalPortInformation data = 1;
+}
+
 service Resource {
   rpc Version(Empty) returns (VersionResponse);
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   rpc MapInterface(NetworkElement) returns (NetworkElementInterface);
+  rpc GetPhysicalPort(NetworkElement) returns (PhysicalPortinformationResponse);
 }
 
