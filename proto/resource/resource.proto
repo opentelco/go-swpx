@@ -24,7 +24,8 @@ message NetworkElement {
   string ip = 2;  
   string interface = 3;
   int64 interface_index = 4;
-  provider.Configuration conf = 5;
+  int64 physical_index = 5;
+  provider.Configuration conf = 6;
 }
 
 message NetworkElementInterface {
@@ -37,17 +38,29 @@ message PhysicalPortInformation {
   string name = 1;
   string oid = 2;
   string value = 3;
-
 }
 
 message PhysicalPortinformationResponse {
   repeated PhysicalPortInformation data = 1;
 }
 
+message VRPTransceiverInformation {
+  string optical_vendor_sn = 1;
+  int64 optical_temperature = 2;
+  int64 optical_voltage = 3;
+  int64 optical_bias_current = 4;
+  int64 optical_rx_power = 5;
+  int64 optical_tx_power = 6;
+  string optical_vendor_pn = 7;
+}
+
+
+
 service Resource {
   rpc Version(Empty) returns (VersionResponse);
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   rpc MapInterface(NetworkElement) returns (NetworkElementInterface);
   rpc GetPhysicalPort(NetworkElement) returns (PhysicalPortinformationResponse);
+  rpc GetVRPTransceiverInformation(NetworkElement) returns (VRPTransceiverInformation);
 }
 
