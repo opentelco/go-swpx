@@ -30,7 +30,7 @@ const (
 	IfAlias                   = ".1.3.6.1.2.1.31.1.1.1.18"
 	IfHighSpeed               = ".1.3.6.1.2.1.31.1.1.1.15"
 	IfConnectorPresent        = ".1.3.6.1.2.1.31.1.1.1.17"
-	IfEntPhysicalName		  = ".1.3.6.1.2.1.47.1.1.1.1.7"
+	IfEntPhysicalName         = ".1.3.6.1.2.1.47.1.1.1.1.7"
 
 	// Input
 	IfInOctets        = ".1.3.6.1.2.1.2.2.1.10"
@@ -131,4 +131,14 @@ const (
 	// Resets
 	HuaIfEthIfStatReset  = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.23"
 	HuaIfEthIfStatResetF = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.23.%d"
+
+	// VRP
+	HuaIfVRPF                   = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.%d"
+	HuaIfVRPOpticalVendorSNF    = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.4.%d"
+	HuaIfVRPOpticalTemperatureF = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.5.%d"
+	HuaIfVRPOpticalVoltageF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.6.%d"
+	HuaIfVRPOpticalBiasF        = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.7.%d"
+	HuaIfVRPOpticalRxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.8.%d"
+	HuaIfVRPOpticalTxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.9.%d"
+	HuaIfVRPVendorPNF           = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.25.%d"
 )

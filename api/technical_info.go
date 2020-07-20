@@ -122,7 +122,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 				render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
 				return
 			}
-			render.JSON(w, r, NewResponse(ResponseStatusOK, resp.NetworkElement))
+			render.JSON(w, r, NewResponse(ResponseStatusOK, resp))
 			return
 		case <-req.Context.Done():
 			log.Println("timeout for request was hit")

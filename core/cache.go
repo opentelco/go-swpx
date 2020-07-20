@@ -28,11 +28,12 @@ type CachedInterface struct {
 	// index from the PhysicalEntityMIB
 	PhysicalEntityIndex     string                                 `bson:"physical_entity_index"`
 	PhysicalPortInformation *proto.PhysicalPortinformationResponse `bson:"physical_port_information"`
+	TransceiverInformation  *proto.VRPTransceiverInformation       `bson:"transceiver_information"`
 }
 
 type InterfaceCache interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, phys *proto.PhysicalPortinformationResponse) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, phys *proto.PhysicalPortinformationResponse, transceiver *proto.VRPTransceiverInformation) (*CachedInterface, error)
 }
 
 func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
@@ -62,7 +63,8 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, phys *proto.PhysicalPortinformationResponse) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface,
+	phys *proto.PhysicalPortinformationResponse, tc *proto.VRPTransceiverInformation) (*CachedInterface, error) {
 	obj := CachedInterface{
 		Hostname:                ne.Hostname,
 		Interface:               ne.Interface,
@@ -70,6 +72,7 @@ func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface
 		Alias:                   nei.Alias,
 		InterfaceIndex:          nei.Index,
 		PhysicalPortInformation: phys,
+		TransceiverInformation:  tc,
 	}
 
 	_, err := c.col.InsertOne(

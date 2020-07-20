@@ -19,6 +19,7 @@ type Resource interface {
 	// TODO should return a slice of *proto.NetworkElementInterface so we can cache all results
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterface, error)
 	GetPhysicalPort(context.Context, *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error)
+	GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*proto.VRPTransceiverInformation, error)
 
 	SetConfiguration(ctx context.Context, conf Configuration) error
 	GetConfiguration(ctx context.Context) (Configuration, error)
@@ -42,6 +43,10 @@ func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, pro
 
 func (rpc *ResourceGRPCClient) GetPhysicalPort(ctx context.Context, proto *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
 	return rpc.client.GetPhysicalPort(ctx, proto)
+}
+
+func (rpc *ResourceGRPCClient) GetVRPTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+	return rpc.client.GetVRPTransceiverInformation(ctx, proto)
 }
 
 func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
@@ -92,6 +97,10 @@ func (rpc *ResourceGRCServer) GetPhysicalPort(ctx context.Context, ne *proto.Net
 
 func (rpc *ResourceGRCServer) GetConfiguration(ctx context.Context) (Configuration, error) {
 	return rpc.conf, nil
+}
+
+func (rpc *ResourceGRCServer) GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+	return rpc.Impl.GetVRPTransceiverInformation(ctx, ne)
 }
 
 func (rpc *ResourceGRCServer) SetConfiguration(ctx context.Context, conf Configuration) error {

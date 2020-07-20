@@ -9,5 +9,6 @@ type Response struct {
 	RequestObjectID string
 	NetworkElement  *networkelement.Element
 	PhysicalPort    *proto.PhysicalPortInformation
+	Transceiver     *proto.VRPTransceiverInformation
 	Error           error
 }

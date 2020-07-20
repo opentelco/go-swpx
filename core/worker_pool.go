@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -352,6 +354,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			iface.Index = cachedInterface.InterfaceIndex
+			resp.Transceiver = cachedInterface.TransceiverInformation
 			findPhysicalPort(cachedInterface.PhysicalPortInformation.Data, req, resp)
 		}
 	}
@@ -368,6 +371,8 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		findPhysicalPort(physPortResponse.Data, req, resp)
 
+		transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
+		resp.Transceiver = transceiver
 		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
@@ -376,7 +381,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		// save in cache upon success (if enabled)
 		if useCache {
-			if _, err = Cache.Set(req, iface, physPortResponse); err != nil {
+			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
 				return err
 			}
 		}
@@ -411,7 +416,16 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
 	for _, element := range data {
 		if element.Value == req.Interface {
+
 			resp.PhysicalPort = element
+
+			fields := strings.Split(element.Oid, ".")
+			index, err := strconv.Atoi(fields[len(fields)-1])
+			if err != nil {
+				logger.Error("can't convert phys.port to int: ", err)
+				return
+			}
+			req.PhysicalIndex = int64(index)
 		}
 	}
 }
