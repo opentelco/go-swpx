@@ -347,6 +347,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 	iface := &proto.NetworkElementInterface{}
 	var cachedInterface *CachedInterface
+	var cachedPhysPort *CachedPhysicalPortInformation
 	var err error
 
 	if useCache {
@@ -355,12 +356,15 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		if cachedInterface != nil {
 			iface.Index = cachedInterface.InterfaceIndex
 			resp.Transceiver = cachedInterface.TransceiverInformation
-			findPhysicalPort(cachedInterface.PhysicalPortInformation.Data, req, resp)
+		}
+
+		cachedPhysPort, err = PhysicalPortCache.PopPhysical(msg.Provider, msg.Resource)
+		if cachedPhysPort != nil {
+			findPhysicalPort(cachedPhysPort.PhysicalPortInformation, req, resp)
 		}
 	}
 
 	// did not find cached item or cached is disabled
-	// todo: this should map/save the whole network element (all interfaces and indexes) to the cache
 	if cachedInterface == nil || !useCache {
 		var physPortResponse *proto.PhysicalPortinformationResponse
 		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
@@ -384,6 +388,10 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
 				return err
 			}
+			if _, err = PhysicalPortCache.SetPhysical(msg.Provider, msg.Resource, physPortResponse); err != nil {
+				return err
+			}
+
 		}
 
 	} else if err != nil {
