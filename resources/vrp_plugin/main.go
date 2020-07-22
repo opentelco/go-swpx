@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
+	"github.com/pkg/errors"
 	"log"
 	"os"
 	"regexp"
@@ -60,12 +62,14 @@ type VRPDriver struct {
 	conf   shared.Configuration
 }
 
-func (d *VRPDriver) GetConfiguration() shared.Configuration {
-	return d.conf
+func (d *VRPDriver) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+	return d.conf, nil
 }
 
-func (d *VRPDriver) SetConfiguration(conf shared.Configuration) {
+func (d *VRPDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
 	d.conf = conf
+
+	return nil
 }
 
 func (d *VRPDriver) Version() (string, error) {
@@ -84,6 +88,62 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 		}
 	}
 	return nil, fmt.Errorf("%s was not found on network element", port)
+}
+
+// Find matching OID for port
+func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+	conf := shared.Proto2conf(*el.Conf)
+
+	portMsg := createPortInformationMsg(el, conf)
+	msg, err := d.dnc.Put(&portMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		data := make([]*proto.PhysicalPortInformation, len(task.Snmpc.Metrics))
+
+		for i, m := range task.Snmpc.Metrics {
+			data[i] = &proto.PhysicalPortInformation{
+				Name:  m.Name,
+				Oid:   m.Oid,
+				Value: m.GetStringValue(),
+			}
+		}
+
+		return &proto.PhysicalPortinformationResponse{Data: data}, nil
+	}
+	return nil, errors.Errorf("Unsupported message type")
+}
+
+func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+	conf := shared.Proto2conf(*el.Conf)
+
+	vrpMsg := createVRPTransceiverMsg(el, conf)
+	msg, err := d.dnc.Put(&vrpMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		if len(task.Snmpc.Metrics) >= 7 {
+			val := &proto.VRPTransceiverInformation{
+				OpticalVendorSn:    task.Snmpc.Metrics[0].GetStringValue(),
+				OpticalTemperature: task.Snmpc.Metrics[1].GetIntValue(),
+				OpticalVoltage:     task.Snmpc.Metrics[2].GetIntValue(),
+				OpticalBiasCurrent: task.Snmpc.Metrics[3].GetIntValue(),
+				OpticalRxPower:     task.Snmpc.Metrics[4].GetIntValue(),
+				OpticalTxPower:     task.Snmpc.Metrics[5].GetIntValue(),
+				OpticalVendorPn:    task.Snmpc.Metrics[6].GetStringValue(),
+			}
+			return val, nil
+		}
+	}
+	return nil, errors.Errorf("Unsupported message type")
 }
 
 func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
@@ -190,100 +250,18 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			for _, m := range task.Snmpc.Metrics {
 				d.logger.Debug(m.GetStringValue())
 				switch {
-				// sys
-				case m.Oid == oids.SysContact:
-					ne.Contact = m.GetStringValue()
-				case m.Oid == oids.SysDescr:
-					ne.Version = m.GetStringValue()
-				case m.Oid == oids.SysLocation:
-					ne.Location = m.GetStringValue()
-				case m.Oid == oids.SysName:
-					ne.Sysname = m.GetStringValue()
-				// case m.Oid == oids.SysORLastChange:
-				// case m.Oid == oids.SysObjectID:
-				case m.Oid == oids.SysUpTime:
-					ne.Uptime = m.GetStringValue()
+				case strings.HasPrefix(m.Oid, oids.SysPrefix):
+					getSystemInformation(m, ne)
 
-				// for _, metric := range metrics {
-				// 	setValue(ne, Target, Value)
-				// }
+				case strings.HasPrefix(m.Oid, oids.HuaPrefix):
+					getHuaweiInformation(m, elif)
 
-				// Output
-				case strings.HasPrefix(m.Oid, oids.IfOutOctets):
-					elif.Stats.Output.Bytes = m.GetIntValue()
+				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
+					getIfEntryInformation(m, elif)
 
-				case strings.HasPrefix(m.Oid, oids.IfOutBroadcastPkts):
-					elif.Stats.Output.Broadcast = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfOutMulticastPkts):
-					elif.Stats.Output.Multicast = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
-					elif.Stats.Output.Unicast = m.GetIntValue()
-
-					// Input
-				case strings.HasPrefix(m.Oid, oids.IfInOctets):
-					elif.Stats.Input.Bytes = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfInBroadcastPkts):
-					elif.Stats.Input.Broadcast = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfInMulticastPkts):
-					elif.Stats.Input.Multicast = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
-					elif.Stats.Input.Unicast = m.GetIntValue()
-
-					// Rest
-				case strings.HasPrefix(m.Oid, oids.IfInErrors):
-					elif.Stats.Input.Errors = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
-					elif.Stats.Input.CrcErrors = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
-					elif.Stats.Input.Pauses = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
-					elif.Stats.Resets = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
-					elif.Stats.Output.Pauses = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfOutErrors):
-					elif.Stats.Output.Errors = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfAlias):
-					elif.Alias = m.GetStringValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfDescr):
-					elif.Description = m.GetStringValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfType):
-					elif.Type = networkelement.InterfaceType(m.GetIntValue())
-
-				case strings.HasPrefix(m.Oid, oids.IfMtu):
-					elif.Mtu = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfLastChange):
-					elif.LastChanged = m.GetTimestampValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
-					elif.Hwaddress = m.GetStringValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfOperStatus):
-					elif.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
-
-				case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
-					elif.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
-
-				case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
-					elif.Speed = m.GetIntValue()
-
-				case strings.HasPrefix(m.Oid, oids.IfConnectorPresent):
-					elif.ConnectorPresent = m.GetBoolValue()
+				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
+					getIfXEntryInformation(m, elif)
 				}
-
 			}
 		}
 	}
@@ -291,6 +269,109 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	ne.Interfaces = append(ne.Interfaces, elif)
 
 	return ne, nil
+}
+
+func getIfXEntryInformation(m *metric.Metric, elif *networkelement.Interface) {
+
+	switch {
+	case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
+		elif.Stats.Output.Unicast = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfInBroadcastPkts):
+		elif.Stats.Input.Broadcast = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfInMulticastPkts):
+		elif.Stats.Input.Multicast = m.GetIntValue()
+	case strings.HasPrefix(m.Oid, oids.IfOutBroadcastPkts):
+		elif.Stats.Output.Broadcast = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfOutMulticastPkts):
+		elif.Stats.Output.Multicast = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfAlias):
+		elif.Alias = m.GetStringValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
+		elif.Speed = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfConnectorPresent):
+		elif.ConnectorPresent = m.GetBoolValue()
+	}
+
+}
+
+func getIfEntryInformation(m *metric.Metric, elif *networkelement.Interface) {
+	switch {
+	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
+		elif.Stats.Output.Bytes = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfInOctets):
+		elif.Stats.Input.Bytes = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
+		elif.Stats.Input.Unicast = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfInErrors):
+		elif.Stats.Input.Errors = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfOutErrors):
+		elif.Stats.Output.Errors = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfDescr):
+		elif.Description = m.GetStringValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfType):
+		elif.Type = networkelement.InterfaceType(m.GetIntValue())
+
+	case strings.HasPrefix(m.Oid, oids.IfMtu):
+		elif.Mtu = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfLastChange):
+		elif.LastChanged = m.GetTimestampValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
+		elif.Hwaddress = m.GetStringValue()
+
+	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
+		elif.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
+
+	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
+		elif.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
+
+	}
+}
+
+func getHuaweiInformation(m *metric.Metric, elif *networkelement.Interface) {
+	switch {
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
+		elif.Stats.Input.CrcErrors = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
+		elif.Stats.Input.Pauses = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
+		elif.Stats.Resets = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
+		elif.Stats.Output.Pauses = m.GetIntValue()
+	}
+}
+
+func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
+	switch m.Oid {
+	case oids.SysContact:
+		ne.Contact = m.GetStringValue()
+	case oids.SysDescr:
+		ne.Version = m.GetStringValue()
+	case oids.SysLocation:
+		ne.Location = m.GetStringValue()
+	case oids.SysName:
+		ne.Sysname = m.GetStringValue()
+	// case oids.SysORLastChange:
+	// case oids.SysObjectID:
+	case oids.SysUpTime:
+		ne.Uptime = m.GetStringValue()
+	}
 }
 
 // handshakeConfigs are used to just do a basic handshake between

@@ -15,10 +15,14 @@ type Resource interface {
 	Version() (string, error)
 	// Gets all the technical information for a Port
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
-	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterface, error)
 
-	SetConfiguration(conf Configuration)
-	GetConfiguration() Configuration
+	// TODO should return a slice of *proto.NetworkElementInterface so we can cache all results
+	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterface, error)
+	GetPhysicalPort(context.Context, *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error)
+	GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*proto.VRPTransceiverInformation, error)
+
+	SetConfiguration(ctx context.Context, conf Configuration) error
+	GetConfiguration(ctx context.Context) (Configuration, error)
 }
 
 // Here is an implementation that talks over RPC
@@ -27,22 +31,32 @@ type ResourceGRPCClient struct {
 	conf   Configuration
 }
 
-// MapInterface is the client implmentation for the plugin-reosource. Connects to the RPC
+// MapInterface is the client implementation for the plugin-resource. Connects to the RPC
 func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
 	return rpc.client.MapInterface(ctx, proto)
 }
 
-// TechnicalPortInformation is the client implmentation
+// TechnicalPortInformation is the client implementation
 func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.client.TechnicalPortInformation(ctx, proto)
 }
 
-func (rpc *ResourceGRPCClient) GetConfiguration() Configuration {
-	return rpc.conf
+func (rpc *ResourceGRPCClient) GetPhysicalPort(ctx context.Context, proto *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+	return rpc.client.GetPhysicalPort(ctx, proto)
 }
 
-func (rpc *ResourceGRPCClient) SetConfiguration(conf Configuration) {
+func (rpc *ResourceGRPCClient) GetVRPTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+	return rpc.client.GetVRPTransceiverInformation(ctx, proto)
+}
+
+func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
+	return rpc.conf, nil
+}
+
+func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf Configuration) error {
 	rpc.conf = conf
+
+	return nil
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
@@ -77,12 +91,22 @@ func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.Networ
 	return rpc.Impl.MapInterface(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) GetConfiguration() Configuration {
-	return rpc.conf
+func (rpc *ResourceGRCServer) GetPhysicalPort(ctx context.Context, ne *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+	return rpc.Impl.GetPhysicalPort(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) SetConfiguration(conf Configuration) {
+func (rpc *ResourceGRCServer) GetConfiguration(ctx context.Context) (Configuration, error) {
+	return rpc.conf, nil
+}
+
+func (rpc *ResourceGRCServer) GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+	return rpc.Impl.GetVRPTransceiverInformation(ctx, ne)
+}
+
+func (rpc *ResourceGRCServer) SetConfiguration(ctx context.Context, conf Configuration) error {
 	rpc.conf = conf
+
+	return nil
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this

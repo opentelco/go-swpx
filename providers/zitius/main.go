@@ -1,19 +1,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"log"
 	"os"
 
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var VERSION *version.Version
 var logger hclog.Logger
+
+var collection *mongo.Collection
+var ctx = context.TODO()
 
 const (
 	VERSION_BASE string = "1.0-beta"
@@ -62,7 +67,7 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) GetConfiguration() (shared.Configuration, error) {
+func (p *Provider) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
 	return conf, nil
 }
 
@@ -77,13 +82,12 @@ func loadConfig(logger hclog.Logger) {
 	viper.AddConfigPath(".providers/" + PROVIDER_NAME)
 	viper.AddConfigPath("$HOME/." + PROVIDER_NAME)
 
-	defaultConf := shared.ConfigSNMP {
+	defaultConf := shared.ConfigSNMP{
 		Community: "public",
-		Retries: 3,
+		Retries:   3,
 	}
 
 	viper.SetDefault("snmp", defaultConf)
-
 	err := viper.ReadInConfig()
 	if err != nil {
 		return

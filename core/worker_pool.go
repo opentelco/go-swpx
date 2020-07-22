@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -290,7 +292,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		conf, _ = provider.GetConfiguration()
+		conf, _ = provider.GetConfiguration(msg.Context)
 
 	} else {
 		// no provider selected, walk all providers
@@ -308,7 +310,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		return nil
 	}
 
-	plugin.SetConfiguration(conf)
+	plugin.SetConfiguration(msg.Context, conf)
 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
@@ -343,20 +345,68 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		Conf:      &protConf,
 	}
 
-	iface, err := plugin.MapInterface(msg.Context, req)
-	if err != nil {
-		logger.Error("error running map interrace", "err", err.Error())
-		resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+	iface := &proto.NetworkElementInterface{}
+	var cachedInterface *CachedInterface
+	var cachedPhysPort *CachedPhysicalPortInformation
+	var err error
+
+	if useCache {
+		logger.Debug("cache enabled, pop object from cache")
+		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
+		if cachedInterface != nil {
+			iface.Index = cachedInterface.InterfaceIndex
+			resp.Transceiver = cachedInterface.TransceiverInformation
+		}
+
+		cachedPhysPort, err = PhysicalPortCache.PopPhysical(msg.Provider, msg.Resource)
+		if cachedPhysPort != nil {
+			findPhysicalPort(cachedPhysPort.PhysicalPortInformation, req, resp)
+		}
+	}
+
+	// did not find cached item or cached is disabled
+	if cachedInterface == nil || !useCache {
+		var physPortResponse *proto.PhysicalPortinformationResponse
+		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
+			logger.Error("error running getphysport", "err", err.Error())
+			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+			return err
+		}
+
+		findPhysicalPort(physPortResponse.Data, req, resp)
+
+		transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
+		resp.Transceiver = transceiver
+		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
+			logger.Error("error running map interface", "err", err.Error())
+			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+			return err
+		}
+
+		// save in cache upon success (if enabled)
+		if useCache {
+			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
+				return err
+			}
+			if _, err = PhysicalPortCache.SetPhysical(msg.Provider, msg.Resource, physPortResponse); err != nil {
+				return err
+			}
+
+		}
+
+	} else if err != nil {
+		logger.Error("error fetching from cache:", err)
 		return err
 	}
-	// if the return is 0 somethng went wrong
+
+	//if the return is 0 something went wrong
 	if iface.Index == 0 {
-		logger.Error("error running map interrace", "err", "index is zero")
+		logger.Error("error running map interface", "err", "index is zero")
 		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
 		return err
 	}
 
-	logger.Info("got back info from MapInterface", "index", iface.Index)
+	logger.Info("found index for selected interface", "index", iface.Index)
 
 	req.InterfaceIndex = iface.Index
 
@@ -367,6 +417,23 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	}
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
-	return nil
 
+	return nil
+}
+
+func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
+	for _, element := range data {
+		if element.Value == req.Interface {
+
+			resp.PhysicalPort = element
+
+			fields := strings.Split(element.Oid, ".")
+			index, err := strconv.Atoi(fields[len(fields)-1])
+			if err != nil {
+				logger.Error("can't convert phys.port to int: ", err)
+				return
+			}
+			req.PhysicalIndex = int64(index)
+		}
+	}
 }
