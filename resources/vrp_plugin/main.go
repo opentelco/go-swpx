@@ -157,11 +157,12 @@ func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*networkelement.Interface, error) {
+func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
 	var index int
+	var interfaces = make([]*proto.NetworkElementInterface, 1)
 
 	conf := shared.Proto2conf(*el.Conf)
 
@@ -175,46 +176,50 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		for _, m := range task.Snmpc.Metrics {
-			index, _ = strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
-			// d.logger.Debug("metric data", "oid", m.Oid, "index", index, "base", m.BaseOid)
-			switch m.GetName() {
-			case "ifIndex":
-				if val, ok := discoveryMap[index]; ok {
-					val.index = int(m.GetIntValue())
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						index: int(m.GetIntValue()),
-					}
+		d.populateDiscoveryMap(task, index, discoveryMap)
+
+		for _, v := range discoveryMap {
+			interfaces = append(interfaces, &proto.NetworkElementInterface{
+				Index:       int64(v.index),
+				Description: v.descr,
+				Alias:       v.alias,
+			})
+		}
+	}
+
+	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+}
+
+func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, index int, discoveryMap map[int]*discoveryItem) {
+	for _, m := range task.Snmpc.Metrics {
+		index, _ = strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
+		switch m.GetName() {
+		case "ifIndex":
+			if val, ok := discoveryMap[index]; ok {
+				val.index = int(m.GetIntValue())
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					index: int(m.GetIntValue()),
 				}
-			case "ifAlias":
-				if val, ok := discoveryMap[index]; ok {
-					val.alias = m.GetStringValue()
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						descr: m.GetStringValue(),
-					}
+			}
+		case "ifAlias":
+			if val, ok := discoveryMap[index]; ok {
+				val.alias = m.GetStringValue()
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					descr: m.GetStringValue(),
 				}
-			case "ifDescr":
-				if val, ok := discoveryMap[index]; ok {
-					val.descr = m.GetStringValue()
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						descr: m.GetStringValue(),
-					}
+			}
+		case "ifDescr":
+			if val, ok := discoveryMap[index]; ok {
+				val.descr = m.GetStringValue()
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					descr: m.GetStringValue(),
 				}
 			}
 		}
-
 	}
-
-	item, err := d.parseDescriptionToIndex(el.Interface, discoveryMap)
-	if err != nil {
-		d.logger.Error("failed to parse port name", err.Error())
-		return nil, err
-	}
-
-	return &networkelement.Interface{Index: int64(item.index), Description: item.descr}, nil
 }
 
 // GIMME DATA!!! InterfaceMetrics

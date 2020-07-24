@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -343,7 +342,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		Conf:      &protConf,
 	}
 
-	iface := &networkelement.Interface{}
+	mapInterfaceResponse := &proto.NetworkElementInterfaces{}
 	var cachedInterface *CachedInterface
 	var err error
 
@@ -351,8 +350,8 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
-			iface.Index = cachedInterface.InterfaceIndex
 			findPhysicalPort(cachedInterface.PhysicalPortInformation, req, resp)
+			findInterface(cachedInterface.AllInterfaces, req, resp)
 		}
 	}
 
@@ -365,20 +364,20 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 			return err
 		}
 
-		findPhysicalPort(physPortResponse.Interfaces, req, resp)
-
-		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
+		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
 
+		findPhysicalPort(physPortResponse.Interfaces, req, resp)
+		findInterface(mapInterfaceResponse.Interfaces, req, resp)
+
 		// save in cache upon success (if enabled)
 		if useCache && !msg.DontUseIndex {
-			if _, err = Cache.Set(req, iface, physPortResponse); err != nil {
+			if _, err = Cache.Set(req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
-
 		}
 
 	} else if err != nil {
@@ -387,15 +386,13 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	}
 
 	//if the return is 0 something went wrong
-	if iface.Index == 0 {
+	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
 		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
 		return err
 	}
 
-	logger.Info("found index for selected interface", "index", iface.Index)
-
-	req.InterfaceIndex = iface.Index
+	logger.Info("found index for selected interface", "index", req.InterfaceIndex)
 
 	ti, err := plugin.TechnicalPortInformation(msg.Context, req)
 	if err != nil {
@@ -409,6 +406,14 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	resp.Transceiver = transceiver
 
 	return nil
+}
+
+func findInterface(interfaces []*proto.NetworkElementInterface, req *proto.NetworkElement, resp *Response) {
+	for _, iface := range interfaces {
+		if iface.Description == req.Interface {
+			req.InterfaceIndex = iface.Index
+		}
+	}
 }
 
 func findPhysicalPort(data []*proto.NetworkElementInterface, req *proto.NetworkElement, resp *Response) {

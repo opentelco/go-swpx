@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,10 +19,9 @@ const (
 
 // CachedInterface is the data object stored in mongo for a cached interface
 type CachedInterface struct {
-	Hostname    string `bson:"hostname"`
-	Interface   string `bson:"interface"`
-	Description string `bson:"description"`
-	Alias       string `bson:"alias"`
+	Hostname      string                           `bson:"hostname"`
+	Port          string                           `bson:"port"`
+	AllInterfaces []*proto.NetworkElementInterface `bson:"all_interfaces"`
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
@@ -33,7 +31,7 @@ type CachedInterface struct {
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *networkelement.Interface, phys *proto.NetworkElementInterfaces) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) (*CachedInterface, error)
 }
 
 func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
@@ -62,7 +60,7 @@ type cache struct {
 }
 
 func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "interface": iface})
+	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface})
 	obj := &CachedInterface{}
 	if err := res.Decode(obj); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -73,15 +71,13 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *networkelement.Interface,
-	phys *proto.NetworkElementInterfaces) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) (*CachedInterface, error) {
 
 	obj := CachedInterface{
 		Hostname:                ne.Hostname,
-		Interface:               ne.Interface,
-		Description:             ne.Hostname,
-		Alias:                   nei.Alias,
-		InterfaceIndex:          nei.Index,
+		Port:                    ne.Interface,
+		AllInterfaces:           interfaces.Interfaces,
+		InterfaceIndex:          ne.InterfaceIndex,
 		PhysicalPortInformation: phys.Interfaces,
 	}
 

@@ -10,5 +10,5 @@ type Response struct {
 	NetworkElement  *networkelement.Element
 	PhysicalPort    *proto.NetworkElementInterface
 	Transceiver     *networkelement.Transceiver
-	Error           error
+	Error           error `json:"error,omitempty"`
 }

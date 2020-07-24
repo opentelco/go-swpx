@@ -17,7 +17,7 @@ type Resource interface {
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 
 	// TODO should return a slice of *proto.NetworkElementInterface so we can cache all results
-	MapInterface(context.Context, *proto.NetworkElement) (*networkelement.Interface, error)
+	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
 
@@ -32,7 +32,7 @@ type ResourceGRPCClient struct {
 }
 
 // MapInterface is the client implementation for the plugin-resource. Connects to the RPC
-func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Interface, error) {
+func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.client.MapInterface(ctx, proto)
 }
 
@@ -87,7 +87,7 @@ func (rpc *ResourceGRCServer) TechnicalPortInformation(ctx context.Context, ne *
 }
 
 //MapInterface has the purppose to map interface name to a index by asking the device
-func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Interface, error) {
+func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.Impl.MapInterface(ctx, ne)
 }
 
