@@ -402,7 +402,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
 
-	transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
+	transceiver, err := plugin.GetTransceiverInformation(msg.Context, req)
 	resp.Transceiver = transceiver
 
 	return nil

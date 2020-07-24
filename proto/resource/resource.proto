@@ -43,6 +43,6 @@ service Resource {
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);
   rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
-  rpc GetVRPTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
+  rpc GetTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
 }
 

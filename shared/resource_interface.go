@@ -19,7 +19,7 @@ type Resource interface {
 	// TODO should return a slice of *proto.NetworkElementInterface so we can cache all results
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
-	GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
 
 	SetConfiguration(ctx context.Context, conf Configuration) error
 	GetConfiguration(ctx context.Context) (Configuration, error)
@@ -45,8 +45,8 @@ func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, proto *pro
 	return rpc.client.MapEntityPhysical(ctx, proto)
 }
 
-func (rpc *ResourceGRPCClient) GetVRPTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return rpc.client.GetVRPTransceiverInformation(ctx, proto)
+func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Transceiver, error) {
+	return rpc.client.GetTransceiverInformation(ctx, proto)
 }
 
 func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
@@ -99,8 +99,8 @@ func (rpc *ResourceGRCServer) GetConfiguration(ctx context.Context) (Configurati
 	return rpc.conf, nil
 }
 
-func (rpc *ResourceGRCServer) GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return rpc.Impl.GetVRPTransceiverInformation(ctx, ne)
+func (rpc *ResourceGRCServer) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
+	return rpc.Impl.GetTransceiverInformation(ctx, ne)
 }
 
 func (rpc *ResourceGRCServer) SetConfiguration(ctx context.Context, conf Configuration) error {

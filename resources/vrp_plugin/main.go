@@ -125,7 +125,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
+func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(*el.Conf)
 
 	vrpMsg := createVRPTransceiverMsg(el, conf)
