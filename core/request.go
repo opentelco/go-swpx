@@ -20,6 +20,7 @@ type Request struct {
 	NetworkElementInterface *string
 	Provider                string
 	Resource                string
+	DontUseIndex            bool
 
 	// metadata to handle the request
 	Response chan *Response

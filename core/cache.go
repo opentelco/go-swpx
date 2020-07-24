@@ -95,8 +95,7 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface,
-	phys *proto.PhysicalPortinformationResponse, tc *proto.VRPTransceiverInformation) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, tc *proto.VRPTransceiverInformation) (*CachedInterface, error) {
 	obj := CachedInterface{
 		Hostname:               ne.Hostname,
 		Interface:              ne.Interface,
@@ -111,7 +110,7 @@ func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface
 		&obj,
 	)
 	if err != nil {
-		logger.Error("Error saving info in cache: ", err)
+		logger.Error("Error saving info in cache: ", err.Error())
 		return nil, err
 	}
 	return &obj, nil
@@ -142,7 +141,7 @@ func (c *cache) SetPhysical(provider, driver string, phys *proto.PhysicalPortinf
 		&obj,
 	)
 	if err != nil {
-		logger.Error("Error saving physical port info in cache: ", err)
+		logger.Error("Error saving physical port info in cache: ", err.Error())
 		return nil, err
 	}
 	return &obj, nil

@@ -349,7 +349,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	var cachedPhysPort *CachedPhysicalPortInformation
 	var err error
 
-	if useCache {
+	if useCache && !msg.DontUseIndex {
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
@@ -383,7 +383,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		}
 
 		// save in cache upon success (if enabled)
-		if useCache {
+		if useCache && !msg.DontUseIndex {
 			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
 				return err
 			}
@@ -394,7 +394,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		}
 
 	} else if err != nil {
-		logger.Error("error fetching from cache:", err)
+		logger.Error("error fetching from cache:", err.Error())
 		return err
 	}
 
@@ -429,7 +429,7 @@ func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkE
 			fields := strings.Split(element.Oid, ".")
 			index, err := strconv.Atoi(fields[len(fields)-1])
 			if err != nil {
-				logger.Error("can't convert phys.port to int: ", err)
+				logger.Error("can't convert phys.port to int: ", err.Error())
 				return
 			}
 			req.PhysicalIndex = int64(index)
