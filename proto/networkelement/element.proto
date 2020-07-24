@@ -135,11 +135,11 @@ message Transceiver {
 }
 
 message TransceiverStatistics {
-  float current = 1;
-  float rx = 2;
-  float tx = 3;
-  float temp = 4;
-  float voltage = 5;
+  int64 current = 1;
+  int64 rx = 2;
+  int64 tx = 3;
+  int64 temp = 4;
+  int64 voltage = 5;
   string timestamp = 6;
 }
 

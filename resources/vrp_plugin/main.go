@@ -118,7 +118,7 @@ func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElemen
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(*el.Conf)
 
 	vrpMsg := createVRPTransceiverMsg(el, conf)
@@ -131,14 +131,18 @@ func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
-			val := &proto.VRPTransceiverInformation{
-				OpticalVendorSn:    task.Snmpc.Metrics[0].GetStringValue(),
-				OpticalTemperature: task.Snmpc.Metrics[1].GetIntValue(),
-				OpticalVoltage:     task.Snmpc.Metrics[2].GetIntValue(),
-				OpticalBiasCurrent: task.Snmpc.Metrics[3].GetIntValue(),
-				OpticalRxPower:     task.Snmpc.Metrics[4].GetIntValue(),
-				OpticalTxPower:     task.Snmpc.Metrics[5].GetIntValue(),
-				OpticalVendorPn:    task.Snmpc.Metrics[6].GetStringValue(),
+			val := &networkelement.Transceiver{
+				SerialNumber: task.Snmpc.Metrics[0].GetStringValue(),
+				Stats: []*networkelement.TransceiverStatistics{
+					{
+						Temp:    task.Snmpc.Metrics[1].GetIntValue(),
+						Voltage: task.Snmpc.Metrics[2].GetIntValue(),
+						Current: task.Snmpc.Metrics[3].GetIntValue(),
+						Rx:      task.Snmpc.Metrics[4].GetIntValue(),
+						Tx:      task.Snmpc.Metrics[5].GetIntValue(),
+					},
+				},
+				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
 			}
 			return val, nil
 		}

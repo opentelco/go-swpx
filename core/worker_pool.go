@@ -354,7 +354,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			iface.Index = cachedInterface.InterfaceIndex
-			resp.Transceiver = cachedInterface.TransceiverInformation
 		}
 
 		cachedPhysPort, err = PhysicalPortCache.PopPhysical(msg.Provider, msg.Resource)
@@ -374,8 +373,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		findPhysicalPort(physPortResponse.Data, req, resp)
 
-		transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
-		resp.Transceiver = transceiver
 		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
@@ -384,7 +381,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		// save in cache upon success (if enabled)
 		if useCache && !msg.DontUseIndex {
-			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
+			if _, err = Cache.Set(req, iface); err != nil {
 				return err
 			}
 			if _, err = PhysicalPortCache.SetPhysical(msg.Provider, msg.Resource, physPortResponse); err != nil {
@@ -416,6 +413,9 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	}
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
+
+	transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
+	resp.Transceiver = transceiver
 
 	return nil
 }

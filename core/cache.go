@@ -27,8 +27,7 @@ type CachedInterface struct {
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex    string                           `bson:"physical_entity_index"`
-	TransceiverInformation *proto.VRPTransceiverInformation `bson:"transceiver_information"`
+	PhysicalEntityIndex string `bson:"physical_entity_index"`
 }
 
 type CachedPhysicalPortInformation struct {
@@ -39,8 +38,7 @@ type CachedPhysicalPortInformation struct {
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, phys *proto.PhysicalPortinformationResponse,
-		transceiver *proto.VRPTransceiverInformation) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface) (*CachedInterface, error)
 }
 
 type PhysicalPortCacher interface {
@@ -95,14 +93,13 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, tc *proto.VRPTransceiverInformation) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface) (*CachedInterface, error) {
 	obj := CachedInterface{
-		Hostname:               ne.Hostname,
-		Interface:              ne.Interface,
-		Description:            ne.Hostname,
-		Alias:                  nei.Alias,
-		InterfaceIndex:         nei.Index,
-		TransceiverInformation: tc,
+		Hostname:       ne.Hostname,
+		Interface:      ne.Interface,
+		Description:    ne.Hostname,
+		Alias:          nei.Alias,
+		InterfaceIndex: nei.Index,
 	}
 
 	_, err := c.col.InsertOne(
