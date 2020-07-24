@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,23 +28,13 @@ type CachedInterface struct {
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex string `bson:"physical_entity_index"`
-}
-
-type CachedPhysicalPortInformation struct {
-	Provider                string                           `bson:"provider"`
-	Driver                  string                           `bson:"driver"`
-	PhysicalPortInformation []*proto.PhysicalPortInformation `bson:"physical_port_information"`
+	PhysicalEntityIndex     string                                    `bson:"physical_entity_index"`
+	PhysicalPortInformation []*networkelement.PhysicalPortInformation `bson:"physical_port_information"`
 }
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface) (*CachedInterface, error)
-}
-
-type PhysicalPortCacher interface {
-	PopPhysical(provider, driver string) (*CachedPhysicalPortInformation, error)
-	SetPhysical(provider, driver string, phys *proto.PhysicalPortinformationResponse) (*CachedPhysicalPortInformation, error)
+	Set(ne *proto.NetworkElement, nei *networkelement.Interface, phys *proto.PhysicalPortInformationResponse) (*CachedInterface, error)
 }
 
 func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
@@ -57,16 +48,6 @@ func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
 	if _, err := col.Indexes().CreateOne(context.Background(), model); err != nil {
 		logger.Warn("can't create index:", err.Error())
 	}
-
-	return &cache{
-		client: client,
-		col:    col,
-		logger: logger,
-	}, nil
-}
-
-func NewPhysicalPortCache(client *mongo.Client, logger hclog.Logger) (PhysicalPortCacher, error) {
-	col := client.Database(CACHE_DATABASE).Collection(PHYS_PORT_CACHE_COLLECTION)
 
 	return &cache{
 		client: client,
@@ -93,43 +74,15 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, nei *networkelement.Interface,
+	phys *proto.PhysicalPortInformationResponse) (*CachedInterface, error) {
+
 	obj := CachedInterface{
-		Hostname:       ne.Hostname,
-		Interface:      ne.Interface,
-		Description:    ne.Hostname,
-		Alias:          nei.Alias,
-		InterfaceIndex: nei.Index,
-	}
-
-	_, err := c.col.InsertOne(
-		context.Background(),
-		&obj,
-	)
-	if err != nil {
-		logger.Error("Error saving info in cache: ", err.Error())
-		return nil, err
-	}
-	return &obj, nil
-
-}
-
-func (c *cache) PopPhysical(provider, driver string) (*CachedPhysicalPortInformation, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"provider": provider, "driver": driver})
-	obj := &CachedPhysicalPortInformation{}
-	if err := res.Decode(obj); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return obj, nil
-}
-
-func (c *cache) SetPhysical(provider, driver string, phys *proto.PhysicalPortinformationResponse) (*CachedPhysicalPortInformation, error) {
-	obj := CachedPhysicalPortInformation{
-		Provider:                provider,
-		Driver:                  driver,
+		Hostname:                ne.Hostname,
+		Interface:               ne.Interface,
+		Description:             ne.Hostname,
+		Alias:                   nei.Alias,
+		InterfaceIndex:          nei.Index,
 		PhysicalPortInformation: phys.Data,
 	}
 
@@ -138,7 +91,7 @@ func (c *cache) SetPhysical(provider, driver string, phys *proto.PhysicalPortinf
 		&obj,
 	)
 	if err != nil {
-		logger.Error("Error saving physical port info in cache: ", err.Error())
+		logger.Error("Error saving info in cache: ", err.Error())
 		return nil, err
 	}
 	return &obj, nil

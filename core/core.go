@@ -51,7 +51,6 @@ var (
 )
 
 var Cache InterfaceCacher
-var PhysicalPortCache PhysicalPortCacher
 
 func init() {
 	// Create an hclog.Logger
@@ -239,7 +238,6 @@ func CreateCore() *Core {
 		return core
 	}
 	Cache, err = NewCache(mc, logger)
-	PhysicalPortCache, err = NewPhysicalPortCache(mc, logger)
 	if err != nil {
 		logger.Error("cannot set cache: %s", err.Error())
 		useCache = false

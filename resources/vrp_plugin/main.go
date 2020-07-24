@@ -91,7 +91,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 }
 
 // Find matching OID for port
-func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortInformationResponse, error) {
 	conf := shared.Proto2conf(*el.Conf)
 
 	portMsg := createPortInformationMsg(el, conf)
@@ -103,17 +103,17 @@ func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElemen
 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
-		data := make([]*proto.PhysicalPortInformation, len(task.Snmpc.Metrics))
+		data := make([]*networkelement.PhysicalPortInformation, len(task.Snmpc.Metrics))
 
 		for i, m := range task.Snmpc.Metrics {
-			data[i] = &proto.PhysicalPortInformation{
+			data[i] = &networkelement.PhysicalPortInformation{
 				Name:  m.Name,
 				Oid:   m.Oid,
 				Value: m.GetStringValue(),
 			}
 		}
 
-		return &proto.PhysicalPortinformationResponse{Data: data}, nil
+		return &proto.PhysicalPortInformationResponse{Data: data}, nil
 	}
 	return nil, errors.Errorf("Unsupported message type")
 }
@@ -150,7 +150,7 @@ func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
+func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*networkelement.Interface, error) {
 	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
@@ -207,7 +207,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 		return nil, err
 	}
 
-	return &proto.NetworkElementInterface{Index: int64(item.index), Description: item.descr}, nil
+	return &networkelement.Interface{Index: int64(item.index), Description: item.descr}, nil
 }
 
 // GIMME DATA!!! InterfaceMetrics

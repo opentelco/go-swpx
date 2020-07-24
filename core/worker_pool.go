@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
+	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	"strconv"
 	"strings"
 	"time"
@@ -344,9 +345,8 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		Conf:      &protConf,
 	}
 
-	iface := &proto.NetworkElementInterface{}
+	iface := &networkelement.Interface{}
 	var cachedInterface *CachedInterface
-	var cachedPhysPort *CachedPhysicalPortInformation
 	var err error
 
 	if useCache && !msg.DontUseIndex {
@@ -354,17 +354,13 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			iface.Index = cachedInterface.InterfaceIndex
-		}
-
-		cachedPhysPort, err = PhysicalPortCache.PopPhysical(msg.Provider, msg.Resource)
-		if cachedPhysPort != nil {
-			findPhysicalPort(cachedPhysPort.PhysicalPortInformation, req, resp)
+			findPhysicalPort(cachedInterface.PhysicalPortInformation, req, resp)
 		}
 	}
 
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
-		var physPortResponse *proto.PhysicalPortinformationResponse
+		var physPortResponse *proto.PhysicalPortInformationResponse
 		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
@@ -381,10 +377,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		// save in cache upon success (if enabled)
 		if useCache && !msg.DontUseIndex {
-			if _, err = Cache.Set(req, iface); err != nil {
-				return err
-			}
-			if _, err = PhysicalPortCache.SetPhysical(msg.Provider, msg.Resource, physPortResponse); err != nil {
+			if _, err = Cache.Set(req, iface, physPortResponse); err != nil {
 				return err
 			}
 
@@ -420,7 +413,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	return nil
 }
 
-func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
+func findPhysicalPort(data []*networkelement.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
 	for _, element := range data {
 		if element.Value == req.Interface {
 

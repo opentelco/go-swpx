@@ -177,6 +177,11 @@ message InterfaceMetrics {
   string timestamp = 1;
 }
 
+message PhysicalPortInformation {
+  string name = 1;
+  string oid = 2;
+  string value = 3;
+}
 
 
 enum InterfaceStatus {
