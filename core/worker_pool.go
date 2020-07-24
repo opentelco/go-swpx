@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -255,7 +254,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 
 	l, err := provider.Lookup(msg.ObjectID)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 	}
 
 	logger.Debug("this is coming back from the plugin", "id", l)
@@ -267,11 +266,11 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 	go func() { c <- f(msg, resp) }()
 	select {
 	case <-ctx.Done():
-		log.Println("got a timeout, letrs go")
+		logger.Error("got a timeout, letrs go")
 		return ctx.Err()
 	case err := <-c:
 		if err != nil {
-			log.Println("err: ", err)
+			logger.Error("err: ", err.Error())
 		}
 		return err
 	}
@@ -280,7 +279,7 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 
 func handleMsg(msg *Request, resp *Response) error {
 	logger.Debug("worker has payload")
-	log.Printf("the user has sent in %s as provider", msg.Provider)
+	logger.Info("the user has sent in %s as provider", msg.Provider)
 	var conf shared.Configuration
 
 	// check if a provider is selected in the request

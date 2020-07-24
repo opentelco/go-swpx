@@ -154,19 +154,20 @@ func CreateCore() *Core {
 		}
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-			log.Printf("succesfully dispensed resource plugin (%s)", name)
+			logger.Info("succesfully dispensed resource plugin (%s)", name)
 			if resource, ok := raw.(shared.Resource); ok {
 				v, err := resource.Version()
 				resources[name] = resource
-				logger.Error("something went wrong", "version", v, "error", err)
+				if err != nil {
+					logger.Error("something went wrong", "version", v, "error", err.Error())
+				}
 			} else {
 				logger.Error(fmt.Sprintf("type assertions failed. %s plugin does not implement Plugin %T", name, raw))
 				os.Exit(1)
 			}
 
 		} else {
-			logger.Error(err.Error())
-			log.Println("error trying to dispense resource or provider: '", err, "'")
+			logger.Error("error trying to dispense resource or provider: '", err.Error(), "'")
 		}
 
 	}
@@ -213,8 +214,11 @@ func CreateCore() *Core {
 			continue
 		} else {
 			logger.Error(err.Error())
-			rpc.Close()
-			log.Println("error trying to dispense resource or provider: '", err, "'")
+
+			rpcErr := rpc.Close()
+			if rpcErr != nil {
+				logger.Error("error trying to dispense resource or provider: '", rpcErr.Error(), "'")
+			}
 		}
 	}
 
