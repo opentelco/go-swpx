@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
 	"git.liero.se/opentelco/go-swpx/proto/networkelement"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -360,14 +358,14 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
-		var physPortResponse *proto.PhysicalPortInformationResponse
-		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
+		var physPortResponse *proto.NetworkElementInterfaces
+		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
 
-		findPhysicalPort(physPortResponse.Data, req, resp)
+		findPhysicalPort(physPortResponse.Interfaces, req, resp)
 
 		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
@@ -413,19 +411,11 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	return nil
 }
 
-func findPhysicalPort(data []*networkelement.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
+func findPhysicalPort(data []*proto.NetworkElementInterface, req *proto.NetworkElement, resp *Response) {
 	for _, element := range data {
-		if element.Value == req.Interface {
-
+		if element.Description == req.Interface {
 			resp.PhysicalPort = element
-
-			fields := strings.Split(element.Oid, ".")
-			index, err := strconv.Atoi(fields[len(fields)-1])
-			if err != nil {
-				logger.Error("can't convert phys.port to int: ", err.Error())
-				return
-			}
-			req.PhysicalIndex = int64(index)
+			req.PhysicalIndex = element.Index
 		}
 	}
 }

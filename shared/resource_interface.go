@@ -18,7 +18,7 @@ type Resource interface {
 
 	// TODO should return a slice of *proto.NetworkElementInterface so we can cache all results
 	MapInterface(context.Context, *proto.NetworkElement) (*networkelement.Interface, error)
-	GetPhysicalPort(context.Context, *proto.NetworkElement) (*proto.PhysicalPortInformationResponse, error)
+	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	GetVRPTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
 
 	SetConfiguration(ctx context.Context, conf Configuration) error
@@ -41,8 +41,8 @@ func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, pro
 	return rpc.client.TechnicalPortInformation(ctx, proto)
 }
 
-func (rpc *ResourceGRPCClient) GetPhysicalPort(ctx context.Context, proto *proto.NetworkElement) (*proto.PhysicalPortInformationResponse, error) {
-	return rpc.client.GetPhysicalPort(ctx, proto)
+func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+	return rpc.client.MapEntityPhysical(ctx, proto)
 }
 
 func (rpc *ResourceGRPCClient) GetVRPTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Transceiver, error) {
@@ -91,8 +91,8 @@ func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.Networ
 	return rpc.Impl.MapInterface(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) GetPhysicalPort(ctx context.Context, ne *proto.NetworkElement) (*proto.PhysicalPortInformationResponse, error) {
-	return rpc.Impl.GetPhysicalPort(ctx, ne)
+func (rpc *ResourceGRCServer) MapEntityPhysical(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+	return rpc.Impl.MapEntityPhysical(ctx, ne)
 }
 
 func (rpc *ResourceGRCServer) GetConfiguration(ctx context.Context) (Configuration, error) {

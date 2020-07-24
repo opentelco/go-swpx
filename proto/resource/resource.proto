@@ -34,15 +34,15 @@ message NetworkElementInterface {
   string alias = 3;
 }
 
-message PhysicalPortInformationResponse {
-  repeated networkelement.PhysicalPortInformation data = 1;
+message NetworkElementInterfaces {
+  repeated NetworkElementInterface interfaces = 1;
 }
 
 service Resource {
   rpc Version(Empty) returns (VersionResponse);
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   rpc MapInterface(NetworkElement) returns (networkelement.Interface);
-  rpc GetPhysicalPort(NetworkElement) returns (PhysicalPortInformationResponse);
+  rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
   rpc GetVRPTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
 }
 

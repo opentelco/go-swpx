@@ -91,7 +91,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 }
 
 // Find matching OID for port
-func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortInformationResponse, error) {
+func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(*el.Conf)
 
 	portMsg := createPortInformationMsg(el, conf)
@@ -103,17 +103,24 @@ func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElemen
 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
-		data := make([]*networkelement.PhysicalPortInformation, len(task.Snmpc.Metrics))
+		data := make([]*proto.NetworkElementInterface, len(task.Snmpc.Metrics))
 
 		for i, m := range task.Snmpc.Metrics {
-			data[i] = &networkelement.PhysicalPortInformation{
-				Name:  m.Name,
-				Oid:   m.Oid,
-				Value: m.GetStringValue(),
+			fields := strings.Split(m.Oid, ".")
+			index, err := strconv.Atoi(fields[len(fields)-1])
+			if err != nil {
+				logger.Error("can't convert phys.port to int: ", err.Error())
+				return nil, err
+			}
+
+			data[i] = &proto.NetworkElementInterface{
+				Alias:       m.Name,
+				Index:       int64(index),
+				Description: m.GetStringValue(),
 			}
 		}
 
-		return &proto.PhysicalPortInformationResponse{Data: data}, nil
+		return &proto.NetworkElementInterfaces{Interfaces: data}, nil
 	}
 	return nil, errors.Errorf("Unsupported message type")
 }

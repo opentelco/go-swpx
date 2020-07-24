@@ -14,9 +14,8 @@ import (
 )
 
 const (
-	CACHE_DATABASE             = "test"
-	CACHE_COLLECTION           = "cache"
-	PHYS_PORT_CACHE_COLLECTION = "physical_port_information"
+	CACHE_DATABASE   = "test"
+	CACHE_COLLECTION = "cache"
 )
 
 // CachedInterface is the data object stored in mongo for a cached interface
@@ -28,13 +27,13 @@ type CachedInterface struct {
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex     string                                    `bson:"physical_entity_index"`
-	PhysicalPortInformation []*networkelement.PhysicalPortInformation `bson:"physical_port_information"`
+	PhysicalEntityIndex     string                           `bson:"physical_entity_index"`
+	PhysicalPortInformation []*proto.NetworkElementInterface `bson:"physical_port_information"`
 }
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *networkelement.Interface, phys *proto.PhysicalPortInformationResponse) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, nei *networkelement.Interface, phys *proto.NetworkElementInterfaces) (*CachedInterface, error)
 }
 
 func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
@@ -75,7 +74,7 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 }
 
 func (c *cache) Set(ne *proto.NetworkElement, nei *networkelement.Interface,
-	phys *proto.PhysicalPortInformationResponse) (*CachedInterface, error) {
+	phys *proto.NetworkElementInterfaces) (*CachedInterface, error) {
 
 	obj := CachedInterface{
 		Hostname:                ne.Hostname,
@@ -83,7 +82,7 @@ func (c *cache) Set(ne *proto.NetworkElement, nei *networkelement.Interface,
 		Description:             ne.Hostname,
 		Alias:                   nei.Alias,
 		InterfaceIndex:          nei.Index,
-		PhysicalPortInformation: phys.Data,
+		PhysicalPortInformation: phys.Interfaces,
 	}
 
 	_, err := c.col.InsertOne(
