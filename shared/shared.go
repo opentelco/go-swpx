@@ -66,7 +66,7 @@ type ConfigSNMP struct {
 }
 
 type Configuration struct {
-	SNMP   ConfigSNMP   `json:"community" toml:"snmp" yaml:"snmp"`
+	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
 	Telnet ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
 }
 

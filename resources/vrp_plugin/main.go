@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
@@ -93,7 +94,6 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 // Find matching OID for port
 func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(*el.Conf)
-
 	portMsg := createPortInformationMsg(el, conf)
 	msg, err := d.dnc.Put(&portMsg)
 	if err != nil {
@@ -416,6 +416,16 @@ func main() {
 	driver := &VRPDriver{
 		logger: logger,
 		dnc:    dncClient,
+		conf: shared.Configuration{
+			SNMP:   shared.ConfigSNMP{
+				Community:          "semipublic",
+				Version:            2,
+				Timeout:            time.Second*20,
+				Retries:            2,
+				DynamicRepetitions: true,
+			},
+			Telnet: shared.ConfigTelnet{},
+		},
 	}
 
 	plugin.Serve(&plugin.ServeConfig{
