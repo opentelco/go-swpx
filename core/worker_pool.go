@@ -278,7 +278,9 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 func handleMsg(msg *Request, resp *Response) error {
 	logger.Debug("worker has payload")
 	logger.Info("the user has sent in %s as provider", msg.Provider)
-	var conf shared.Configuration
+
+	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
+	var providerConf shared.Configuration
 
 	// check if a provider is selected in the request
 	if msg.Provider != "" {
@@ -289,7 +291,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		conf, _ = provider.GetConfiguration(msg.Context)
+		providerConf, _ = provider.GetConfiguration(msg.Context)
 
 	} else {
 		// no provider selected, walk all providers
@@ -306,16 +308,15 @@ func handleMsg(msg *Request, resp *Response) error {
 		resp.Error = errors.New("selected driver is missing/does not exist", errors.ErrInvalidResource)
 		return nil
 	}
-
-	plugin.SetConfiguration(msg.Context, conf)
+	plugin.SetConfiguration(msg.Context, providerConf)
 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case GetTechnicalInformationElement:
-		return handleGetTechnicalInformationElement(msg, resp, plugin, conf)
+		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
 	case GetTechnicalInformationPort:
-		return handleGetTechnicalInformationPort(msg, resp, plugin, conf)
+		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
 
 	return nil
