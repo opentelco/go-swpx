@@ -150,8 +150,13 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 			volt = float64(voltInt)/1000
 			curr = float64(curInt)/1000
 
+			// no transceiver available, return nil
+			if tempInt == -255 &&  rxInt == -1 && txInt == -1{
+				return nil, nil
+			}
+
 			val := &networkelement.Transceiver{
-				SerialNumber: task.Snmpc.Metrics[0].GetStringValue(),
+				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue()," "),
 				Stats: []*networkelement.TransceiverStatistics{
 					{
 						Temp:    temp,
