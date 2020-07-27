@@ -137,15 +137,28 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
+
+			tempInt := task.Snmpc.Metrics[1].GetIntValue()
+			voltInt := task.Snmpc.Metrics[2].GetIntValue()
+			curInt := task.Snmpc.Metrics[3].GetIntValue()
+			rxInt := task.Snmpc.Metrics[4].GetIntValue()
+			txInt := task.Snmpc.Metrics[5].GetIntValue()
+			var rx, tx, temp, volt, curr float64
+			rx = float64(rxInt*-1)/100
+			tx = float64(txInt * -1)/100
+			temp = float64(tempInt)
+			volt = float64(voltInt)/1000
+			curr = float64(curInt)/1000
+
 			val := &networkelement.Transceiver{
 				SerialNumber: task.Snmpc.Metrics[0].GetStringValue(),
 				Stats: []*networkelement.TransceiverStatistics{
 					{
-						Temp:    task.Snmpc.Metrics[1].GetIntValue(),
-						Voltage: task.Snmpc.Metrics[2].GetIntValue(),
-						Current: task.Snmpc.Metrics[3].GetIntValue(),
-						Rx:      task.Snmpc.Metrics[4].GetIntValue(),
-						Tx:      task.Snmpc.Metrics[5].GetIntValue(),
+						Temp:    temp,
+						Voltage: volt,
+						Current: curr,
+						Rx:      rx,
+						Tx:      tx,
 					},
 				},
 				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
