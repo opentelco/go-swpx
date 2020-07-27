@@ -19,26 +19,24 @@ const (
 
 // CachedInterface is the data object stored in mongo for a cached interface
 type CachedInterface struct {
-	Hostname      string                           `bson:"hostname"`
-	Port          string                           `bson:"port"`
-	AllInterfaces []*proto.NetworkElementInterface `bson:"all_interfaces"`
+	Hostname string `bson:"hostname"`
+	Port     string `bson:"port"`
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex     string                           `bson:"physical_entity_index"`
-	PhysicalPortInformation []*proto.NetworkElementInterface `bson:"physical_port_information"`
+	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
 }
 
 func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
 	col := client.Database(CACHE_DATABASE).Collection(CACHE_COLLECTION)
 
 	model := mongo.IndexModel{
-		Keys:    bson.M{"hostname": -1, "interface": -1},
+		Keys:    bson.M{"hostname": -1, "port": -1},
 		Options: options.Index().SetUnique(true),
 	}
 
@@ -71,25 +69,24 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) (*CachedInterface, error) {
+func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
+	for k, v := range interfaces.Interfaces {
+		if physInterface, ok := phys.Interfaces[k]; ok {
+			_, err := c.col.InsertOne(context.Background(), bson.M{
+				"hostname":              ne.Hostname,
+				"port":                  v.Description,
+				"if_index":              v.Index,
+				"physical_entity_index": physInterface.Index,
+			})
 
-	obj := CachedInterface{
-		Hostname:                ne.Hostname,
-		Port:                    ne.Interface,
-		AllInterfaces:           interfaces.Interfaces,
-		InterfaceIndex:          ne.InterfaceIndex,
-		PhysicalPortInformation: phys.Interfaces,
-	}
+			if err != nil {
+				logger.Error("Error saving info in cache: ", err.Error())
+				return err
+			}
 
-	_, err := c.col.InsertOne(
-		context.Background(),
-		&obj,
-	)
-	if err != nil {
-		logger.Error("Error saving info in cache: ", err.Error())
-		return nil, err
+		}
 	}
-	return &obj, nil
+	return nil
 
 }
 

@@ -103,9 +103,8 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
-		data := make([]*proto.NetworkElementInterface, len(task.Snmpc.Metrics))
-
-		for i, m := range task.Snmpc.Metrics {
+		interfaces := make(map[string]*proto.NetworkElementInterface)
+		for _, m := range task.Snmpc.Metrics {
 			fields := strings.Split(m.Oid, ".")
 			index, err := strconv.Atoi(fields[len(fields)-1])
 			if err != nil {
@@ -113,14 +112,14 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 				return nil, err
 			}
 
-			data[i] = &proto.NetworkElementInterface{
+			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
 				Alias:       m.Name,
 				Index:       int64(index),
 				Description: m.GetStringValue(),
 			}
 		}
 
-		return &proto.NetworkElementInterfaces{Interfaces: data}, nil
+		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 	}
 	return nil, errors.Errorf("Unsupported message type")
 }
@@ -162,7 +161,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
 	var index int
-	var interfaces = make([]*proto.NetworkElementInterface, 1)
+	var interfaces = make(map[string]*proto.NetworkElementInterface)
 
 	conf := shared.Proto2conf(*el.Conf)
 
@@ -179,11 +178,11 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 		d.populateDiscoveryMap(task, index, discoveryMap)
 
 		for _, v := range discoveryMap {
-			interfaces = append(interfaces, &proto.NetworkElementInterface{
+			interfaces[v.descr] = &proto.NetworkElementInterface{
 				Index:       int64(v.index),
 				Description: v.descr,
 				Alias:       v.alias,
-			})
+			}
 		}
 	}
 

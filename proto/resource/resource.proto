@@ -33,9 +33,9 @@ message NetworkElementInterface {
   string description = 2;
   string alias = 3;
 }
-
+// map port to entire interface for faster retrieval
 message NetworkElementInterfaces {
-  repeated NetworkElementInterface interfaces = 1;
+  map<string, NetworkElementInterface> interfaces = 1;
 }
 
 service Resource {

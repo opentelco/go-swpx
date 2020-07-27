@@ -350,8 +350,9 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
-			findPhysicalPort(cachedInterface.PhysicalPortInformation, req, resp)
-			findInterface(cachedInterface.AllInterfaces, req, resp)
+			resp.PhysicalPort = cachedInterface.Port
+			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
+			req.InterfaceIndex = cachedInterface.InterfaceIndex
 		}
 	}
 
@@ -363,19 +364,23 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
+		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+			resp.PhysicalPort = val.Description
+			req.PhysicalIndex = val.Index
+		}
 
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
-
-		findPhysicalPort(physPortResponse.Interfaces, req, resp)
-		findInterface(mapInterfaceResponse.Interfaces, req, resp)
+		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
+			req.InterfaceIndex = val.Index
+		}
 
 		// save in cache upon success (if enabled)
 		if useCache && !msg.DontUseIndex {
-			if _, err = Cache.Set(req, mapInterfaceResponse, physPortResponse); err != nil {
+			if err = Cache.Set(req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
 		}
@@ -406,21 +411,4 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	resp.Transceiver = transceiver
 
 	return nil
-}
-
-func findInterface(interfaces []*proto.NetworkElementInterface, req *proto.NetworkElement, resp *Response) {
-	for _, iface := range interfaces {
-		if iface.Description == req.Interface {
-			req.InterfaceIndex = iface.Index
-		}
-	}
-}
-
-func findPhysicalPort(data []*proto.NetworkElementInterface, req *proto.NetworkElement, resp *Response) {
-	for _, element := range data {
-		if element.Description == req.Interface {
-			resp.PhysicalPort = element
-			req.PhysicalIndex = element.Index
-		}
-	}
 }
