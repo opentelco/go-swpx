@@ -135,11 +135,11 @@ message Transceiver {
 }
 
 message TransceiverStatistics {
-  double current = 1;
-  double rx = 2;
-  double tx = 3;
-  double temp = 4;
-  double voltage = 5;
+  double current = 1; // should be returned in mA
+  double rx = 2;      // should be returned in dBm
+  double tx = 3;      // should be returned in dBm
+  double temp = 4;    // in celsius
+  double voltage = 5; // should be returned in V
   string timestamp = 6;
 }
 
