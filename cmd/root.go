@@ -14,10 +14,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var port string
+
 func init() {
 	Root.AddCommand(Version)
 	Root.AddCommand(Start)
 	Root.AddCommand(Test)
+
+	Start.Flags().StringVarP(&port, "port", "p", "1337", "the port to use")
 }
 
 const APP_NAME = "go-swpx"
@@ -36,7 +40,7 @@ var Start = &cobra.Command{
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it.
 		server := api.New(core.RequestQueue)
-		err := server.ListenAndServe(":1337")
+		err := server.ListenAndServe(":" + port)
 		if err != nil {
 			panic(err)
 		}

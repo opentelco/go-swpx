@@ -12,14 +12,10 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var VERSION *version.Version
 var logger hclog.Logger
-
-var collection *mongo.Collection
-var ctx = context.TODO()
 
 const (
 	VERSION_BASE string = "1.0-beta"
@@ -86,8 +82,8 @@ func loadConfig(logger hclog.Logger) {
 	defaultSnmpConf := shared.ConfigSNMP{
 		Community: "semipublic",
 		Retries:   3,
-		Version: 2,
-		Timeout: time.Second*5,
+		Version:   2,
+		Timeout:   time.Second * 5,
 	}
 
 	viper.SetDefault("snmp", defaultSnmpConf)

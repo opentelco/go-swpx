@@ -44,7 +44,7 @@ type Server struct {
 }
 
 func (s *Server) ListenAndServe(host string) error {
-	logger.Info("Listen on %s\n", host)
+	logger.Info(fmt.Sprintf("Listen on %s\n", host))
 	return http.ListenAndServe(host, context.ClearHandler(s))
 }
 

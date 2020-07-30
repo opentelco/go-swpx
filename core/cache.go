@@ -5,16 +5,12 @@ import (
 	"errors"
 	"fmt"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
-)
-
-const (
-	CACHE_DATABASE   = "test"
-	CACHE_COLLECTION = "cache"
 )
 
 // CachedInterface is the data object stored in mongo for a cached interface
@@ -32,8 +28,14 @@ type InterfaceCacher interface {
 	Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
 }
 
-func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
-	col := client.Database(CACHE_DATABASE).Collection(CACHE_COLLECTION)
+type cache struct {
+	client *mongo.Client
+	col    *mongo.Collection
+	logger hclog.Logger
+}
+
+func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (*cache, error) {
+	col := client.Database(conf.Database).Collection(conf.Collection)
 
 	model := mongo.IndexModel{
 		Keys:    bson.M{"hostname": -1, "port": -1},
@@ -49,12 +51,6 @@ func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
 		col:    col,
 		logger: logger,
 	}, nil
-}
-
-type cache struct {
-	client *mongo.Client
-	col    *mongo.Collection
-	logger hclog.Logger
 }
 
 func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
@@ -90,18 +86,17 @@ func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementIn
 
 }
 
-func initMongoDB(uri string) (*mongo.Client, error) {
-	// TODO timeout from config
+func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
 	logger.Info("Attempting to connect to MongoDB...")
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+
 	var err error
 	var mongoClient *mongo.Client
-	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(uri)); err != nil {
+	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server)); err != nil {
 		logger.Error("error initializing Mongo client:", err.Error())
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(conf.TimeoutSeconds)*time.Second)
 	defer cancel()
 	if err = mongoClient.Connect(ctx); err != nil {
 		logger.Error("error connecting Mongo client:", err.Error())

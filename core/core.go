@@ -2,6 +2,10 @@ package core
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/shared"
+	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-version"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,11 +13,6 @@ import (
 	"os/signal"
 	"path"
 	"sort"
-
-	"git.liero.se/opentelco/go-swpx/shared"
-	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-version"
 )
 
 const (
@@ -112,7 +111,7 @@ func (c *Core) Start() {
 	csig := make(chan os.Signal, 1)
 	signal.Notify(csig, os.Interrupt)
 	go func() {
-		for _ = range csig {
+		for range csig {
 			plugin.CleanupClients()
 			os.Exit(1)
 		}
@@ -129,6 +128,7 @@ func CreateCore() *Core {
 		Swarm: newWorkerPool(WORKERS, MAX_REQUESTS),
 		//transport: Transport(t),
 	}
+	conf := shared.GetConfig()
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = LoadPlugins(path.Join(PLUGIN_PATH, PROVIDERS)); err != nil {
@@ -139,8 +139,38 @@ func CreateCore() *Core {
 		logger.Error(err.Error())
 	}
 
-	// interate the resources and connect to the plugin
-	// TODO move to a function instead?
+	loadResources()
+	loadProviders()
+
+	// Sort the list of providers by their Weight()
+	sortedProviders = providers.Slice()
+	sort.Sort(byWeight(sortedProviders))
+	for n, p := range sortedProviders {
+		name, _ := p.Name()
+		w, _ := p.Weight()
+		println(n, name, w)
+	}
+
+	// setup mongodb cache
+	mongoClient, err := initMongoDB(conf.Mongo)
+	if err != nil {
+		logger.Warn("could not establish mongodb connection: %s", err.Error())
+		useCache = false
+		return core
+	}
+	if Cache, err = NewCache(mongoClient, logger, conf.Mongo); err != nil {
+		logger.Error("cannot set cache: %s", err.Error())
+		useCache = false
+		return core
+	}
+
+	useCache = true
+
+	return core
+}
+
+// iterate the resources and connect to the plugin
+func loadResources() {
 	for name, p := range availableResources {
 		var raw interface{}
 		var err error
@@ -170,9 +200,10 @@ func CreateCore() *Core {
 		}
 
 	}
+}
 
-	// iterate providers and connect to the plugin.
-	// TODO move to a function instead?
+// iterate providers and connect to the plugin.
+func loadProviders() {
 	for name, p := range availableProviders {
 		var raw interface{}
 		var err error
@@ -220,31 +251,4 @@ func CreateCore() *Core {
 			}
 		}
 	}
-
-	// Sort the list of providers by their Weight()
-	sortedProviders = providers.Slice()
-	sort.Sort(byWeight(sortedProviders))
-	for n, p := range sortedProviders {
-		name, _ := p.Name()
-		w, _ := p.Weight()
-		println(n, name, w)
-	}
-
-	// setup mongodb cache
-	mc, err := initMongoDB("mongodb://localhost:27017")
-	if err != nil {
-		logger.Warn("could not establish mongodb connection: %s", err.Error())
-		useCache = false
-		return core
-	}
-	Cache, err = NewCache(mc, logger)
-	if err != nil {
-		logger.Error("cannot set cache: %s", err.Error())
-		useCache = false
-		return core
-	}
-
-	useCache = true
-
-	return core
 }

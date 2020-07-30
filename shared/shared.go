@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"time"
 
 	"github.com/hashicorp/go-plugin"
@@ -65,9 +66,37 @@ type ConfigSNMP struct {
 	DynamicRepetitions bool          `json:"dynamic_repetitions" yaml:"dynamic_repetitions" toml:"dynamic_repetitions" yaml:"dynamic_repetitions"`
 }
 
+type ConfigMongo struct {
+	Server         string `json:"server" toml:"server" yaml:"server"`
+	Database       string `json:"database" toml:"database" yaml:"database"`
+	Collection     string `json:"collection" toml:"collection" yaml:"collection"`
+	TimeoutSeconds int    `json:"timeout_seconds" toml:"timeout_seconds" yaml:"timeout_seconds"`
+}
+
 type Configuration struct {
 	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
 	Telnet ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
+	Mongo  ConfigMongo  `json:"mongo" toml:"mongo" yaml:"mongo"`
+}
+
+func GetConfig() Configuration {
+	conf := Configuration{}
+
+	viper.SetConfigName("config")
+	viper.SetConfigType("yml")
+	viper.AddConfigPath("./config")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	err = viper.Unmarshal(&conf)
+	if err != nil {
+		panic(err)
+	}
+
+	return conf
 }
 
 func Conf2proto(conf Configuration) proto.Configuration {
