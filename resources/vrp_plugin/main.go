@@ -44,10 +44,7 @@ type discoveryItem struct {
 	alias string
 }
 
-var (
-	dncChan       chan string
-	EVENT_SERVERS []string = []string{"nats://localhost:14222", "nats://localhost:24222", "nats://localhost:34222"}
-)
+var dncChan chan string
 
 func init() {
 	var err error
@@ -419,8 +416,8 @@ func main() {
 		Output:     os.Stderr,
 		JSONFormat: true,
 	})
-
-	nc, _ := nats.Connect(strings.Join(EVENT_SERVERS, ","))
+	natsConf := shared.GetConfig().NATS
+	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
 	dncChan = make(chan string, 0)
 	enc, _ := nats.NewEncodedConn(nc, "json")
 	enc.BindSendChan("vrp-driver", dncChan)
@@ -434,10 +431,10 @@ func main() {
 		logger: logger,
 		dnc:    dncClient,
 		conf: shared.Configuration{
-			SNMP:   shared.ConfigSNMP{
+			SNMP: shared.ConfigSNMP{
 				Community:          "semipublic",
 				Version:            2,
-				Timeout:            time.Second*20,
+				Timeout:            time.Second * 20,
 				Retries:            2,
 				DynamicRepetitions: true,
 			},

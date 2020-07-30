@@ -73,10 +73,15 @@ type ConfigMongo struct {
 	TimeoutSeconds int    `json:"timeout_seconds" toml:"timeout_seconds" yaml:"timeout_seconds"`
 }
 
+type ConfigNATS struct {
+	EventServers []string `json:"event_servers" toml:"event_servers" yaml:"event_servers" mapstructure:"event_servers"`
+}
+
 type Configuration struct {
 	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
 	Telnet ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
 	Mongo  ConfigMongo  `json:"mongo" toml:"mongo" yaml:"mongo"`
+	NATS   ConfigNATS   `json:"nats" toml:"nats" yaml:"nats"`
 }
 
 func GetConfig() Configuration {
