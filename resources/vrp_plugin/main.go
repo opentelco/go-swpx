@@ -141,19 +141,19 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 			rxInt := task.Snmpc.Metrics[4].GetIntValue()
 			txInt := task.Snmpc.Metrics[5].GetIntValue()
 			var rx, tx, temp, volt, curr float64
-			rx = float64(rxInt*-1)/100
-			tx = float64(txInt * -1)/100
+			rx = float64(rxInt*-1) / 100
+			tx = float64(txInt*-1) / 100
 			temp = float64(tempInt)
-			volt = float64(voltInt)/1000
-			curr = float64(curInt)/1000
+			volt = float64(voltInt) / 1000
+			curr = float64(curInt) / 1000
 
 			// no transceiver available, return nil
-			if tempInt == -255 &&  rxInt == -1 && txInt == -1{
+			if tempInt == -255 && rxInt == -1 && txInt == -1 {
 				return nil, nil
 			}
 
 			val := &networkelement.Transceiver{
-				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue()," "),
+				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
 				Stats: []*networkelement.TransceiverStatistics{
 					{
 						Temp:    temp,
@@ -418,12 +418,13 @@ func main() {
 	})
 	natsConf := shared.GetConfig().NATS
 	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
-	dncChan = make(chan string, 0)
+	dncChan = make(chan string)
 	enc, _ := nats.NewEncodedConn(nc, "json")
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
-	dncClient, err := client.New(DISPATCHER_ADDR)
+	//dncClient, err := client.New(DISPATCHER_ADDR)
+	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		log.Fatal(err)
 	}

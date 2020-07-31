@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.14
 
 require (
-	git.liero.se/opentelco/go-dnc v0.0.0-20200624104445-9445e837da36
+	git.liero.se/opentelco/go-dnc v0.0.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/golang/protobuf v1.4.2
@@ -25,3 +25,5 @@ require (
 )
 
 replace git.liero.se/opentelco/go-dnc v0.0.0 => ../go-dnc
+
+replace git.liero.se/opentelco/go-net v0.0.0 => ../go-net
