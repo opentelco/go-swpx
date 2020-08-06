@@ -92,7 +92,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(*el.Conf)
 	portMsg := createPortInformationMsg(el, conf)
-	msg, err := d.dnc.Put(&portMsg)
+	msg, err := d.dnc.Put(ctx, &portMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -125,7 +125,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	conf := shared.Proto2conf(*el.Conf)
 
 	vrpMsg := createVRPTransceiverMsg(el, conf)
-	msg, err := d.dnc.Put(&vrpMsg)
+	msg, err := d.dnc.Put(ctx, &vrpMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -181,7 +181,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	conf := shared.Proto2conf(*el.Conf)
 
 	msg = createDiscoveryMsg(el, conf)
-	msg, err := d.dnc.Put(msg)
+	msg, err := d.dnc.Put(ctx, msg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -265,7 +265,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 	for _, msg := range msgs {
 		d.logger.Debug("sending msg")
-		msg, err = d.dnc.Put(msg)
+		msg, err = d.dnc.Put(ctx, msg)
 		if err != nil {
 			d.logger.Error(err.Error())
 			return nil, err
@@ -423,7 +423,7 @@ func main() {
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
-	//dncClient, err := client.New(DISPATCHER_ADDR)
+	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
 	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		log.Fatal(err)
