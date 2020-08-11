@@ -5,11 +5,14 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	libtelnet "git.liero.se/opentelco/go-net/telnet"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/segmentio/ksuid"
 )
@@ -212,7 +215,7 @@ func createMsg(conf shared.Configuration) *transport.Message {
 	return message
 }
 
-func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) transport.Message {
+func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -230,7 +233,7 @@ func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	}
 
 	// task.Parameters = params
-	message := transport.Message{
+	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
@@ -241,7 +244,7 @@ func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	return message
 }
 
-func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) transport.Message {
+func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -265,7 +268,7 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 	}
 
 	// task.Parameters = params
-	message := transport.Message{
+	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
@@ -274,4 +277,40 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 		Created: &timestamp.Timestamp{},
 	}
 	return message
+}
+
+func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &telnet.Task{
+		Type: telnet.Type_GET,
+		Payload: []*telnet.Payload{
+			{
+				Command: "display mac-address GigabitEthernet 0/0/1",
+			},
+			{
+				Command: "display dhcp snooping user-bind interface GigabitEthernet 0/0/1",
+			},
+		},
+		Config: &telnet.Config{
+			User:          "root",
+			Password:      "qwerty1234",
+			Port:          23,
+			ScreenLength:  "0",
+			RegexPrompt:   libtelnet.DefaultRegexPrompt,
+			Ttl:           &duration.Duration{Seconds: 5},
+			ReadDeadLine:  &duration.Duration{Seconds: 5},
+			WriteDeadLine: &duration.Duration{Seconds: 5},
+		},
+		Host: "10.5.5.100",
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_TELNET,
+		Task:    &transport.Message_Telnet{Telnet: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+
 }
