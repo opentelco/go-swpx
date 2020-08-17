@@ -15,6 +15,7 @@ git.liero.se/opentelco/go-dnc v0.0.0-20200616084456-842e513a9a7d/go.mod h1:SccKM
 git.liero.se/opentelco/go-dnc v0.0.0-20200624104445-9445e837da36 h1:72bypzpi7JFQR+HpP0RTxNEwetYEWQKvHBeOPA7BPbc=
 git.liero.se/opentelco/go-dnc v0.0.0-20200624104445-9445e837da36/go.mod h1:fGpMl/OGj5m0UVxjNfo93WeO7GbeiGHdLlQufhATUq4=
 git.liero.se/opentelco/go-net v0.0.0-20200624092256-11e1ab9d6a28/go.mod h1:/XTy8+TBVobS+PAYs5pRVykYfDAYayOIGWzQXSX4/+4=
+git.liero.se/opentelco/go-net v0.0.0-20200811115352-9128b7f3b85e/go.mod h1:VqyZ2b0vIjw71Wnf9IFPI2BwtUXPlhIk2XMdzN2XEB0=
 git.liero.se/opentelco/go-swpx v0.0.0-20200616085046-f1c118144ed2/go.mod h1:xbQ1VNuXk+Q5NGs4pBFB7FN1oEzVW6kdugioL1d+h9k=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=

@@ -11,3 +11,13 @@ mongo:
   timeout_seconds: 30
 nats:
   event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
+telnet:
+  username: 'root'
+  password: 'qwerty1234'
+  port: 23
+  screen_length: '0'
+  default_prompt: '\n[<\[](\S+)[>#\]]'
+  default_errors: 'error|failed|unrecognized'
+  ttl: 5
+  read_dead_line: 5
+  write_dead_line: 5

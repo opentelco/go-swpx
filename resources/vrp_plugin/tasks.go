@@ -7,7 +7,6 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
-	libtelnet "git.liero.se/opentelco/go-net/telnet"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
@@ -291,16 +290,16 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			},
 		},
 		Config: &telnet.Config{
-			User:          "root",
-			Password:      "qwerty1234",
-			Port:          23,
-			ScreenLength:  "0",
-			RegexPrompt:   libtelnet.DefaultRegexPrompt,
-			Ttl:           &duration.Duration{Seconds: 5},
-			ReadDeadLine:  &duration.Duration{Seconds: 5},
-			WriteDeadLine: &duration.Duration{Seconds: 5},
+			User:          conf.Telnet.Username,
+			Password:      conf.Telnet.Password,
+			Port:          conf.Telnet.Port,
+			ScreenLength:  conf.Telnet.ScreenLength,
+			RegexPrompt:   conf.Telnet.RegexPrompt,
+			Ttl:           &duration.Duration{Seconds: int64(conf.Telnet.TTL)},
+			ReadDeadLine:  &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine)},
+			WriteDeadLine: &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine)},
 		},
-		Host: "10.5.5.100",
+		Host: el.Hostname,
 	}
 
 	message := &transport.Message{

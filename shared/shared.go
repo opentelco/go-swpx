@@ -46,7 +46,7 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ConfigTelnet struct {
-	User          string        `json:"username" yaml:"username" toml:"username"`
+	Username      string        `json:"username" yaml:"username" toml:"username"`
 	Password      string        `json:"password" yaml:"password" toml:"password"`
 	Port          int32         `json:"port" yaml:"port" toml:"port"`
 	ScreenLength  string        `json:"screen_length" yaml:"screen_length" toml:"screen_length"`
@@ -115,7 +115,7 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			DynamicRepetitions: conf.SNMP.DynamicRepetitions,
 		},
 		Telnet: &proto.ConfigTelnet{
-			User:          conf.Telnet.User,
+			User:          conf.Telnet.Username,
 			Password:      conf.Telnet.Password,
 			Port:          conf.Telnet.Port,
 			ScreenLength:  conf.Telnet.ScreenLength,
@@ -139,7 +139,7 @@ func Proto2conf(protoConf proto.Configuration) Configuration {
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
 		Telnet: ConfigTelnet{
-			User:          protoConf.Telnet.User,
+			Username:      protoConf.Telnet.User,
 			Password:      protoConf.Telnet.Password,
 			Port:          protoConf.Telnet.Port,
 			ScreenLength:  protoConf.Telnet.ScreenLength,
