@@ -283,10 +283,10 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 		Type: telnet.Type_GET,
 		Payload: []*telnet.Payload{
 			{
-				Command: "display mac-address GigabitEthernet 0/0/1",
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
 			},
 			{
-				Command: "display dhcp snooping user-bind interface GigabitEthernet 0/0/1",
+				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
 			},
 		},
 		Config: &telnet.Config{

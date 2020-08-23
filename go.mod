@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	git.liero.se/opentelco/go-dnc v0.0.0
-	git.liero.se/opentelco/go-net v0.0.0
+	git.liero.se/opentelco/go-net v0.0.0 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/golang/protobuf v1.4.2
