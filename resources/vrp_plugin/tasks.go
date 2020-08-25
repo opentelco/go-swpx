@@ -5,11 +5,13 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/segmentio/ksuid"
 )
@@ -212,7 +214,7 @@ func createMsg(conf shared.Configuration) *transport.Message {
 	return message
 }
 
-func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) transport.Message {
+func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -230,7 +232,7 @@ func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	}
 
 	// task.Parameters = params
-	message := transport.Message{
+	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
@@ -241,7 +243,7 @@ func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	return message
 }
 
-func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) transport.Message {
+func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -254,18 +256,18 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 		},
 		Type: snmpc.Type_GET,
 		Oids: []*snmpc.Oid{
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVendorSNF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_STRING},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTemperatureF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVoltageF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalBiasF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalRxPowerF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTxPowerF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPVendorPNF, el.PhysicalIndex), Name: "ifPhysAddress", Type: metric.MetricType_STRING},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVendorSNF, el.PhysicalIndex), Name: "hwEntityOpticalVendorSn", Type: metric.MetricType_STRING},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTemperatureF, el.PhysicalIndex), Name: "hwEntityOpticalTemperature", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVoltageF, el.PhysicalIndex), Name: "hwEntityOpticalVoltage", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalBiasF, el.PhysicalIndex), Name: "hwEntityOpticalBiasCurrent", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalRxPowerF, el.PhysicalIndex), Name: "hwEntityOpticalRxPower", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTxPowerF, el.PhysicalIndex), Name: "hwEntityOpticalTxPower", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfVRPVendorPNF, el.PhysicalIndex), Name: "hwEntityOpticalVenderPn", Type: metric.MetricType_STRING},
 		},
 	}
 
 	// task.Parameters = params
-	message := transport.Message{
+	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  el.Hostname,
 		Type:    transport.Type_SNMP,
@@ -274,4 +276,40 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 		Created: &timestamp.Timestamp{},
 	}
 	return message
+}
+
+func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &telnet.Task{
+		Type: telnet.Type_GET,
+		Payload: []*telnet.Payload{
+			{
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
+			},
+		},
+		Config: &telnet.Config{
+			User:          conf.Telnet.Username,
+			Password:      conf.Telnet.Password,
+			Port:          conf.Telnet.Port,
+			ScreenLength:  conf.Telnet.ScreenLength,
+			RegexPrompt:   conf.Telnet.RegexPrompt,
+			Ttl:           &duration.Duration{Seconds: int64(conf.Telnet.TTL)},
+			ReadDeadLine:  &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine)},
+			WriteDeadLine: &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine)},
+		},
+		Host: el.Hostname,
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_TELNET,
+		Task:    &transport.Message_Telnet{Telnet: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+
 }

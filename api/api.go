@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-hclog"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -15,7 +17,12 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var router *chi.Mux
+const APP_NAME = "go-swpx"
+
+var (
+	logger hclog.Logger
+	router *chi.Mux
+)
 
 type TimeoutDuration struct {
 	time.Duration
@@ -37,7 +44,7 @@ type Server struct {
 }
 
 func (s *Server) ListenAndServe(host string) error {
-	log.Printf("Listen on %s\n", host)
+	logger.Info(fmt.Sprintf("Listen on %s\n", host))
 	return http.ListenAndServe(host, context.ClearHandler(s))
 }
 
@@ -46,6 +53,13 @@ func New(requestQueue chan *core.Request) *Server {
 	if requestQueue == nil {
 		log.Fatal("channel is nil, requests needs to be handled..")
 	}
+
+	logger = hclog.New(&hclog.LoggerOptions{
+		Name:   APP_NAME,
+		Output: os.Stdout,
+		Level:  hclog.Debug,
+	})
+
 	s := &Server{
 		Mux:      chi.NewRouter(),
 		requests: requestQueue,

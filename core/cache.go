@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,47 +13,32 @@ import (
 	"time"
 )
 
-const (
-	CACHE_DATABASE             = "test"
-	CACHE_COLLECTION           = "cache"
-	PHYS_PORT_CACHE_COLLECTION = "physical_port_information"
-)
-
 // CachedInterface is the data object stored in mongo for a cached interface
 type CachedInterface struct {
-	Hostname    string `bson:"hostname"`
-	Interface   string `bson:"interface"`
-	Description string `bson:"description"`
-	Alias       string `bson:"alias"`
+	Hostname string `bson:"hostname"`
+	Port     string `bson:"port"`
 	// index from the InterfaceTableMIB
 	InterfaceIndex int64 `bson:"if_index"`
 	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex    string                           `bson:"physical_entity_index"`
-	TransceiverInformation *proto.VRPTransceiverInformation `bson:"transceiver_information"`
-}
-
-type CachedPhysicalPortInformation struct {
-	Provider                string                           `bson:"provider"`
-	Driver                  string                           `bson:"driver"`
-	PhysicalPortInformation []*proto.PhysicalPortInformation `bson:"physical_port_information"`
+	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
 type InterfaceCacher interface {
 	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface, phys *proto.PhysicalPortinformationResponse,
-		transceiver *proto.VRPTransceiverInformation) (*CachedInterface, error)
+	Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
 }
 
-type PhysicalPortCacher interface {
-	PopPhysical(provider, driver string) (*CachedPhysicalPortInformation, error)
-	SetPhysical(provider, driver string, phys *proto.PhysicalPortinformationResponse) (*CachedPhysicalPortInformation, error)
+type cache struct {
+	client *mongo.Client
+	col    *mongo.Collection
+	logger hclog.Logger
 }
 
-func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
-	col := client.Database(CACHE_DATABASE).Collection(CACHE_COLLECTION)
+func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (*cache, error) {
+	col := client.Database(conf.Database).Collection(conf.Collection)
 
 	model := mongo.IndexModel{
-		Keys:    bson.M{"hostname": -1, "interface": -1},
+		Keys:    bson.M{"hostname": -1, "port": -1},
 		Options: options.Index().SetUnique(true),
 	}
 
@@ -67,24 +53,8 @@ func NewCache(client *mongo.Client, logger hclog.Logger) (*cache, error) {
 	}, nil
 }
 
-func NewPhysicalPortCache(client *mongo.Client, logger hclog.Logger) (PhysicalPortCacher, error) {
-	col := client.Database(CACHE_DATABASE).Collection(PHYS_PORT_CACHE_COLLECTION)
-
-	return &cache{
-		client: client,
-		col:    col,
-		logger: logger,
-	}, nil
-}
-
-type cache struct {
-	client *mongo.Client
-	col    *mongo.Collection
-	logger hclog.Logger
-}
-
 func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "interface": iface})
+	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface})
 	obj := &CachedInterface{}
 	if err := res.Decode(obj); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -95,72 +65,38 @@ func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) Set(ne *proto.NetworkElement, nei *proto.NetworkElementInterface,
-	phys *proto.PhysicalPortinformationResponse, tc *proto.VRPTransceiverInformation) (*CachedInterface, error) {
-	obj := CachedInterface{
-		Hostname:               ne.Hostname,
-		Interface:              ne.Interface,
-		Description:            ne.Hostname,
-		Alias:                  nei.Alias,
-		InterfaceIndex:         nei.Index,
-		TransceiverInformation: tc,
-	}
+func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
+	for k, v := range interfaces.Interfaces {
+		if physInterface, ok := phys.Interfaces[k]; ok {
+			_, err := c.col.InsertOne(context.Background(), bson.M{
+				"hostname":              ne.Hostname,
+				"port":                  v.Description,
+				"if_index":              v.Index,
+				"physical_entity_index": physInterface.Index,
+			})
 
-	_, err := c.col.InsertOne(
-		context.Background(),
-		&obj,
-	)
-	if err != nil {
-		logger.Error("Error saving info in cache: ", err)
-		return nil, err
-	}
-	return &obj, nil
+			if err != nil {
+				logger.Error("Error saving info in cache: ", err.Error())
+				return err
+			}
 
-}
-
-func (c *cache) PopPhysical(provider, driver string) (*CachedPhysicalPortInformation, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"provider": provider, "driver": driver})
-	obj := &CachedPhysicalPortInformation{}
-	if err := res.Decode(obj); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, nil
 		}
-		return nil, err
 	}
-	return obj, nil
-}
-
-func (c *cache) SetPhysical(provider, driver string, phys *proto.PhysicalPortinformationResponse) (*CachedPhysicalPortInformation, error) {
-	obj := CachedPhysicalPortInformation{
-		Provider:                provider,
-		Driver:                  driver,
-		PhysicalPortInformation: phys.Data,
-	}
-
-	_, err := c.col.InsertOne(
-		context.Background(),
-		&obj,
-	)
-	if err != nil {
-		logger.Error("Error saving physical port info in cache: ", err)
-		return nil, err
-	}
-	return &obj, nil
+	return nil
 
 }
 
-func initMongoDB(uri string) (*mongo.Client, error) {
-	// TODO timeout from config
+func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
 	logger.Info("Attempting to connect to MongoDB...")
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+
 	var err error
 	var mongoClient *mongo.Client
-	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(uri)); err != nil {
+	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server)); err != nil {
 		logger.Error("error initializing Mongo client:", err.Error())
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(conf.TimeoutSeconds)*time.Second)
 	defer cancel()
 	if err = mongoClient.Connect(ctx); err != nil {
 		logger.Error("error connecting Mongo client:", err.Error())

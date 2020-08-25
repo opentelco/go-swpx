@@ -2,6 +2,10 @@ package core
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/shared"
+	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-version"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,11 +13,6 @@ import (
 	"os/signal"
 	"path"
 	"sort"
-
-	"git.liero.se/opentelco/go-swpx/shared"
-	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-version"
 )
 
 const (
@@ -51,7 +50,6 @@ var (
 )
 
 var Cache InterfaceCacher
-var PhysicalPortCache PhysicalPortCacher
 
 func init() {
 	// Create an hclog.Logger
@@ -113,7 +111,7 @@ func (c *Core) Start() {
 	csig := make(chan os.Signal, 1)
 	signal.Notify(csig, os.Interrupt)
 	go func() {
-		for _ = range csig {
+		for range csig {
 			plugin.CleanupClients()
 			os.Exit(1)
 		}
@@ -130,6 +128,7 @@ func CreateCore() *Core {
 		Swarm: newWorkerPool(WORKERS, MAX_REQUESTS),
 		//transport: Transport(t),
 	}
+	conf := shared.GetConfig()
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = LoadPlugins(path.Join(PLUGIN_PATH, PROVIDERS)); err != nil {
@@ -140,8 +139,38 @@ func CreateCore() *Core {
 		logger.Error(err.Error())
 	}
 
-	// interate the resources and connect to the plugin
-	// TODO move to a function instead?
+	loadResources()
+	loadProviders()
+
+	// Sort the list of providers by their Weight()
+	sortedProviders = providers.Slice()
+	sort.Sort(byWeight(sortedProviders))
+	for n, p := range sortedProviders {
+		name, _ := p.Name()
+		w, _ := p.Weight()
+		println(n, name, w)
+	}
+
+	// setup mongodb cache
+	mongoClient, err := initMongoDB(conf.Mongo)
+	if err != nil {
+		logger.Warn("could not establish mongodb connection: %s", err.Error())
+		useCache = false
+		return core
+	}
+	if Cache, err = NewCache(mongoClient, logger, conf.Mongo); err != nil {
+		logger.Error("cannot set cache: %s", err.Error())
+		useCache = false
+		return core
+	}
+
+	useCache = true
+
+	return core
+}
+
+// iterate the resources and connect to the plugin
+func loadResources() {
 	for name, p := range availableResources {
 		var raw interface{}
 		var err error
@@ -154,25 +183,27 @@ func CreateCore() *Core {
 		}
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-			log.Printf("succesfully dispensed resource plugin (%s)", name)
+			logger.Info("succesfully dispensed resource plugin (%s)", name)
 			if resource, ok := raw.(shared.Resource); ok {
 				v, err := resource.Version()
 				resources[name] = resource
-				logger.Error("something went wrong", "version", v, "error", err)
+				if err != nil {
+					logger.Error("something went wrong", "version", v, "error", err.Error())
+				}
 			} else {
 				logger.Error(fmt.Sprintf("type assertions failed. %s plugin does not implement Plugin %T", name, raw))
 				os.Exit(1)
 			}
 
 		} else {
-			logger.Error(err.Error())
-			log.Println("error trying to dispense resource or provider: '", err, "'")
+			logger.Error("error trying to dispense resource or provider: '", err.Error(), "'")
 		}
 
 	}
+}
 
-	// iterate providers and connect to the plugin.
-	// TODO move to a function instead?
+// iterate providers and connect to the plugin.
+func loadProviders() {
 	for name, p := range availableProviders {
 		var raw interface{}
 		var err error
@@ -213,36 +244,11 @@ func CreateCore() *Core {
 			continue
 		} else {
 			logger.Error(err.Error())
-			rpc.Close()
-			log.Println("error trying to dispense resource or provider: '", err, "'")
+
+			rpcErr := rpc.Close()
+			if rpcErr != nil {
+				logger.Error("error trying to dispense resource or provider: '", rpcErr.Error(), "'")
+			}
 		}
 	}
-
-	// Sort the list of providers by their Weight()
-	sortedProviders = providers.Slice()
-	sort.Sort(byWeight(sortedProviders))
-	for n, p := range sortedProviders {
-		name, _ := p.Name()
-		w, _ := p.Weight()
-		println(n, name, w)
-	}
-
-	// setup mongodb cache
-	mc, err := initMongoDB("mongodb://localhost:27017")
-	if err != nil {
-		logger.Warn("could not establish mongodb connection: %s", err.Error())
-		useCache = false
-		return core
-	}
-	Cache, err = NewCache(mc, logger)
-	PhysicalPortCache, err = NewPhysicalPortCache(mc, logger)
-	if err != nil {
-		logger.Error("cannot set cache: %s", err.Error())
-		useCache = false
-		return core
-	}
-
-	useCache = true
-
-	return core
 }

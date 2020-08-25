@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"time"
 
 	"github.com/hashicorp/go-plugin"
@@ -45,7 +46,7 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ConfigTelnet struct {
-	User          string        `json:"username" yaml:"username" toml:"username"`
+	Username      string        `json:"username" yaml:"username" toml:"username"`
 	Password      string        `json:"password" yaml:"password" toml:"password"`
 	Port          int32         `json:"port" yaml:"port" toml:"port"`
 	ScreenLength  string        `json:"screen_length" yaml:"screen_length" toml:"screen_length"`
@@ -65,9 +66,42 @@ type ConfigSNMP struct {
 	DynamicRepetitions bool          `json:"dynamic_repetitions" yaml:"dynamic_repetitions" toml:"dynamic_repetitions" yaml:"dynamic_repetitions"`
 }
 
+type ConfigMongo struct {
+	Server         string `json:"server" toml:"server" yaml:"server"`
+	Database       string `json:"database" toml:"database" yaml:"database"`
+	Collection     string `json:"collection" toml:"collection" yaml:"collection"`
+	TimeoutSeconds int    `json:"timeout_seconds" toml:"timeout_seconds" yaml:"timeout_seconds"`
+}
+
+type ConfigNATS struct {
+	EventServers []string `json:"event_servers" toml:"event_servers" yaml:"event_servers" mapstructure:"event_servers"`
+}
+
 type Configuration struct {
-	SNMP   ConfigSNMP   `json:"community" toml:"snmp" yaml:"snmp"`
+	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
 	Telnet ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
+	Mongo  ConfigMongo  `json:"mongo" toml:"mongo" yaml:"mongo"`
+	NATS   ConfigNATS   `json:"nats" toml:"nats" yaml:"nats"`
+}
+
+func GetConfig() Configuration {
+	conf := Configuration{}
+
+	viper.SetConfigName("config")
+	viper.SetConfigType("yml")
+	viper.AddConfigPath("./config")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	err = viper.Unmarshal(&conf)
+	if err != nil {
+		panic(err)
+	}
+
+	return conf
 }
 
 func Conf2proto(conf Configuration) proto.Configuration {
@@ -81,7 +115,7 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			DynamicRepetitions: conf.SNMP.DynamicRepetitions,
 		},
 		Telnet: &proto.ConfigTelnet{
-			User:          conf.Telnet.User,
+			User:          conf.Telnet.Username,
 			Password:      conf.Telnet.Password,
 			Port:          conf.Telnet.Port,
 			ScreenLength:  conf.Telnet.ScreenLength,
@@ -105,7 +139,7 @@ func Proto2conf(protoConf proto.Configuration) Configuration {
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
 		Telnet: ConfigTelnet{
-			User:          protoConf.Telnet.User,
+			Username:      protoConf.Telnet.User,
 			Password:      protoConf.Telnet.Password,
 			Port:          protoConf.Telnet.Port,
 			ScreenLength:  protoConf.Telnet.ScreenLength,

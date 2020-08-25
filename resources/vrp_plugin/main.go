@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
@@ -43,10 +44,7 @@ type discoveryItem struct {
 	alias string
 }
 
-var (
-	dncChan       chan string
-	EVENT_SERVERS []string = []string{"nats://localhost:14222", "nats://localhost:24222", "nats://localhost:34222"}
-)
+var dncChan chan string
 
 func init() {
 	var err error
@@ -91,11 +89,10 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 }
 
 // Find matching OID for port
-func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElement) (*proto.PhysicalPortinformationResponse, error) {
+func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(*el.Conf)
-
 	portMsg := createPortInformationMsg(el, conf)
-	msg, err := d.dnc.Put(&portMsg)
+	msg, err := d.dnc.Put(ctx, portMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -103,26 +100,32 @@ func (d *VRPDriver) GetPhysicalPort(ctx context.Context, el *proto.NetworkElemen
 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
-		data := make([]*proto.PhysicalPortInformation, len(task.Snmpc.Metrics))
+		interfaces := make(map[string]*proto.NetworkElementInterface)
+		for _, m := range task.Snmpc.Metrics {
+			fields := strings.Split(m.Oid, ".")
+			index, err := strconv.Atoi(fields[len(fields)-1])
+			if err != nil {
+				logger.Error("can't convert phys.port to int: ", err.Error())
+				return nil, err
+			}
 
-		for i, m := range task.Snmpc.Metrics {
-			data[i] = &proto.PhysicalPortInformation{
-				Name:  m.Name,
-				Oid:   m.Oid,
-				Value: m.GetStringValue(),
+			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
+				Alias:       m.Name,
+				Index:       int64(index),
+				Description: m.GetStringValue(),
 			}
 		}
 
-		return &proto.PhysicalPortinformationResponse{Data: data}, nil
+		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 	}
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*proto.VRPTransceiverInformation, error) {
+func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(*el.Conf)
 
 	vrpMsg := createVRPTransceiverMsg(el, conf)
-	msg, err := d.dnc.Put(&vrpMsg)
+	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -131,14 +134,36 @@ func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
-			val := &proto.VRPTransceiverInformation{
-				OpticalVendorSn:    task.Snmpc.Metrics[0].GetStringValue(),
-				OpticalTemperature: task.Snmpc.Metrics[1].GetIntValue(),
-				OpticalVoltage:     task.Snmpc.Metrics[2].GetIntValue(),
-				OpticalBiasCurrent: task.Snmpc.Metrics[3].GetIntValue(),
-				OpticalRxPower:     task.Snmpc.Metrics[4].GetIntValue(),
-				OpticalTxPower:     task.Snmpc.Metrics[5].GetIntValue(),
-				OpticalVendorPn:    task.Snmpc.Metrics[6].GetStringValue(),
+
+			tempInt := task.Snmpc.Metrics[1].GetIntValue()
+			voltInt := task.Snmpc.Metrics[2].GetIntValue()
+			curInt := task.Snmpc.Metrics[3].GetIntValue()
+			rxInt := task.Snmpc.Metrics[4].GetIntValue()
+			txInt := task.Snmpc.Metrics[5].GetIntValue()
+			var rx, tx, temp, volt, curr float64
+			rx = float64(rxInt*-1) / 100
+			tx = float64(txInt*-1) / 100
+			temp = float64(tempInt)
+			volt = float64(voltInt) / 1000
+			curr = float64(curInt) / 1000
+
+			// no transceiver available, return nil
+			if tempInt == -255 && rxInt == -1 && txInt == -1 {
+				return nil, nil
+			}
+
+			val := &networkelement.Transceiver{
+				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
+				Stats: []*networkelement.TransceiverStatistics{
+					{
+						Temp:    temp,
+						Voltage: volt,
+						Current: curr,
+						Rx:      rx,
+						Tx:      tx,
+					},
+				},
+				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
 			}
 			return val, nil
 		}
@@ -146,16 +171,17 @@ func (d *VRPDriver) GetVRPTransceiverInformation(ctx context.Context, el *proto.
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterface, error) {
+func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
 	var index int
+	var interfaces = make(map[string]*proto.NetworkElementInterface)
 
 	conf := shared.Proto2conf(*el.Conf)
 
 	msg = createDiscoveryMsg(el, conf)
-	msg, err := d.dnc.Put(msg)
+	msg, err := d.dnc.Put(ctx, msg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -164,49 +190,52 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		for _, m := range task.Snmpc.Metrics {
-			index, _ = strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
-			// d.logger.Debug("metric data", "oid", m.Oid, "index", index, "base", m.BaseOid)
-			switch m.GetName() {
-			case "ifIndex":
-				if val, ok := discoveryMap[index]; ok {
-					val.index = int(m.GetIntValue())
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						index: int(m.GetIntValue()),
-					}
+		d.populateDiscoveryMap(task, index, discoveryMap)
+
+		for _, v := range discoveryMap {
+			interfaces[v.descr] = &proto.NetworkElementInterface{
+				Index:       int64(v.index),
+				Description: v.descr,
+				Alias:       v.alias,
+			}
+		}
+	}
+
+	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+}
+
+func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, index int, discoveryMap map[int]*discoveryItem) {
+	for _, m := range task.Snmpc.Metrics {
+		index, _ = strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
+		switch m.GetName() {
+		case "ifIndex":
+			if val, ok := discoveryMap[index]; ok {
+				val.index = int(m.GetIntValue())
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					index: int(m.GetIntValue()),
 				}
-			case "ifAlias":
-				if val, ok := discoveryMap[index]; ok {
-					val.alias = m.GetStringValue()
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						descr: m.GetStringValue(),
-					}
+			}
+		case "ifAlias":
+			if val, ok := discoveryMap[index]; ok {
+				val.alias = m.GetStringValue()
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					descr: m.GetStringValue(),
 				}
-			case "ifDescr":
-				if val, ok := discoveryMap[index]; ok {
-					val.descr = m.GetStringValue()
-				} else {
-					discoveryMap[index] = &discoveryItem{
-						descr: m.GetStringValue(),
-					}
+			}
+		case "ifDescr":
+			if val, ok := discoveryMap[index]; ok {
+				val.descr = m.GetStringValue()
+			} else {
+				discoveryMap[index] = &discoveryItem{
+					descr: m.GetStringValue(),
 				}
 			}
 		}
-
 	}
-
-	item, err := d.parseDescriptionToIndex(el.Interface, discoveryMap)
-	if err != nil {
-		d.logger.Error("failed to parse port name", err.Error())
-		return nil, err
-	}
-
-	return &proto.NetworkElementInterface{Index: int64(item.index), Description: item.descr}, nil
 }
 
-// GIMME DATA!!! InterfaceMetrics
 func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
 	dncChan <- "ok"
 	d.logger.Info("running technical port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
@@ -222,10 +251,11 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	}
 
 	msgs = append(msgs, createTaskSystemInfo(el, conf))
+	msgs = append(msgs, createTelnetInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
-	elif := &networkelement.Interface{
+	elementInterface := &networkelement.Interface{
 		Stats: &networkelement.InterfaceStatistics{
 			Input:  &networkelement.InterfaceStatisticsInput{},
 			Output: &networkelement.InterfaceStatisticsOutput{},
@@ -235,7 +265,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 	for _, msg := range msgs {
 		d.logger.Debug("sending msg")
-		msg, err = d.dnc.Put(msg)
+		msg, err = d.dnc.Put(ctx, msg)
 		if err != nil {
 			d.logger.Error(err.Error())
 			return nil, err
@@ -245,7 +275,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 		case *transport.Message_Snmpc:
 			d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
 
-			elif.Index = el.InterfaceIndex
+			elementInterface.Index = el.InterfaceIndex
 
 			for _, m := range task.Snmpc.Metrics {
 				d.logger.Debug(m.GetStringValue())
@@ -254,106 +284,116 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 					getSystemInformation(m, ne)
 
 				case strings.HasPrefix(m.Oid, oids.HuaPrefix):
-					getHuaweiInformation(m, elif)
+					getHuaweiInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
-					getIfEntryInformation(m, elif)
+					getIfEntryInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
-					getIfXEntryInformation(m, elif)
+					getIfXEntryInformation(m, elementInterface)
 				}
+			}
+		case *transport.Message_Telnet:
+			if elementInterface.MacAddressTable, err = ParseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
+				logger.Error("can't parse MAC address table: ", err.Error())
+				return nil, err
+			}
+
+			if elementInterface.DhcpTable, err = ParseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
+				logger.Error("can't parse DHCP table: ", err.Error())
+				return nil, err
 			}
 		}
 	}
 
-	ne.Interfaces = append(ne.Interfaces, elif)
+	ne.Interfaces = append(ne.Interfaces, elementInterface)
 
 	return ne, nil
 }
 
-func getIfXEntryInformation(m *metric.Metric, elif *networkelement.Interface) {
+func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
-		elif.Stats.Output.Unicast = m.GetIntValue()
+		elementInterface.Stats.Output.Unicast = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfInBroadcastPkts):
-		elif.Stats.Input.Broadcast = m.GetIntValue()
+		elementInterface.Stats.Input.Broadcast = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfInMulticastPkts):
-		elif.Stats.Input.Multicast = m.GetIntValue()
+		elementInterface.Stats.Input.Multicast = m.GetIntValue()
 	case strings.HasPrefix(m.Oid, oids.IfOutBroadcastPkts):
-		elif.Stats.Output.Broadcast = m.GetIntValue()
+		elementInterface.Stats.Output.Broadcast = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfOutMulticastPkts):
-		elif.Stats.Output.Multicast = m.GetIntValue()
+		elementInterface.Stats.Output.Multicast = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfAlias):
-		elif.Alias = m.GetStringValue()
+		elementInterface.Alias = m.GetStringValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
-		elif.Speed = m.GetIntValue()
+		elementInterface.Speed = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfConnectorPresent):
-		elif.ConnectorPresent = m.GetBoolValue()
+		elementInterface.ConnectorPresent = m.GetBoolValue()
 	}
 
 }
 
-func getIfEntryInformation(m *metric.Metric, elif *networkelement.Interface) {
+func getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
-		elif.Stats.Output.Bytes = m.GetIntValue()
+		elementInterface.Stats.Output.Bytes = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfInOctets):
-		elif.Stats.Input.Bytes = m.GetIntValue()
+		elementInterface.Stats.Input.Bytes = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
-		elif.Stats.Input.Unicast = m.GetIntValue()
+		elementInterface.Stats.Input.Unicast = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfInErrors):
-		elif.Stats.Input.Errors = m.GetIntValue()
+		elementInterface.Stats.Input.Errors = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfOutErrors):
-		elif.Stats.Output.Errors = m.GetIntValue()
+		elementInterface.Stats.Output.Errors = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfDescr):
-		elif.Description = m.GetStringValue()
+		elementInterface.Description = m.GetStringValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfType):
-		elif.Type = networkelement.InterfaceType(m.GetIntValue())
+		elementInterface.Type = networkelement.InterfaceType(m.GetIntValue())
 
 	case strings.HasPrefix(m.Oid, oids.IfMtu):
-		elif.Mtu = m.GetIntValue()
+		elementInterface.Mtu = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfLastChange):
-		elif.LastChanged = m.GetTimestampValue()
+		elementInterface.LastChanged = m.GetTimestampValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
-		elif.Hwaddress = m.GetStringValue()
+		elementInterface.Hwaddress = m.GetStringValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
-		elif.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
+		elementInterface.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
 
 	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
-		elif.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
+		elementInterface.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
 
 	}
 }
 
-func getHuaweiInformation(m *metric.Metric, elif *networkelement.Interface) {
+func getHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
-		elif.Stats.Input.CrcErrors = m.GetIntValue()
+		elementInterface.Stats.Input.CrcErrors = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
-		elif.Stats.Input.Pauses = m.GetIntValue()
+		elementInterface.Stats.Input.Pauses = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
-		elif.Stats.Resets = m.GetIntValue()
+		elementInterface.Stats.Resets = m.GetIntValue()
 
 	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
-		elif.Stats.Output.Pauses = m.GetIntValue()
+		elementInterface.Stats.Output.Pauses = m.GetIntValue()
 	}
 }
 
@@ -386,20 +426,31 @@ func main() {
 		Output:     os.Stderr,
 		JSONFormat: true,
 	})
-
-	nc, _ := nats.Connect(strings.Join(EVENT_SERVERS, ","))
-	dncChan = make(chan string, 0)
+	natsConf := shared.GetConfig().NATS
+	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
+	dncChan = make(chan string)
 	enc, _ := nats.NewEncodedConn(nc, "json")
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
-	dncClient, err := client.New(DISPATCHER_ADDR)
+	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
+	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		log.Fatal(err)
 	}
 	driver := &VRPDriver{
 		logger: logger,
 		dnc:    dncClient,
+		conf: shared.Configuration{
+			SNMP: shared.ConfigSNMP{
+				Community:          "semipublic",
+				Version:            2,
+				Timeout:            time.Second * 20,
+				Retries:            2,
+				DynamicRepetitions: true,
+			},
+			Telnet: shared.ConfigTelnet{},
+		},
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

@@ -4,9 +4,6 @@ import (
 	"container/heap"
 	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
-	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -255,7 +252,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 
 	l, err := provider.Lookup(msg.ObjectID)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 	}
 
 	logger.Debug("this is coming back from the plugin", "id", l)
@@ -267,11 +264,11 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 	go func() { c <- f(msg, resp) }()
 	select {
 	case <-ctx.Done():
-		log.Println("got a timeout, letrs go")
+		logger.Error("got a timeout, letrs go")
 		return ctx.Err()
 	case err := <-c:
 		if err != nil {
-			log.Println("err: ", err)
+			logger.Error("err: ", err.Error())
 		}
 		return err
 	}
@@ -280,8 +277,10 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 
 func handleMsg(msg *Request, resp *Response) error {
 	logger.Debug("worker has payload")
-	log.Printf("the user has sent in %s as provider", msg.Provider)
-	var conf shared.Configuration
+	logger.Info("the user has sent in %s as provider", msg.Provider)
+
+	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
+	var providerConf shared.Configuration
 
 	// check if a provider is selected in the request
 	if msg.Provider != "" {
@@ -292,7 +291,7 @@ func handleMsg(msg *Request, resp *Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		conf, _ = provider.GetConfiguration(msg.Context)
+		providerConf, _ = provider.GetConfiguration(msg.Context)
 
 	} else {
 		// no provider selected, walk all providers
@@ -309,16 +308,15 @@ func handleMsg(msg *Request, resp *Response) error {
 		resp.Error = errors.New("selected driver is missing/does not exist", errors.ErrInvalidResource)
 		return nil
 	}
-
-	plugin.SetConfiguration(msg.Context, conf)
+	plugin.SetConfiguration(msg.Context, providerConf)
 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case GetTechnicalInformationElement:
-		return handleGetTechnicalInformationElement(msg, resp, plugin, conf)
+		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
 	case GetTechnicalInformationPort:
-		return handleGetTechnicalInformationPort(msg, resp, plugin, conf)
+		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
 
 	return nil
@@ -345,70 +343,62 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 		Conf:      &protConf,
 	}
 
-	iface := &proto.NetworkElementInterface{}
+	mapInterfaceResponse := &proto.NetworkElementInterfaces{}
 	var cachedInterface *CachedInterface
-	var cachedPhysPort *CachedPhysicalPortInformation
 	var err error
 
-	if useCache {
+	if useCache && !msg.DontUseIndex {
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
 		if cachedInterface != nil {
-			iface.Index = cachedInterface.InterfaceIndex
-			resp.Transceiver = cachedInterface.TransceiverInformation
-		}
-
-		cachedPhysPort, err = PhysicalPortCache.PopPhysical(msg.Provider, msg.Resource)
-		if cachedPhysPort != nil {
-			findPhysicalPort(cachedPhysPort.PhysicalPortInformation, req, resp)
+			resp.PhysicalPort = cachedInterface.Port
+			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
+			req.InterfaceIndex = cachedInterface.InterfaceIndex
 		}
 	}
 
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
-		var physPortResponse *proto.PhysicalPortinformationResponse
-		if physPortResponse, err = plugin.GetPhysicalPort(msg.Context, req); err != nil {
+		var physPortResponse *proto.NetworkElementInterfaces
+		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
+		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+			resp.PhysicalPort = val.Description
+			req.PhysicalIndex = val.Index
+		}
 
-		findPhysicalPort(physPortResponse.Data, req, resp)
-
-		transceiver, err := plugin.GetVRPTransceiverInformation(msg.Context, req)
-		resp.Transceiver = transceiver
-		if iface, err = plugin.MapInterface(msg.Context, req); err != nil {
+		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
 			return err
 		}
+		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
+			req.InterfaceIndex = val.Index
+		}
 
 		// save in cache upon success (if enabled)
-		if useCache {
-			if _, err = Cache.Set(req, iface, physPortResponse, transceiver); err != nil {
+		if useCache && !msg.DontUseIndex {
+			if err = Cache.Set(req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
-			if _, err = PhysicalPortCache.SetPhysical(msg.Provider, msg.Resource, physPortResponse); err != nil {
-				return err
-			}
-
 		}
 
 	} else if err != nil {
-		logger.Error("error fetching from cache:", err)
+		logger.Error("error fetching from cache:", err.Error())
 		return err
 	}
 
 	//if the return is 0 something went wrong
-	if iface.Index == 0 {
+	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
 		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
 		return err
 	}
 
-	logger.Info("found index for selected interface", "index", iface.Index)
-
-	req.InterfaceIndex = iface.Index
+	logger.Info("found index for selected interface", "index", req.InterfaceIndex)
 
 	ti, err := plugin.TechnicalPortInformation(msg.Context, req)
 	if err != nil {
@@ -418,22 +408,8 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
 
+	transceiver, err := plugin.GetTransceiverInformation(msg.Context, req)
+	resp.Transceiver = transceiver
+
 	return nil
-}
-
-func findPhysicalPort(data []*proto.PhysicalPortInformation, req *proto.NetworkElement, resp *Response) {
-	for _, element := range data {
-		if element.Value == req.Interface {
-
-			resp.PhysicalPort = element
-
-			fields := strings.Split(element.Oid, ".")
-			index, err := strconv.Atoi(fields[len(fields)-1])
-			if err != nil {
-				logger.Error("can't convert phys.port to int: ", err)
-				return
-			}
-			req.PhysicalIndex = int64(index)
-		}
-	}
 }

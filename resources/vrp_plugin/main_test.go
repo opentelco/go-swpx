@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"testing"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
@@ -12,6 +15,7 @@ func TestMapInterface(t *testing.T) {
 	driver := &VRPDriver{
 		logger: nil,
 		dnc:    &MockClient{},
+		conf:   shared.Configuration{},
 	}
 
 	req := &proto.NetworkElement{
@@ -19,8 +23,8 @@ func TestMapInterface(t *testing.T) {
 		Interface: "GigabitEthernet0/0/1",
 	}
 
-	msg := createDiscoveryMsg(req)
-	msg, err := driver.dnc.Put(msg)
+	msg := createDiscoveryMsg(req, driver.conf)
+	msg, err := driver.dnc.Put(context.Background(), msg)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -29,11 +33,11 @@ func TestMapInterface(t *testing.T) {
 
 type MockClient struct{}
 
-func (m MockClient) Ping() (string, error) {
-	return "", nil
+func (m MockClient) Ping() (*dispatcher.PingReply, error) {
+	return &dispatcher.PingReply{}, nil
 }
 
-func (m MockClient) Put(*transport.Message) (*transport.Message, error) {
+func (m MockClient) Put(ctx context.Context, msg *transport.Message) (*transport.Message, error) {
 
 	return &transport.Message{}, nil
 }
@@ -43,5 +47,4 @@ func (m MockClient) Close() error {
 }
 
 func TestInterfaceDescriptionIndexParser(t *testing.T) {
-	return nil
 }

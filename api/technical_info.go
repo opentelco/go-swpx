@@ -2,24 +2,24 @@ package api
 
 import (
 	"context"
-	"log"
-	"net"
-	"net/http"
-
+	"encoding/json"
 	"git.liero.se/opentelco/go-swpx/core"
 	"git.liero.se/opentelco/go-swpx/errors"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"net"
+	"net/http"
 )
 
 // TechnicalInformationRequest is the request that holdes the TI request.
 type TechnicalInformationRequest struct {
-	Hostname string          `json:"hostname"`
-	Port     string          `json:"port"`
-	Provider string          `json:"provider"`
-	Driver   string          `json:"driver"`
-	Region   string          `json:"region"`
-	Timeout  TimeoutDuration `json:"timeout"`
+	Hostname     string          `json:"hostname"`
+	Port         string          `json:"port"`
+	Provider     string          `json:"provider"`
+	Driver       string          `json:"driver"`
+	Region       string          `json:"region"`
+	DontUseIndex bool            `json:"dont_use_index"`
+	Timeout      TimeoutDuration `json:"timeout"`
 
 	ipAddr []net.IP
 }
@@ -36,13 +36,13 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 	// Parse hostname/ip for host
 	addrs, err := net.LookupHost(r.Hostname)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return err
 	}
 
 	for _, addr := range addrs {
 		addr := net.ParseIP(addr)
-		log.Println(addr)
+		logger.Info("addr:", addr.String())
 		if addr == nil {
 			r.ipAddr = append(r.ipAddr, addr)
 		} else {
@@ -55,7 +55,7 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 // Parse the incoming request
 func (r *TechnicalInformationRequest) Parse() error {
 	if err := r.parseAddr(); err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return errors.New(err.Error(), errors.ErrInvalidAddr)
 	}
 	return nil
@@ -83,11 +83,12 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 	data := &TechnicalInformationRequest{}
 
 	if err := render.Bind(r, data); err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
 	}
-	log.Println(data)
+	ti, _ := json.Marshal(data)
+	logger.Info("TI:", string(ti))
 	if err := data.Parse(); err != nil {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
@@ -98,6 +99,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		NetworkElement: data.Hostname,
 		Provider:       data.Provider,
 		Resource:       data.Driver,
+		DontUseIndex:   data.DontUseIndex,
 
 		// Metadata
 		Response: make(chan *core.Response, 1),
@@ -125,7 +127,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 			render.JSON(w, r, NewResponse(ResponseStatusOK, resp))
 			return
 		case <-req.Context.Done():
-			log.Println("timeout for request was hit")
+			logger.Info("timeout for request was hit")
 
 			render.JSON(w, r, NewResponse(ErrorStatusRequestTimeout, nil))
 			return

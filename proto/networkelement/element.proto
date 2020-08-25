@@ -135,11 +135,11 @@ message Transceiver {
 }
 
 message TransceiverStatistics {
-  float current = 1;
-  float rx = 2;
-  float tx = 3;
-  float temp = 4;
-  float voltage = 5;
+  double current = 1; // should be returned in mA
+  double rx = 2;      // should be returned in dBm
+  double tx = 3;      // should be returned in dBm
+  double temp = 4;    // in celsius
+  double voltage = 5; // should be returned in V
   string timestamp = 6;
 }
 
@@ -177,6 +177,11 @@ message InterfaceMetrics {
   string timestamp = 1;
 }
 
+message PhysicalPortInformation {
+  string name = 1;
+  string oid = 2;
+  string value = 3;
+}
 
 
 enum InterfaceStatus {

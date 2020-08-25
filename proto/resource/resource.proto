@@ -33,34 +33,16 @@ message NetworkElementInterface {
   string description = 2;
   string alias = 3;
 }
-
-message PhysicalPortInformation {
-  string name = 1;
-  string oid = 2;
-  string value = 3;
+// map port to entire interface for faster retrieval
+message NetworkElementInterfaces {
+  map<string, NetworkElementInterface> interfaces = 1;
 }
-
-message PhysicalPortinformationResponse {
-  repeated PhysicalPortInformation data = 1;
-}
-
-message VRPTransceiverInformation {
-  string optical_vendor_sn = 1;
-  int64 optical_temperature = 2;
-  int64 optical_voltage = 3;
-  int64 optical_bias_current = 4;
-  int64 optical_rx_power = 5;
-  int64 optical_tx_power = 6;
-  string optical_vendor_pn = 7;
-}
-
-
 
 service Resource {
   rpc Version(Empty) returns (VersionResponse);
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
-  rpc MapInterface(NetworkElement) returns (NetworkElementInterface);
-  rpc GetPhysicalPort(NetworkElement) returns (PhysicalPortinformationResponse);
-  rpc GetVRPTransceiverInformation(NetworkElement) returns (VRPTransceiverInformation);
+  rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);
+  rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
+  rpc GetTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
 }
 
