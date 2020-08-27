@@ -288,16 +288,20 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			{
 				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
 			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			},
 		},
 		Config: &telnet.Config{
-			User:          conf.Telnet.Username,
-			Password:      conf.Telnet.Password,
-			Port:          conf.Telnet.Port,
-			ScreenLength:  conf.Telnet.ScreenLength,
-			RegexPrompt:   conf.Telnet.RegexPrompt,
-			Ttl:           &duration.Duration{Seconds: int64(conf.Telnet.TTL)},
-			ReadDeadLine:  &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine)},
-			WriteDeadLine: &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine)},
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			Port:                conf.Telnet.Port,
+			ScreenLength:        conf.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			Ttl:                 &duration.Duration{Seconds: int64(conf.Telnet.TTL)},
+			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine)},
+			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine)},
 		},
 		Host: el.Hostname,
 	}

@@ -303,12 +303,20 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				logger.Error("can't parse DHCP table: ", err.Error())
 				return nil, err
 			}
+			elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
 		}
 	}
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
 
 	return ne, nil
+}
+
+func parseCurrentConfig(config string) string {
+	configStart := strings.Index(config, "#\r\n") + 1
+	configEnd := strings.LastIndex(config, "#\r\n")
+
+	return config[configStart:configEnd]
 }
 
 func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {

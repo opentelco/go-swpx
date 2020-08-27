@@ -46,15 +46,16 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ConfigTelnet struct {
-	Username      string        `json:"username" yaml:"username" toml:"username"`
-	Password      string        `json:"password" yaml:"password" toml:"password"`
-	Port          int32         `json:"port" yaml:"port" toml:"port"`
-	ScreenLength  string        `json:"screen_length" yaml:"screen_length" toml:"screen_length"`
-	RegexPrompt   string        `json:"default_prompt" yaml:"default_prompt" toml:"default_prompt"`
-	Errors        string        `json:"default_errors" yaml:"default_errors" toml:"default_errors"`
-	TTL           time.Duration `json:"ttl" yaml:"ttl" toml:"ttl"`
-	ReadDeadLine  time.Duration `json:"read_dead_line" yaml:"read_dead_line" toml:"read_dead_line"`
-	WriteDeadLine time.Duration `json:"write_dead_line" yaml:"write_dead_line" toml:"write_dead_line"`
+	Username            string        `mapstructure:"username" yaml:"username" toml:"username"`
+	Password            string        `mapstructure:"password" yaml:"password" toml:"password"`
+	Port                int32         `mapstructure:"port" yaml:"port" toml:"port"`
+	ScreenLength        string        `mapstructure:"screen_length" yaml:"screen_length" toml:"screen_length"`
+	ScreenLengthCommand string        `mapstructure:"screen_length_command" yaml:"screen_length_command" toml:"screen_length_command"`
+	RegexPrompt         string        `mapstructure:"default_prompt" yaml:"default_prompt" toml:"default_prompt"`
+	Errors              string        `mapstructure:"default_errors" yaml:"default_errors" toml:"default_errors"`
+	TTL                 time.Duration `mapstructure:"ttl" yaml:"ttl" toml:"ttl"`
+	ReadDeadLine        time.Duration `mapstructure:"read_dead_line" yaml:"read_dead_line" toml:"read_dead_line"`
+	WriteDeadLine       time.Duration `mapstructure:"write_dead_line" yaml:"write_dead_line" toml:"write_dead_line"`
 }
 
 type ConfigSNMP struct {
@@ -115,15 +116,16 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			DynamicRepetitions: conf.SNMP.DynamicRepetitions,
 		},
 		Telnet: &proto.ConfigTelnet{
-			User:          conf.Telnet.Username,
-			Password:      conf.Telnet.Password,
-			Port:          conf.Telnet.Port,
-			ScreenLength:  conf.Telnet.ScreenLength,
-			RegexPrompt:   conf.Telnet.RegexPrompt,
-			Errors:        conf.Telnet.Errors,
-			TTL:           uint64(conf.Telnet.TTL),
-			ReadDeadLine:  uint64(conf.Telnet.ReadDeadLine),
-			WriteDeadLine: uint64(conf.Telnet.WriteDeadLine),
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			Port:                conf.Telnet.Port,
+			ScreenLength:        conf.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			Errors:              conf.Telnet.Errors,
+			TTL:                 uint64(conf.Telnet.TTL),
+			ReadDeadLine:        uint64(conf.Telnet.ReadDeadLine),
+			WriteDeadLine:       uint64(conf.Telnet.WriteDeadLine),
 		},
 	}
 }
@@ -139,15 +141,16 @@ func Proto2conf(protoConf proto.Configuration) Configuration {
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
 		Telnet: ConfigTelnet{
-			Username:      protoConf.Telnet.User,
-			Password:      protoConf.Telnet.Password,
-			Port:          protoConf.Telnet.Port,
-			ScreenLength:  protoConf.Telnet.ScreenLength,
-			RegexPrompt:   protoConf.Telnet.RegexPrompt,
-			Errors:        protoConf.Telnet.Errors,
-			TTL:           time.Duration(protoConf.Telnet.TTL),
-			ReadDeadLine:  time.Duration(protoConf.Telnet.ReadDeadLine),
-			WriteDeadLine: time.Duration(protoConf.Telnet.WriteDeadLine),
+			Username:            protoConf.Telnet.User,
+			Password:            protoConf.Telnet.Password,
+			Port:                protoConf.Telnet.Port,
+			ScreenLength:        protoConf.Telnet.ScreenLength,
+			ScreenLengthCommand: protoConf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         protoConf.Telnet.RegexPrompt,
+			Errors:              protoConf.Telnet.Errors,
+			TTL:                 time.Duration(protoConf.Telnet.TTL),
+			ReadDeadLine:        time.Duration(protoConf.Telnet.ReadDeadLine),
+			WriteDeadLine:       time.Duration(protoConf.Telnet.WriteDeadLine),
 		},
 	}
 }

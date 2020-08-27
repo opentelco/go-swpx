@@ -39,38 +39,39 @@ message WeightResponse {
 
 
 message configTelnet {
-	string User            = 1; 
-	string Password        = 2;
-	int32 Port             = 3;  
-	string ScreenLength    = 4;
-	string RegexPrompt     = 5;     
-	string Errors          = 6;     
-	uint64 TTL           = 7;  
-	uint64 ReadDeadLine  = 8;
-	uint64 WriteDeadLine = 9;
+  string User = 1;
+  string Password = 2;
+  int32 Port = 3;
+  string ScreenLength = 4;
+  string ScreenLengthCommand = 5;
+  string RegexPrompt = 6;
+  string Errors = 7;
+  uint64 TTL = 8;
+  uint64 ReadDeadLine = 9;
+  uint64 WriteDeadLine = 10;
 }
 
 message configSNMP {
-  string	Community        = 1;   
-	uint32 Version           = 2;
-	uint32 Port              = 3;
-	uint64 Timeout         = 4;
-	int32 Retries            = 5;
-	int32 MaxIterations      = 6;
-	int32 MaxRepetitions     = 7;
-	int32 NonRepeaters       = 8;
-	bool DynamicRepetitions  = 9; 
+  string  Community = 1;
+  uint32 Version = 2;
+  uint32 Port = 3;
+  uint64 Timeout = 4;
+  int32 Retries = 5;
+  int32 MaxIterations = 6;
+  int32 MaxRepetitions = 7;
+  int32 NonRepeaters = 8;
+  bool DynamicRepetitions = 9;
 }
 
 message Configuration{
-	configSNMP    SNMP = 1;
-	configTelnet  Telnet = 2;
+  configSNMP    SNMP = 1;
+  configTelnet  Telnet = 2;
 }
 
 
 service Provider {
   rpc Name(Empty) returns (NameResponse);
-  rpc Version(Empty) returns (VersionResponse); 
+  rpc Version(Empty) returns (VersionResponse);
 
   rpc Match(MatchRequest) returns (MatchResponse);
   rpc Lookup(dnc.LookupRequest) returns (dnc.LookupResponse);
