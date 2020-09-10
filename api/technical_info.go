@@ -36,15 +36,15 @@ import (
 
 // TechnicalInformationRequest is the request that holdes the TI request.
 type TechnicalInformationRequest struct {
-	Hostname     string          `json:"hostname"`
-	Port         string          `json:"port"`
-	Provider     string          `json:"provider"`
-	Driver       string          `json:"driver"`
-	Region       string          `json:"region"`
-	DontUseIndex bool            `json:"dont_use_index"`
-	Timeout      TimeoutDuration `json:"timeout"`
-	TTL          TimeoutDuration `json:"ttl"`
-	ipAddr       []net.IP
+	Hostname      string          `json:"hostname"`
+	Port          string          `json:"port"`
+	Provider      string          `json:"provider"`
+	Driver        string          `json:"driver"`
+	Region        string          `json:"region"`
+	RecreateIndex bool            `json:"recreate_index"`
+	Timeout       TimeoutDuration `json:"timeout"`
+	CacheTTL      TimeoutDuration `json:"cache_ttl"`
+	ipAddr        []net.IP
 }
 
 func (req *TechnicalInformationRequest) Bind(r *http.Request) error {
@@ -122,7 +122,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		NetworkElement: data.Hostname,
 		Provider:       data.Provider,
 		Resource:       data.Driver,
-		DontUseIndex:   data.DontUseIndex,
+		DontUseIndex:   data.RecreateIndex,
 
 		// Metadata
 		Response: make(chan *core.Response, 1),
@@ -145,7 +145,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 	}
 
 	if cachedResponse != nil {
-		if time.Since(cachedResponse.Timestamp) < data.TTL.Duration {
+		if time.Since(cachedResponse.Timestamp) < data.CacheTTL.Duration {
 			logger.Info("found response in cache")
 			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response.Data))
 			return
