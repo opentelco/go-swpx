@@ -5,9 +5,9 @@ import (
 )
 
 type Response struct {
-	RequestObjectID string
-	NetworkElement  *networkelement.Element
-	PhysicalPort    string
-	Transceiver     *networkelement.Transceiver
-	Error           error `json:"error,omitempty"`
+	RequestObjectID string                      `json:"request_object_id,omitempty" bson:"request_object_id"`
+	NetworkElement  *networkelement.Element     `json:"network_element,omitempty" bson:"network_element"`
+	PhysicalPort    string                      `json:"physical_port,omitempty" bson:"physical_port"`
+	Transceiver     *networkelement.Transceiver `json:"transceiver,omitempty" bson:"transceiver"`
+	Error           error                       `json:"error,omitempty" bson:"error"`
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/render"
 	"net"
 	"net/http"
+	"time"
 )
 
 // TechnicalInformationRequest is the request that holdes the TI request.
@@ -20,8 +21,8 @@ type TechnicalInformationRequest struct {
 	Region       string          `json:"region"`
 	DontUseIndex bool            `json:"dont_use_index"`
 	Timeout      TimeoutDuration `json:"timeout"`
-
-	ipAddr []net.IP
+	TTL          TimeoutDuration `json:"ttl"`
+	ipAddr       []net.IP
 }
 
 func (req *TechnicalInformationRequest) Bind(r *http.Request) error {
@@ -113,6 +114,26 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		req.Type = core.GetTechnicalInformationElement
 	}
 
+	// check response cache before sending request
+	cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
+	if err != nil {
+		logger.Error("error popping from cache: ", err.Error())
+		render.JSON(w, r, NewResponse(ResponseStatusError, err.Error()))
+		return
+	}
+
+	if cachedResponse != nil {
+		if time.Since(cachedResponse.Timestamp) < data.TTL.Duration {
+			logger.Info("found response in cache")
+			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response.Data))
+			return
+		}
+		// if response is cached but ttl ran out, clear it from the cache
+		if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
+			logger.Error("error clearing cache:", err)
+		}
+	}
+
 	// send the request
 	s.requests <- req
 
@@ -124,7 +145,13 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 				render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
 				return
 			}
-			render.JSON(w, r, NewResponse(ResponseStatusOK, resp))
+
+			wrappedResponse := NewResponse(ResponseStatusOK, resp)
+			if err = core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, wrappedResponse); err != nil {
+				logger.Error("error saving response to cache: ", err.Error())
+			}
+
+			render.JSON(w, r, wrappedResponse)
 			return
 		case <-req.Context.Done():
 			logger.Info("timeout for request was hit")
@@ -134,7 +161,4 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		}
 
 	}
-
-	render.JSON(w, r, NewResponse(ResponseStatusOK, ""))
-
 }

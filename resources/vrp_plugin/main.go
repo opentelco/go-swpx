@@ -31,9 +31,8 @@ var VERSION *version.Version
 var logger hclog.Logger
 
 const (
-	VERSION_BASE    string = "1.0-beta"
-	DRIVER_NAME     string = "vrp-driver"
-	DISPATCHER_ADDR string = "127.0.0.1:50051"
+	VersionBase string = "1.0-beta"
+	DriverName  string = "vrp-driver"
 )
 
 var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
@@ -48,7 +47,7 @@ var dncChan chan string
 
 func init() {
 	var err error
-	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
+	if VERSION, err = version.NewVersion(VersionBase); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -73,7 +72,7 @@ func (d *VRPDriver) SetConfiguration(ctx context.Context, conf shared.Configurat
 func (d *VRPDriver) Version() (string, error) {
 	d.logger.Debug("message from resource-driver running at version", VERSION.String())
 	dncChan <- VERSION.String()
-	return fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()), nil
+	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
 // parse a map of description/alias and return the ID
@@ -90,7 +89,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 
 // Find matching OID for port
 func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	conf := shared.Proto2conf(*el.Conf)
+	conf := shared.Proto2conf(el.Conf)
 	portMsg := createPortInformationMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, portMsg)
 	if err != nil {
@@ -122,7 +121,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 }
 
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	conf := shared.Proto2conf(*el.Conf)
+	conf := shared.Proto2conf(el.Conf)
 
 	vrpMsg := createVRPTransceiverMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
@@ -178,7 +177,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	var index int
 	var interfaces = make(map[string]*proto.NetworkElementInterface)
 
-	conf := shared.Proto2conf(*el.Conf)
+	conf := shared.Proto2conf(el.Conf)
 
 	msg = createDiscoveryMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, msg)
@@ -240,7 +239,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	dncChan <- "ok"
 	d.logger.Info("running technical port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 
-	conf := shared.Proto2conf(*el.Conf)
+	conf := shared.Proto2conf(el.Conf)
 
 	var msgs []*transport.Message
 	if el.InterfaceIndex != 0 {
@@ -429,7 +428,7 @@ func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 
 func main() {
 	logger = hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()),
+		Name:       fmt.Sprintf("%s@%s", DriverName, VERSION.String()),
 		Level:      hclog.Trace,
 		Output:     os.Stderr,
 		JSONFormat: true,
@@ -464,7 +463,7 @@ func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			shared.PLUGIN_RESOURCE_KEY: &shared.ResourcePlugin{Impl: driver},
+			shared.PluginResourceKey: &shared.ResourcePlugin{Impl: driver},
 		},
 		GRPCServer: plugin.DefaultGRPCServer,
 	})

@@ -349,7 +349,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 	if useCache && !msg.DontUseIndex {
 		logger.Debug("cache enabled, pop object from cache")
-		cachedInterface, err = Cache.Pop(req.Hostname, req.Interface)
+		cachedInterface, err = InterfaceCache.PopInterface(req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			resp.PhysicalPort = cachedInterface.Port
 			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
@@ -381,7 +381,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		// save in cache upon success (if enabled)
 		if useCache && !msg.DontUseIndex {
-			if err = Cache.Set(req, mapInterfaceResponse, physPortResponse); err != nil {
+			if err = InterfaceCache.SetInterface(req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
 		}

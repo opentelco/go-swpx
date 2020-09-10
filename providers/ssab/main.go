@@ -67,8 +67,8 @@ func (p *Provider) Name() (string, error) {
 // directory. It is a UX feature, not a security feature.
 var handshakeConfig = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
-	MagicCookieKey:   shared.MAGIC_COOKIE_KEY,
-	MagicCookieValue: shared.MAGIC_COOKIE_VALUE,
+	MagicCookieKey:   shared.MagicCookieKey,
+	MagicCookieValue: shared.MagicCookieValue,
 }
 
 func main() {
@@ -82,7 +82,7 @@ func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			shared.PLUGIN_PROVIDER_KEY: &shared.ProviderPlugin{Impl: &Provider{logger: logger}},
+			shared.PluginProviderKey: &shared.ProviderPlugin{Impl: &Provider{logger: logger}},
 		},
 		GRPCServer: plugin.DefaultGRPCServer,
 	})

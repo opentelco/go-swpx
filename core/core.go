@@ -16,46 +16,33 @@ import (
 )
 
 const (
-	REQUEST_BUFFER_SIZE int    = 2000000
-	MAX_REQUESTS               = 1000000
-	WORKERS                    = 1
-	APP_NAME            string = "swpx-core"
-	RESOURCE            string = "resource"
-	PLUGIN_PATH         string = "./plugins"
-	RESOURCES           string = "resources"
-	PROVIDERS           string = "providers"
-	VERSION_STRING      string = "0.1-beta"
-
-	// Name of queues SWPX Listens to.
-	CommandQueue string = "opentelco.dnc.cmd"
-	EventQueue   string = "opentelco.dnc.events"
+	RequestBufferSize int    = 2000000
+	MaxRequests              = 1000000
+	WORKERS                  = 1
+	AppName           string = "swpx-core"
+	PluginPath        string = "./plugins"
+	Resources         string = "resources"
+	Providers         string = "providers"
+	VersionString     string = "0.1-beta"
 )
 
 var (
-	// this contants should be moved to environment variables and arguments to CMD
-	EVENT_SERVERS []string    = []string{"nats://localhost:14222", "nats://localhost:24222", "nats://localhost:34222"}
-	TEST_CHAN     chan string = make(chan string, 0)
-)
-
-var (
-	logger             hclog.Logger
-	VERSION            *version.Version
-	StopRequestHandler chan bool = make(chan bool)
+	logger  hclog.Logger
+	VERSION *version.Version
 
 	// Global request queue
-	RequestQueue chan *Request = make(chan *Request, REQUEST_BUFFER_SIZE)
+	RequestQueue = make(chan *Request, RequestBufferSize)
 
-	// if swpx has an established InterfaceCacher
-	useCache bool
+	useCache       bool
+	InterfaceCache *cache
+	ResponseCache  *cache
 )
-
-var Cache InterfaceCacher
 
 func init() {
 	// Create an hclog.Logger
-	VERSION, _ = version.NewVersion(VERSION_STRING)
+	VERSION, _ = version.NewVersion(VersionString)
 	logger = hclog.New(&hclog.LoggerOptions{
-		Name:   APP_NAME,
+		Name:   AppName,
 		Output: os.Stdout,
 		Level:  hclog.Debug,
 	})
@@ -125,17 +112,17 @@ func CreateCore() *Core {
 
 	// create core
 	core := &Core{
-		Swarm: newWorkerPool(WORKERS, MAX_REQUESTS),
+		Swarm: newWorkerPool(WORKERS, MaxRequests),
 		//transport: Transport(t),
 	}
 	conf := shared.GetConfig()
 
 	// load all provider and resource plugins (files)
-	if availableProviders, err = LoadPlugins(path.Join(PLUGIN_PATH, PROVIDERS)); err != nil {
+	if availableProviders, err = LoadPlugins(path.Join(PluginPath, Providers)); err != nil {
 		logger.Error(err.Error())
 	}
 	// load resource plugins, vrp etc
-	if availableResources, err = LoadPlugins(path.Join(PLUGIN_PATH, RESOURCES)); err != nil {
+	if availableResources, err = LoadPlugins(path.Join(PluginPath, Resources)); err != nil {
 		logger.Error(err.Error())
 	}
 
@@ -152,15 +139,20 @@ func CreateCore() *Core {
 	}
 
 	// setup mongodb cache
-	mongoClient, err := initMongoDB(conf.Mongo)
+	mongoClient, err := initMongoDB(conf.InterfaceCache)
 	if err != nil {
 		logger.Warn("could not establish mongodb connection: %s", err.Error())
 		useCache = false
 		return core
 	}
-	if Cache, err = NewCache(mongoClient, logger, conf.Mongo); err != nil {
-		logger.Error("cannot set cache: %s", err.Error())
+	if InterfaceCache, err = NewCache(mongoClient, logger, conf.InterfaceCache); err != nil {
+		logger.Error("cannot set interface cache: %s", err.Error())
 		useCache = false
+		return core
+	}
+
+	if ResponseCache, err = NewCache(mongoClient, logger, conf.ResponseCache); err != nil {
+		logger.Error("cannot set response cache: %s", err.Error())
 		return core
 	}
 

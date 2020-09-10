@@ -42,8 +42,8 @@ func (g *ComwareDriver) Version() (string, error) {
 // directory. It is a UX feature, not a security feature.
 var handshakeConfig = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
-	MagicCookieKey:   shared.MAGIC_COOKIE_KEY,
-	MagicCookieValue: shared.MAGIC_COOKIE_VALUE,
+	MagicCookieKey:   shared.MagicCookieKey,
+	MagicCookieValue: shared.MagicCookieValue,
 }
 
 func main() {

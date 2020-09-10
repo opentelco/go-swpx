@@ -8,21 +8,21 @@ import (
 
 // Response is the main struct that returns to the client
 type Response struct {
-	Status *ResponseStatus `json:"status"`
-	Data   interface{}     `json:"data"`
+	Status *ResponseStatus `json:"status" bson:"status"`
+	Data   interface{}     `json:"data" bson:"data"`
 }
 
 // ResponseStatus is the status of a Response.
 type ResponseStatus struct {
 	// AppErrorCode is used for internal
-	AppErrorCode    errors.ErrorCode `json:"-"`
-	AppErrorMessage string           `json:"-"`
+	AppErrorCode    errors.ErrorCode `json:"-" bson:"-"`
+	AppErrorMessage string           `json:"-" bson:"-"`
 
 	// Sent to the client
-	Error   bool   `json:"error"`
-	Code    int    `json:"code"`
-	Type    string `json:"type,omitempty"`
-	Message string `json:"message"`
+	Error   bool   `json:"error" bson:"error"`
+	Code    int    `json:"code" bson:"code"`
+	Type    string `json:"type,omitempty" bson:"type,omitempty"`
+	Message string `json:"message" bson:"message"`
 }
 
 // Render implements the chi Response return
@@ -59,5 +59,11 @@ var (
 		Code:    http.StatusNotFound,
 		Type:    "failure",
 		Message: "could not find anything",
+	}
+	ResponseStatusError = &ResponseStatus{
+		Error:   true,
+		Code:    http.StatusInternalServerError,
+		Type:    "failure",
+		Message: "internal server error",
 	}
 )

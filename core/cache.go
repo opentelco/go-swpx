@@ -2,9 +2,7 @@ package core
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,21 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
-
-// CachedInterface is the data object stored in mongo for a cached interface
-type CachedInterface struct {
-	Hostname string `bson:"hostname"`
-	Port     string `bson:"port"`
-	// index from the InterfaceTableMIB
-	InterfaceIndex int64 `bson:"if_index"`
-	// index from the PhysicalEntityMIB
-	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
-}
-
-type InterfaceCacher interface {
-	Pop(hostname, iface string) (*CachedInterface, error)
-	Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
-}
 
 type cache struct {
 	client *mongo.Client
@@ -51,39 +34,6 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 		col:    col,
 		logger: logger,
 	}, nil
-}
-
-func (c *cache) Pop(hostname, iface string) (*CachedInterface, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface})
-	obj := &CachedInterface{}
-	if err := res.Decode(obj); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return obj, nil
-}
-
-func (c *cache) Set(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
-	for k, v := range interfaces.Interfaces {
-		if physInterface, ok := phys.Interfaces[k]; ok {
-			_, err := c.col.InsertOne(context.Background(), bson.M{
-				"hostname":              ne.Hostname,
-				"port":                  v.Description,
-				"if_index":              v.Index,
-				"physical_entity_index": physInterface.Index,
-			})
-
-			if err != nil {
-				logger.Error("Error saving info in cache: ", err.Error())
-				return err
-			}
-
-		}
-	}
-	return nil
-
 }
 
 func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {

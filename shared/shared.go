@@ -12,21 +12,21 @@ import (
 )
 
 const (
-	PLUGIN_VERSION     uint   = 1
-	VERSION_STRING     string = "1.0-beta"
-	CORE_NAME          string = "swpx"
-	MAGIC_COOKIE_KEY   string = "SWPX_PLUGIN_COOKE"
-	MAGIC_COOKIE_VALUE string = "IVbRejBEZ6EnzwoR4wUz"
+	PluginVersion    uint   = 1
+	VersionString    string = "1.0-beta"
+	CoreName         string = "swpx"
+	MagicCookieKey   string = "SWPX_PLUGIN_COOKE"
+	MagicCookieValue string = "IVbRejBEZ6EnzwoR4wUz"
 
-	PLUGIN_RESOURCE_KEY string = "resource"
-	PLUGIN_PROVIDER_KEY string = "provider"
+	PluginResourceKey string = "resource"
+	PluginProviderKey string = "provider"
 )
 
 var VERSION *version.Version
-var DEFAULT_CORE_PATH string = fmt.Sprintf(".%s", CORE_NAME)
+var DefaultCorePath = fmt.Sprintf(".%s", CoreName)
 
 func init() {
-	VERSION, _ = version.NewVersion(VERSION_STRING)
+	VERSION, _ = version.NewVersion(VersionString)
 }
 
 type DNCRequest struct {
@@ -34,15 +34,15 @@ type DNCRequest struct {
 }
 
 var Handshake = plugin.HandshakeConfig{
-	ProtocolVersion:  PLUGIN_VERSION,
-	MagicCookieKey:   MAGIC_COOKIE_KEY,
-	MagicCookieValue: MAGIC_COOKIE_VALUE,
+	ProtocolVersion:  PluginVersion,
+	MagicCookieKey:   MagicCookieKey,
+	MagicCookieValue: MagicCookieValue,
 }
 
 // pluginMap is the map of plugins we can dispense.
 var PluginMap = map[string]plugin.Plugin{
-	PLUGIN_RESOURCE_KEY: &ResourcePlugin{},
-	PLUGIN_PROVIDER_KEY: &ProviderPlugin{},
+	PluginResourceKey: &ResourcePlugin{},
+	PluginProviderKey: &ProviderPlugin{},
 }
 
 type ConfigTelnet struct {
@@ -79,10 +79,11 @@ type ConfigNATS struct {
 }
 
 type Configuration struct {
-	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
-	Telnet ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
-	Mongo  ConfigMongo  `json:"mongo" toml:"mongo" yaml:"mongo"`
-	NATS   ConfigNATS   `json:"nats" toml:"nats" yaml:"nats"`
+	SNMP           ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp"`
+	Telnet         ConfigTelnet `json:"telnet" toml:"telnet" yaml:"telnet"`
+	InterfaceCache ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache  ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	NATS           ConfigNATS   `json:"nats" toml:"nats" yaml:"nats"`
 }
 
 func GetConfig() Configuration {
@@ -130,7 +131,7 @@ func Conf2proto(conf Configuration) proto.Configuration {
 	}
 }
 
-func Proto2conf(protoConf proto.Configuration) Configuration {
+func Proto2conf(protoConf *proto.Configuration) Configuration {
 	return Configuration{
 		SNMP: ConfigSNMP{
 			Community:          protoConf.SNMP.Community,

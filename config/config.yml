@@ -4,10 +4,15 @@ snmp:
   version: 2
   retries: 3
   dynamic_repetitions: true
-mongo:
+interface_cache:
   server: mongodb://localhost:27017
   database: test
-  collection: cache
+  collection: interface_cache
+  timeout_seconds: 30
+response_cache:
+  server: mongodb://localhost:27017
+  database: test
+  collection: response_cache
   timeout_seconds: 30
 nats:
   event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
