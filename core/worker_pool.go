@@ -31,7 +31,7 @@ import (
 	"github.com/segmentio/ksuid"
 
 	"git.liero.se/opentelco/go-swpx/errors"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -57,7 +57,7 @@ type workers []*worker
 type workerPool struct {
 	pool     workers
 	done     chan *worker
-	response chan *Response
+	response chan *resource.TechnicalInformationResponse
 	index    int
 	ops      int
 }
@@ -70,7 +70,7 @@ func newWorkerPool(nWorker int, nRequester int) *workerPool {
 	b := &workerPool{
 		pool:     make(workers, 0, nWorker),
 		done:     done,
-		response: make(chan *Response, nRequester),
+		response: make(chan *resource.TechnicalInformationResponse, nRequester),
 		index:    0,
 		ops:      0,
 	}
@@ -88,7 +88,7 @@ func newWorkerPool(nWorker int, nRequester int) *workerPool {
 
 		// push the worker to the heap pool
 		heap.Push(&b.pool, w)
-		go w.start(b.done, b.response)
+		go w.start(b.done)
 	}
 	return b
 }
@@ -233,17 +233,17 @@ type wresp struct {
 }
 
 // start the worker and ready it to accept payloads
-func (w *worker) start(done chan *worker, res chan<- *Response) {
+func (w *worker) start(done chan *worker) {
 	for {
 		select {
 		case msg := <-w.messages:
-			resp := &Response{RequestObjectID: msg.ObjectID}
+			resp := &resource.TechnicalInformationResponse{RequestObjectID: msg.ObjectID}
 
 			// do work with payload
 			err := handle(msg.Context, msg, resp, handleMsg)
 
 			if err != nil {
-				resp.Error = err
+				resp.Error = &resource.Error{Message: err.Error()}
 				w.TimedOut++
 			}
 
@@ -281,7 +281,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 	logger.Debug("data from provider plugin", "provider", name, "version", ver, "weight", weight)
 }
 
-func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Request, resp *Response) error) error {
+func handle(ctx context.Context, msg *Request, resp *resource.TechnicalInformationResponse, f func(msg *Request, resp *resource.TechnicalInformationResponse) error) error {
 	c := make(chan error, 1)
 	go func() { c <- f(msg, resp) }()
 	select {
@@ -294,10 +294,9 @@ func handle(ctx context.Context, msg *Request, resp *Response, f func(msg *Reque
 		}
 		return err
 	}
-	return nil
 }
 
-func handleMsg(msg *Request, resp *Response) error {
+func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error {
 	logger.Debug("worker has payload")
 	logger.Info("the user has sent in %s as provider", msg.Provider)
 
@@ -308,8 +307,8 @@ func handleMsg(msg *Request, resp *Response) error {
 	if msg.Provider != "" {
 		provider := providers[msg.Provider]
 		if provider == nil {
-			resp.Error = errors.New("the provider is missing/does not exist", errors.ErrInvalidProvider)
-			return resp.Error
+			resp.Error = &resource.Error{Message: "the provider is missing/does not exist", Code: errors.ErrInvalidProvider}
+			return errors.New(resp.Error.Message, errors.ErrorCode(resp.Error.Code))
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
@@ -327,7 +326,10 @@ func handleMsg(msg *Request, resp *Response) error {
 	plugin := resources[msg.Resource]
 	if plugin == nil {
 		logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.Resource)
-		resp.Error = errors.New("selected driver is missing/does not exist", errors.ErrInvalidResource)
+		resp.Error = &resource.Error{
+			Message: "selected driver is missing/does not exist",
+			Code:    errors.ErrInvalidResource,
+		}
 		return nil
 	}
 	plugin.SetConfiguration(msg.Context, providerConf)
@@ -336,7 +338,7 @@ func handleMsg(msg *Request, resp *Response) error {
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case GetTechnicalInformationElement:
-		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
+		return handleGetTechnicalInformationElement(plugin)
 	case GetTechnicalInformationPort:
 		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
@@ -345,7 +347,7 @@ func handleMsg(msg *Request, resp *Response) error {
 }
 
 // handleGetTechnicalInformationElement gets full information of a Element
-func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
+func handleGetTechnicalInformationElement(plugin shared.Resource) error {
 	ver, err := plugin.Version()
 	if err != nil {
 		logger.Error(err.Error())
@@ -357,15 +359,15 @@ func handleGetTechnicalInformationElement(msg *Request, resp *Response, plugin s
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shared.Resource, conf shared.Configuration) error {
+func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInformationResponse, plugin shared.Resource, conf shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
-	req := &proto.NetworkElement{
+	req := &resource.NetworkElement{
 		Hostname:  msg.NetworkElement,
 		Interface: *msg.NetworkElementInterface,
 		Conf:      &protConf,
 	}
 
-	mapInterfaceResponse := &proto.NetworkElementInterfaces{}
+	mapInterfaceResponse := &resource.NetworkElementInterfaces{}
 	var cachedInterface *CachedInterface
 	var err error
 
@@ -381,10 +383,13 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
-		var physPortResponse *proto.NetworkElementInterfaces
+		var physPortResponse *resource.NetworkElementInterfaces
 		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
-			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+			resp.Error = &resource.Error{
+				Message: err.Error(),
+				Code:    errors.ErrInvalidPort,
+			}
 			return err
 		}
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
@@ -394,7 +399,10 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
-			resp.Error = errors.New(err.Error(), errors.ErrInvalidPort)
+			resp.Error = &resource.Error{
+				Message: err.Error(),
+				Code:    errors.ErrInvalidPort,
+			}
 			return err
 		}
 		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
@@ -416,7 +424,10 @@ func handleGetTechnicalInformationPort(msg *Request, resp *Response, plugin shar
 	//if the return is 0 something went wrong
 	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = errors.New("interface index returned zero", errors.ErrInvalidPort)
+		resp.Error = &resource.Error{
+			Message: "interface index returned zero",
+			Code:    errors.ErrInvalidPort,
+		}
 		return err
 	}
 

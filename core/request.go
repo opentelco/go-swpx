@@ -22,7 +22,10 @@
 
 package core
 
-import "context"
+import (
+	"context"
+	"git.liero.se/opentelco/go-swpx/proto/resource"
+)
 
 // ReqestType is the possible requsts that can be made to swpx
 // they maps to a switchcase on each request
@@ -45,7 +48,7 @@ type Request struct {
 	DontUseIndex            bool
 
 	// metadata to handle the request
-	Response chan *Response
+	Response chan *resource.TechnicalInformationResponse
 	Context  context.Context
 	Type     RequestType
 }

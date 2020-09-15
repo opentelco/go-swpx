@@ -61,7 +61,10 @@ var Start = &cobra.Command{
 
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it.
-		server := api.New(core.RequestQueue)
+
+		server := api.NewServer(core.RequestQueue)
+		//server := api.NewGRPCServer(core.RequestQueue)
+
 		err := server.ListenAndServe(":" + port)
 		if err != nil {
 			panic(err)
