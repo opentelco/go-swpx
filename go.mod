@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	go.mongodb.org/mongo-driver v1.3.4
 	google.golang.org/grpc v1.27.1
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.25.0
 
 )
 

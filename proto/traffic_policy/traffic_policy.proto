@@ -1,0 +1,122 @@
+syntax = "proto3";
+//  import "google/protobuf/timestamp.proto";
+
+package traffic_policy;
+option go_package = "git.liero.se/opentelco/go-swpx/proto/traffic_policy";
+
+//display current-configuration interface GigabitEthernet0/0/5 | include traffic-policy|shaping
+//traffic-policy KBPS_0000 inbound
+//traffic-policy KBPS_100000 outbound
+//qos queue 0 shaping cir 110000 pir 110000 cbs 2500000 pbs 2500000
+message ConfiguredTrafficPolicy {
+  string inbound = 1;
+  string outbound = 2;
+
+  message QOS {
+    int64 queue = 1;
+    Shaping shaping = 2;
+
+    message Shaping {
+      double cir = 1;
+      double pir = 2;
+      double cbs = 3;
+      double pbs = 4;
+    }
+  }
+  QOS qos = 3;
+
+  // display traffic policy statistics interface GigabitEthernet0/0/5 inbound verbose classifier-base
+  Statistics inbound_statistics = 4;
+  message Statistics {
+    string traffic_policy = 1;
+    int64 rule_number = 2;
+    string status = 3;
+    int64 interval = 4;
+
+    // AS A TABLE
+    //        PERMIT       drop        0 pass        0 for KBPS_0000
+    //        DISCARD      drop        0 pass        0 for DISCARD
+    //        VOIP         drop        0 pass        0 for VOIP
+    //        OTHER        drop        0 pass        0 for KBPS_0000
+    map<string, Classifier> classifiers = 5;
+
+    message Classifier {
+      string classifier = 1;
+      string behavior = 2;
+      string board = 3;
+
+      map<string, Metric> metrics = 4;
+
+      message Metric {
+        map<string, double> values = 1;
+      }
+
+    }
+  }
+}
+
+
+
+// Interface: GigabitEthernet0/0/5
+// Traffic policy inbound: KBPS_0000
+// Rule number: 24
+// Current status: success
+// Statistics interval: 300
+//Classifier: OTHER operator and
+//Behavior: KBPS_0000
+//Board : 0
+//---------------------------------------------------------------------
+//Matched          |      Packets:                             0
+//                |      Bytes:                               -
+//                |      Rate(pps):                           0
+//                |      Rate(bps):                           -
+//---------------------------------------------------------------------
+//Passed         |      Packets:                             0
+//                |      Bytes:                               -
+//                |      Rate(pps):                           0
+//                |      Rate(bps):                           -
+//---------------------------------------------------------------------
+//Dropped        |      Packets:                             0
+//                |      Bytes:                               -
+//                |      Rate(pps):                           0
+//                |      Rate(bps):                           -
+//---------------------------------------------------------------------
+//Filter       |      Packets:                             0
+//                |      Bytes:                               -
+//---------------------------------------------------------------------
+//Car          |      Packets:                             0
+//            |      Bytes:                               -
+//---------------------------------------------------------------------
+
+
+// display qos queue statistics interface GigabitEthernet 0/0/5
+// as a table:
+//Queue      CIR(kbps)              Passed Packets             Dropped Packets
+//0        110,000                          23                           0
+//1              0                           0                           0
+//2              0                           0                           0
+//3              0                           0                           0
+//4              0                           0                           0
+//5              0                           0                           0
+//6              0                   1,636,830                           0
+//7              0                           0                           0
+
+message QOS {
+
+  repeated QueueStatistics queue_statistics = 1;
+
+  message QueueStatistics {
+    int64 id = 1;
+    double cir = 2; // kbps
+    double pir = 3; // kbps
+    int64 passed_packets = 4;
+    double passed_rate_pps = 5; //pps
+    int64 passed_bytes = 6;
+    double passed_rate_bps = 7;
+    int64 dropped_packets = 8;
+    double dropped_rate_pps = 9; //pps
+    int64 dropped_bytes = 10;
+    double dropped_rate_bps = 11;
+  }
+
+}
