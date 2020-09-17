@@ -142,7 +142,8 @@ func parseCurrentConfig(config string) string {
 }
 
 func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data string) error {
-	lines := strings.Split(data, "\r\n")
+	data = strings.Replace(data, "\r", "", -1) // remove line feeds
+	lines := strings.Split(data, "\n")
 
 	statistics := &traffic_policy.ConfiguredTrafficPolicy_Statistics{
 		Classifiers: make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier),
@@ -219,7 +220,8 @@ func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPo
 func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 	policy := &traffic_policy.ConfiguredTrafficPolicy{}
 
-	lines := strings.Split(data, "\r\n")
+	data = strings.Replace(data, "\r", "", -1) // remove line feeds
+	lines := strings.Split(data, "\n")
 
 	for _, line := range lines {
 		fields := strings.Fields(line)
@@ -255,7 +257,7 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 
 func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 	data = strings.Replace(data, ",", "", -1)
-	lines := strings.Split(data, "\r\n")
+	lines := strings.Split(data, "\n")
 	qos := &traffic_policy.QOS{
 		QueueStatistics: make([]*traffic_policy.QOS_QueueStatistics, len(lines)/QueueEntryLength),
 	}
