@@ -106,7 +106,7 @@ message QOS {
   repeated QueueStatistics queue_statistics = 1;
 
   message QueueStatistics {
-    int64 id = 1;
+    int64 queue_id = 1;
     double cir = 2; // kbps
     double pir = 3; // kbps
     int64 passed_packets = 4;

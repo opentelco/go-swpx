@@ -53,9 +53,10 @@ var VERSION *version.Version
 var logger hclog.Logger
 
 const (
-	VersionBase = "1.0-beta"
-	DriverName  = "vrp-driver"
-	Float64Size = 64
+	VersionBase      = "1.0-beta"
+	DriverName       = "vrp-driver"
+	Float64Size      = 64
+	QueueEntryLength = 12
 )
 
 var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
@@ -316,12 +317,12 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				}
 			}
 		case *transport.Message_Telnet:
-			if elementInterface.MacAddressTable, err = ParseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
 				logger.Error("can't parse MAC address table: ", err.Error())
 				return nil, err
 			}
 
-			if elementInterface.DhcpTable, err = ParseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
+			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
 				logger.Error("can't parse DHCP table: ", err.Error())
 				return nil, err
 			}
@@ -334,6 +335,12 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
 				logger.Error("can't parse policy statistics: ", err.Error())
+				return nil, err
+			}
+
+			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
+				logger.Error("can't parse queue statistics: ", err.Error())
+
 				return nil, err
 			}
 		}

@@ -319,6 +319,9 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			{
 				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
 			},
+			{
+				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			},
 		},
 		Config: &telnet.Config{
 			User:                conf.Telnet.Username,

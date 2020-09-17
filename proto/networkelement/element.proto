@@ -130,6 +130,7 @@ message Interface {
   int64 interface_status = 20;
 
   traffic_policy.ConfiguredTrafficPolicy configuredTrafficPolicy = 21;
+  traffic_policy.QOS qos = 22;
 
 }
 

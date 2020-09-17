@@ -49,7 +49,7 @@ Total items displayed = 10
 <liero-test-a1>
 `
 
-	got, err := ParseMacTable(table)
+	got, err := parseMacTable(table)
 	want := []*networkelement.MACEntry{
 		{HardwareAddress: "0035-1a6d-4ebf", Vlan: 55},
 		{HardwareAddress: "20f1-7cb0-ecbf", Vlan: 55},
@@ -82,7 +82,7 @@ MAC Address    VLAN/VSI                          Learned-From        Type
 Total items displayed = 1
 `
 
-	got, err := ParseMacTable(table)
+	got, err := parseMacTable(table)
 	want := []*networkelement.MACEntry{
 		{HardwareAddress: "0848-2c20-15a1", Vlan: 999},
 	}
@@ -105,7 +105,7 @@ MAC Address    VLAN/VSI                          Learned-From        Type
 Total items displayed = 0
 `
 
-	got, err := ParseMacTable(table)
+	got, err := parseMacTable(table)
 	want := make([]*networkelement.MACEntry, 0)
 
 	if err != nil {
@@ -127,7 +127,7 @@ IP Address       MAC Address     VSI/VLAN(O/I/P) Interface      Lease
 Print count:           1          Total count:           1         
 `
 
-	got, err := ParseIPTable(table)
+	got, err := parseIPTable(table)
 	want := []*networkelement.DHCPEntry{
 		{IpAddress: "192.168.112.19", HardwareAddress: "0848-2c20-1599", Vlan: 296, Timestamp: "2020.08.10-12:27"},
 	}
