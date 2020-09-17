@@ -89,42 +89,42 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
-// ResourceGRCServer is the server struct
-type ResourceGRCServer struct {
+// ResourceGRPCServer is the server struct
+type ResourceGRPCServer struct {
 	// *plugin.MuxBroker
 	Impl Resource
 	conf Configuration
 }
 
 // Version returns the current version
-func (rpc *ResourceGRCServer) Version(ctx context.Context, _ *proto.Empty) (*proto.VersionResponse, error) {
+func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
 }
 
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRCServer) TechnicalPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
+func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.Impl.TechnicalPortInformation(ctx, ne)
 }
 
 //MapInterface has the purppose to map interface name to a index by asking the device
-func (rpc *ResourceGRCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+func (rpc *ResourceGRPCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.Impl.MapInterface(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) MapEntityPhysical(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.Impl.MapEntityPhysical(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) GetConfiguration(ctx context.Context) (Configuration, error) {
+func (rpc *ResourceGRPCServer) GetConfiguration(ctx context.Context) (Configuration, error) {
 	return rpc.conf, nil
 }
 
-func (rpc *ResourceGRCServer) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
+func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	return rpc.Impl.GetTransceiverInformation(ctx, ne)
 }
 
-func (rpc *ResourceGRCServer) SetConfiguration(ctx context.Context, conf Configuration) error {
+func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf Configuration) error {
 	rpc.conf = conf
 
 	return nil
@@ -141,7 +141,7 @@ type ResourcePlugin struct {
 
 // GRPCServer Implements RCP interface
 func (p *ResourcePlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterResourceServer(s, &ResourceGRCServer{
+	proto.RegisterResourceServer(s, &ResourceGRPCServer{
 		Impl: p.Impl,
 	})
 

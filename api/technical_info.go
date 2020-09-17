@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"git.liero.se/opentelco/go-swpx/core"
 	"git.liero.se/opentelco/go-swpx/errors"
+	"git.liero.se/opentelco/go-swpx/proto/resource"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"net"
@@ -125,7 +126,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		DontUseIndex:   data.RecreateIndex,
 
 		// Metadata
-		Response: make(chan *core.Response, 1),
+		Response: make(chan *resource.TechnicalInformationResponse, 1),
 		Context:  ctx,
 	}
 
@@ -145,9 +146,9 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 	}
 
 	if cachedResponse != nil {
-		if time.Since(cachedResponse.Timestamp) < data.CacheTTL.Duration {
+		if time.Since(cachedResponse.Timestamp.AsTime()) < data.CacheTTL.Duration {
 			logger.Info("found response in cache")
-			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response.Data))
+			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response))
 			return
 		}
 		// if response is cached but ttl ran out, clear it from the cache
@@ -169,7 +170,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 			}
 
 			wrappedResponse := NewResponse(ResponseStatusOK, resp)
-			if err = core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, wrappedResponse); err != nil {
+			if err = core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
 

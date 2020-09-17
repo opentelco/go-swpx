@@ -36,18 +36,47 @@ message VersionResponse {
   string version = 1;
 }
 
-message TechnicalPortInformationResponse {
-  string response = 1;
+message TechnicalInformationResponse {
+  networkelement.Element network_element = 1;
+  string physical_port = 2;
+  networkelement.Transceiver transceiver = 3;
+  Error error = 4;
+  string RequestObjectID = 5;
 }
+
+message Status {
+  bool error = 1;
+  int32 code = 2;
+  string type = 3;
+  string message = 4;
+}
+
+message Error {
+  string message = 1;
+  int32 code = 2;
+}
+
 
 // used in request
 message NetworkElement {
   string hostname = 1;
-  string ip = 2;  
+  string ip = 2;
   string interface = 3;
   int64 interface_index = 4;
   int64 physical_index = 5;
   provider.Configuration conf = 6;
+}
+
+
+message TechnicalInformationRequest {
+  string hostname = 1;
+  string port = 2;
+  string provider = 3;
+  string driver = 4;
+  string region = 5;
+  int32 timeout = 6;
+  bool recreate_index = 7;
+  int32 cache_ttl = 8;
 }
 
 message NetworkElementInterface {
@@ -58,6 +87,10 @@ message NetworkElementInterface {
 // map port to entire interface for faster retrieval
 message NetworkElementInterfaces {
   map<string, NetworkElementInterface> interfaces = 1;
+}
+
+service TechnicalInformation {
+  rpc TechnicalPortInformation(TechnicalInformationRequest) returns (TechnicalInformationResponse);
 }
 
 service Resource {

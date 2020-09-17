@@ -70,8 +70,8 @@ func (s *Server) ListenAndServe(host string) error {
 	return http.ListenAndServe(host, context.ClearHandler(s))
 }
 
-// New creates and returnes a server.
-func New(requestQueue chan *core.Request) *Server {
+// NewServer creates and returns a server.
+func NewServer(requestQueue chan *core.Request) *Server {
 	if requestQueue == nil {
 		log.Fatal("channel is nil, requests needs to be handled..")
 	}

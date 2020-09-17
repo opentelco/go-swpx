@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"git.liero.se/opentelco/go-swpx/shared"
+	codecs "github.com/amsokol/mongo-go-driver-protobuf"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -61,9 +62,12 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
 	logger.Info("Attempting to connect to MongoDB...")
 
+	// Register custom codecs for protobuf Timestamp and wrapper types
+	reg := codecs.Register(bson.NewRegistryBuilder()).Build()
+
 	var err error
 	var mongoClient *mongo.Client
-	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server)); err != nil {
+	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server), &options.ClientOptions{Registry: reg}); err != nil {
 		logger.Error("error initializing Mongo client:", err.Error())
 		return nil, err
 	}
