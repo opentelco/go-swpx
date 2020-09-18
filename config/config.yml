@@ -5,12 +5,12 @@ snmp:
   retries: 3
   dynamic_repetitions: true
 interface_cache:
-  server: mongodb://localhost:27017
+  server: mongodb://192.168.86.32:27017
   database: test
   collection: interface_cache
   timeout_seconds: 30
 response_cache:
-  server: mongodb://localhost:27017
+  server: mongodb://192.168.86.32:27017
   database: test
   collection: response_cache
   timeout_seconds: 30

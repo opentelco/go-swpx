@@ -384,6 +384,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
 		var physPortResponse *resource.NetworkElementInterfaces
+		logger.Error("run mapEntity")
 		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
 			resp.Error = &resource.Error{

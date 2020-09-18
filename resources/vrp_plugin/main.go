@@ -118,7 +118,6 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 		d.logger.Error(err.Error())
 		return nil, err
 	}
-
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		interfaces := make(map[string]*proto.NetworkElementInterface)

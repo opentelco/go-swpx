@@ -60,7 +60,7 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 }
 
 func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
-	logger.Info("Attempting to connect to MongoDB...")
+	logger.Info("Attempting to connect to MongoDB: ", conf.Server)
 
 	// Register custom codecs for protobuf Timestamp and wrapper types
 	reg := codecs.Register(bson.NewRegistryBuilder()).Build()
