@@ -96,6 +96,7 @@ func (m *VersionResponse) GetVersion() string {
 	return ""
 }
 
+<<<<<<< HEAD
 type TechnicalInformationResponse struct {
 	NetworkElement       *networkelement.Element     `protobuf:"bytes,1,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty"`
 	PhysicalPort         string                      `protobuf:"bytes,2,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty"`
@@ -142,10 +143,56 @@ func (m *TechnicalInformationResponse) GetNetworkElement() *networkelement.Eleme
 func (m *TechnicalInformationResponse) GetPhysicalPort() string {
 	if m != nil {
 		return m.PhysicalPort
+=======
+type TechnicalPortInformationResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Response string `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+}
+
+func (x *TechnicalPortInformationResponse) Reset() {
+	*x = TechnicalPortInformationResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TechnicalPortInformationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TechnicalPortInformationResponse) ProtoMessage() {}
+
+func (x *TechnicalPortInformationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TechnicalPortInformationResponse.ProtoReflect.Descriptor instead.
+func (*TechnicalPortInformationResponse) Descriptor() ([]byte, []int) {
+	return file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *TechnicalPortInformationResponse) GetResponse() string {
+	if x != nil {
+		return x.Response
+>>>>>>> feature/traffic_policy
 	}
 	return ""
 }
 
+<<<<<<< HEAD
 func (m *TechnicalInformationResponse) GetTransceiver() *networkelement.Transceiver {
 	if m != nil {
 		return m.Transceiver
@@ -295,11 +342,35 @@ func (m *NetworkElement) String() string { return proto.CompactTextString(m) }
 func (*NetworkElement) ProtoMessage()    {}
 func (*NetworkElement) Descriptor() ([]byte, []int) {
 	return fileDescriptor_478d904e0b4d43a1, []int{5}
+=======
+// used in request
+type NetworkElement struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Hostname       string                  `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Ip             string                  `protobuf:"bytes,2,opt,name=ip,proto3" json:"ip,omitempty"`
+	Interface      string                  `protobuf:"bytes,3,opt,name=interface,proto3" json:"interface,omitempty"`
+	InterfaceIndex int64                   `protobuf:"varint,4,opt,name=interface_index,json=interfaceIndex,proto3" json:"interface_index,omitempty"`
+	PhysicalIndex  int64                   `protobuf:"varint,5,opt,name=physical_index,json=physicalIndex,proto3" json:"physical_index,omitempty"`
+	Conf           *provider.Configuration `protobuf:"bytes,6,opt,name=conf,proto3" json:"conf,omitempty"`
+}
+
+func (x *NetworkElement) Reset() {
+	*x = NetworkElement{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+>>>>>>> feature/traffic_policy
 }
 
 func (m *NetworkElement) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NetworkElement.Unmarshal(m, b)
 }
+<<<<<<< HEAD
 func (m *NetworkElement) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_NetworkElement.Marshal(b, m, deterministic)
 }
@@ -308,6 +379,26 @@ func (m *NetworkElement) XXX_Merge(src proto.Message) {
 }
 func (m *NetworkElement) XXX_Size() int {
 	return xxx_messageInfo_NetworkElement.Size(m)
+=======
+
+func (*NetworkElement) ProtoMessage() {}
+
+func (x *NetworkElement) ProtoReflect() protoreflect.Message {
+	mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkElement.ProtoReflect.Descriptor instead.
+func (*NetworkElement) Descriptor() ([]byte, []int) {
+	return file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescGZIP(), []int{3}
+>>>>>>> feature/traffic_policy
 }
 func (m *NetworkElement) XXX_DiscardUnknown() {
 	xxx_messageInfo_NetworkElement.DiscardUnknown(m)
@@ -357,6 +448,7 @@ func (m *NetworkElement) GetConf() *provider.Configuration {
 	return nil
 }
 
+<<<<<<< HEAD
 type TechnicalInformationRequest struct {
 	Hostname             string   `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	Port                 string   `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
@@ -452,6 +544,8 @@ func (m *TechnicalInformationRequest) GetCacheTtl() int32 {
 	return 0
 }
 
+=======
+>>>>>>> feature/traffic_policy
 type NetworkElementInterface struct {
 	Index                int64    `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 	Description          string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -461,21 +555,52 @@ type NetworkElementInterface struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
+<<<<<<< HEAD
 func (m *NetworkElementInterface) Reset()         { *m = NetworkElementInterface{} }
 func (m *NetworkElementInterface) String() string { return proto.CompactTextString(m) }
 func (*NetworkElementInterface) ProtoMessage()    {}
 func (*NetworkElementInterface) Descriptor() ([]byte, []int) {
 	return fileDescriptor_478d904e0b4d43a1, []int{7}
+=======
+func (x *NetworkElementInterface) Reset() {
+	*x = NetworkElementInterface{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+>>>>>>> feature/traffic_policy
 }
 
 func (m *NetworkElementInterface) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NetworkElementInterface.Unmarshal(m, b)
 }
+<<<<<<< HEAD
 func (m *NetworkElementInterface) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_NetworkElementInterface.Marshal(b, m, deterministic)
 }
 func (m *NetworkElementInterface) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_NetworkElementInterface.Merge(m, src)
+=======
+
+func (*NetworkElementInterface) ProtoMessage() {}
+
+func (x *NetworkElementInterface) ProtoReflect() protoreflect.Message {
+	mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkElementInterface.ProtoReflect.Descriptor instead.
+func (*NetworkElementInterface) Descriptor() ([]byte, []int) {
+	return file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescGZIP(), []int{4}
+>>>>>>> feature/traffic_policy
 }
 func (m *NetworkElementInterface) XXX_Size() int {
 	return xxx_messageInfo_NetworkElementInterface.Size(m)
@@ -515,16 +640,27 @@ type NetworkElementInterfaces struct {
 	XXX_sizecache        int32                               `json:"-"`
 }
 
+<<<<<<< HEAD
 func (m *NetworkElementInterfaces) Reset()         { *m = NetworkElementInterfaces{} }
 func (m *NetworkElementInterfaces) String() string { return proto.CompactTextString(m) }
 func (*NetworkElementInterfaces) ProtoMessage()    {}
 func (*NetworkElementInterfaces) Descriptor() ([]byte, []int) {
 	return fileDescriptor_478d904e0b4d43a1, []int{8}
+=======
+func (x *NetworkElementInterfaces) Reset() {
+	*x = NetworkElementInterfaces{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+>>>>>>> feature/traffic_policy
 }
 
 func (m *NetworkElementInterfaces) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NetworkElementInterfaces.Unmarshal(m, b)
 }
+<<<<<<< HEAD
 func (m *NetworkElementInterfaces) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_NetworkElementInterfaces.Marshal(b, m, deterministic)
 }
@@ -536,6 +672,26 @@ func (m *NetworkElementInterfaces) XXX_Size() int {
 }
 func (m *NetworkElementInterfaces) XXX_DiscardUnknown() {
 	xxx_messageInfo_NetworkElementInterfaces.DiscardUnknown(m)
+=======
+
+func (*NetworkElementInterfaces) ProtoMessage() {}
+
+func (x *NetworkElementInterfaces) ProtoReflect() protoreflect.Message {
+	mi := &file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkElementInterfaces.ProtoReflect.Descriptor instead.
+func (*NetworkElementInterfaces) Descriptor() ([]byte, []int) {
+	return file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescGZIP(), []int{5}
+>>>>>>> feature/traffic_policy
 }
 
 var xxx_messageInfo_NetworkElementInterfaces proto.InternalMessageInfo
@@ -547,6 +703,7 @@ func (m *NetworkElementInterfaces) GetInterfaces() map[string]*NetworkElementInt
 	return nil
 }
 
+<<<<<<< HEAD
 func init() {
 	proto.RegisterType((*Empty)(nil), "resource.Empty")
 	proto.RegisterType((*VersionResponse)(nil), "resource.VersionResponse")
@@ -615,6 +772,233 @@ var fileDescriptor_478d904e0b4d43a1 = []byte{
 	0x1b, 0xf7, 0xc2, 0xdf, 0xd2, 0x24, 0x85, 0x17, 0xdf, 0xa2, 0x2a, 0x2d, 0xf4, 0xff, 0x96, 0xf0,
 	0xa1, 0x5f, 0xc2, 0x57, 0xfd, 0x5f, 0x5e, 0xfd, 0xaf, 0x7f, 0xf0, 0x6d, 0xcd, 0xe8, 0x1f, 0xff,
 	0x1b, 0x00, 0x00, 0xff, 0xff, 0x3d, 0x98, 0xe0, 0x2b, 0xbb, 0x07, 0x00, 0x00,
+=======
+var File_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto protoreflect.FileDescriptor
+
+var file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDesc = []byte{
+	0x0a, 0x3c, 0x67, 0x69, 0x74, 0x2e, 0x6c, 0x69, 0x65, 0x72, 0x6f, 0x2e, 0x73, 0x65, 0x2f, 0x6f,
+	0x70, 0x65, 0x6e, 0x74, 0x65, 0x6c, 0x63, 0x6f, 0x2f, 0x67, 0x6f, 0x2d, 0x73, 0x77, 0x70, 0x78,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2f,
+	0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08,
+	0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x1a, 0x1c, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2f, 0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72,
+	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
+	0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x2b, 0x0a, 0x0f, 0x56, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65,
+	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x3e, 0x0a, 0x20, 0x54, 0x65, 0x63, 0x68, 0x6e, 0x69, 0x63,
+	0x61, 0x6c, 0x50, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd7, 0x01, 0x0a, 0x0e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x68, 0x6f, 0x73, 0x74,
+	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x68, 0x6f, 0x73, 0x74,
+	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61,
+	0x63, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x5f,
+	0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x69, 0x6e, 0x74,
+	0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x25, 0x0a, 0x0e, 0x70,
+	0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x0d, 0x70, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x49, 0x6e, 0x64,
+	0x65, 0x78, 0x12, 0x2b, 0x0a, 0x04, 0x63, 0x6f, 0x6e, 0x66, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x2e, 0x43, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x04, 0x63, 0x6f, 0x6e, 0x66, 0x22,
+	0x67, 0x0a, 0x17, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e,
+	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e,
+	0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78,
+	0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69,
+	0x6f, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x22, 0xd0, 0x01, 0x0a, 0x18, 0x4e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x66, 0x61, 0x63, 0x65, 0x73, 0x12, 0x52, 0x0a, 0x0a, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61,
+	0x63, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x32, 0x2e, 0x72, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c, 0x65, 0x6d,
+	0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x2e, 0x49, 0x6e,
+	0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0a, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x1a, 0x60, 0x0a, 0x0f, 0x49, 0x6e, 0x74,
+	0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03,
+	0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x37,
+	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e,
+	0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+	0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x32, 0x85, 0x03, 0x0a, 0x08,
+	0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x35, 0x0a, 0x07, 0x56, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x12, 0x0f, 0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x19, 0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e,
+	0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x4d, 0x0a, 0x18, 0x54, 0x65, 0x63, 0x68, 0x6e, 0x69, 0x63, 0x61, 0x6c, 0x50, 0x6f, 0x72, 0x74,
+	0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x2e, 0x72, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c,
+	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x1a, 0x17, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x65,
+	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2e, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x4c,
+	0x0a, 0x0c, 0x4d, 0x61, 0x70, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x12, 0x18,
+	0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x1a, 0x22, 0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65,
+	0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x12, 0x51, 0x0a, 0x11,
+	0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x50, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61,
+	0x6c, 0x12, 0x18, 0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x1a, 0x22, 0x2e, 0x72, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45, 0x6c,
+	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x12,
+	0x52, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x63, 0x65, 0x69, 0x76, 0x65,
+	0x72, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x2e, 0x72,
+	0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x45,
+	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x1a, 0x1b, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+	0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2e, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x63, 0x65, 0x69,
+	0x76, 0x65, 0x72, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x2e, 0x6c, 0x69, 0x65, 0x72, 0x6f,
+	0x2e, 0x73, 0x65, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x74, 0x65, 0x6c, 0x63, 0x6f, 0x2f, 0x67, 0x6f,
+	0x2d, 0x73, 0x77, 0x70, 0x78, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x72, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+}
+
+var (
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescOnce sync.Once
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescData = file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDesc
+)
+
+func file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescGZIP() []byte {
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescOnce.Do(func() {
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescData = protoimpl.X.CompressGZIP(file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescData)
+	})
+	return file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDescData
+}
+
+var file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_goTypes = []interface{}{
+	(*Empty)(nil),                            // 0: resource.Empty
+	(*VersionResponse)(nil),                  // 1: resource.VersionResponse
+	(*TechnicalPortInformationResponse)(nil), // 2: resource.TechnicalPortInformationResponse
+	(*NetworkElement)(nil),                   // 3: resource.NetworkElement
+	(*NetworkElementInterface)(nil),          // 4: resource.NetworkElementInterface
+	(*NetworkElementInterfaces)(nil),         // 5: resource.NetworkElementInterfaces
+	nil,                                      // 6: resource.NetworkElementInterfaces.InterfacesEntry
+	(*provider.Configuration)(nil),           // 7: provider.Configuration
+	(*networkelement.Element)(nil),           // 8: networkelement.Element
+	(*networkelement.Transceiver)(nil),       // 9: networkelement.Transceiver
+}
+var file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_depIdxs = []int32{
+	7, // 0: resource.NetworkElement.conf:type_name -> provider.Configuration
+	6, // 1: resource.NetworkElementInterfaces.interfaces:type_name -> resource.NetworkElementInterfaces.InterfacesEntry
+	4, // 2: resource.NetworkElementInterfaces.InterfacesEntry.value:type_name -> resource.NetworkElementInterface
+	0, // 3: resource.Resource.Version:input_type -> resource.Empty
+	3, // 4: resource.Resource.TechnicalPortInformation:input_type -> resource.NetworkElement
+	3, // 5: resource.Resource.MapInterface:input_type -> resource.NetworkElement
+	3, // 6: resource.Resource.MapEntityPhysical:input_type -> resource.NetworkElement
+	3, // 7: resource.Resource.GetTransceiverInformation:input_type -> resource.NetworkElement
+	1, // 8: resource.Resource.Version:output_type -> resource.VersionResponse
+	8, // 9: resource.Resource.TechnicalPortInformation:output_type -> networkelement.Element
+	5, // 10: resource.Resource.MapInterface:output_type -> resource.NetworkElementInterfaces
+	5, // 11: resource.Resource.MapEntityPhysical:output_type -> resource.NetworkElementInterfaces
+	9, // 12: resource.Resource.GetTransceiverInformation:output_type -> networkelement.Transceiver
+	8, // [8:13] is the sub-list for method output_type
+	3, // [3:8] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
+}
+
+func init() { file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_init() }
+func file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_init() {
+	if File_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto != nil {
+		return
+	}
+	if !protoimpl.UnsafeEnabled {
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Empty); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*VersionResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TechnicalPortInformationResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkElement); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkElementInterface); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkElementInterfaces); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
+	type x struct{}
+	out := protoimpl.TypeBuilder{
+		File: protoimpl.DescBuilder{
+			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
+			RawDescriptor: file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDesc,
+			NumEnums:      0,
+			NumMessages:   7,
+			NumExtensions: 0,
+			NumServices:   1,
+		},
+		GoTypes:           file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_goTypes,
+		DependencyIndexes: file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_depIdxs,
+		MessageInfos:      file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_msgTypes,
+	}.Build()
+	File_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto = out.File
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_rawDesc = nil
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_goTypes = nil
+	file_git_liero_se_opentelco_go_swpx_proto_resource_resource_proto_depIdxs = nil
+>>>>>>> feature/traffic_policy
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -625,6 +1009,7 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
+<<<<<<< HEAD
 // TechnicalInformationClient is the client API for TechnicalInformation service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
@@ -697,6 +1082,8 @@ var _TechnicalInformation_serviceDesc = grpc.ServiceDesc{
 	Metadata: "git.liero.se/opentelco/go-swpx/proto/resource/resource.proto",
 }
 
+=======
+>>>>>>> feature/traffic_policy
 // ResourceClient is the client API for Resource service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.

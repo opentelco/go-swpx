@@ -25,6 +25,7 @@ package main
 import (
 	"fmt"
 	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/traffic_policy"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ const (
 	IPRegex  = "(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)\\s+([0-9A-Fa-f]{4}[-][a-f0-9A-F]{4}[-][a-f0-9A-F]{4})\\s+([0-9]{1,3}).*([1-9][0-9]{3}.[0-9]{2}.[0-9]{2}-[0-9]{2}:[0-9]{2})"
 )
 
-func ParseMacTable(data string) ([]*networkelement.MACEntry, error) {
+func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
 	dataRows := strings.Split(data, "\n")
 	rows := make([]*networkelement.MACEntry, 0)
 
@@ -74,7 +75,7 @@ func isMacAddressRow(fields []string) bool {
 	return match
 }
 
-func ParseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
+func parseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
 	dataRows := strings.Split(data, "\n")
 	rows := make([]*networkelement.DHCPEntry, 0)
 
@@ -131,4 +132,191 @@ func isIPAddressRow(fields []string) bool {
 	}
 
 	return match
+}
+
+func parseCurrentConfig(config string) string {
+	configStart := strings.Index(config, "#\r\n") + 1
+	configEnd := strings.LastIndex(config, "#\r\n")
+
+	return config[configStart:configEnd]
+}
+
+func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data string) error {
+	data = strings.Replace(data, "\r", "", -1) // remove line feeds
+	lines := strings.Split(data, "\n")
+
+	statistics := &traffic_policy.ConfiguredTrafficPolicy_Statistics{
+		Classifiers: make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier),
+	}
+
+	if err := parseStatisticsHeader(statistics, lines); err != nil {
+		return err
+	}
+
+	parseMetrics(lines, statistics)
+
+	policy.InboundStatistics = statistics
+
+	return nil
+}
+
+func parseStatisticsHeader(statistics *traffic_policy.ConfiguredTrafficPolicy_Statistics, lines []string) error {
+	statistics.TrafficPolicy = strings.Split(lines[3], ": ")[1]
+
+	rulenumber, err := strconv.Atoi(strings.Split(lines[4], ": ")[1])
+	if err != nil {
+		return err
+	}
+	statistics.RuleNumber = int64(rulenumber)
+	statistics.Status = strings.Split(lines[5], ": ")[1]
+	interval, err := strconv.Atoi(strings.Split(lines[6], ": ")[1])
+	if err != nil {
+		return err
+	}
+	statistics.RuleNumber = int64(rulenumber)
+	statistics.Interval = int64(interval)
+
+	return nil
+}
+
+func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPolicy_Statistics) {
+	var classifierName string
+	for i := 7; i < len(lines)-1; {
+		if strings.HasPrefix(lines[i], "-") {
+			if strings.HasPrefix(lines[i+1], " Classifier:") {
+				classifierName = strings.Split(lines[i+1], "Classifier: ")[1]
+				statistics.Classifiers[classifierName] = &traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier{
+					Classifier: classifierName,
+					Behavior:   strings.Split(lines[i+2], "Behavior: ")[1],
+					Board:      strings.Split(lines[i+3], "Board : ")[1],
+					Metrics:    make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier_Metric),
+				}
+				i += 3
+			}
+			i++
+		}
+
+		var metricName string
+		for !strings.HasPrefix(lines[i], "-") && i < len(lines)-1 {
+			fields := strings.Fields(lines[i])
+
+			if len(fields) == 4 {
+				metricName = fields[0] //passed, dropped etc
+				metric := &traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier_Metric{
+					Values: make(map[string]float64),
+				}
+				statistics.Classifiers[classifierName].Metrics[metricName] = metric
+			}
+			metricKey := fields[len(fields)-2]
+			metricValue, _ := strconv.ParseFloat(strings.Replace(fields[len(fields)-1], ",", "", -1), Float64Size)
+
+			statistics.Classifiers[classifierName].Metrics[metricName].Values[metricKey] = metricValue
+
+			i++
+		}
+	}
+}
+
+func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
+	policy := &traffic_policy.ConfiguredTrafficPolicy{}
+
+	data = strings.Replace(data, "\r", "", -1) // remove line feeds
+	lines := strings.Split(data, "\n")
+
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if strings.Contains(line, "inbound") {
+			policy.Inbound = fields[1]
+		}
+
+		if strings.Contains(line, "outbound") {
+			policy.Outbound = fields[1]
+		}
+
+		if strings.Contains(line, "qos") {
+			queue, _ := strconv.Atoi(fields[2])
+			cir, _ := strconv.ParseFloat(fields[5], Float64Size)
+			pir, _ := strconv.ParseFloat(fields[7], Float64Size)
+			cbs, _ := strconv.ParseFloat(fields[9], Float64Size)
+			pbs, _ := strconv.ParseFloat(fields[11], Float64Size)
+
+			policy.Qos = &traffic_policy.ConfiguredTrafficPolicy_QOS{
+				Queue: int64(queue),
+				Shaping: &traffic_policy.ConfiguredTrafficPolicy_QOS_Shaping{
+					Cir: cir,
+					Pir: pir,
+					Cbs: cbs,
+					Pbs: pbs,
+				},
+			}
+		}
+	}
+
+	return policy, nil
+}
+
+func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
+	data = strings.Replace(data, ",", "", -1)
+	lines := strings.Split(data, "\n")
+	qos := &traffic_policy.QOS{
+		QueueStatistics: make([]*traffic_policy.QOS_QueueStatistics, len(lines)/QueueEntryLength),
+	}
+
+	for i := 2; i < len(lines)-1; i += QueueEntryLength {
+
+		id, err := parseQOSLineInt(lines[i])
+		cir, err := parseQOSLineFloat(lines[i+1])
+		pir, err := parseQOSLineFloat(lines[i+2])
+		passedPackets, err := parseQOSLineInt(lines[i+3])
+		passedRatePps, err := parseQOSLineFloat(lines[i+4])
+		passedBytes, err := parseQOSLineInt(lines[i+5])
+		passedRateBps, err := parseQOSLineFloat(lines[i+6])
+		droppedPackets, err := parseQOSLineInt(lines[i+7])
+		droppedRatePps, err := parseQOSLineFloat(lines[i+8])
+		droppedBytes, err := parseQOSLineInt(lines[i+9])
+		droppedRateBps, err := parseQOSLineFloat(lines[i+10])
+
+		if err != nil {
+			return nil, err
+		}
+
+		qos.QueueStatistics[i/QueueEntryLength] = &traffic_policy.QOS_QueueStatistics{
+			QueueId:        id,
+			Cir:            cir,
+			Pir:            pir,
+			PassedPackets:  passedPackets,
+			PassedRatePps:  passedRatePps,
+			PassedBytes:    passedBytes,
+			PassedRateBps:  passedRateBps,
+			DroppedPackets: droppedPackets,
+			DroppedRatePps: droppedRatePps,
+			DroppedBytes:   droppedBytes,
+			DroppedRateBps: droppedRateBps,
+		}
+	}
+
+	return qos, nil
+}
+
+func parseQOSLineInt(line string) (int64, error) {
+	fields := strings.Fields(line)
+
+	val, err := strconv.ParseInt(fields[len(fields)-1], 10, Float64Size)
+	if err != nil {
+		return 0, err
+	}
+
+	return val, nil
+}
+
+func parseQOSLineFloat(line string) (float64, error) {
+	fields := strings.Fields(line)
+
+	val, err := strconv.ParseFloat(fields[len(fields)-1], Float64Size)
+	if err != nil {
+		return 0, err
+	}
+
+	return val, nil
+
 }

@@ -24,6 +24,7 @@ syntax = "proto3";
 package networkelement;
 
 import "google/protobuf/timestamp.proto";
+import "traffic_policy/traffic_policy.proto";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/networkelement";
 
@@ -127,6 +128,10 @@ message Interface {
   string config = 19; // text blob of current config
 
   int64 interface_status = 20;
+
+  traffic_policy.ConfiguredTrafficPolicy configuredTrafficPolicy = 21;
+  traffic_policy.QOS qos = 22;
+
 }
 
 
