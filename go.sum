@@ -18,6 +18,8 @@ git.liero.se/opentelco/go-dnc v0.0.0-20200830200144-75822ae2aa4a h1:wbmKXIvh+M8T
 git.liero.se/opentelco/go-dnc v0.0.0-20200830200144-75822ae2aa4a/go.mod h1:Q+JCE02YcLhdSRerQNy15NHBGzQiRtOJXh34HsxI2v8=
 git.liero.se/opentelco/go-dnc v0.0.0-20200918204925-77b91111ea6f h1:+1jmyxBns9/Mcl+vXMXTfjIMeY2bk+lsjkD9cfeZ03Y=
 git.liero.se/opentelco/go-dnc v0.0.0-20200918204925-77b91111ea6f/go.mod h1:dDPwBpZBdOtBb7xHHRjk30QUI6D4zT5+09PA7c0AE3g=
+git.liero.se/opentelco/go-dnc v0.0.0-20200920201513-cfb945a93a84 h1:J+R17rLJ7buD8DV40rPy43T4qsddtvky5gpbSq7wYzs=
+git.liero.se/opentelco/go-dnc v0.0.0-20200920201513-cfb945a93a84/go.mod h1:dDPwBpZBdOtBb7xHHRjk30QUI6D4zT5+09PA7c0AE3g=
 git.liero.se/opentelco/go-net v0.0.0-20200624092256-11e1ab9d6a28/go.mod h1:/XTy8+TBVobS+PAYs5pRVykYfDAYayOIGWzQXSX4/+4=
 git.liero.se/opentelco/go-net v0.0.0-20200811115352-9128b7f3b85e/go.mod h1:VqyZ2b0vIjw71Wnf9IFPI2BwtUXPlhIk2XMdzN2XEB0=
 git.liero.se/opentelco/go-net v0.0.0-20200827084848-6ccc6bb7e513 h1:tT8x8Di0Uil0kM0N0QUUMGYOELZXllv9/N5oDhfnLqY=

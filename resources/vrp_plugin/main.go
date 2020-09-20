@@ -316,28 +316,28 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				}
 			}
 		case *transport.Message_Telnet:
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Response[0].Data); err != nil {
 				logger.Error("can't parse MAC address table: ", err.Error())
 				return nil, err
 			}
 
-			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
+			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Response[1].Data); err != nil {
 				logger.Error("can't parse DHCP table: ", err.Error())
 				return nil, err
 			}
-			elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
+			elementInterface.Config = parseCurrentConfig(task.Telnet.Response[2].Data)
 
-			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Payload[3].Lookfor); err != nil {
+			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Response[3].Data); err != nil {
 				logger.Error("can't parse policy: ", err.Error())
 				return nil, err
 			}
 
-			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
+			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Response[4].Data); err != nil {
 				logger.Error("can't parse policy statistics: ", err.Error())
 				return nil, err
 			}
 
-			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
+			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Response[5].Data); err != nil {
 				logger.Error("can't parse queue statistics: ", err.Error())
 
 				return nil, err

@@ -302,8 +302,8 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 
 func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &telnet.Task{
-		Type: telnet.Type_GET,
-		Payload: []*telnet.Payload{
+		Type: telnet.Task_GET,
+		Payload: []*telnet.Task_Payload{
 			{
 				Command: fmt.Sprintf("display mac-address %s", el.Interface),
 			},
@@ -323,7 +323,7 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
 			},
 		},
-		Config: &telnet.Config{
+		Config: &telnet.Task_Config{
 			User:                conf.Telnet.Username,
 			Password:            conf.Telnet.Password,
 			Port:                conf.Telnet.Port,
