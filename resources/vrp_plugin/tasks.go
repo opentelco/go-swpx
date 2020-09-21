@@ -322,6 +322,10 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			{
 				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
 			},
+			{
+				Command: fmt.Sprintf("display version"),
+				LookFor:    "VRP \\(R\\) software, Version\\s+(.*)",
+			},
 		},
 		Config: &telnet.Task_Config{
 			User:                conf.Telnet.Username,

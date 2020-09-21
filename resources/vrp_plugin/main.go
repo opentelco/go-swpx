@@ -342,6 +342,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 				return nil, err
 			}
+			logger.Log(hclog.Debug,task.Telnet.Response[6].String())
 		}
 	}
 
