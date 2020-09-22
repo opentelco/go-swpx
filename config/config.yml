@@ -17,7 +17,7 @@ response_cache:
 nats:
   event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
 telnet:
-  username: "root"
+  username: "root-telnet"
   password: "qwerty1234"
   port: 23
   screen_length: "0"
