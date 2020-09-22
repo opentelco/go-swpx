@@ -138,6 +138,10 @@ func parseCurrentConfig(config string) string {
 	configStart := strings.Index(config, "#\r\n") + 1
 	configEnd := strings.LastIndex(config, "#\r\n")
 
+	if configStart == 0 || configEnd == -1 {
+		return ""
+	}
+
 	return config[configStart:configEnd]
 }
 
