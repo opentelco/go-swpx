@@ -22,7 +22,7 @@ telnet:
   port: 23
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"
-  default_prompt: "\\n[<\\[](\\S+)[>#\\]]"
+  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
   read_dead_line: "8s"
