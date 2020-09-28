@@ -24,6 +24,7 @@ package main
 
 import (
 	"fmt"
+	"git.liero.se/opentelco/go-swpx/errors"
 	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	"git.liero.se/opentelco/go-swpx/proto/traffic_policy"
 	"regexp"
@@ -229,6 +230,9 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 
 	for _, line := range lines {
 		fields := strings.Fields(line)
+		if len(fields) < 11 {
+			return nil, errors.New("malformed command output from switch", errors.ErrInvalidResource)
+		}
 		if strings.Contains(line, "inbound") {
 			policy.Inbound = fields[1]
 		}
@@ -267,6 +271,9 @@ func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 	}
 
 	for i := 2; i < len(lines)-1; i += QueueEntryLength {
+		if len(lines) < i+10 {
+			continue
+		}
 
 		id, err := parseQOSLineInt(lines[i])
 		cir, err := parseQOSLineFloat(lines[i+1])

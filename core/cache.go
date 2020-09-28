@@ -60,7 +60,7 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 }
 
 func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
-	logger.Info("Attempting to connect to MongoDB: ", conf.Server)
+	logger.Info(fmt.Sprintf("Attempting to connect to MongoDB: %s", conf.Server))
 
 	// Register custom codecs for protobuf Timestamp and wrapper types
 	reg := codecs.Register(bson.NewRegistryBuilder()).Build()
@@ -68,20 +68,20 @@ func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
 	var err error
 	var mongoClient *mongo.Client
 	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server), &options.ClientOptions{Registry: reg}); err != nil {
-		logger.Error("error initializing Mongo client:", err.Error())
+		logger.Error(fmt.Sprintf("error initializing Mongo client: %s", err.Error()))
 		return nil, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(conf.TimeoutSeconds)*time.Second)
 	defer cancel()
 	if err = mongoClient.Connect(ctx); err != nil {
-		logger.Error("error connecting Mongo client:", err.Error())
+		logger.Error(fmt.Sprintf("error connecting Mongo client: %s", err.Error()))
 		return nil, err
 	}
 
 	// Check the connection
 	if err = mongoClient.Ping(context.TODO(), nil); err != nil {
-		logger.Error("Can't ping mongo server:", err.Error())
+		logger.Error(fmt.Sprintf("Can't ping mongo server: %s", err.Error()))
 		return nil, fmt.Errorf("can't reach mongo server")
 	}
 
