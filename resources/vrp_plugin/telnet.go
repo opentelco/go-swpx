@@ -23,8 +23,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/errors"
 	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	"git.liero.se/opentelco/go-swpx/proto/traffic_policy"
 	"regexp"
@@ -35,6 +35,11 @@ import (
 const (
 	MacRegex = "^([[:xdigit:]]{2}[:.-]?){5}[[:xdigit:]]{2}$"
 	IPRegex  = "(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)\\s+([0-9A-Fa-f]{4}[-][a-f0-9A-F]{4}[-][a-f0-9A-F]{4})\\s+([0-9]{1,3}).*([1-9][0-9]{3}.[0-9]{2}.[0-9]{2}-[0-9]{2}:[0-9]{2})"
+
+	// The number of lines in a traffic policy statistics header.
+	StatisticsHeaderLength = 7
+	// The number of lines for each traffic policy statistics metric.
+	StatisticsMetricLength = 25
 )
 
 func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
@@ -154,6 +159,10 @@ func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data 
 		Classifiers: make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier),
 	}
 
+	if policyStatsOutputValid(lines) {
+		return errors.New("output for policy statistics is malformed - skipping")
+	}
+
 	if err := parseStatisticsHeader(statistics, lines); err != nil {
 		return err
 	}
@@ -186,7 +195,7 @@ func parseStatisticsHeader(statistics *traffic_policy.ConfiguredTrafficPolicy_St
 
 func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPolicy_Statistics) {
 	var classifierName string
-	for i := 7; i < len(lines)-1; {
+	for i := StatisticsHeaderLength; i < len(lines)-1; {
 		if strings.HasPrefix(lines[i], "-") {
 			if strings.HasPrefix(lines[i+1], " Classifier:") {
 				classifierName = strings.Split(lines[i+1], "Classifier: ")[1]
@@ -230,8 +239,9 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 
 	for _, line := range lines {
 		fields := strings.Fields(line)
-		if len(fields) < 11 {
-			return nil, errors.New("malformed command output from switch", errors.ErrInvalidResource)
+		if len(fields) <= 11 {
+			logger.Warn("malformed output in policy command")
+			continue
 		}
 		if strings.Contains(line, "inbound") {
 			policy.Inbound = fields[1]
@@ -271,7 +281,8 @@ func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 	}
 
 	for i := 2; i < len(lines)-1; i += QueueEntryLength {
-		if len(lines) < i+10 {
+		if len(lines) <= i+10 {
+			logger.Warn("malformed output in queue statistics command")
 			continue
 		}
 
@@ -330,4 +341,8 @@ func parseQOSLineFloat(line string) (float64, error) {
 
 	return val, nil
 
+}
+
+func policyStatsOutputValid(lines []string) bool {
+	return len(lines)%StatisticsMetricLength-StatisticsHeaderLength-2 != 0
 }
