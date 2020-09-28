@@ -159,7 +159,7 @@ func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data 
 		Classifiers: make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier),
 	}
 
-	if policyStatsOutputValid(lines) {
+	if !policyStatsOutputValid(lines) {
 		return errors.New("output for policy statistics is malformed - skipping")
 	}
 
@@ -344,5 +344,5 @@ func parseQOSLineFloat(line string) (float64, error) {
 }
 
 func policyStatsOutputValid(lines []string) bool {
-	return len(lines)%StatisticsMetricLength-StatisticsHeaderLength-2 != 0
+	return (len(lines)-StatisticsHeaderLength-2)%StatisticsMetricLength == 0
 }
