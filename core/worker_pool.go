@@ -442,8 +442,5 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
 
-	transceiver, err := plugin.GetTransceiverInformation(msg.Context, req)
-	resp.Transceiver = transceiver
-
 	return nil
 }

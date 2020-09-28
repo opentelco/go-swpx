@@ -344,6 +344,9 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			}
 		}
 	}
+	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
+		return nil, err
+	}
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
 

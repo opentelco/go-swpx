@@ -39,9 +39,8 @@ message VersionResponse {
 message TechnicalInformationResponse {
   networkelement.Element network_element = 1;
   string physical_port = 2;
-  networkelement.Transceiver transceiver = 3;
-  Error error = 4;
-  string RequestObjectID = 5;
+  Error error = 3;
+  string RequestObjectID = 4;
 }
 
 message Status {
