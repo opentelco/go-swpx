@@ -236,23 +236,32 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
 	dncChan <- "ok"
 	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
-
 	conf := shared.Proto2conf(el.Conf)
-	msg := createAllPortsMsg(el, conf)
-
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
 
-	var err error
-	d.logger.Debug("sending msg")
-	msg, err = d.dnc.Put(ctx, msg)
+	sysInfoMsg := createTaskSystemInfo(el, conf)
+	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
 	}
 
-	task := msg.Task.(*transport.Message_Snmpc)
-	d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+	sysInfoTask := sysInfoMsg.Task.(*transport.Message_Snmpc)
+	for _, m := range sysInfoTask.Snmpc.Metrics {
+		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
+			getSystemInformation(m, ne)
+		}
+	}
+
+	portsMsg := createAllPortsMsg(el, conf)
+	portsMsg, err = d.dnc.Put(ctx, portsMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	task := portsMsg.Task.(*transport.Message_Snmpc)
 
 	discoveryMap := make(map[int]*discoveryItem)
 	d.populateDiscoveryMap(task, discoveryMap)
