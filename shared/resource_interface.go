@@ -38,6 +38,8 @@ type Resource interface {
 	// Gets all the technical information for a Port
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 
+	AllPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
@@ -55,6 +57,10 @@ type ResourceGRPCClient struct {
 // MapInterface is the client implementation for the plugin-resource. Connects to the RPC
 func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.client.MapInterface(ctx, proto)
+}
+
+func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
+	return rpc.client.AllPortInformation(ctx, proto)
 }
 
 // TechnicalPortInformation is the client implementation
@@ -83,7 +89,7 @@ func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf Config
 func (rpc *ResourceGRPCClient) Version() (string, error) {
 	resp, err := rpc.client.Version(context.Background(), &proto.Empty{})
 	if err != nil {
-		return resp.Version, err
+		return "", err
 	}
 
 	return resp.Version, err
@@ -105,6 +111,11 @@ func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*pr
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
 func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.Impl.TechnicalPortInformation(ctx, ne)
+}
+
+// AllPortInformation is a lazy interface to get all information needed for a technical info call.
+func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
+	return rpc.Impl.AllPortInformation(ctx, ne)
 }
 
 //MapInterface has the purppose to map interface name to a index by asking the device

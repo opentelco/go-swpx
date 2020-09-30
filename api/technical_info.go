@@ -130,31 +130,15 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		Context:  ctx,
 	}
 
+	req.NetworkElementInterface = &data.Port
 	if data.Port != "" {
-		req.NetworkElementInterface = &data.Port
 		req.Type = core.GetTechnicalInformationPort
-	} else {
-		req.Type = core.GetTechnicalInformationElement
-	}
-
-	// check response cache before sending request
-	cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
-	if err != nil {
-		logger.Error("error popping from cache: ", err.Error())
-		render.JSON(w, r, NewResponse(ResponseStatusError, err.Error()))
-		return
-	}
-
-	if cachedResponse != nil {
-		if time.Since(cachedResponse.Timestamp.AsTime()) < data.CacheTTL.Duration {
-			logger.Info("found response in cache")
-			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response))
+		// check response cache before sending request
+		if s.hasCachedResponse(w, r, req, data) {
 			return
 		}
-		// if response is cached but ttl ran out, clear it from the cache
-		if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
-			logger.Error("error clearing cache:", err)
-		}
+	} else {
+		req.Type = core.GetTechnicalInformationElement
 	}
 
 	// send the request
@@ -168,9 +152,8 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 				render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
 				return
 			}
-
 			wrappedResponse := NewResponse(ResponseStatusOK, resp)
-			if err = core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, resp); err != nil {
+			if err := core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
 
@@ -184,4 +167,26 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		}
 
 	}
+}
+
+func (s *ServiceTechnicalInformation) hasCachedResponse(w http.ResponseWriter, r *http.Request, req *core.Request, data *TechnicalInformationRequest) bool {
+	cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
+	if err != nil {
+		logger.Error("error popping from cache: ", err.Error())
+		render.JSON(w, r, NewResponse(ResponseStatusError, err.Error()))
+		return true
+	}
+
+	if cachedResponse != nil {
+		if time.Since(cachedResponse.Timestamp.AsTime()) < data.CacheTTL.Duration {
+			logger.Info("found response in cache")
+			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response))
+			return true
+		}
+		// if response is cached but ttl ran out, clear it from the cache
+		if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
+			logger.Error("error clearing cache:", err)
+		}
+	}
+	return false
 }

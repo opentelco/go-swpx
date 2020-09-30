@@ -348,3 +348,41 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 	return message
 
 }
+
+func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: true,
+			MaxIterations:      1,
+			NonRepeaters:       0,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_BULKGET,
+		Oids: []*snmpc.Oid{
+			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
+			{Oid: oids.IfAlias, Name: "ifAlias", Type: metric.MetricType_STRING},
+			{Oid: oids.IfType, Name: "ifType", Type: metric.MetricType_INT},
+			{Oid: oids.IfMtu, Name: "ifMtu", Type: metric.MetricType_INT},
+			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metric.MetricType_HWADDR},
+			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metric.MetricType_INT},
+			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metric.MetricType_INT},
+			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
+
+			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
+			{Oid: oids.IfConnectorPresent, Name: "ifConnectorPresent", Type: metric.MetricType_BOOL},
+		},
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_SNMP,
+		Task:    &transport.Message_Snmpc{Snmpc: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+}

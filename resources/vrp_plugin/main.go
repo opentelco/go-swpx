@@ -25,8 +25,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"os"
 	"regexp"
@@ -62,9 +62,17 @@ const (
 var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
 
 type discoveryItem struct {
-	index int
-	descr string
-	alias string
+	index            int
+	descr            string
+	alias            string
+	ifType           int
+	mtu              int
+	physAddress      string
+	adminStatus      int
+	operStatus       int
+	lastChange       *timestamppb.Timestamp
+	highSpeed        int
+	connectorPresent bool
 }
 
 var dncChan chan string
@@ -197,7 +205,6 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
-	var index int
 	var interfaces = make(map[string]*proto.NetworkElementInterface)
 
 	conf := shared.Proto2conf(el.Conf)
@@ -212,7 +219,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		d.populateDiscoveryMap(task, index, discoveryMap)
+		d.populateDiscoveryMap(task, discoveryMap)
 
 		for _, v := range discoveryMap {
 			interfaces[v.descr] = &proto.NetworkElementInterface{
@@ -226,36 +233,46 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 }
 
-func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, index int, discoveryMap map[int]*discoveryItem) {
-	for _, m := range task.Snmpc.Metrics {
-		index, _ = strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
-		switch m.GetName() {
-		case "ifIndex":
-			if val, ok := discoveryMap[index]; ok {
-				val.index = int(m.GetIntValue())
-			} else {
-				discoveryMap[index] = &discoveryItem{
-					index: int(m.GetIntValue()),
-				}
-			}
-		case "ifAlias":
-			if val, ok := discoveryMap[index]; ok {
-				val.alias = m.GetStringValue()
-			} else {
-				discoveryMap[index] = &discoveryItem{
-					descr: m.GetStringValue(),
-				}
-			}
-		case "ifDescr":
-			if val, ok := discoveryMap[index]; ok {
-				val.descr = m.GetStringValue()
-			} else {
-				discoveryMap[index] = &discoveryItem{
-					descr: m.GetStringValue(),
-				}
-			}
-		}
+func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+	dncChan <- "ok"
+	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+
+	conf := shared.Proto2conf(el.Conf)
+	msg := createAllPortsMsg(el, conf)
+
+	ne := &networkelement.Element{}
+	ne.Hostname = el.Hostname
+
+	var err error
+	d.logger.Debug("sending msg")
+	msg, err = d.dnc.Put(ctx, msg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
 	}
+
+	task := msg.Task.(*transport.Message_Snmpc)
+	d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+
+	discoveryMap := make(map[int]*discoveryItem)
+	d.populateDiscoveryMap(task, discoveryMap)
+
+	for _, v := range discoveryMap {
+		ne.Interfaces = append(ne.Interfaces, &networkelement.Interface{
+			Index:             int64(v.index),
+			Alias:             v.alias,
+			Description:       v.descr,
+			Hwaddress:         v.physAddress,
+			Type:              networkelement.InterfaceType(v.ifType),
+			AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),
+			OperationalStatus: networkelement.InterfaceStatus(v.operStatus),
+			LastChanged:       v.lastChange,
+			ConnectorPresent:  v.connectorPresent,
+			Speed:             int64(v.highSpeed),
+			Mtu:               int64(v.mtu),
+		})
+	}
+	return ne, nil
 }
 
 func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
@@ -351,109 +368,6 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
 
 	return ne, nil
-}
-
-func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
-
-	switch {
-	case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
-		elementInterface.Stats.Output.Unicast = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfInBroadcastPkts):
-		elementInterface.Stats.Input.Broadcast = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfInMulticastPkts):
-		elementInterface.Stats.Input.Multicast = m.GetIntValue()
-	case strings.HasPrefix(m.Oid, oids.IfOutBroadcastPkts):
-		elementInterface.Stats.Output.Broadcast = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfOutMulticastPkts):
-		elementInterface.Stats.Output.Multicast = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfAlias):
-		elementInterface.Alias = m.GetStringValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
-		elementInterface.Speed = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfConnectorPresent):
-		elementInterface.ConnectorPresent = m.GetBoolValue()
-	}
-
-}
-
-func getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
-	switch {
-	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
-		elementInterface.Stats.Output.Bytes = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfInOctets):
-		elementInterface.Stats.Input.Bytes = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
-		elementInterface.Stats.Input.Unicast = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfInErrors):
-		elementInterface.Stats.Input.Errors = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfOutErrors):
-		elementInterface.Stats.Output.Errors = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfDescr):
-		elementInterface.Description = m.GetStringValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfType):
-		elementInterface.Type = networkelement.InterfaceType(m.GetIntValue())
-
-	case strings.HasPrefix(m.Oid, oids.IfMtu):
-		elementInterface.Mtu = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfLastChange):
-		elementInterface.LastChanged = m.GetTimestampValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
-		elementInterface.Hwaddress = m.GetStringValue()
-
-	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
-		elementInterface.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
-
-	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
-		elementInterface.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
-
-	}
-}
-
-func getHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
-	switch {
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
-		elementInterface.Stats.Input.CrcErrors = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
-		elementInterface.Stats.Input.Pauses = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
-		elementInterface.Stats.Resets = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
-		elementInterface.Stats.Output.Pauses = m.GetIntValue()
-	}
-}
-
-func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
-	switch m.Oid {
-	case oids.SysContact:
-		ne.Contact = m.GetStringValue()
-	case oids.SysDescr:
-		ne.Version = m.GetStringValue()
-	case oids.SysLocation:
-		ne.Location = m.GetStringValue()
-	case oids.SysName:
-		ne.Sysname = m.GetStringValue()
-	// case oids.SysORLastChange:
-	// case oids.SysObjectID:
-	case oids.SysUpTime:
-		ne.Uptime = m.GetStringValue()
-	}
 }
 
 // handshakeConfigs are used to just do a basic handshake between

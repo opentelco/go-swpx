@@ -338,7 +338,7 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case GetTechnicalInformationElement:
-		return handleGetTechnicalInformationElement(plugin)
+		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
 	case GetTechnicalInformationPort:
 		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
@@ -346,14 +346,23 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 	return nil
 }
 
-// handleGetTechnicalInformationElement gets full information of a Element
-func handleGetTechnicalInformationElement(plugin shared.Resource) error {
-	ver, err := plugin.Version()
+// handleGetTechnicalInformationElement gets full information of an Element
+func handleGetTechnicalInformationElement(msg *Request, resp *resource.TechnicalInformationResponse, plugin shared.Resource, conf shared.Configuration) error {
+	protoConf := shared.Conf2proto(conf)
+
+	req := &resource.NetworkElement{
+		Interface: "",
+		Hostname:  msg.NetworkElement,
+		Conf:      &protoConf,
+	}
+
+	resp1, err := plugin.AllPortInformation(msg.Context, req)
 	if err != nil {
 		logger.Error(err.Error())
 		return err
 	}
-	logger.Info("calling version ok", "version", ver)
+
+	resp.NetworkElement = resp1
 
 	return nil
 }
