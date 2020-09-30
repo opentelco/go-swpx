@@ -63,17 +63,16 @@ const (
 var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
 
 type discoveryItem struct {
-	index            int
-	descr            string
-	alias            string
-	ifType           int
-	mtu              int
-	physAddress      string
-	adminStatus      int
-	operStatus       int
-	lastChange       *timestamppb.Timestamp
-	highSpeed        int
-	connectorPresent bool
+	index       int
+	descr       string
+	alias       string
+	ifType      int
+	mtu         int
+	physAddress string
+	adminStatus int
+	operStatus  int
+	lastChange  *timestamppb.Timestamp
+	highSpeed   int
 }
 
 var dncChan chan string

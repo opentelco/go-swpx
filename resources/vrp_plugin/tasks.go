@@ -93,7 +93,6 @@ func createSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Conf
 			{Oid: fmt.Sprintf(oids.IfLastChangeF, index), Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
 
 			{Oid: fmt.Sprintf(oids.IfHighSpeedF, index), Name: "ifHighSpeed", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.IfConnectorPresentF, index), Name: "ifConnectorPresent", Type: metric.MetricType_BOOL},
 		},
 	}
 
@@ -219,7 +218,6 @@ func createMsg(conf shared.Configuration) *transport.Message {
 			{Oid: oids.IfOutErrors, Name: "ifOutErrors", Type: metric.MetricType_INT},
 
 			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
-			{Oid: oids.IfConnectorPresent, Name: "ifConnectorPresent", Type: metric.MetricType_BOOL},
 			{Oid: oids.IfHCOutUcastPkts, Name: "ifHCOutUcastPkts", Type: metric.MetricType_INT},
 		},
 	}
@@ -372,7 +370,6 @@ func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
 
 			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
-			{Oid: oids.IfConnectorPresent, Name: "ifConnectorPresent", Type: metric.MetricType_BOOL},
 		},
 	}
 

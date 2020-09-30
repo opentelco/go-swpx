@@ -113,7 +113,6 @@ message Interface {
   InterfaceStatus admin_status = 7;   // the desired state of the interface
   InterfaceStatus operational_status = 8; // the current state of the interface
   google.protobuf.Timestamp last_changed = 9;
-  bool connector_present = 10;
 
   int64 speed = 11; 
   string duplex = 12; 

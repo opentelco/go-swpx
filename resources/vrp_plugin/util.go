@@ -93,15 +93,6 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 					highSpeed: int(m.GetIntValue()),
 				}
 			}
-		case "ifConnectorPresent":
-			if val, ok := discoveryMap[index]; ok {
-				val.connectorPresent = m.GetBoolValue()
-			} else {
-				discoveryMap[index] = &discoveryItem{
-					connectorPresent: m.GetBoolValue(),
-				}
-			}
-
 		}
 	}
 }
@@ -129,8 +120,6 @@ func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 	case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
 		elementInterface.Speed = m.GetIntValue()
 
-	case strings.HasPrefix(m.Oid, oids.IfConnectorPresent):
-		elementInterface.ConnectorPresent = m.GetBoolValue()
 	}
 
 }
@@ -220,7 +209,6 @@ func itemToInterface(v *discoveryItem) *networkelement.Interface {
 		AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),
 		OperationalStatus: networkelement.InterfaceStatus(v.operStatus),
 		LastChanged:       v.lastChange,
-		ConnectorPresent:  v.connectorPresent,
 		Speed:             int64(v.highSpeed),
 		Mtu:               int64(v.mtu),
 	}
