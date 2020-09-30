@@ -30,6 +30,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -157,7 +158,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	vrpMsg := createVRPTransceiverMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
-		d.logger.Error(err.Error())
+		d.logger.Error("transceiver put error", err.Error())
 		return nil, err
 	}
 
@@ -179,7 +180,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 
 			// no transceiver available, return nil
 			if tempInt == -255 && rxInt == -1 && txInt == -1 {
-				return nil, nil
+				return &networkelement.Transceiver{}, nil
 			}
 
 			val := &networkelement.Transceiver{
@@ -257,21 +258,14 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 	discoveryMap := make(map[int]*discoveryItem)
 	d.populateDiscoveryMap(task, discoveryMap)
 
-	for _, v := range discoveryMap {
-		ne.Interfaces = append(ne.Interfaces, &networkelement.Interface{
-			Index:             int64(v.index),
-			Alias:             v.alias,
-			Description:       v.descr,
-			Hwaddress:         v.physAddress,
-			Type:              networkelement.InterfaceType(v.ifType),
-			AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),
-			OperationalStatus: networkelement.InterfaceStatus(v.operStatus),
-			LastChanged:       v.lastChange,
-			ConnectorPresent:  v.connectorPresent,
-			Speed:             int64(v.highSpeed),
-			Mtu:               int64(v.mtu),
-		})
+	for _, discoveryItem := range discoveryMap {
+		ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
 	}
+
+	sort.Slice(ne.Interfaces, func(i, j int) bool {
+		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+	})
+
 	return ne, nil
 }
 

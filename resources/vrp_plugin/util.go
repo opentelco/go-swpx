@@ -208,3 +208,21 @@ func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 		ne.Uptime = m.GetStringValue()
 	}
 }
+
+func itemToInterface(v *discoveryItem) *networkelement.Interface {
+	iface := &networkelement.Interface{
+		AggregatedId:      "",
+		Index:             int64(v.index),
+		Alias:             v.alias,
+		Description:       v.descr,
+		Hwaddress:         v.physAddress,
+		Type:              networkelement.InterfaceType(v.ifType),
+		AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),
+		OperationalStatus: networkelement.InterfaceStatus(v.operStatus),
+		LastChanged:       v.lastChange,
+		ConnectorPresent:  v.connectorPresent,
+		Speed:             int64(v.highSpeed),
+		Mtu:               int64(v.mtu),
+	}
+	return iface
+}

@@ -355,14 +355,34 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 		Hostname:  msg.NetworkElement,
 		Conf:      &protoConf,
 	}
-
-	resp1, err := plugin.AllPortInformation(msg.Context, req)
+	physPortResponse, err := plugin.MapEntityPhysical(msg.Context, req)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("error fetching physical entities:", err.Error())
+		return err
+
+	}
+	allPortInformation, err := plugin.AllPortInformation(msg.Context, req)
+	if err != nil {
+		logger.Error("error fetching port information for all interfaces:", err.Error())
 		return err
 	}
 
-	resp.NetworkElement = resp1
+	for _, v := range allPortInformation.Interfaces {
+		if matchingInterface, ok := physPortResponse.Interfaces[v.Description]; ok {
+			transceiver, _ := plugin.GetTransceiverInformation(msg.Context, &resource.NetworkElement{
+				PhysicalIndex: matchingInterface.Index,
+
+				Hostname:       msg.NetworkElement,
+				Ip:             req.Ip,
+				Interface:      v.Description,
+				InterfaceIndex: v.Index,
+				Conf:           &protoConf,
+			})
+			v.Transceiver = transceiver
+		}
+	}
+
+	resp.NetworkElement = allPortInformation
 
 	return nil
 }
