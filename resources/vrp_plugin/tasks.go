@@ -383,3 +383,41 @@ func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 	}
 	return message
 }
+
+
+// Before the task is sent we need to set the MaxRepetitions to X
+func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: false,
+			MaxIterations:      2,
+			MaxRepetitions:0,
+			NonRepeaters:       0,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_GET,
+		Oids: []*snmpc.Oid{
+			{Oid: oids.HuaIfVRPOpticalVendorSN, Name: "hwEntityOpticalVendorSn", Type: metric.MetricType_STRING},
+			{Oid: oids.HuaIfVRPOpticalTemperature, Name: "hwEntityOpticalTemperature", Type: metric.MetricType_INT},
+			{Oid: oids.HuaIfVRPOpticalVoltage, Name: "hwEntityOpticalVoltage", Type: metric.MetricType_INT},
+			{Oid: oids.HuaIfVRPOpticalBias, Name: "hwEntityOpticalBiasCurrent", Type: metric.MetricType_INT},
+			{Oid: oids.HuaIfVRPOpticalRxPower, Name: "hwEntityOpticalRxPower", Type: metric.MetricType_INT},
+			{Oid: oids.HuaIfVRPOpticalTxPower, Name: "hwEntityOpticalTxPower", Type: metric.MetricType_INT},
+			{Oid: oids.HuaIfVRPVendorPN, Name: "hwEntityOpticalVenderPn", Type: metric.MetricType_STRING},
+		},
+	}
+	
+	// task.Parameters = params
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_SNMP,
+		Task:    &transport.Message_Snmpc{Snmpc: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+}

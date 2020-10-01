@@ -163,4 +163,12 @@ const (
 	HuaIfVRPOpticalRxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.8.%d"
 	HuaIfVRPOpticalTxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.9.%d"
 	HuaIfVRPVendorPNF           = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.25.%d"
+	
+	HuaIfVRPOpticalVendorSN    = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.4"
+	HuaIfVRPOpticalTemperature = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.5"
+	HuaIfVRPOpticalVoltage     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.6"
+	HuaIfVRPOpticalBias        = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.7"
+	HuaIfVRPOpticalRxPower     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.8"
+	HuaIfVRPOpticalTxPower     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.9"
+	HuaIfVRPVendorPN           = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.25"
 )
