@@ -43,6 +43,10 @@ const (
 )
 
 func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
+	if data == "" {
+		return nil, fmt.Errorf("no data found")
+	}
+
 	dataRows := strings.Split(data, "\n")
 	rows := make([]*networkelement.MACEntry, 0)
 
@@ -82,6 +86,10 @@ func isMacAddressRow(fields []string) bool {
 }
 
 func parseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
+	if data == "" {
+		return nil, fmt.Errorf("no data found")
+	}
+
 	dataRows := strings.Split(data, "\n")
 	rows := make([]*networkelement.DHCPEntry, 0)
 
@@ -152,6 +160,10 @@ func parseCurrentConfig(config string) string {
 }
 
 func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data string) error {
+	if data == "" {
+		return fmt.Errorf("no data found")
+	}
+
 	data = strings.Replace(data, "\r", "", -1) // remove line feeds
 	lines := strings.Split(data, "\n")
 
@@ -232,6 +244,10 @@ func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPo
 }
 
 func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
+	if data == "" {
+		return nil, fmt.Errorf("no data found")
+	}
+
 	policy := &traffic_policy.ConfiguredTrafficPolicy{}
 
 	data = strings.Replace(data, "\r", "", -1) // remove line feeds
@@ -274,6 +290,10 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 }
 
 func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
+	if data == "" {
+		return nil, fmt.Errorf("no data found")
+	}
+
 	data = strings.Replace(data, ",", "", -1)
 	lines := strings.Split(data, "\n")
 	qos := &traffic_policy.QOS{
@@ -282,8 +302,7 @@ func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 
 	for i := 2; i < len(lines)-1; i += QueueEntryLength {
 		if len(lines) <= i+10 {
-			logger.Warn("malformed output in queue statistics command")
-			continue
+			return nil, fmt.Errorf("malformed output in queue statistics command")
 		}
 
 		id, err := parseQOSLineInt(lines[i])
@@ -299,7 +318,7 @@ func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 		droppedRateBps, err := parseQOSLineFloat(lines[i+10])
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error parsing qos output: %v", err)
 		}
 
 		qos.QueueStatistics[i/QueueEntryLength] = &traffic_policy.QOS_QueueStatistics{

@@ -280,6 +280,7 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
 	dncChan <- "ok"
 	d.logger.Info("running technical port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+	errs := make([]*networkelement.TransientError, 0)
 
 	conf := shared.Proto2conf(el.Conf)
 
@@ -336,40 +337,45 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			}
 		case *transport.Message_Telnet:
 			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
-				logger.Error("can't parse MAC address table: ", err.Error())
-				return nil, err
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
 			}
 
 			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
-				logger.Error("can't parse DHCP table: ", err.Error())
-				return nil, err
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[1].Command)
 			}
 			elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
 
 			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Payload[3].Lookfor); err != nil {
-				logger.Error("can't parse policy: ", err.Error())
-				return nil, err
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[3].Command)
 			}
 
 			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
-				logger.Error("can't parse policy statistics: ", err.Error())
-				return nil, err
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[4].Command)
 			}
 
 			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
-				logger.Error("can't parse queue statistics: ", err.Error())
-
-				return nil, err
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
 			}
 		}
 	}
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
-		return nil, err
+		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
 	}
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
-
+	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
 	return ne, nil
+}
+
+func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
+	d.logger.Error(err.Error())
+	errs = append(errs, &networkelement.TransientError{
+		Message: err.Error(),
+		Level:   networkelement.TransientError_WARN,
+		Cause:   command,
+	})
+
+	return errs
 }
 
 // handshakeConfigs are used to just do a basic handshake between

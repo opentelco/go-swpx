@@ -55,7 +55,6 @@ message Error {
   int32 code = 2;
 }
 
-
 // used in request
 message NetworkElement {
   string hostname = 1;
