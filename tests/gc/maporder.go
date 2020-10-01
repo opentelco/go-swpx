@@ -52,7 +52,7 @@ func main() {
 	dp := NewPlugin(1, "default")
 	sp := NewPlugin(20, "ssab")
 	tp := NewPlugin(30, "telia")
-	zp := NewPlugin(10, "zitius")
+	zp := NewPlugin(10, "vx")
 	providers = append(providers, dp, sp, tp, zp)
 
 	sort.Sort(byWeight(providers))

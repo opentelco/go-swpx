@@ -261,18 +261,22 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 		return nil, err
 	}
 
-	task := portsMsg.Task.(*transport.Message_Snmpc)
-
-	discoveryMap := make(map[int]*discoveryItem)
-	d.populateDiscoveryMap(task, discoveryMap)
-
-	for _, discoveryItem := range discoveryMap {
+	var task *transport.Message_Snmpc
+	var ok bool
+	if task,ok = portsMsg.Task.(*transport.Message_Snmpc); ok {
+		discoveryMap := make(map[int]*discoveryItem)
+		d.populateDiscoveryMap(task, discoveryMap)
+		
+		for _, discoveryItem := range discoveryMap {
 		ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
 	}
-
-	sort.Slice(ne.Interfaces, func(i, j int) bool {
+		
+		sort.Slice(ne.Interfaces, func(i, j int) bool {
 		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
 	})
+	}
+	
+	
 
 	return ne, nil
 }
