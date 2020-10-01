@@ -1,4 +1,6 @@
-
+hash := $(shell git log --pretty=format:'%h' -n 1)
+goarch := $(shell echo amd64)
+goos :=  $(shell echo linux)
 build:
 	go generate
 	rm -f plugins/resources/*
@@ -23,11 +25,20 @@ test:
 
 
 linux:
+
 	rm -rf build/linux
-	mkdir -p build/linux/plugins/resources
-	mkdir -p build/linux/plugins/providers
-	env GOOS=linux GOARCH=amd64 go build -o ./build/linux/plugins/resources/resource_vrp_plug ./resources/vrp_plugin/
-	env GOOS=linux GOARCH=amd64 go build -o ./build/linux/plugins/providers/provider_x ./providers/vx/main.go
-	env GOOS=linux GOARCH=amd64 go build -o ./build/linux/swpx main.go
+	mkdir -p build/linux/plugins/resources;mkdir -p build/linux/plugins/providers;mkdir -p build/linux/config
+	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/resource_vrp_plug ./resources/vrp_plugin/
+	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/providers/provider_vx ./providers/vx/main.go
+	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/swpx main.go
+	cp config/config.yml build/linux/config/
+	zip -r build/swpx_$(goos)_$(goarch)-$(hash).zip ./build/linux/*
+	@echo built and zipped build/swpx_$(goos)_$(goarch)-$(hash).zip
+
+
+
+hash:
+	@echo current hash is: $(hash)
+
 
 
