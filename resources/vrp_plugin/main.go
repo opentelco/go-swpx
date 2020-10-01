@@ -491,7 +491,7 @@ func main() {
 				Retries:            2,
 				DynamicRepetitions: true,
 			},
-			Telnet: shared.ConfigTelnet{},
+			Connection: shared.ConfigConnection{},
 		},
 	}
 

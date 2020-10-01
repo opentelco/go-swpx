@@ -16,10 +16,11 @@ response_cache:
   timeout_seconds: 30
 nats:
   event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
-telnet:
-  username: "root-telnet"
+connection:
+  type: "ssh"
+  username: "root-ssh"
   password: "qwerty1234"
-  port: 23
+  port: 22
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"
   default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
@@ -27,3 +28,16 @@ telnet:
   ttl: "30s"
   read_dead_line: "8s"
   write_dead_line: "8s"
+
+#connection:
+#  type: "telnet"
+#  username: "root-telnet"
+#  password: "qwerty1234"
+#  port: 23
+#  screen_length: "0"
+#  screen_length_command: "screen-length %s temporary"
+#  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+#  default_errors: "error|failed|unrecognized"
+#  ttl: "30s"
+#  read_dead_line: "8s"
+#  write_dead_line: "8s"
