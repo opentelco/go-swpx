@@ -75,18 +75,18 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ConfigConnection struct {
-	Type                ConnectionType `mapstructure:"type" yaml:"type" toml:"type"`
-	Username            string         `mapstructure:"username" yaml:"username" toml:"username"`
-	Password            string         `mapstructure:"password" yaml:"password" toml:"password"`
-	Port                int32          `mapstructure:"port" yaml:"port" toml:"port"`
-	ScreenLength        string         `mapstructure:"screen_length" yaml:"screen_length" toml:"screen_length"`
-	ScreenLengthCommand string         `mapstructure:"screen_length_command" yaml:"screen_length_command" toml:"screen_length_command"`
-	RegexPrompt         string         `mapstructure:"default_prompt" yaml:"default_prompt" toml:"default_prompt"`
-	Errors              string         `mapstructure:"default_errors" yaml:"default_errors" toml:"default_errors"`
-	TTL                 time.Duration  `mapstructure:"ttl" yaml:"ttl" toml:"ttl"`
-	ReadDeadLine        time.Duration  `mapstructure:"read_dead_line" yaml:"read_dead_line" toml:"read_dead_line"`
-	WriteDeadLine       time.Duration  `mapstructure:"write_dead_line" yaml:"write_dead_line" toml:"write_dead_line"`
-	SSHKeyPath          string         `mapstructure:"ssh_key_path" yaml:"ssh_key_path" toml:"ssh_key_path"`
+	Type                ConnectionType `json:"type" mapstructure:"type" yaml:"type" toml:"type"`
+	Username            string         `json:"username" mapstructure:"username" yaml:"username" toml:"username"`
+	Password            string         `json:"password" mapstructure:"password" yaml:"password" toml:"password"`
+	Port                int32          `json:"port" mapstructure:"port" yaml:"port" toml:"port"`
+	ScreenLength        string         `json:"screen_length" mapstructure:"screen_length" yaml:"screen_length" toml:"screen_length"`
+	ScreenLengthCommand string         `json:"screen_length_command" mapstructure:"screen_length_command" yaml:"screen_length_command" toml:"screen_length_command"`
+	RegexPrompt         string         `json:"default_prompt" mapstructure:"default_prompt" yaml:"default_prompt" toml:"default_prompt"`
+	Errors              string         `json:"default_errors" mapstructure:"default_errors" yaml:"default_errors" toml:"default_errors"`
+	TTL                 time.Duration  `json:"ttl" mapstructure:"ttl" yaml:"ttl" toml:"ttl"`
+	ReadDeadLine        time.Duration  `json:"read_dead_line" mapstructure:"read_dead_line" yaml:"read_dead_line" toml:"read_dead_line"`
+	WriteDeadLine       time.Duration  `json:"write_dead_line" mapstructure:"write_dead_line" yaml:"write_dead_line" toml:"write_dead_line"`
+	SSHKeyPath          string         `json:"ssh_key_path" mapstructure:"ssh_key_path" yaml:"ssh_key_path" toml:"ssh_key_path"`
 }
 
 type ConfigSNMP struct {
