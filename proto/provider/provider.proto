@@ -72,6 +72,7 @@ message configConnection {
   uint64 ReadDeadLine = 9;
   uint64 WriteDeadLine = 10;
   string Type = 11;
+  string SSHKeyPath = 12;
 }
 
 message configSNMP {

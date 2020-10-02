@@ -18,7 +18,7 @@ nats:
   event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
 connection:
   type: "ssh"
-  username: "root-ssh"
+  username: "root-ssh-key"
   password: "qwerty1234"
   port: 22
   screen_length: "0"
@@ -28,7 +28,7 @@ connection:
   ttl: "30s"
   read_dead_line: "8s"
   write_dead_line: "8s"
-
+  ssh_key_path: "/home/ardi/.ssh/id_rsa"
 #connection:
 #  type: "telnet"
 #  username: "root-telnet"

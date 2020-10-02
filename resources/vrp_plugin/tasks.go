@@ -334,6 +334,7 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			Ttl:                 &duration.Duration{Seconds: int64(conf.Connection.TTL)},
 			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Connection.ReadDeadLine)},
 			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Connection.WriteDeadLine)},
+			SshKeyPath:          conf.Connection.SSHKeyPath,
 		},
 		Host: el.Hostname,
 	}

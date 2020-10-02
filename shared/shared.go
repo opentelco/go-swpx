@@ -86,6 +86,7 @@ type ConfigConnection struct {
 	TTL                 time.Duration  `mapstructure:"ttl" yaml:"ttl" toml:"ttl"`
 	ReadDeadLine        time.Duration  `mapstructure:"read_dead_line" yaml:"read_dead_line" toml:"read_dead_line"`
 	WriteDeadLine       time.Duration  `mapstructure:"write_dead_line" yaml:"write_dead_line" toml:"write_dead_line"`
+	SSHKeyPath          string         `mapstructure:"ssh_key_path" yaml:"ssh_key_path" toml:"ssh_key_path"`
 }
 
 type ConfigSNMP struct {
@@ -158,6 +159,7 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			TTL:                 uint64(conf.Connection.TTL),
 			ReadDeadLine:        uint64(conf.Connection.ReadDeadLine),
 			WriteDeadLine:       uint64(conf.Connection.WriteDeadLine),
+			SSHKeyPath:          conf.Connection.SSHKeyPath,
 		},
 	}
 }
@@ -184,6 +186,7 @@ func Proto2conf(protoConf *proto.Configuration) Configuration {
 			TTL:                 time.Duration(protoConf.Connection.TTL),
 			ReadDeadLine:        time.Duration(protoConf.Connection.ReadDeadLine),
 			WriteDeadLine:       time.Duration(protoConf.Connection.WriteDeadLine),
+			SSHKeyPath:          protoConf.Connection.SSHKeyPath,
 		},
 	}
 }
