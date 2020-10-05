@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.14
 
 require (
-	git.liero.se/opentelco/go-dnc v0.0.0-20200918204925-77b91111ea6f
+	git.liero.se/opentelco/go-dnc v0.0.0-20201005111513-bcfabfd76961
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/aws/aws-sdk-go v1.34.27 // indirect
 	github.com/fatih/color v1.9.0 // indirect
