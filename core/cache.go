@@ -31,6 +31,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"time"
 )
 
@@ -48,15 +49,30 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 		Options: options.Index().SetUnique(true),
 	}
 
-	if _, err := col.Indexes().CreateOne(context.Background(), model); err != nil {
-		logger.Warn("can't create index:", err.Error())
-	}
+	createIndex(col, model, logger)
 
 	return &cache{
 		client: client,
 		col:    col,
 		logger: logger,
 	}, nil
+}
+
+func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) {
+	cursor, err := col.Indexes().List(context.TODO(), options.ListIndexes())
+	if err != nil {
+		log.Fatal(err)
+	}
+	var indexes []bson.M
+	if err = cursor.All(context.TODO(), &indexes); err != nil {
+		log.Fatal(err)
+	}
+
+	if len(indexes) == 0 {
+		if _, err := col.Indexes().CreateOne(context.Background(), model); err != nil {
+			logger.Warn("can't create index:", err.Error())
+		}
+	}
 }
 
 func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
