@@ -60,7 +60,7 @@ message WeightResponse {
 }
 
 
-message configTelnet {
+message configConnection {
   string User = 1;
   string Password = 2;
   int32 Port = 3;
@@ -71,6 +71,8 @@ message configTelnet {
   uint64 TTL = 8;
   uint64 ReadDeadLine = 9;
   uint64 WriteDeadLine = 10;
+  string Type = 11;
+  string SSHKeyPath = 12;
 }
 
 message configSNMP {
@@ -87,7 +89,7 @@ message configSNMP {
 
 message Configuration{
   configSNMP    SNMP = 1;
-  configTelnet  Telnet = 2;
+  configConnection  Connection = 2;
 }
 
 

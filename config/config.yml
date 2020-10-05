@@ -5,21 +5,22 @@ snmp:
   retries: 3
   dynamic_repetitions: true
 interface_cache:
-  server: mongodb://10.102.11.110:27027
-  database: swpx
+  server: mongodb://192.168.0.12:27017
+  database: test
   collection: interface_cache
   timeout_seconds: 30
 response_cache:
-  server: mongodb://10.102.11.110:27027
-  database: swpx
+  server: mongodb://192.168.0.12:27017
+  database: test
   collection: response_cache
   timeout_seconds: 30
 nats:
-  event_servers: ['nats://10.201.11.120:14222', 'nats://10.201.11.121:24222', 'nats://10.201.11.122:34222']
-telnet:
-  username: "root-telnet"
+  event_servers: ['nats://192.168.0.12:14222', 'nats://192.168.0.12:24222', 'nats://192.168.0.12:34222']
+connection:
+  type: "ssh"
+  username: "root-ssh"
   password: "qwerty1234"
-  port: 23
+  port: 22
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"
   default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
@@ -27,3 +28,4 @@ telnet:
   ttl: "30s"
   read_dead_line: "8s"
   write_dead_line: "8s"
+#  ssh_key_path: "/home/ardi/.ssh/id_rsa"
