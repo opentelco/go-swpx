@@ -302,6 +302,8 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 
 	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
 	var providerConf shared.Configuration
+	var err error
+	defaultConf := shared.GetConfig()
 
 	// check if a provider is selected in the request
 	if msg.Provider != "" {
@@ -312,7 +314,11 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		providerConf, _ = provider.GetConfiguration(msg.Context)
+		providerConf, err = provider.GetConfiguration(msg.Context)
+
+		if err != nil {
+			providerConf = defaultConf
+		}
 
 	} else {
 		// no provider selected, walk all providers

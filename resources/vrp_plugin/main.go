@@ -25,6 +25,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
@@ -33,10 +35,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
-
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 
@@ -263,20 +261,18 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 
 	var task *transport.Message_Snmpc
 	var ok bool
-	if task,ok = portsMsg.Task.(*transport.Message_Snmpc); ok {
+	if task, ok = portsMsg.Task.(*transport.Message_Snmpc); ok {
 		discoveryMap := make(map[int]*discoveryItem)
 		d.populateDiscoveryMap(task, discoveryMap)
-		
+
 		for _, discoveryItem := range discoveryMap {
-		ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
-	}
-		
+			ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
+		}
+
 		sort.Slice(ne.Interfaces, func(i, j int) bool {
-		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
-	})
+			return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+		})
 	}
-	
-	
 
 	return ne, nil
 }
@@ -360,6 +356,27 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
 			}
+		case *transport.Message_Ssh:
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Ssh.Payload[0].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[0].Command)
+			}
+
+			if elementInterface.DhcpTable, err = parseIPTable(task.Ssh.Payload[1].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[1].Command)
+			}
+			elementInterface.Config = parseCurrentConfig(task.Ssh.Payload[2].Lookfor)
+
+			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Ssh.Payload[3].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[3].Command)
+			}
+
+			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Ssh.Payload[4].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[4].Command)
+			}
+
+			if elementInterface.Qos, err = parseQueueStatistics(task.Ssh.Payload[5].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[5].Command)
+			}
 		}
 	}
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
@@ -394,7 +411,10 @@ func main() {
 		Output:     os.Stderr,
 		JSONFormat: true,
 	})
-	natsConf := shared.GetConfig().NATS
+
+	sharedConf := shared.GetConfig()
+
+	natsConf := sharedConf.NATS
 	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
 	dncChan = make(chan string)
 	enc, _ := nats.NewEncodedConn(nc, "json")
@@ -409,16 +429,7 @@ func main() {
 	driver := &VRPDriver{
 		logger: logger,
 		dnc:    dncClient,
-		conf: shared.Configuration{
-			SNMP: shared.ConfigSNMP{
-				Community:          "semipublic",
-				Version:            2,
-				Timeout:            time.Second * 20,
-				Retries:            2,
-				DynamicRepetitions: true,
-			},
-			Connection: shared.ConfigConnection{},
-		},
+		conf:   sharedConf,
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

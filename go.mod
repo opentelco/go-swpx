@@ -30,3 +30,7 @@ require (
 	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
 )
+
+replace (
+	git.liero.se/opentelco/go-dnc v0.0.0-20201005111513-bcfabfd76961 => ../go-dnc //todo uses go-dnc from the refactor/ssh-config branch locally (for now)
+)

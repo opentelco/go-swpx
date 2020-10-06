@@ -27,6 +27,7 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/ssh"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/resource"
@@ -322,17 +323,15 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 			},
 		},
 		Config: &telnet.Config{
-			Type:                string(conf.Connection.Type),
-			User:                conf.Connection.Username,
-			Password:            conf.Connection.Password,
-			Port:                conf.Connection.Port,
-			ScreenLength:        conf.Connection.ScreenLength,
-			ScreenLengthCommand: conf.Connection.ScreenLengthCommand,
-			RegexPrompt:         conf.Connection.RegexPrompt,
-			Ttl:                 &duration.Duration{Seconds: int64(conf.Connection.TTL.Seconds())},
-			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Connection.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Connection.WriteDeadLine.Seconds())},
-			SshKeyPath:          conf.Connection.SSHKeyPath,
+			User:                conf.Connection.Telnet.Username,
+			Password:            conf.Connection.Telnet.Password,
+			Port:                conf.Connection.Telnet.Port,
+			ScreenLength:        conf.Connection.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Connection.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Connection.Telnet.RegexPrompt,
+			Ttl:                 &duration.Duration{Seconds: int64(conf.Connection.Telnet.TTL.Seconds())},
+			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Connection.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Connection.Telnet.WriteDeadLine.Seconds())},
 		},
 		Host: el.Hostname,
 	}
@@ -342,6 +341,56 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 		Target:  el.Hostname,
 		Type:    transport.Type_TELNET,
 		Task:    &transport.Message_Telnet{Telnet: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+
+}
+
+func createSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &ssh.Task{
+		Type: ssh.Type_GET,
+		Payload: []*ssh.Payload{
+			{
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			},
+		},
+		Config: &ssh.Config{
+			User:                conf.Connection.SSH.Username,
+			Password:            conf.Connection.SSH.Password,
+			Port:                conf.Connection.SSH.Port,
+			ScreenLength:        conf.Connection.SSH.ScreenLength,
+			ScreenLengthCommand: conf.Connection.SSH.ScreenLengthCommand,
+			RegexPrompt:         conf.Connection.SSH.RegexPrompt,
+			Ttl:                 &duration.Duration{Seconds: int64(conf.Connection.SSH.TTL.Seconds())},
+			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Connection.SSH.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Connection.SSH.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Connection.SSH.SSHKeyPath,
+		},
+		Host: el.Hostname,
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_SSH,
+		Task:    &transport.Message_Ssh{Ssh: task},
 		Status:  shared2.Status_NEW,
 		Created: &timestamp.Timestamp{},
 	}
@@ -386,7 +435,6 @@ func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 	return message
 }
 
-
 // Before the task is sent we need to set the MaxRepetitions to X
 func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
@@ -394,7 +442,7 @@ func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configurat
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
 			MaxIterations:      2,
-			MaxRepetitions:0,
+			MaxRepetitions:     0,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
@@ -411,7 +459,7 @@ func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configurat
 			{Oid: oids.HuaIfVRPVendorPN, Name: "hwEntityOpticalVenderPn", Type: metric.MetricType_STRING},
 		},
 	}
-	
+
 	// task.Parameters = params
 	message := &transport.Message{
 		Id:      ksuid.New().String(),

@@ -17,15 +17,27 @@ response_cache:
 nats:
   event_servers: ['nats://192.168.0.12:14222', 'nats://192.168.0.12:24222', 'nats://192.168.0.12:34222']
 connection:
-  type: "telnet"
-  username: "root-telnet"
-  password: "qwerty1234"
-  port: 23
-  screen_length: "0"
-  screen_length_command: "screen-length %s temporary"
-  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
-  default_errors: "error|failed|unrecognized"
-  ttl: "30s"
-  read_dead_line: "8s"
-  write_dead_line: "8s"
-#  ssh_key_path: "/home/ardi/.ssh/id_rsa"
+  ssh:
+    username: "root-ssh"
+    password: "qwerty1234"
+    port: 22
+    screen_length: "0"
+    screen_length_command: "screen-length %s temporary"
+    default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+    default_errors: "error|failed|unrecognized"
+    ttl: "30s"
+    read_dead_line: "8s"
+    write_dead_line: "8s"
+  #  ssh_key_path: "/home/ardi/.ssh/id_rsa"
+  telnet:
+    username: "root-telnet"
+    password: "qwerty1234"
+    port: 23
+    screen_length: "0"
+    screen_length_command: "screen-length %s temporary"
+    default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+    default_errors: "error|failed|unrecognized"
+    ttl: "30s"
+    read_dead_line: "8s"
+    write_dead_line: "8s"
+

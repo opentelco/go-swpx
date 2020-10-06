@@ -83,7 +83,11 @@ func (p *ProviderGRPCClient) Weight() (int64, error) {
 // GetConfiguration returns the configuration of the Provider.
 func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
 	resp, err := p.client.GetConfiguration(ctx, &proto.Empty{})
-	return Proto2conf(resp), err
+	if err != nil {
+		return Configuration{}, err
+	}
+
+	return Proto2conf(resp), nil
 }
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
@@ -120,6 +124,9 @@ func (rpc *ProviderGRPCServer) Weight(ctx context.Context, _ *proto.Empty) (*pro
 
 func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context, _ *proto.Empty) (*proto.Configuration, error) {
 	res, err := rpc.Impl.GetConfiguration(ctx)
+	if err != nil {
+		return nil, err
+	}
 	protoConf := Conf2proto(res)
 	return &protoConf, err
 }
