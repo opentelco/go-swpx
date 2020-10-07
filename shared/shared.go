@@ -67,9 +67,7 @@ var PluginMap = map[string]plugin.Plugin{
 	PluginProviderKey: &ProviderPlugin{},
 }
 
-type ConfigConnection struct {
-	Telnet ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
-	SSH    ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
+type Confi struct {
 }
 type ConfigTelnet struct {
 	Username            string        `json:"username" mapstructure:"username" yaml:"username" toml:"username"`
@@ -119,11 +117,12 @@ type ConfigNATS struct {
 }
 
 type Configuration struct {
-	SNMP           ConfigSNMP       `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
-	Connection     ConfigConnection `json:"connection" toml:"connection" yaml:"connection" mapstructure:"connection"`
-	InterfaceCache ConfigMongo      `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
-	ResponseCache  ConfigMongo      `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
-	NATS           ConfigNATS       `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
+	SNMP           ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
+	InterfaceCache ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache  ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	NATS           ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
+	Telnet         ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
+	Ssh            ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
 }
 
 func GetConfig() Configuration {
@@ -156,32 +155,30 @@ func Conf2proto(conf Configuration) proto.Configuration {
 			Retries:            int32(conf.SNMP.Retries),
 			DynamicRepetitions: conf.SNMP.DynamicRepetitions,
 		},
-		Connection: &proto.ConfigConnection{
-			Telnet: &proto.ConfigTelnet{
-				User:                conf.Connection.Telnet.Username,
-				Password:            conf.Connection.Telnet.Password,
-				Port:                conf.Connection.Telnet.Port,
-				ScreenLength:        conf.Connection.Telnet.ScreenLength,
-				ScreenLengthCommand: conf.Connection.Telnet.ScreenLengthCommand,
-				RegexPrompt:         conf.Connection.Telnet.RegexPrompt,
-				Errors:              conf.Connection.Telnet.Errors,
-				TTL:                 uint64(conf.Connection.Telnet.TTL),
-				ReadDeadLine:        uint64(conf.Connection.Telnet.ReadDeadLine),
-				WriteDeadLine:       uint64(conf.Connection.Telnet.WriteDeadLine),
-			},
-			Ssh: &proto.ConfigSSH{
-				User:                conf.Connection.SSH.Username,
-				Password:            conf.Connection.SSH.Password,
-				Port:                conf.Connection.SSH.Port,
-				ScreenLength:        conf.Connection.SSH.ScreenLength,
-				ScreenLengthCommand: conf.Connection.SSH.ScreenLengthCommand,
-				RegexPrompt:         conf.Connection.SSH.RegexPrompt,
-				Errors:              conf.Connection.SSH.Errors,
-				TTL:                 uint64(conf.Connection.SSH.TTL),
-				ReadDeadLine:        uint64(conf.Connection.SSH.ReadDeadLine),
-				WriteDeadLine:       uint64(conf.Connection.SSH.WriteDeadLine),
-				SSHKeyPath:          conf.Connection.SSH.SSHKeyPath,
-			},
+		Telnet: &proto.ConfigTelnet{
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			Port:                conf.Telnet.Port,
+			ScreenLength:        conf.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			Errors:              conf.Telnet.Errors,
+			TTL:                 uint64(conf.Telnet.TTL),
+			ReadDeadLine:        uint64(conf.Telnet.ReadDeadLine),
+			WriteDeadLine:       uint64(conf.Telnet.WriteDeadLine),
+		},
+		Ssh: &proto.ConfigSSH{
+			User:                conf.Ssh.Username,
+			Password:            conf.Ssh.Password,
+			Port:                conf.Ssh.Port,
+			ScreenLength:        conf.Ssh.ScreenLength,
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			RegexPrompt:         conf.Ssh.RegexPrompt,
+			Errors:              conf.Ssh.Errors,
+			TTL:                 uint64(conf.Ssh.TTL),
+			ReadDeadLine:        uint64(conf.Ssh.ReadDeadLine),
+			WriteDeadLine:       uint64(conf.Ssh.WriteDeadLine),
+			SSHKeyPath:          conf.Ssh.SSHKeyPath,
 		},
 	}
 }
@@ -196,32 +193,30 @@ func Proto2conf(protoConf *proto.Configuration) Configuration {
 			Retries:            int32(protoConf.SNMP.Retries),
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
-		Connection: ConfigConnection{
-			Telnet: ConfigTelnet{
-				Username:            protoConf.Connection.Telnet.User,
-				Password:            protoConf.Connection.Telnet.Password,
-				Port:                protoConf.Connection.Telnet.Port,
-				ScreenLength:        protoConf.Connection.Telnet.ScreenLength,
-				ScreenLengthCommand: protoConf.Connection.Telnet.ScreenLengthCommand,
-				RegexPrompt:         protoConf.Connection.Telnet.RegexPrompt,
-				Errors:              protoConf.Connection.Telnet.Errors,
-				TTL:                 time.Duration(protoConf.Connection.Telnet.TTL),
-				ReadDeadLine:        time.Duration(protoConf.Connection.Telnet.ReadDeadLine),
-				WriteDeadLine:       time.Duration(protoConf.Connection.Telnet.WriteDeadLine),
-			},
-			SSH: ConfigSSH{
-				Username:            protoConf.Connection.Ssh.User,
-				Password:            protoConf.Connection.Ssh.Password,
-				Port:                protoConf.Connection.Ssh.Port,
-				ScreenLength:        protoConf.Connection.Ssh.ScreenLength,
-				ScreenLengthCommand: protoConf.Connection.Ssh.ScreenLengthCommand,
-				RegexPrompt:         protoConf.Connection.Ssh.RegexPrompt,
-				Errors:              protoConf.Connection.Ssh.Errors,
-				TTL:                 time.Duration(protoConf.Connection.Ssh.TTL),
-				ReadDeadLine:        time.Duration(protoConf.Connection.Ssh.ReadDeadLine),
-				WriteDeadLine:       time.Duration(protoConf.Connection.Ssh.WriteDeadLine),
-				SSHKeyPath:          protoConf.Connection.Ssh.SSHKeyPath,
-			},
+		Telnet: ConfigTelnet{
+			Username:            protoConf.Telnet.User,
+			Password:            protoConf.Telnet.Password,
+			Port:                protoConf.Telnet.Port,
+			ScreenLength:        protoConf.Telnet.ScreenLength,
+			ScreenLengthCommand: protoConf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         protoConf.Telnet.RegexPrompt,
+			Errors:              protoConf.Telnet.Errors,
+			TTL:                 time.Duration(protoConf.Telnet.TTL),
+			ReadDeadLine:        time.Duration(protoConf.Telnet.ReadDeadLine),
+			WriteDeadLine:       time.Duration(protoConf.Telnet.WriteDeadLine),
+		},
+		Ssh: ConfigSSH{
+			Username:            protoConf.Ssh.User,
+			Password:            protoConf.Ssh.Password,
+			Port:                protoConf.Ssh.Port,
+			ScreenLength:        protoConf.Ssh.ScreenLength,
+			ScreenLengthCommand: protoConf.Ssh.ScreenLengthCommand,
+			RegexPrompt:         protoConf.Ssh.RegexPrompt,
+			Errors:              protoConf.Ssh.Errors,
+			TTL:                 time.Duration(protoConf.Ssh.TTL),
+			ReadDeadLine:        time.Duration(protoConf.Ssh.ReadDeadLine),
+			WriteDeadLine:       time.Duration(protoConf.Ssh.WriteDeadLine),
+			SSHKeyPath:          protoConf.Ssh.SSHKeyPath,
 		},
 	}
 }

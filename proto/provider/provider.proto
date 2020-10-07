@@ -60,11 +60,6 @@ message WeightResponse {
 }
 
 
-message configConnection {
-  configTelnet telnet = 1;
-  configSSH ssh = 2;
-}
-
 message configTelnet {
   string User = 1;
   string Password = 2;
@@ -105,7 +100,8 @@ message configSNMP {
 
 message Configuration{
   configSNMP    SNMP = 1;
-  configConnection  Connection = 2;
+  configTelnet Telnet = 2;
+  configSSH Ssh = 3;
 }
 
 
