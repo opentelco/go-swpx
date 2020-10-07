@@ -307,15 +307,15 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 	for _, msg := range msgs {
 		d.logger.Debug("sending msg")
-		msg, err = d.dnc.Put(ctx, msg)
+		reply, err := d.dnc.Put(ctx, msg)
 		if err != nil {
 			d.logger.Error(err.Error())
 			return nil, err
 		}
 
-		switch task := msg.Task.(type) {
+		switch task := reply.Task.(type) {
 		case *transport.Message_Snmpc:
-			d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+			d.logger.Debug("the reply returns from dnc", "status", reply.Status.String(), "completed", reply.Completed.String(), "execution_time", reply.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
 
 			elementInterface.Index = el.InterfaceIndex
 
@@ -336,6 +336,11 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				}
 			}
 		case *transport.Message_Telnet:
+			if reply.Error != "" {
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
+				continue
+			}
+
 			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
 			}
@@ -357,6 +362,11 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
 			}
 		case *transport.Message_Ssh:
+			if reply.Error != "" {
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
+				continue
+			}
+
 			if elementInterface.MacAddressTable, err = parseMacTable(task.Ssh.Payload[0].Lookfor); err != nil {
 				errs = d.logAndAppend(err, errs, task.Ssh.Payload[0].Command)
 			}

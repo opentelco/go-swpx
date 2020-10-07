@@ -25,6 +25,8 @@ git.liero.se/opentelco/go-net v0.0.0-20201002132333-0459b3224510 h1:vT6hAiNFVd6S
 git.liero.se/opentelco/go-net v0.0.0-20201002132333-0459b3224510/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
 git.liero.se/opentelco/go-net v0.0.0-20201005104710-e3b364b57a02 h1:ChF6pi5wolf/0n743KcXvsVK9SPM9JkR/bVXWg/wOWI=
 git.liero.se/opentelco/go-net v0.0.0-20201005104710-e3b364b57a02/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
+git.liero.se/opentelco/go-net v0.0.0-20201006094023-8575ca8e4133 h1:1Q4dgUI3/ulqpKXgJQW2BPuw5BwxDQ5BTo2zcw5N4/s=
+git.liero.se/opentelco/go-net v0.0.0-20201006094023-8575ca8e4133/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
 git.liero.se/opentelco/go-swpx v0.0.0-20200616085046-f1c118144ed2/go.mod h1:xbQ1VNuXk+Q5NGs4pBFB7FN1oEzVW6kdugioL1d+h9k=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
