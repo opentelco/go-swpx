@@ -293,7 +293,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	}
 
 	msgs = append(msgs, createTaskSystemInfo(el, conf))
-	msgs = append(msgs, createTelnetInterfaceTask(el, conf))
+	msgs = append(msgs, createSSHInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname

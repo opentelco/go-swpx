@@ -24,6 +24,7 @@ package shared
 
 import (
 	"context"
+	"fmt"
 
 	dnc "git.liero.se/opentelco/go-swpx/proto/dnc"
 	proto "git.liero.se/opentelco/go-swpx/proto/provider"
@@ -85,6 +86,10 @@ func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (Configuratio
 	resp, err := p.client.GetConfiguration(ctx, &proto.Empty{})
 	if err != nil {
 		return Configuration{}, err
+	}
+
+	if resp.Telnet == nil || resp.Ssh == nil || resp.SNMP == nil {
+		return Configuration{}, fmt.Errorf("invalid config, restore to default")
 	}
 
 	return Proto2conf(resp), nil
