@@ -23,11 +23,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/resources"
+	"git.liero.se/opentelco/go-swpx/shared"
+	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"github.com/pkg/errors"
 	"log"
 	"os"
-
-	"git.liero.se/opentelco/go-swpx/shared"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -48,13 +58,14 @@ func init() {
 	}
 }
 
-// Here is a real implementation of Driver
 type RaycoreDriver struct {
 	logger hclog.Logger
+	dnc    client.Client
+	conf   shared.Configuration
 }
 
-func (g *RaycoreDriver) Version() (string, error) {
-	// g.logger.Debug("message from resource-driver running at version:", VERSION)
+func (d *RaycoreDriver) Version() (string, error) {
+	d.logger.Debug("message from resource-driver running at version:", VERSION)
 	return fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()), nil
 }
 
@@ -75,19 +86,123 @@ func main() {
 		Output:     os.Stderr,
 		JSONFormat: true,
 	})
+	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
+
+	sharedConf := shared.GetConfig()
+
+	natsConf := sharedConf.NATS
+	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	resource := &RaycoreDriver{
 		logger: logger,
+		dnc:    dncClient,
+		conf:   sharedConf,
 	}
-	// pluginMap is the map of plugins we can dispense.
-	var pluginMap = map[string]plugin.Plugin{
-		"resource": &shared.ResourceDriverPlugin{Impl: resource},
-	}
-
-	logger.Debug("message from resource-driver", VERSION.String())
 
 	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: handshakeConfig,
-		Plugins:         pluginMap,
+		HandshakeConfig: shared.Handshake,
+		Plugins: map[string]plugin.Plugin{
+			"resource": &shared.ResourcePlugin{Impl: resource},
+		},
+		GRPCServer: plugin.DefaultGRPCServer,
 	})
+}
+
+func (d *RaycoreDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+	conf := shared.Proto2conf(el.Conf)
+	portMsg := resources.CreatePortInformationMsg(el, conf)
+	msg, err := d.dnc.Put(ctx, portMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		interfaces := make(map[string]*proto.NetworkElementInterface)
+		for _, m := range task.Snmpc.Metrics {
+			fields := strings.Split(m.Oid, ".")
+			index, err := strconv.Atoi(fields[len(fields)-1])
+			if err != nil {
+				d.logger.Error("can't convert phys.port to int: ", err.Error())
+				return nil, err
+			}
+
+			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
+				Alias:       m.Name,
+				Index:       int64(index),
+				Description: m.GetStringValue(),
+			}
+		}
+
+		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+	}
+	return nil, errors.Errorf("Unsupported message type")
+}
+
+func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+	conf := shared.Proto2conf(el.Conf)
+	ne := &networkelement.Element{}
+	ne.Hostname = el.Hostname
+
+	sysInfoMsg := resources.CreateTaskSystemInfo(el, conf)
+	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	sysInfoTask := sysInfoMsg.Task.(*transport.Message_Snmpc)
+	for _, m := range sysInfoTask.Snmpc.Metrics {
+		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
+			resources.GetSystemInformation(m, ne)
+		}
+	}
+
+	portsMsg := resources.CreateAllPortsMsg(el, conf)
+	portsMsg, err = d.dnc.Put(ctx, portsMsg)
+	if err != nil {
+		d.logger.Error(err.Error())
+		return nil, err
+	}
+
+	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
+		discoveryMap := make(map[int]*resources.DiscoveryItem)
+		resources.PopulateDiscoveryMap(task, discoveryMap)
+
+		for _, discoveryItem := range discoveryMap {
+			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
+		}
+
+		sort.Slice(ne.Interfaces, func(i, j int) bool {
+			return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+		})
+	}
+
+	return ne, nil
+}
+
+// Gets all the technical information for a Port
+func (d *RaycoreDriver) TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
+	return nil, nil
+}
+
+func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+	return nil, nil
+}
+
+func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
+	return nil, nil
+}
+
+func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
+	d.conf = conf
+
+	return nil
+}
+func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+	return d.conf, nil
 }

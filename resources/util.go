@@ -1,47 +1,64 @@
-package main
+package resources
 
 import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/proto/networkelement"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
-func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discoveryMap map[int]*discoveryItem) {
+var ReFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
+
+type DiscoveryItem struct {
+	Index       int
+	Descr       string
+	Alias       string
+	ifType      int
+	mtu         int
+	physAddress string
+	adminStatus int
+	operStatus  int
+	lastChange  *timestamppb.Timestamp
+	highSpeed   int
+}
+
+func PopulateDiscoveryMap(task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
 	for _, m := range task.Snmpc.Metrics {
-		index, _ := strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
+		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
 		case "ifIndex":
 			if val, ok := discoveryMap[index]; ok {
-				val.index = int(m.GetIntValue())
+				val.Index = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
-					index: int(m.GetIntValue()),
+				discoveryMap[index] = &DiscoveryItem{
+					Index: int(m.GetIntValue()),
 				}
 			}
 		case "ifAlias":
 			if val, ok := discoveryMap[index]; ok {
 			} else {
-				val.alias = m.GetStringValue()
-				discoveryMap[index] = &discoveryItem{
-					alias: m.GetStringValue(),
+				val.Alias = m.GetStringValue()
+				discoveryMap[index] = &DiscoveryItem{
+					Alias: m.GetStringValue(),
 				}
 			}
 		case "ifDescr":
 			if val, ok := discoveryMap[index]; ok {
-				val.descr = m.GetStringValue()
+				val.Descr = m.GetStringValue()
 			} else {
-				discoveryMap[index] = &discoveryItem{
-					descr: m.GetStringValue(),
+				discoveryMap[index] = &DiscoveryItem{
+					Descr: m.GetStringValue(),
 				}
 			}
 		case "ifType":
 			if val, ok := discoveryMap[index]; ok {
 				val.ifType = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					ifType: int(m.GetIntValue()),
 				}
 			}
@@ -49,7 +66,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.mtu = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					mtu: int(m.GetIntValue()),
 				}
 			}
@@ -57,7 +74,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.physAddress = m.GetHwaddrValue()
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					physAddress: m.GetHwaddrValue(),
 				}
 			}
@@ -65,7 +82,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.adminStatus = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					adminStatus: int(m.GetIntValue()),
 				}
 			}
@@ -73,7 +90,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.operStatus = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					operStatus: int(m.GetIntValue()),
 				}
 			}
@@ -81,7 +98,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.lastChange = m.GetTimestampValue()
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					lastChange: m.GetTimestampValue(),
 				}
 			}
@@ -89,7 +106,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 			if val, ok := discoveryMap[index]; ok {
 				val.highSpeed = int(m.GetIntValue())
 			} else {
-				discoveryMap[index] = &discoveryItem{
+				discoveryMap[index] = &DiscoveryItem{
 					highSpeed: int(m.GetIntValue()),
 				}
 			}
@@ -97,7 +114,7 @@ func (d *VRPDriver) populateDiscoveryMap(task *transport.Message_Snmpc, discover
 	}
 }
 
-func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
@@ -124,7 +141,7 @@ func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 
 }
 
-func getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func GetIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
 		elementInterface.Stats.Output.Bytes = m.GetIntValue()
@@ -165,7 +182,7 @@ func getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.In
 	}
 }
 
-func getHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func GetHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
 		elementInterface.Stats.Input.CrcErrors = m.GetIntValue()
@@ -181,7 +198,7 @@ func getHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Int
 	}
 }
 
-func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
+func GetSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	switch m.Oid {
 	case oids.SysContact:
 		ne.Contact = m.GetStringValue()
@@ -198,12 +215,12 @@ func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	}
 }
 
-func itemToInterface(v *discoveryItem) *networkelement.Interface {
+func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
 	iface := &networkelement.Interface{
 		AggregatedId:      "",
-		Index:             int64(v.index),
-		Alias:             v.alias,
-		Description:       v.descr,
+		Index:             int64(v.Index),
+		Alias:             v.Alias,
+		Description:       v.Descr,
 		Hwaddress:         v.physAddress,
 		Type:              networkelement.InterfaceType(v.ifType),
 		AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),

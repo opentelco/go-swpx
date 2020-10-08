@@ -26,6 +26,7 @@ import (
 	"context"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"testing"
 
@@ -45,7 +46,7 @@ func TestMapInterface(t *testing.T) {
 		Interface: "GigabitEthernet0/0/1",
 	}
 
-	msg := createDiscoveryMsg(req, driver.conf)
+	msg := resources.CreateDiscoveryMsg(req, driver.conf)
 	msg, err := driver.dnc.Put(context.Background(), msg)
 	if err != nil {
 		t.Errorf(err.Error())

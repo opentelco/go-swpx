@@ -25,8 +25,7 @@ package shared
 import (
 	"context"
 	"fmt"
-
-	dnc "git.liero.se/opentelco/go-swpx/proto/dnc"
+	"git.liero.se/opentelco/go-swpx/proto/dnc"
 	proto "git.liero.se/opentelco/go-swpx/proto/provider"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"

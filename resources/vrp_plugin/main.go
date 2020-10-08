@@ -27,11 +27,10 @@ import (
 	"fmt"
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-swpx/resources"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,21 +56,6 @@ const (
 	Float64Size      = 64
 	QueueEntryLength = 12
 )
-
-var reFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
-
-type discoveryItem struct {
-	index       int
-	descr       string
-	alias       string
-	ifType      int
-	mtu         int
-	physAddress string
-	adminStatus int
-	operStatus  int
-	lastChange  *timestamppb.Timestamp
-	highSpeed   int
-}
 
 var dncChan chan string
 
@@ -106,11 +90,11 @@ func (d *VRPDriver) Version() (string, error) {
 }
 
 // parse a map of description/alias and return the ID
-func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*discoveryItem) (*discoveryItem, error) {
+func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*resources.DiscoveryItem) (*resources.DiscoveryItem, error) {
 	for _, v := range discoveryMap {
 		// v.index = k
-		if v.descr == port {
-			d.logger.Info("parser found match", "port", v.descr)
+		if v.Descr == port {
+			d.logger.Info("parser found match", "port", v.Descr)
 			return v, nil
 		}
 	}
@@ -120,7 +104,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 // Find matching OID for port
 func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(el.Conf)
-	portMsg := createPortInformationMsg(el, conf)
+	portMsg := resources.CreatePortInformationMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, portMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
@@ -133,7 +117,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 			fields := strings.Split(m.Oid, ".")
 			index, err := strconv.Atoi(fields[len(fields)-1])
 			if err != nil {
-				logger.Error("can't convert phys.port to int: ", err.Error())
+				d.logger.Error("can't convert phys.port to int: ", err.Error())
 				return nil, err
 			}
 
@@ -152,7 +136,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(el.Conf)
 
-	vrpMsg := createVRPTransceiverMsg(el, conf)
+	vrpMsg := resources.CreateVRPTransceiverMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
 		d.logger.Error("transceiver put error", err.Error())
@@ -202,12 +186,12 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
-	discoveryMap := make(map[int]*discoveryItem)
+	discoveryMap := make(map[int]*resources.DiscoveryItem)
 	var interfaces = make(map[string]*proto.NetworkElementInterface)
 
 	conf := shared.Proto2conf(el.Conf)
 
-	msg = createDiscoveryMsg(el, conf)
+	msg = resources.CreateDiscoveryMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, msg)
 	if err != nil {
 		d.logger.Error(err.Error())
@@ -217,13 +201,13 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		d.populateDiscoveryMap(task, discoveryMap)
+		resources.PopulateDiscoveryMap(task, discoveryMap)
 
 		for _, v := range discoveryMap {
-			interfaces[v.descr] = &proto.NetworkElementInterface{
-				Index:       int64(v.index),
-				Description: v.descr,
-				Alias:       v.alias,
+			interfaces[v.Descr] = &proto.NetworkElementInterface{
+				Index:       int64(v.Index),
+				Description: v.Descr,
+				Alias:       v.Alias,
 			}
 		}
 	}
@@ -238,7 +222,7 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
 
-	sysInfoMsg := createTaskSystemInfo(el, conf)
+	sysInfoMsg := resources.CreateTaskSystemInfo(el, conf)
 	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
@@ -248,25 +232,23 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 	sysInfoTask := sysInfoMsg.Task.(*transport.Message_Snmpc)
 	for _, m := range sysInfoTask.Snmpc.Metrics {
 		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
-			getSystemInformation(m, ne)
+			resources.GetSystemInformation(m, ne)
 		}
 	}
 
-	portsMsg := createAllPortsMsg(el, conf)
+	portsMsg := resources.CreateAllPortsMsg(el, conf)
 	portsMsg, err = d.dnc.Put(ctx, portsMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
 	}
 
-	var task *transport.Message_Snmpc
-	var ok bool
-	if task, ok = portsMsg.Task.(*transport.Message_Snmpc); ok {
-		discoveryMap := make(map[int]*discoveryItem)
-		d.populateDiscoveryMap(task, discoveryMap)
+	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
+		discoveryMap := make(map[int]*resources.DiscoveryItem)
+		resources.PopulateDiscoveryMap(task, discoveryMap)
 
 		for _, discoveryItem := range discoveryMap {
-			ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
+			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
 		}
 
 		sort.Slice(ne.Interfaces, func(i, j int) bool {
@@ -286,14 +268,14 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 	var msgs []*transport.Message
 	if el.InterfaceIndex != 0 {
-		msgs = append(msgs, createSinglePortMsg(el.InterfaceIndex, el, conf))
-		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, resources.CreateSinglePortMsg(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, resources.CreateTaskGetPortStats(el.InterfaceIndex, el, conf))
 	} else {
-		msgs = append(msgs, createMsg(conf))
+		msgs = append(msgs, resources.CreateMsg(conf))
 	}
 
-	msgs = append(msgs, createTaskSystemInfo(el, conf))
-	msgs = append(msgs, createSSHInterfaceTask(el, conf))
+	msgs = append(msgs, resources.CreateTaskSystemInfo(el, conf))
+	msgs = append(msgs, resources.CreateSSHInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
@@ -323,16 +305,16 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 				d.logger.Debug(m.GetStringValue())
 				switch {
 				case strings.HasPrefix(m.Oid, oids.SysPrefix):
-					getSystemInformation(m, ne)
+					resources.GetSystemInformation(m, ne)
 
 				case strings.HasPrefix(m.Oid, oids.HuaPrefix):
-					getHuaweiInformation(m, elementInterface)
+					resources.GetHuaweiInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
-					getIfEntryInformation(m, elementInterface)
+					resources.GetIfEntryInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
-					getIfXEntryInformation(m, elementInterface)
+					resources.GetIfXEntryInformation(m, elementInterface)
 				}
 			}
 		case *transport.Message_Telnet:

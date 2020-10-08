@@ -8,7 +8,7 @@ build:
 	# RESOURCES
 	go build -o ./plugins/resources/resource_vrp_plug ./resources/vrp_plugin/
 	# disabled
-	# go build -o ./plugins/resource_raycore_plug ./resources/raycore_plugin/main.go
+	 go build -o ./plugins/resources/resource_raycore_plug ./resources/raycore_plugin/
 	# go build -o ./plugins/resource_comware_plug ./resources/comware_plugin/main.go
 	
 	# PROVIDERS

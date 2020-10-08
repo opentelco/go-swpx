@@ -20,7 +20,7 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package main
+package resources
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func createDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -71,7 +71,7 @@ func createDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *tr
 }
 
 // createMsg uses the pbuf transport for DNC..
-func createSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -109,7 +109,7 @@ func createSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Conf
 	return message
 }
 
-func createTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -146,7 +146,7 @@ func createTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *
 	return message
 }
 
-func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -193,8 +193,8 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.C
 	return message
 }
 
-// createMsg uses the pbuf transport for DNC..
-func createMsg(conf shared.Configuration) *transport.Message {
+// CreateMsg uses the pbuf transport for DNC..
+func CreateMsg(conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -235,7 +235,7 @@ func createMsg(conf shared.Configuration) *transport.Message {
 	return message
 }
 
-func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreatePortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -264,7 +264,7 @@ func createPortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	return message
 }
 
-func createVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -348,7 +348,7 @@ func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 
 }
 
-func createSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &ssh.Task{
 		Type: ssh.Type_GET,
 		Payload: []*ssh.Payload{
@@ -398,7 +398,7 @@ func createSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration)
 
 }
 
-func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
