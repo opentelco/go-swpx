@@ -299,7 +299,7 @@ func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 	return message
 }
 
-func createTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &telnet.Task{
 		Type: telnet.Type_GET,
 		Payload: []*telnet.Payload{
@@ -436,7 +436,7 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 }
 
 // Before the task is sent we need to set the MaxRepetitions to X
-func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -470,4 +470,38 @@ func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configurat
 		Created: &timestamp.Timestamp{},
 	}
 	return message
+}
+
+func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+	task := &telnet.Task{
+		Type: telnet.Type_GET,
+		Payload: []*telnet.Payload{
+			{
+				Command: "port sfp",
+			},
+		},
+		Config: &telnet.Config{
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			Port:                conf.Telnet.Port,
+			ScreenLength:        conf.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			Ttl:                 &duration.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
+			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
+		},
+		Host: el.Hostname,
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_TELNET,
+		Task:    &transport.Message_Telnet{Telnet: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+
 }

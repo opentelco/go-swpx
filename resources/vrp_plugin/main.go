@@ -146,38 +146,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
-
-			tempInt := task.Snmpc.Metrics[1].GetIntValue()
-			voltInt := task.Snmpc.Metrics[2].GetIntValue()
-			curInt := task.Snmpc.Metrics[3].GetIntValue()
-			rxInt := task.Snmpc.Metrics[4].GetIntValue()
-			txInt := task.Snmpc.Metrics[5].GetIntValue()
-			var rx, tx, temp, volt, curr float64
-			rx = float64(rxInt*-1) / 100
-			tx = float64(txInt*-1) / 100
-			temp = float64(tempInt)
-			volt = float64(voltInt) / 1000
-			curr = float64(curInt) / 1000
-
-			// no transceiver available, return nil
-			if tempInt == -255 && rxInt == -1 && txInt == -1 {
-				return &networkelement.Transceiver{}, nil
-			}
-
-			val := &networkelement.Transceiver{
-				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
-				Stats: []*networkelement.TransceiverStatistics{
-					{
-						Temp:    temp,
-						Voltage: volt,
-						Current: curr,
-						Rx:      rx,
-						Tx:      tx,
-					},
-				},
-				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
-			}
-			return val, nil
+			return resources.ParseTransceiverMessage(task)
 		}
 	}
 	return nil, errors.Errorf("Unsupported message type")

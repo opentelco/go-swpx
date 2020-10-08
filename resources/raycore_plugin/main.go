@@ -194,8 +194,23 @@ func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*p
 	return nil, nil
 }
 
-func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return nil, nil
+func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
+	conf := shared.Proto2conf(el.Conf)
+
+	vrpMsg := resources.CreateVRPTransceiverMsg(el, conf)
+	msg, err := d.dnc.Put(ctx, vrpMsg)
+	if err != nil {
+		d.logger.Error("transceiver put error", err.Error())
+		return nil, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		if len(task.Snmpc.Metrics) >= 7 {
+			return resources.ParseTransceiverMessage(task)
+		}
+	}
+	return nil, errors.Errorf("Unsupported message type")
 }
 
 func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
