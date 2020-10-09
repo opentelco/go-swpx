@@ -366,7 +366,6 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 	if err != nil {
 		logger.Error("error fetching physical entities:", err.Error())
 		return err
-
 	}
 
 	allPortInformation, err := plugin.AllPortInformation(msg.Context, req)
@@ -375,15 +374,15 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 		return err
 	}
 
-	var physCount int32 = 0
-	for _, v := range allPortInformation.Interfaces {
-		if _, ok := physPortResponse.Interfaces[v.Description]; ok {
-			physCount++
+	var matchingInterfaces int32 = 0
+	for _, iface := range allPortInformation.Interfaces {
+		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
+			matchingInterfaces++
 		}
 	}
 	transceivers, _ := plugin.GetAllTransceiverInformation(msg.Context, &resource.NetworkElementWrapper{
 		Element:       req,
-		NumInterfaces: physCount,
+		NumInterfaces: matchingInterfaces,
 	})
 
 	for _, iface := range allPortInformation.Interfaces {

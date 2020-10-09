@@ -232,36 +232,30 @@ func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
 	return iface
 }
 
-func ParseTransceiverMessage(task *transport.Message_Snmpc) (*networkelement.Transceiver, error) {
-	tempInt := task.Snmpc.Metrics[1].GetIntValue()
-	voltInt := task.Snmpc.Metrics[2].GetIntValue()
-	curInt := task.Snmpc.Metrics[3].GetIntValue()
-	rxInt := task.Snmpc.Metrics[4].GetIntValue()
-	txInt := task.Snmpc.Metrics[5].GetIntValue()
-	var rx, tx, temp, volt, curr float64
-	rx = float64(rxInt*-1) / 100
-	tx = float64(txInt*-1) / 100
-	temp = float64(tempInt)
-	volt = float64(voltInt) / 1000
-	curr = float64(curInt) / 1000
+func ParseTransceiverMessage(task *transport.Message_Snmpc, startIndex int) *networkelement.Transceiver {
+	tempInt := task.Snmpc.Metrics[startIndex+1].GetIntValue()
+	voltInt := task.Snmpc.Metrics[startIndex+2].GetIntValue()
+	curInt := task.Snmpc.Metrics[startIndex+3].GetIntValue()
+	rxInt := task.Snmpc.Metrics[startIndex+4].GetIntValue()
+	txInt := task.Snmpc.Metrics[startIndex+5].GetIntValue()
 
 	// no transceiver available, return nil
-	if tempInt == -255 && rxInt == -1 && txInt == -1 {
-		return &networkelement.Transceiver{}, nil
+	if tempInt == -255 || rxInt == -1 || txInt == -1 {
+		return nil
 	}
 
 	val := &networkelement.Transceiver{
-		SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
+		SerialNumber: strings.Trim(task.Snmpc.Metrics[startIndex+0].GetStringValue(), " "),
 		Stats: []*networkelement.TransceiverStatistics{
 			{
-				Temp:    temp,
-				Voltage: volt,
-				Current: curr,
-				Rx:      rx,
-				Tx:      tx,
+				Temp:    float64(tempInt*-1) / 100,
+				Voltage: float64(voltInt*-1) / 100,
+				Current: float64(curInt),
+				Rx:      float64(rxInt) / 1000,
+				Tx:      float64(txInt) / 1000,
 			},
 		},
-		PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
+		PartNumber: task.Snmpc.Metrics[startIndex+6].GetStringValue(),
 	}
-	return val, nil
+	return val
 }
