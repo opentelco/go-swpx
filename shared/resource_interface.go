@@ -43,6 +43,7 @@ type Resource interface {
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
+	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*proto.Transceivers, error)
 
 	SetConfiguration(ctx context.Context, conf Configuration) error
 	GetConfiguration(ctx context.Context) (Configuration, error)
@@ -84,6 +85,10 @@ func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf Config
 	rpc.conf = conf
 
 	return nil
+}
+
+func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+	return rpc.client.GetAllTransceiverInformation(ctx, ne)
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
@@ -139,6 +144,9 @@ func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf Config
 	rpc.conf = conf
 
 	return nil
+}
+func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+	return rpc.Impl.GetAllTransceiverInformation(ctx, wrapper)
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this

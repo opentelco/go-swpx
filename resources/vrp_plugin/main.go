@@ -133,6 +133,52 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 	return nil, errors.Errorf("Unsupported message type")
 }
 
+func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+	el := wrapper.Element
+	conf := shared.Proto2conf(el.Conf)
+	result := make(map[int32]*networkelement.Transceiver)
+
+	vrpMsg := createAllVRPTransceiverMsg(el, conf, wrapper.NumInterfaces)
+	msg, err := d.dnc.Put(ctx, vrpMsg)
+	if err != nil {
+		d.logger.Error("transceiver put error", err.Error())
+		return &proto.Transceivers{}, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		for i := 0; i < len(task.Snmpc.Metrics); i += 7 {
+			index, _ := strconv.Atoi(reFindIndexinOID.FindString(task.Snmpc.Metrics[i].Oid))
+
+			tempInt := task.Snmpc.Metrics[i+1].GetIntValue()
+			voltInt := task.Snmpc.Metrics[i+2].GetIntValue()
+			curInt := task.Snmpc.Metrics[i+3].GetIntValue()
+			rxInt := task.Snmpc.Metrics[i+4].GetIntValue()
+			txInt := task.Snmpc.Metrics[i+5].GetIntValue()
+
+			if tempInt == -255 || rxInt == -1 || txInt == -1 {
+				continue
+			}
+
+			result[int32(index)] = &networkelement.Transceiver{
+				SerialNumber: strings.Trim(task.Snmpc.Metrics[i].GetStringValue(), " "),
+				Stats: []*networkelement.TransceiverStatistics{
+					{
+						Temp:    float64(tempInt),
+						Voltage: float64(voltInt) / 1000,
+						Current: float64(curInt) / 1000,
+						Rx:      float64(rxInt*-1) / 100,
+						Tx:      float64(txInt*-1) / 100,
+					},
+				},
+				PartNumber: task.Snmpc.Metrics[i+6].GetStringValue(),
+			}
+		}
+	}
+
+	return &proto.Transceivers{Transceivers: result}, nil
+}
+
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(el.Conf)
 
@@ -146,7 +192,32 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
-			return resources.ParseTransceiverMessage(task)
+
+			tempInt := task.Snmpc.Metrics[1].GetIntValue()
+			voltInt := task.Snmpc.Metrics[2].GetIntValue()
+			curInt := task.Snmpc.Metrics[3].GetIntValue()
+			rxInt := task.Snmpc.Metrics[4].GetIntValue()
+			txInt := task.Snmpc.Metrics[5].GetIntValue()
+
+			// no transceiver available, return nil
+			if tempInt == -255 || rxInt == -1 || txInt == -1 {
+				return &networkelement.Transceiver{}, nil
+			}
+
+			val := &networkelement.Transceiver{
+				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
+				Stats: []*networkelement.TransceiverStatistics{
+					{
+						Temp:    float64(tempInt),
+						Voltage: float64(voltInt) / 1000,
+						Current: float64(curInt) / 1000,
+						Rx:      float64(rxInt*-1) / 100,
+						Tx:      float64(txInt*-1) / 100,
+					},
+				},
+				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
+			}
+			return val, nil
 		}
 	}
 	return nil, errors.Errorf("Unsupported message type")
@@ -244,7 +315,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	}
 
 	msgs = append(msgs, resources.CreateTaskSystemInfo(el, conf))
-	msgs = append(msgs, resources.CreateSSHInterfaceTask(el, conf))
+	msgs = append(msgs, resources.CreateTelnetInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
