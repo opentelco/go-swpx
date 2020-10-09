@@ -436,19 +436,19 @@ func createAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 }
 
 // Before the task is sent we need to set the MaxRepetitions to X
-func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func createAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration, maxRepetitions int32) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
-			DynamicRepititions: false,
-			MaxIterations:      2,
-			MaxRepetitions:     0,
-			NonRepeaters:       0,
+			DynamicRepititions: false, // FALSE because right now it will lookup the ifIndex to get repetitions which we cannot rely on
+			MaxIterations:      3,
+			MaxRepetitions:     maxRepetitions, // set this to the number of interfaces ( db.getCollection('interface_cache').find({"hostname": "172.16.56.21"}).count(); )
+			NonRepeaters:       0,              // all oids should be repeated
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_GET,
+		Type: snmpc.Type_BULKGET,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.HuaIfVRPOpticalVendorSN, Name: "hwEntityOpticalVendorSn", Type: metric.MetricType_STRING},
 			{Oid: oids.HuaIfVRPOpticalTemperature, Name: "hwEntityOpticalTemperature", Type: metric.MetricType_INT},

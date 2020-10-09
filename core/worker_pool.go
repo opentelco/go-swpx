@@ -361,30 +361,34 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 		Hostname:  msg.NetworkElement,
 		Conf:      &protoConf,
 	}
+
 	physPortResponse, err := plugin.MapEntityPhysical(msg.Context, req)
 	if err != nil {
 		logger.Error("error fetching physical entities:", err.Error())
 		return err
 
 	}
+
 	allPortInformation, err := plugin.AllPortInformation(msg.Context, req)
 	if err != nil {
 		logger.Error("error fetching port information for all interfaces:", err.Error())
 		return err
 	}
 
+	var physCount int32 = 0
 	for _, v := range allPortInformation.Interfaces {
-		if matchingInterface, ok := physPortResponse.Interfaces[v.Description]; ok {
-			transceiver, _ := plugin.GetTransceiverInformation(msg.Context, &resource.NetworkElement{
-				PhysicalIndex: matchingInterface.Index,
+		if _, ok := physPortResponse.Interfaces[v.Description]; ok {
+			physCount++
+		}
+	}
+	transceivers, _ := plugin.GetAllTransceiverInformation(msg.Context, &resource.NetworkElementWrapper{
+		Element:       req,
+		NumInterfaces: physCount,
+	})
 
-				Hostname:       msg.NetworkElement,
-				Ip:             req.Ip,
-				Interface:      v.Description,
-				InterfaceIndex: v.Index,
-				Conf:           &protoConf,
-			})
-			v.Transceiver = transceiver
+	for _, iface := range allPortInformation.Interfaces {
+		if matchingPhysInterface, ok := physPortResponse.Interfaces[iface.Description]; ok {
+			iface.Transceiver = transceivers.Transceivers[int32(matchingPhysInterface.Index)]
 		}
 	}
 

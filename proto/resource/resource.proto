@@ -86,6 +86,14 @@ message NetworkElementInterface {
 message NetworkElementInterfaces {
   map<string, NetworkElementInterface> interfaces = 1;
 }
+message Transceivers {
+  map<int32, networkelement.Transceiver> transceivers = 1;
+}
+
+message NetworkElementWrapper {
+  NetworkElement element = 1;
+  int32 numInterfaces = 2;
+}
 
 service TechnicalInformation {
   rpc TechnicalPortInformation(TechnicalInformationRequest) returns (TechnicalInformationResponse);
@@ -98,5 +106,6 @@ service Resource {
   rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);
   rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
   rpc GetTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
+  rpc GetAllTransceiverInformation(NetworkElementWrapper) returns (Transceivers);
 }
 
