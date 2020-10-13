@@ -195,46 +195,7 @@ func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*p
 }
 
 func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	conf := shared.Proto2conf(el.Conf)
-
-	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el, conf)
-	msg, err := d.dnc.Put(ctx, vrpMsg)
-	if err != nil {
-		d.logger.Error("transceiver put error", err.Error())
-		return nil, err
-	}
-
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
-		if len(task.Snmpc.Metrics) >= 7 {
-			tempInt := task.Snmpc.Metrics[1].GetIntValue()
-			voltInt := task.Snmpc.Metrics[2].GetIntValue()
-			curInt := task.Snmpc.Metrics[3].GetIntValue()
-			rxInt := task.Snmpc.Metrics[4].GetIntValue()
-			txInt := task.Snmpc.Metrics[5].GetIntValue()
-
-			// no transceiver available, return nil
-			if tempInt == -255 && rxInt == -1 && txInt == -1 {
-				return nil, nil
-			}
-
-			val := &networkelement.Transceiver{
-				SerialNumber: strings.Trim(task.Snmpc.Metrics[0].GetStringValue(), " "),
-				Stats: []*networkelement.TransceiverStatistics{
-					{
-						Temp:    float64(tempInt*-1) / 100,
-						Voltage: float64(voltInt*-1) / 100,
-						Current: float64(curInt),
-						Rx:      float64(rxInt) / 1000,
-						Tx:      float64(txInt) / 1000,
-					},
-				},
-				PartNumber: task.Snmpc.Metrics[6].GetStringValue(),
-			}
-			return val, nil
-		}
-	}
-	return nil, errors.Errorf("Unsupported message type")
+	return nil, nil
 }
 
 func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
@@ -246,7 +207,26 @@ func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (shared.Configurat
 	return d.conf, nil
 }
 
-func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+	conf := shared.Proto2conf(el.Element.Conf)
 
-	return nil, nil
+	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el.Element, conf)
+	msg, err := d.dnc.Put(ctx, vrpMsg)
+	if err != nil {
+		d.logger.Error("transceiver put error", err.Error())
+		return nil, err
+	}
+
+	// TODO parse telnet output
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Telnet:
+		if len(task.Telnet.Payload) > 0 {
+
+			return &proto.Transceivers{Transceivers: make(map[int32]*networkelement.Transceiver)}, nil
+		}
+		// TODO append the transceiver to the last interface with type ETHERNETCSMACD once it is found
+
+	}
+	return nil, errors.Errorf("Unsupported message type")
 }
