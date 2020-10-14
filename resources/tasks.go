@@ -486,7 +486,7 @@ func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf shared.Co
 			Port:                conf.Telnet.Port,
 			ScreenLength:        conf.Telnet.ScreenLength,
 			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
-			RegexPrompt:         conf.Telnet.RegexPrompt,
+			RegexPrompt:         "CP7:\\/>",
 			Ttl:                 &duration.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
 			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
 			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},

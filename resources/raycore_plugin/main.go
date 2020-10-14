@@ -207,9 +207,8 @@ func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (shared.Configurat
 	return d.conf, nil
 }
 
-func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*networkelement.Element, error) {
 	conf := shared.Proto2conf(el.Element.Conf)
-
 	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el.Element, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
@@ -217,16 +216,83 @@ func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *pr
 		return nil, err
 	}
 
-	// TODO parse telnet output
-
 	switch task := msg.Task.(type) {
 	case *transport.Message_Telnet:
 		if len(task.Telnet.Payload) > 0 {
+			transceiver, err := parseTransceiverMessage(task.Telnet.Payload[0].Lookfor, el.Element)
+			if err != nil {
+				return nil, err
+			}
 
-			return &proto.Transceivers{Transceivers: make(map[int32]*networkelement.Transceiver)}, nil
+			//  assign the transceiver to the last interface with type ETHERNETCSMACD once it is found
+			assignToLastInterface(el, transceiver)
 		}
-		// TODO append the transceiver to the last interface with type ETHERNETCSMACD once it is found
-
 	}
-	return nil, errors.Errorf("Unsupported message type")
+
+	return el.FullElement, nil
+}
+
+func parseTransceiverMessage(msg string) (*networkelement.Transceiver, error) {
+	lines := strings.Split(msg, "\n\r")
+
+	var serial, part string
+	var cur, rx, tx, temp, voltage float64
+	var err error
+
+	for _, line := range lines {
+		switch {
+		case strings.HasPrefix(line, "Vendor Port Number"):
+			part = strings.Split(line, ": ")[1]
+		case strings.HasPrefix(line, "Vendor Serial Number"):
+			serial = strings.Split(line, ": ")[1]
+		case strings.HasPrefix(line, "Tx Power"):
+			txStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
+			if tx, err = strconv.ParseFloat(txStr, 64); err != nil {
+				return nil, err
+			}
+		case strings.HasPrefix(line, "Rx Power"):
+			rxStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
+			if rx, err = strconv.ParseFloat(rxStr, 64); err != nil {
+				return nil, err
+			}
+		case strings.HasPrefix(line, "Tx Bias"):
+			curStr := strings.TrimRight(strings.Split(line, ": ")[1], " mA")
+			if cur, err = strconv.ParseFloat(curStr, 64); err != nil {
+				return nil, err
+			}
+		case strings.HasPrefix(line, "Supply voltage"):
+			voltageStr := strings.TrimRight(strings.Split(line, ": ")[1], " V")
+			if voltage, err = strconv.ParseFloat(voltageStr, 64); err != nil {
+				return nil, err
+			}
+		case strings.HasPrefix(line, "Temperature"):
+			tempStr := strings.TrimRight(strings.Split(line, ": ")[1], " degree C")
+			if temp, err = strconv.ParseFloat(tempStr, 64); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &networkelement.Transceiver{
+		SerialNumber: strings.Trim(serial, " "),
+		PartNumber:   strings.Trim(part, " "),
+		Stats: []*networkelement.TransceiverStatistics{
+			{
+				Current: cur,
+				Rx:      rx,
+				Tx:      tx,
+				Temp:    temp,
+				Voltage: voltage,
+			},
+		},
+	}, nil
+}
+
+func assignToLastInterface(el *proto.NetworkElementWrapper, transceiver *networkelement.Transceiver) {
+	for i, iface := range el.FullElement.Interfaces {
+		if iface.Type == networkelement.InterfaceType_ethernetCsmacd && el.FullElement.Interfaces[i+1].Type != networkelement.InterfaceType_ethernetCsmacd {
+			iface.Transceiver = transceiver
+			break
+		}
+	}
 }

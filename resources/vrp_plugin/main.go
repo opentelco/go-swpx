@@ -133,7 +133,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*networkelement.Element, error) {
 	el := wrapper.Element
 	conf := shared.Proto2conf(el.Conf)
 	result := make(map[int32]*networkelement.Transceiver)
@@ -142,7 +142,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
 		d.logger.Error("transceiver put error", err.Error())
-		return &proto.Transceivers{}, err
+		return wrapper.FullElement, err
 	}
 
 	switch task := msg.Task.(type) {
@@ -155,7 +155,14 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 		}
 	}
 
-	return &proto.Transceivers{Transceivers: result}, nil
+	// match transceiver to interface using phys. indexes
+	for _, iface := range wrapper.FullElement.Interfaces {
+		if matchingPhysInterface, ok := wrapper.PhysInterfaces.Interfaces[iface.Description]; ok {
+			iface.Transceiver = result[int32(matchingPhysInterface.Index)]
+		}
+	}
+
+	return wrapper.FullElement, nil
 }
 
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {

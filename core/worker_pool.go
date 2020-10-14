@@ -380,15 +380,14 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 			matchingInterfaces++
 		}
 	}
-	transceivers, _ := plugin.GetAllTransceiverInformation(msg.Context, &resource.NetworkElementWrapper{
-		Element:       req,
-		NumInterfaces: matchingInterfaces,
+	allPortInformation, err = plugin.GetAllTransceiverInformation(msg.Context, &resource.NetworkElementWrapper{
+		Element:        req,
+		NumInterfaces:  matchingInterfaces,
+		FullElement:    allPortInformation,
+		PhysInterfaces: physPortResponse,
 	})
-
-	for _, iface := range allPortInformation.Interfaces {
-		if matchingPhysInterface, ok := physPortResponse.Interfaces[iface.Description]; ok {
-			iface.Transceiver = transceivers.Transceivers[int32(matchingPhysInterface.Index)]
-		}
+	if err != nil {
+		logger.Error("error fetching transceiver information: ", err)
 	}
 
 	resp.NetworkElement = allPortInformation

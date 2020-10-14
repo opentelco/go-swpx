@@ -43,7 +43,8 @@ type Resource interface {
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
-	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*proto.Transceivers, error)
+	// Maps transceivers to corresponding interfaces using physical port information in the wrapper
+	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
 
 	SetConfiguration(ctx context.Context, conf Configuration) error
 	GetConfiguration(ctx context.Context) (Configuration, error)
@@ -87,7 +88,7 @@ func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf Config
 	return nil
 }
 
-func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error) {
 	return rpc.client.GetAllTransceiverInformation(ctx, ne)
 }
 
@@ -145,7 +146,7 @@ func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf Config
 
 	return nil
 }
-func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*proto.Transceivers, error) {
+func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*networkelement.Element, error) {
 	return rpc.Impl.GetAllTransceiverInformation(ctx, wrapper)
 }
 

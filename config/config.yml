@@ -22,7 +22,7 @@ ssh:
   port: 22
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"
-  default_prompt: "\\nCP7:\\/>$"
+  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
   read_dead_line: "8s"
@@ -34,9 +34,9 @@ telnet:
   port: 23
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"
-  default_prompt: "\\nCP7:\\/>$"
+  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
-  read_dead_line: "8s"
-  write_dead_line: "8s"
+  read_dead_line: "180s"
+  write_dead_line: "180s"
 

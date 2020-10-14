@@ -93,6 +93,8 @@ message Transceivers {
 message NetworkElementWrapper {
   NetworkElement element = 1;
   int32 numInterfaces = 2;
+  networkelement.Element fullElement = 3;
+  NetworkElementInterfaces physInterfaces = 4;
 }
 
 service TechnicalInformation {
@@ -106,6 +108,6 @@ service Resource {
   rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);
   rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
   rpc GetTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
-  rpc GetAllTransceiverInformation(NetworkElementWrapper) returns (Transceivers);
+  rpc GetAllTransceiverInformation(NetworkElementWrapper) returns (networkelement.Element);
 }
 
