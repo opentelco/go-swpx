@@ -20,7 +20,6 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package requestcache
 
 import (
@@ -112,7 +111,7 @@ func (o *requestCache) Delete(id uuid.UUID) error {
 }
 
 // GetSize returns the size of the request cache
-func (o requestCache) GetSize() int {
+func (o *requestCache) GetSize() int {
 	o.Lock()
 	defer o.Unlock()
 	return len(o.payloads)

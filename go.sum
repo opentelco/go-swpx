@@ -21,6 +21,8 @@ git.liero.se/opentelco/go-dnc v0.0.0-20201005111513-bcfabfd76961/go.mod h1:hzbDa
 git.liero.se/opentelco/go-dnc v0.0.0-20201006094437-7f09849a6ff7 h1:2L54y9Uitgl33xlEyRWc/Lx9eXX605PHJDXEng7cMA8=
 git.liero.se/opentelco/go-dnc v0.0.0-20201013144826-cac4da1d18a1 h1:tm64ENYvAS+WeiPDzEaqBPrmD0zil4SG9oZ92ONYPsY=
 git.liero.se/opentelco/go-dnc v0.0.0-20201013144826-cac4da1d18a1/go.mod h1:AF67TjxvMP/Y/alEc6M/MpEfuPcjbN4Bmw3ICp7BXDo=
+git.liero.se/opentelco/go-dnc v0.0.0-20201014120647-de11b9f82780 h1:uB9fgcu56xox7haX2iIDQhmSe8pHoLpRKUkrW2wVeyk=
+git.liero.se/opentelco/go-dnc v0.0.0-20201014120647-de11b9f82780/go.mod h1:+WyqYJSJCOmIn2YqEeIs7BRmVsiha4EvFMdAo7FosRY=
 git.liero.se/opentelco/go-net v0.0.0-20200830195941-e7b77cdee05f h1:Zab9uETb4lsaTIytJCzptxpxpvR7NZ2CkjH3ehOnq7c=
 git.liero.se/opentelco/go-net v0.0.0-20200830195941-e7b77cdee05f/go.mod h1:k7rGFZRmawiMzCDwXsKeXTV8KGcspeIHQLvougFyvVk=
 git.liero.se/opentelco/go-net v0.0.0-20201002132333-0459b3224510 h1:vT6hAiNFVd6SlUgBN9RCL13A73eDamr1FGcKZ0hMu4o=
@@ -31,6 +33,8 @@ git.liero.se/opentelco/go-net v0.0.0-20201006094023-8575ca8e4133 h1:1Q4dgUI3/ulq
 git.liero.se/opentelco/go-net v0.0.0-20201006094023-8575ca8e4133/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
 git.liero.se/opentelco/go-net v0.0.0-20201013144721-417896fd1a05 h1:DA1cGO3P9hYW4XdXEB/mO3UCjxjPFMMOA5VfO+ca9S8=
 git.liero.se/opentelco/go-net v0.0.0-20201013144721-417896fd1a05/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
+git.liero.se/opentelco/go-net v0.0.0-20201014120518-4a3d2f1be7e9 h1:hfBpjqaevnUttpyQMUPFeVyJCiSy9CmO0GnlEDWVzcQ=
+git.liero.se/opentelco/go-net v0.0.0-20201014120518-4a3d2f1be7e9/go.mod h1:KKgcES9mVjNImMkil38DjdB3Biz0ujSnvOveUlrKCkw=
 git.liero.se/opentelco/go-swpx v0.0.0-20200616085046-f1c118144ed2/go.mod h1:xbQ1VNuXk+Q5NGs4pBFB7FN1oEzVW6kdugioL1d+h9k=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -226,6 +230,7 @@ github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfV
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/karrick/godirwalk v1.8.0/go.mod h1:H5KPZjojv4lE+QYImBI8xVtrBRgYrIVsaRPx4tDPEn4=
 github.com/karrick/godirwalk v1.10.3/go.mod h1:RoGL9dQei4vP9ilrpETWE8CLOZ1kiN0LhBygSwrAsHA=
+github.com/keepeye/logrus-filename v0.0.0-20190711075016-ce01a4391dd1 h1:JL2rWnBX8jnbHHlLcLde3BBWs+jzqZvOmF+M3sXoNOE=
 github.com/keepeye/logrus-filename v0.0.0-20190711075016-ce01a4391dd1/go.mod h1:nNLjpEi4xVFB7358xLPpPscdvXP+pbhiHgSmjIur8z0=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

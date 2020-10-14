@@ -5,9 +5,9 @@ import (
 	"errors"
 	"git.liero.se/opentelco/go-swpx/proto/resource"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 type CachedResponse struct {
@@ -15,7 +15,7 @@ type CachedResponse struct {
 	Port        string                                 `bson:"port"`
 	RequestType RequestType                            `bson:"request_type"`
 	Response    *resource.TechnicalInformationResponse `bson:"response,omitempty"`
-	Timestamp   *timestamp.Timestamp                 `bson:"timestamp" json:"timestamp"`
+	Timestamp   *timestamp.Timestamp                   `bson:"timestamp" json:"timestamp"`
 }
 
 func (c *cache) PopResponse(hostname, port string, requestType RequestType) (*CachedResponse, error) {
