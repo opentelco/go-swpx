@@ -248,9 +248,9 @@ func ParseTransceiverMessage(task *transport.Message_Snmpc, startIndex int) *net
 		SerialNumber: strings.Trim(task.Snmpc.Metrics[startIndex+0].GetStringValue(), " "),
 		Stats: []*networkelement.TransceiverStatistics{
 			{
-				Temp:    float64(tempInt*-1) / 100,
-				Voltage: float64(voltInt*-1) / 100,
-				Current: float64(curInt),
+				Temp:    float64(tempInt),
+				Voltage: float64(voltInt) / 1000,
+				Current: float64(curInt) / 1000,
 				Rx:      float64(rxInt) / 1000,
 				Tx:      float64(txInt) / 1000,
 			},
