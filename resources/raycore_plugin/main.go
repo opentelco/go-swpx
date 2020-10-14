@@ -219,7 +219,7 @@ func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *pr
 	switch task := msg.Task.(type) {
 	case *transport.Message_Telnet:
 		if len(task.Telnet.Payload) > 0 {
-			transceiver, err := parseTransceiverMessage(task.Telnet.Payload[0].Lookfor, el.Element)
+			transceiver, err := parseTransceiverMessage(task.Telnet.Payload[0].Lookfor)
 			if err != nil {
 				return nil, err
 			}

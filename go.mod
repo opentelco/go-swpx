@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.14
 
 require (
-	git.liero.se/opentelco/go-dnc v0.0.0-20201005111513-bcfabfd76961
+	git.liero.se/opentelco/go-dnc v0.0.0-20201013144826-cac4da1d18a1
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/aws/aws-sdk-go v1.34.27 // indirect
 	github.com/fatih/color v1.9.0 // indirect
@@ -29,8 +29,4 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
-)
-
-replace (
-	git.liero.se/opentelco/go-dnc v0.0.0-20201005111513-bcfabfd76961 => ../go-dnc //todo uses go-dnc from the refactor/ssh-config branch locally (for now)
 )
