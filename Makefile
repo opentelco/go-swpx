@@ -1,16 +1,21 @@
 hash := $(shell git log --pretty=format:'%h' -n 1)
 goarch := $(shell echo amd64)
 goos :=  $(shell echo linux)
+app_name := "swpx"
+resources_bin := plugins/resources
+providers_bin := plugins/providers
+
+.PHONY: build linux hash
+
 build:
 	go generate
-	rm -f plugins/resources/*
-	# rm -f plugins/providers/*
+	rm -f $(resources_bin)/*
+	rm -f $(providers_bin)/*
+	rm -f $(app_name)
 	# RESOURCES
 	go build -o ./plugins/resources/resource_vrp_plug ./resources/vrp_plugin/
-	# disabled
-	 go build -o ./plugins/resources/resource_raycore_plug ./resources/raycore_plugin/
-	# go build -o ./plugins/resource_comware_plug ./resources/comware_plugin/main.go
-	
+	go build -o ./plugins/resources/resource_raycore_plug ./resources/raycore_plugin/
+
 	# PROVIDERS
 	go build -o ./plugins/providers/provider_vx ./providers/vx/main.go
 	

@@ -65,8 +65,7 @@ type RaycoreDriver struct {
 }
 
 func (d *RaycoreDriver) Version() (string, error) {
-	d.logger.Debug("message from resource-driver running at version:", VERSION)
-	return fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()), nil
+	
 }
 
 // handshakeConfigs are used to just do a basic handshake between
