@@ -2,15 +2,15 @@ package api
 
 import (
 	"context"
-	"errors"
-	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc"
 	"log"
 	"net"
 	"os"
-	"time"
+	
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
+	
+	"git.liero.se/opentelco/go-swpx/core"
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
 type GRPCServer struct {
@@ -18,64 +18,65 @@ type GRPCServer struct {
 	grpc     *grpc.Server
 }
 
-func (s *GRPCServer) TechnicalPortInformation(ctx context.Context, requestProto *resource.TechnicalInformationRequest) (*resource.TechnicalInformationResponse, error) {
-	ctx, _ = context.WithTimeout(ctx, time.Duration(requestProto.Timeout)*time.Second)
-	req := &core.Request{
-		NetworkElement: requestProto.Hostname,
-		Provider:       requestProto.Provider,
-		Resource:       requestProto.Driver,
-		DontUseIndex:   requestProto.RecreateIndex,
-
-		Response: make(chan *resource.TechnicalInformationResponse, 1),
-		Context:  ctx,
-	}
-
-	if requestProto.Port != "" {
-		req.NetworkElementInterface = &requestProto.Port
-		req.Type = core.GetTechnicalInformationPort
-	} else {
-		req.Type = core.GetTechnicalInformationElement
-	}
-
-	cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
-	if err != nil {
-		logger.Error("error popping from cache: ", err.Error())
-		return nil, err
-	}
-
-	if cachedResponse != nil {
-		if time.Since(cachedResponse.Timestamp.AsTime()) < time.Duration(requestProto.CacheTtl)*time.Second {
-			logger.Info("found response in cache")
-
-			return cachedResponse.Response, nil
-		}
-		// if response is cached but ttl ran out, clear it from the cache
-		if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
-			logger.Error("error clearing cache:", err)
-		}
-	}
-
-	s.requests <- req
-
-	for {
-		select {
-		case resp := <-req.Response:
-			if resp.Error != nil {
-				return nil, errors.New(resp.Error.Message)
-			}
-
-			if err := core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, resp); err != nil {
-				logger.Error("error saving response to cache: ", err.Error())
-				return nil, err
-			}
-
-			return resp, nil
-		case <-req.Context.Done():
-			logger.Info("timeout for request was hit")
-			return nil, errors.New("timeout")
-		}
-	}
+func (s *GRPCServer) GetTechnicalInformation(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
+	panic("implement me")
 }
+
+// func (s *GRPCServer) TechnicalPortInformation(ctx context.Context, requestProto *pb_core.Request) (*pb_core.Response, error) {
+	// ctx, _ = context.WithTimeout(ctx, time.Duration(requestProto.Timeout)*time.Second)
+	//
+	// req := &core.Request{
+	// 	Request: requestProto,
+	// 	Response: make(chan *pb_core.Response, 1),
+	// 	Context:  ctx,
+	// }
+	//
+	// if requestProto.Port != "" {
+	// 	req.NetworkElementInterface = &requestProto.Port
+	// 	req.Type = core.GetTechnicalInformationPort
+	// } else {
+	// 	req.Type = core.GetTechnicalInformationElement
+	// }
+	//
+	// cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
+	// if err != nil {
+	// 	logger.Error("error popping from cache: ", err.Error())
+	// 	return nil, err
+	// }
+	//
+	// if cachedResponse != nil {
+	// 	if time.Since(cachedResponse.Timestamp.AsTime()) < time.Duration(requestProto.CacheTtl)*time.Second {
+	// 		logger.Info("found response in cache")
+	//
+	// 		return cachedResponse.Response, nil
+	// 	}
+	// 	// if response is cached but ttl ran out, clear it from the cache
+	// 	if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
+	// 		logger.Error("error clearing cache:", err)
+	// 	}
+	// }
+	//
+	// s.requests <- req
+	//
+	// for {
+	// 	select {
+	// 	case resp := <-req.Response:
+	// 		if resp.Error != nil {
+	// 			return nil, errors.New(resp.Error.Message)
+	// 		}
+	//
+	// 		if err := core.ResponseCache.SetResponse(req.Hostname, *req.NetworkElementInterface, req.Type, resp); err != nil {
+	// 			logger.Error("error saving response to cache: ", err.Error())
+	// 			return nil, err
+	// 		}
+	//
+	// 		return resp, nil
+	// 	case <-req.Context.Done():
+	// 		logger.Info("timeout for request was hit")
+	// 		return nil, errors.New("timeout")
+	// 	}
+	// }
+// }
 
 func NewGRPCServer(requests chan *core.Request) *GRPCServer {
 	if requests == nil {
@@ -91,7 +92,7 @@ func NewGRPCServer(requests chan *core.Request) *GRPCServer {
 	grpcServer := grpc.NewServer()
 	instance := &GRPCServer{requests, grpcServer}
 
-	resource.RegisterTechnicalInformationServer(grpcServer, instance)
+	pb_core.RegisterCoreServer(grpcServer, instance)
 
 	return instance
 }

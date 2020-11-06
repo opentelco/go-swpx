@@ -25,14 +25,16 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/errors"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/render"
 	"net"
 	"net/http"
 	"time"
+	
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+	
+	"git.liero.se/opentelco/go-swpx/core"
+	"git.liero.se/opentelco/go-swpx/errors"
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
 // TechnicalInformationRequest is the request that holdes the TI request.
@@ -120,25 +122,32 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 
 	ctx, _ := context.WithTimeout(r.Context(), data.Timeout.Duration)
 	req := &core.Request{
-		NetworkElement: data.Hostname,
-		Provider:       data.Provider,
-		Resource:       data.Driver,
-		DontUseIndex:   data.RecreateIndex,
+		Request: &pb_core.Request{
+			ProviderPlugin:         data.Provider,
+			ResourcePlugin:         data.Driver,
+			RecreateIndex:          data.RecreateIndex,
+			DisableDistributedLock: false,
+			Timeout:                data.Timeout.String(),
+			CacheTtl:               data.CacheTTL.String(),
+			Hostname:               data.Hostname,
+			Port:                   data.Port,
+			Type: pb_core.Request_GET_TECHNICAL_INFO,
+		},
 
 		// Metadata
-		Response: make(chan *resource.TechnicalInformationResponse, 1),
+		Response: make(chan *pb_core.Response, 1),
 		Context:  ctx,
 	}
-
-	req.NetworkElementInterface = &data.Port
 	if data.Port != "" {
-		req.Type = core.GetTechnicalInformationPort
+	
+	}
+	
+	if data.Port != "" {
+		req.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
 		// check response cache before sending request
 		if s.hasCachedResponse(w, r, req, data) {
 			return
 		}
-	} else {
-		req.Type = core.GetTechnicalInformationElement
 	}
 
 	// send the request
@@ -153,7 +162,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 				return
 			}
 			wrappedResponse := NewResponse(ResponseStatusOK, resp)
-			if err := core.ResponseCache.SetResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type, resp); err != nil {
+			if err := core.ResponseCache.SetResponse(req.Hostname, req.Port, req.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
 
@@ -170,7 +179,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *ServiceTechnicalInformation) hasCachedResponse(w http.ResponseWriter, r *http.Request, req *core.Request, data *TechnicalInformationRequest) bool {
-	cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
+	cachedResponse, err := core.ResponseCache.PopResponse(req.Hostname, req.Port, req.Type)
 	if err != nil {
 		logger.Error("error popping from cache: ", err.Error())
 		render.JSON(w, r, NewResponse(ResponseStatusError, err.Error()))
@@ -184,7 +193,7 @@ func (s *ServiceTechnicalInformation) hasCachedResponse(w http.ResponseWriter, r
 			return true
 		}
 		// if response is cached but ttl ran out, clear it from the cache
-		if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
+		if err := core.ResponseCache.Clear(req.Hostname, req.Port, req.Type); err != nil {
 			logger.Error("error clearing cache:", err)
 		}
 	}

@@ -12,9 +12,9 @@ providers_dir := $(curpath)/providers
 resources_plugin_dir := $(curpath)/plugins/resources
 providers_plugin_dir := $(curpath)/plugins/providers
 
-.PHONY: build pb providers resources main clean linux hash
+.PHONY: build pb providers resources core clean linux hash
 
-build: clean pb providers resources main
+build: clean_all pb providers resources core
 
 
 pb:
@@ -33,7 +33,7 @@ resources:
 	@cd $(resources_dir)/raycore_plugin/; go build -o $(resources_plugin_dir)/resource_raycore .
 
 
-main:
+core:
 	# Building SWPX ($(bin_path)/$(app_name))
 	@rm -f $(app_name)
 	@go build -o $(bin_path)/$(app_name) main.go

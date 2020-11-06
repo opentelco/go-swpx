@@ -32,36 +32,39 @@ message Error {
 }
 
 message Request {
-    oneof payload {
-        TechnicalInformationRequest technical_information_request = 1;
+    // settings for the request
+    string provider_plugin = 1;
+    string resource_plugin = 2;
+    bool recreate_index = 3;
+    bool disable_distributed_lock = 4;
+    string timeout = 5;
+    string cache_ttl = 6;
+
+    enum Type {
+        NOIT_SET = 0;
+        GET_TECHNICAL_INFO = 1;
+        GET_TECHNICAL_INFO_PORT = 2;
     }
+
+    Type type = 7;
+
+    // used to locate the resource
+    string object_id = 8;
+    string hostname = 9;
+    string port = 10;
 }
 
 message Response{
-    oneof Payload {
-        TechnicalInformationResponse technical_information_response = 1;
-    }
+    Request request = 1;
+    networkelement.Element network_element = 2;
+
+    string physical_port = 3;
+    Error error = 4;
+    string request_object_id = 5;
+    string execution_time = 6;
 }
 
 service Core {
-    rpc GetTechnicalPortInformation(Request) returns (Response);
-}
-
-message TechnicalInformationResponse {
-    networkelement.Element network_element = 1;
-    string physical_port = 2;
-    Error error = 3;
-    string RequestObjectID = 4;
-}
-
-message TechnicalInformationRequest {
-    string hostname = 1;
-    string port = 2;
-    string provider = 3;
-    string driver = 4;
-    string region = 5;
-    int32 timeout = 6;
-    bool recreate_index = 7;
-    int32 cache_ttl = 8;
+    rpc GetTechnicalInformation(Request) returns (Response);
 }
 

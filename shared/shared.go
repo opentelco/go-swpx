@@ -125,8 +125,8 @@ type Configuration struct {
 	Ssh            ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
 }
 
-func GetConfig() Configuration {
-	conf := Configuration{}
+func GetConfig() *Configuration {
+	conf := &Configuration{}
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
@@ -145,8 +145,8 @@ func GetConfig() Configuration {
 	return conf
 }
 
-func Conf2proto(conf Configuration) proto.Configuration {
-	return proto.Configuration{
+func Conf2proto(conf *Configuration) *proto.Configuration {
+	return &proto.Configuration{
 		SNMP: &proto.ConfigSNMP{
 			Community:          conf.SNMP.Community,
 			Version:            uint32(conf.SNMP.Version),
@@ -183,8 +183,8 @@ func Conf2proto(conf Configuration) proto.Configuration {
 	}
 }
 
-func Proto2conf(protoConf *proto.Configuration) Configuration {
-	return Configuration{
+func Proto2conf(protoConf *proto.Configuration) *Configuration {
+	return &Configuration{
 		SNMP: ConfigSNMP{
 			Community:          protoConf.SNMP.Community,
 			Version:            uint8(protoConf.SNMP.Version),

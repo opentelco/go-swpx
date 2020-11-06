@@ -82,25 +82,25 @@ func NewServer(requestQueue chan *core.Request) *Server {
 		Level:  hclog.Debug,
 	})
 
-	s := &Server{
+	srv := &Server{
 		Mux:      chi.NewRouter(),
 		requests: requestQueue,
 	}
-	s.Use(middleware.RequestID,
+	srv.Use(middleware.RequestID,
 		middleware.RealIP,
 		middleware.Recoverer,
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Heartbeat("/ping"))
 
 	// Mount the default path
-	s.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	srv.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		Render(w, r, NewResponse(ResponseStatusNotFound, nil))
 	})
 
-	s.Route("/v1", func(r chi.Router) {
-		r.Mount("/ti", NewServiceTechnicalInformation(s.requests))
+	srv.Route("/v1", func(r chi.Router) {
+		r.Mount("/ti", NewServiceTechnicalInformation(srv.requests))
 	})
-	return s
+	return srv
 }
 
 // Request is the interface for every request.

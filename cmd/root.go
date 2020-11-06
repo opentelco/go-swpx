@@ -61,6 +61,7 @@ var Start = &cobra.Command{
 			Name:   APP_NAME,
 			Level:  hclog.Debug,
 			Color: hclog.AutoColor,
+			IncludeLocation: true,
 		})
 		
 		c,err := core.New(logger)

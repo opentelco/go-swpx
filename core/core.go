@@ -125,7 +125,7 @@ func (c *Core) Start() error{
 		
 	}
 	
-	
+	return nil
 }
 
 //
@@ -236,8 +236,13 @@ func loadProviders() {
 
 		raw, err = rpc.Dispense("provider")
 		if err == nil {
-			provider := raw.(shared.Provider)
-
+			provider, ok := raw.(shared.Provider)
+			if !ok || provider == nil {
+				logger.Error("failed to load provider_plugin", "plugin", name)
+				continue
+			}
+			
+			
 			// get information about the provider to use on request
 			var (
 				err error

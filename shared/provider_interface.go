@@ -52,7 +52,7 @@ type Provider interface {
 	PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
 	
 
-	GetConfiguration(ctx context.Context) (Configuration, error)
+	GetConfiguration(ctx context.Context) (*Configuration, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -103,14 +103,14 @@ func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Resp
 }
 
 // GetConfiguration returns the configuration of the Provider.
-func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
+func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (*Configuration, error) {
 	resp, err := p.client.GetConfiguration(ctx, &proto.Empty{})
 	if err != nil {
-		return Configuration{}, err
+		return &Configuration{}, err
 	}
 
 	if resp.Telnet == nil || resp.Ssh == nil || resp.SNMP == nil {
-		return Configuration{}, fmt.Errorf("invalid config, restore to default")
+		return &Configuration{}, fmt.Errorf("invalid config, restore to default")
 	}
 
 	return Proto2conf(resp), nil
@@ -163,7 +163,7 @@ func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context,  _ *proto.E
 		return nil, err
 	}
 	protoConf := Conf2proto(res)
-	return &protoConf, err
+	return protoConf, err
 }
 
 type ProviderPlugin struct {

@@ -3,22 +3,24 @@ package core
 import (
 	"context"
 	"errors"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
+	
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
 type CachedResponse struct {
 	Hostname    string                                 `bson:"hostname"`
 	Port        string                                 `bson:"port"`
-	RequestType RequestType                            `bson:"request_type"`
-	Response    *resource.TechnicalInformationResponse `bson:"response,omitempty"`
+	RequestType pb_core.Request_Type                            `bson:"request_type"`
+	Response    *pb_core.Response `bson:"response,omitempty"`
 	Timestamp   *timestamp.Timestamp                   `bson:"timestamp" json:"timestamp"`
 }
 
-func (c *cache) PopResponse(hostname, port string, requestType RequestType) (*CachedResponse, error) {
+func (c *cache) PopResponse(hostname, port string, requestType pb_core.Request_Type) (*CachedResponse, error) {
 	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": port, "request_type": requestType})
 	obj := &CachedResponse{}
 
@@ -33,7 +35,7 @@ func (c *cache) PopResponse(hostname, port string, requestType RequestType) (*Ca
 	return obj, nil
 }
 
-func (c *cache) SetResponse(hostname, port string, requestType RequestType, response *resource.TechnicalInformationResponse) error {
+func (c *cache) SetResponse(hostname, port string, requestType pb_core.Request_Type, response *pb_core.Response) error {
 	_, err := c.col.InsertOne(context.Background(), &CachedResponse{
 		hostname,
 		port,
@@ -50,7 +52,7 @@ func (c *cache) SetResponse(hostname, port string, requestType RequestType, resp
 	return nil
 }
 
-func (c *cache) Clear(hostname, port string, requestType RequestType) error {
+func (c *cache) Clear(hostname, port string, requestType pb_core.Request_Type) error {
 	_, err := c.col.DeleteMany(context.Background(), bson.M{"hostname": hostname, "port": port, "request_type": requestType})
 
 	return err

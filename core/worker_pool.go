@@ -31,6 +31,7 @@ import (
 	"github.com/segmentio/ksuid"
 
 	"git.liero.se/opentelco/go-swpx/errors"
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
@@ -57,7 +58,7 @@ type workers []*worker
 type workerPool struct {
 	pool     workers
 	done     chan *worker
-	response chan *resource.TechnicalInformationResponse
+	response chan *pb_core.Response
 	index    int
 	ops      int
 }
@@ -70,7 +71,7 @@ func newWorkerPool(nWorker int, nRequester int) *workerPool {
 	b := &workerPool{
 		pool:     make(workers, 0, nWorker),
 		done:     done,
-		response: make(chan *resource.TechnicalInformationResponse, nRequester),
+		response: make(chan *pb_core.Response, nRequester),
 		index:    0,
 		ops:      0,
 	}
@@ -237,13 +238,13 @@ func (w *worker) start(done chan *worker) {
 	for {
 		select {
 		case msg := <-w.messages:
-			resp := &resource.TechnicalInformationResponse{RequestObjectID: msg.ObjectID}
+			resp := &pb_core.Response{RequestObjectId: msg.ObjectId}
 
 			// do work with payload
 			err := handle(msg.Context, msg, resp, handleMsg)
 
 			if err != nil {
-				resp.Error = &resource.Error{Message: err.Error()}
+				resp.Error = &pb_core.Error{Message: err.Error()}
 				w.TimedOut++
 			}
 
@@ -272,7 +273,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 		logger.Debug("getting provider name failed", "error", err)
 	}
 
-	l, err := provider.Lookup(msg.ObjectID)
+	l, err := provider.Lookup(msg.ObjectId)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -281,7 +282,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 	logger.Debug("data from provider plugin", "provider", name, "version", ver, "weight", weight)
 }
 
-func handle(ctx context.Context, msg *Request, resp *resource.TechnicalInformationResponse, f func(msg *Request, resp *resource.TechnicalInformationResponse) error) error {
+func handle(ctx context.Context, msg *Request, resp *pb_core.Response, f func(msg *Request, resp *pb_core.Response) error) error {
 	c := make(chan error, 1)
 	go func() { c <- f(msg, resp) }()
 	select {
@@ -296,20 +297,20 @@ func handle(ctx context.Context, msg *Request, resp *resource.TechnicalInformati
 	}
 }
 
-func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error {
+func handleMsg(msg *Request, resp *pb_core.Response) error {
 	logger.Debug("worker has payload")
-	logger.Info("the user has sent in %s as provider", msg.Provider)
+	logger.Info("selected provider", "provider", msg.ProviderPlugin)
 
 	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
-	var providerConf shared.Configuration
+	var providerConf *shared.Configuration
 	var err error
 	defaultConf := shared.GetConfig()
 
 	// check if a provider is selected in the request
-	if msg.Provider != "" {
-		provider := providers[msg.Provider]
+	if msg.ProviderPlugin != "" {
+		provider := providers[msg.ProviderPlugin]
 		if provider == nil {
-			resp.Error = &resource.Error{Message: "the provider is missing/does not exist", Code: errors.ErrInvalidProvider}
+			resp.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: errors.ErrInvalidProvider}
 			return errors.New(resp.Error.Message, errors.ErrorCode(resp.Error.Code))
 		}
 		// run some provider funcs
@@ -329,10 +330,10 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 	}
 
 	// select resource-plugin to send the requests to
-	plugin := resources[msg.Resource]
+	plugin := resources[msg.ResourcePlugin]
 	if plugin == nil {
-		logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.Resource)
-		resp.Error = &resource.Error{
+		logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.ResourcePlugin)
+		resp.Error = &pb_core.Error{
 			Message: "selected driver is missing/does not exist",
 			Code:    errors.ErrInvalidResource,
 		}
@@ -343,9 +344,9 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
-	case GetTechnicalInformationElement:
+	case pb_core.Request_GET_TECHNICAL_INFO:
 		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
-	case GetTechnicalInformationPort:
+	case pb_core.Request_GET_TECHNICAL_INFO_PORT:
 		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
 
@@ -353,13 +354,13 @@ func handleMsg(msg *Request, resp *resource.TechnicalInformationResponse) error 
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func handleGetTechnicalInformationElement(msg *Request, resp *resource.TechnicalInformationResponse, plugin shared.Resource, conf shared.Configuration) error {
+func handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
 
 	req := &resource.NetworkElement{
 		Interface: "",
-		Hostname:  msg.NetworkElement,
-		Conf:      &protoConf,
+		Hostname:  msg.Hostname,
+		Conf:      protoConf,
 	}
 
 	physPortResponse, err := plugin.MapEntityPhysical(msg.Context, req)
@@ -396,19 +397,19 @@ func handleGetTechnicalInformationElement(msg *Request, resp *resource.Technical
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInformationResponse, plugin shared.Resource, conf shared.Configuration) error {
+func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
 	req := &resource.NetworkElement{
-		Hostname:  msg.NetworkElement,
-		Interface: *msg.NetworkElementInterface,
-		Conf:      &protConf,
+		Hostname:  msg.Hostname,
+		Interface: msg.Port,
+		Conf:      protConf,
 	}
 
 	mapInterfaceResponse := &resource.NetworkElementInterfaces{}
 	var cachedInterface *CachedInterface
 	var err error
 
-	if useCache && !msg.DontUseIndex {
+	if useCache && !msg.RecreateIndex{
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = InterfaceCache.PopInterface(req.Hostname, req.Interface)
 		if cachedInterface != nil {
@@ -421,10 +422,10 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
 		var physPortResponse *resource.NetworkElementInterfaces
-		logger.Error("run mapEntity")
+		logger.Debug("run mapEntity")
 		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
 			logger.Error("error running getphysport", "err", err.Error())
-			resp.Error = &resource.Error{
+			resp.Error = &pb_core.Error{
 				Message: err.Error(),
 				Code:    errors.ErrInvalidPort,
 			}
@@ -437,7 +438,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
-			resp.Error = &resource.Error{
+			resp.Error = &pb_core.Error{
 				Message: err.Error(),
 				Code:    errors.ErrInvalidPort,
 			}
@@ -448,7 +449,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 		}
 
 		// save in cache upon success (if enabled)
-		if useCache && !msg.DontUseIndex {
+		if useCache {
 			if err = InterfaceCache.SetInterface(req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
@@ -462,7 +463,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *resource.TechnicalInf
 	//if the return is 0 something went wrong
 	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = &resource.Error{
+		resp.Error = &pb_core.Error{
 			Message: "interface index returned zero",
 			Code:    errors.ErrInvalidPort,
 		}

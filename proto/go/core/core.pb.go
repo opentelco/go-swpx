@@ -25,6 +25,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type Request_Type int32
+
+const (
+	Request_NOIT_SET                Request_Type = 0
+	Request_GET_TECHNICAL_INFO      Request_Type = 1
+	Request_GET_TECHNICAL_INFO_PORT Request_Type = 2
+)
+
+var Request_Type_name = map[int32]string{
+	0: "NOIT_SET",
+	1: "GET_TECHNICAL_INFO",
+	2: "GET_TECHNICAL_INFO_PORT",
+}
+
+var Request_Type_value = map[string]int32{
+	"NOIT_SET":                0,
+	"GET_TECHNICAL_INFO":      1,
+	"GET_TECHNICAL_INFO_PORT": 2,
+}
+
+func (x Request_Type) String() string {
+	return proto.EnumName(Request_Type_name, int32(x))
+}
+
+func (Request_Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{1, 0}
+}
+
 type Error struct {
 	Message              string   `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	Code                 int32    `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
@@ -73,12 +101,21 @@ func (m *Error) GetCode() int32 {
 }
 
 type Request struct {
-	// Types that are valid to be assigned to Payload:
-	//	*Request_TechnicalInformationRequest
-	Payload              isRequest_Payload `protobuf_oneof:"payload"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
+	// settings for the request
+	ProviderPlugin         string       `protobuf:"bytes,1,opt,name=provider_plugin,json=providerPlugin,proto3" json:"provider_plugin,omitempty"`
+	ResourcePlugin         string       `protobuf:"bytes,2,opt,name=resource_plugin,json=resourcePlugin,proto3" json:"resource_plugin,omitempty"`
+	RecreateIndex          bool         `protobuf:"varint,3,opt,name=recreate_index,json=recreateIndex,proto3" json:"recreate_index,omitempty"`
+	DisableDistributedLock bool         `protobuf:"varint,4,opt,name=disable_distributed_lock,json=disableDistributedLock,proto3" json:"disable_distributed_lock,omitempty"`
+	Timeout                string       `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	CacheTtl               string       `protobuf:"bytes,6,opt,name=cache_ttl,json=cacheTtl,proto3" json:"cache_ttl,omitempty"`
+	Type                   Request_Type `protobuf:"varint,7,opt,name=type,proto3,enum=core.Request_Type" json:"type,omitempty"`
+	// used to locate the resource
+	ObjectId             string   `protobuf:"bytes,8,opt,name=object_id,json=objectId,proto3" json:"object_id,omitempty"`
+	Hostname             string   `protobuf:"bytes,9,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Port                 string   `protobuf:"bytes,10,opt,name=port,proto3" json:"port,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Request) Reset()         { *m = Request{} }
@@ -106,44 +143,86 @@ func (m *Request) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Request proto.InternalMessageInfo
 
-type isRequest_Payload interface {
-	isRequest_Payload()
-}
-
-type Request_TechnicalInformationRequest struct {
-	TechnicalInformationRequest *TechnicalInformationRequest `protobuf:"bytes,1,opt,name=technical_information_request,json=technicalInformationRequest,proto3,oneof"`
-}
-
-func (*Request_TechnicalInformationRequest) isRequest_Payload() {}
-
-func (m *Request) GetPayload() isRequest_Payload {
+func (m *Request) GetProviderPlugin() string {
 	if m != nil {
-		return m.Payload
+		return m.ProviderPlugin
 	}
-	return nil
+	return ""
 }
 
-func (m *Request) GetTechnicalInformationRequest() *TechnicalInformationRequest {
-	if x, ok := m.GetPayload().(*Request_TechnicalInformationRequest); ok {
-		return x.TechnicalInformationRequest
+func (m *Request) GetResourcePlugin() string {
+	if m != nil {
+		return m.ResourcePlugin
 	}
-	return nil
+	return ""
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*Request) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*Request_TechnicalInformationRequest)(nil),
+func (m *Request) GetRecreateIndex() bool {
+	if m != nil {
+		return m.RecreateIndex
 	}
+	return false
+}
+
+func (m *Request) GetDisableDistributedLock() bool {
+	if m != nil {
+		return m.DisableDistributedLock
+	}
+	return false
+}
+
+func (m *Request) GetTimeout() string {
+	if m != nil {
+		return m.Timeout
+	}
+	return ""
+}
+
+func (m *Request) GetCacheTtl() string {
+	if m != nil {
+		return m.CacheTtl
+	}
+	return ""
+}
+
+func (m *Request) GetType() Request_Type {
+	if m != nil {
+		return m.Type
+	}
+	return Request_NOIT_SET
+}
+
+func (m *Request) GetObjectId() string {
+	if m != nil {
+		return m.ObjectId
+	}
+	return ""
+}
+
+func (m *Request) GetHostname() string {
+	if m != nil {
+		return m.Hostname
+	}
+	return ""
+}
+
+func (m *Request) GetPort() string {
+	if m != nil {
+		return m.Port
+	}
+	return ""
 }
 
 type Response struct {
-	// Types that are valid to be assigned to Payload:
-	//	*Response_TechnicalInformationResponse
-	Payload              isResponse_Payload `protobuf_oneof:"Payload"`
-	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
-	XXX_unrecognized     []byte             `json:"-"`
-	XXX_sizecache        int32              `json:"-"`
+	Request              *Request                `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
+	NetworkElement       *networkelement.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty"`
+	PhysicalPort         string                  `protobuf:"bytes,3,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty"`
+	Error                *Error                  `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	RequestObjectId      string                  `protobuf:"bytes,5,opt,name=request_object_id,json=requestObjectId,proto3" json:"request_object_id,omitempty"`
+	ExecutionTime        string                  `protobuf:"bytes,6,opt,name=execution_time,json=executionTime,proto3" json:"execution_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
 }
 
 func (m *Response) Reset()         { *m = Response{} }
@@ -171,201 +250,53 @@ func (m *Response) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Response proto.InternalMessageInfo
 
-type isResponse_Payload interface {
-	isResponse_Payload()
-}
-
-type Response_TechnicalInformationResponse struct {
-	TechnicalInformationResponse *TechnicalInformationResponse `protobuf:"bytes,1,opt,name=technical_information_response,json=technicalInformationResponse,proto3,oneof"`
-}
-
-func (*Response_TechnicalInformationResponse) isResponse_Payload() {}
-
-func (m *Response) GetPayload() isResponse_Payload {
+func (m *Response) GetRequest() *Request {
 	if m != nil {
-		return m.Payload
+		return m.Request
 	}
 	return nil
 }
 
-func (m *Response) GetTechnicalInformationResponse() *TechnicalInformationResponse {
-	if x, ok := m.GetPayload().(*Response_TechnicalInformationResponse); ok {
-		return x.TechnicalInformationResponse
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*Response) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*Response_TechnicalInformationResponse)(nil),
-	}
-}
-
-type TechnicalInformationResponse struct {
-	NetworkElement       *networkelement.Element `protobuf:"bytes,1,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty"`
-	PhysicalPort         string                  `protobuf:"bytes,2,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty"`
-	Error                *Error                  `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
-	RequestObjectID      string                  `protobuf:"bytes,4,opt,name=RequestObjectID,proto3" json:"RequestObjectID,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
-	XXX_unrecognized     []byte                  `json:"-"`
-	XXX_sizecache        int32                   `json:"-"`
-}
-
-func (m *TechnicalInformationResponse) Reset()         { *m = TechnicalInformationResponse{} }
-func (m *TechnicalInformationResponse) String() string { return proto.CompactTextString(m) }
-func (*TechnicalInformationResponse) ProtoMessage()    {}
-func (*TechnicalInformationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_47606d63192e4934, []int{3}
-}
-
-func (m *TechnicalInformationResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TechnicalInformationResponse.Unmarshal(m, b)
-}
-func (m *TechnicalInformationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TechnicalInformationResponse.Marshal(b, m, deterministic)
-}
-func (m *TechnicalInformationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TechnicalInformationResponse.Merge(m, src)
-}
-func (m *TechnicalInformationResponse) XXX_Size() int {
-	return xxx_messageInfo_TechnicalInformationResponse.Size(m)
-}
-func (m *TechnicalInformationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_TechnicalInformationResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TechnicalInformationResponse proto.InternalMessageInfo
-
-func (m *TechnicalInformationResponse) GetNetworkElement() *networkelement.Element {
+func (m *Response) GetNetworkElement() *networkelement.Element {
 	if m != nil {
 		return m.NetworkElement
 	}
 	return nil
 }
 
-func (m *TechnicalInformationResponse) GetPhysicalPort() string {
+func (m *Response) GetPhysicalPort() string {
 	if m != nil {
 		return m.PhysicalPort
 	}
 	return ""
 }
 
-func (m *TechnicalInformationResponse) GetError() *Error {
+func (m *Response) GetError() *Error {
 	if m != nil {
 		return m.Error
 	}
 	return nil
 }
 
-func (m *TechnicalInformationResponse) GetRequestObjectID() string {
+func (m *Response) GetRequestObjectId() string {
 	if m != nil {
-		return m.RequestObjectID
+		return m.RequestObjectId
 	}
 	return ""
 }
 
-type TechnicalInformationRequest struct {
-	Hostname             string   `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	Port                 string   `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
-	Provider             string   `protobuf:"bytes,3,opt,name=provider,proto3" json:"provider,omitempty"`
-	Driver               string   `protobuf:"bytes,4,opt,name=driver,proto3" json:"driver,omitempty"`
-	Region               string   `protobuf:"bytes,5,opt,name=region,proto3" json:"region,omitempty"`
-	Timeout              int32    `protobuf:"varint,6,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	RecreateIndex        bool     `protobuf:"varint,7,opt,name=recreate_index,json=recreateIndex,proto3" json:"recreate_index,omitempty"`
-	CacheTtl             int32    `protobuf:"varint,8,opt,name=cache_ttl,json=cacheTtl,proto3" json:"cache_ttl,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *TechnicalInformationRequest) Reset()         { *m = TechnicalInformationRequest{} }
-func (m *TechnicalInformationRequest) String() string { return proto.CompactTextString(m) }
-func (*TechnicalInformationRequest) ProtoMessage()    {}
-func (*TechnicalInformationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_47606d63192e4934, []int{4}
-}
-
-func (m *TechnicalInformationRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TechnicalInformationRequest.Unmarshal(m, b)
-}
-func (m *TechnicalInformationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TechnicalInformationRequest.Marshal(b, m, deterministic)
-}
-func (m *TechnicalInformationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TechnicalInformationRequest.Merge(m, src)
-}
-func (m *TechnicalInformationRequest) XXX_Size() int {
-	return xxx_messageInfo_TechnicalInformationRequest.Size(m)
-}
-func (m *TechnicalInformationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_TechnicalInformationRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TechnicalInformationRequest proto.InternalMessageInfo
-
-func (m *TechnicalInformationRequest) GetHostname() string {
+func (m *Response) GetExecutionTime() string {
 	if m != nil {
-		return m.Hostname
+		return m.ExecutionTime
 	}
 	return ""
-}
-
-func (m *TechnicalInformationRequest) GetPort() string {
-	if m != nil {
-		return m.Port
-	}
-	return ""
-}
-
-func (m *TechnicalInformationRequest) GetProvider() string {
-	if m != nil {
-		return m.Provider
-	}
-	return ""
-}
-
-func (m *TechnicalInformationRequest) GetDriver() string {
-	if m != nil {
-		return m.Driver
-	}
-	return ""
-}
-
-func (m *TechnicalInformationRequest) GetRegion() string {
-	if m != nil {
-		return m.Region
-	}
-	return ""
-}
-
-func (m *TechnicalInformationRequest) GetTimeout() int32 {
-	if m != nil {
-		return m.Timeout
-	}
-	return 0
-}
-
-func (m *TechnicalInformationRequest) GetRecreateIndex() bool {
-	if m != nil {
-		return m.RecreateIndex
-	}
-	return false
-}
-
-func (m *TechnicalInformationRequest) GetCacheTtl() int32 {
-	if m != nil {
-		return m.CacheTtl
-	}
-	return 0
 }
 
 func init() {
+	proto.RegisterEnum("core.Request_Type", Request_Type_name, Request_Type_value)
 	proto.RegisterType((*Error)(nil), "core.Error")
 	proto.RegisterType((*Request)(nil), "core.Request")
 	proto.RegisterType((*Response)(nil), "core.Response")
-	proto.RegisterType((*TechnicalInformationResponse)(nil), "core.TechnicalInformationResponse")
-	proto.RegisterType((*TechnicalInformationRequest)(nil), "core.TechnicalInformationRequest")
 }
 
 func init() {
@@ -373,38 +304,43 @@ func init() {
 }
 
 var fileDescriptor_47606d63192e4934 = []byte{
-	// 494 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xad, 0x21, 0x69, 0x92, 0x29, 0x49, 0xa5, 0x95, 0x00, 0x2b, 0x29, 0x28, 0x0d, 0x42, 0xca,
-	0x01, 0x1c, 0xa9, 0x15, 0x37, 0x0e, 0x08, 0x5a, 0xd1, 0x9c, 0xa8, 0x56, 0x3d, 0x71, 0x89, 0x5c,
-	0x67, 0x70, 0xb6, 0xd8, 0x3b, 0x66, 0x77, 0xfa, 0x75, 0xe0, 0xc0, 0x5f, 0xe4, 0xcf, 0x70, 0x45,
-	0xde, 0x5d, 0x87, 0xaa, 0x52, 0x23, 0x4e, 0x9e, 0xf7, 0x66, 0xf4, 0xf4, 0xfc, 0x66, 0x16, 0x0e,
-	0x73, 0xc5, 0x49, 0xa1, 0xd0, 0x50, 0x62, 0x71, 0x46, 0x15, 0x6a, 0xc6, 0x22, 0xa3, 0x59, 0x4e,
-	0x6f, 0xed, 0x75, 0x75, 0x33, 0xab, 0x0c, 0x31, 0xcd, 0xac, 0xc9, 0x66, 0x19, 0x19, 0x4c, 0x1c,
-	0x14, 0xad, 0xba, 0x1e, 0x3e, 0xd5, 0xc8, 0xd7, 0x64, 0xbe, 0x2f, 0xb0, 0xc0, 0x12, 0x35, 0xfb,
-	0xe6, 0xe4, 0x1d, 0xb4, 0x8f, 0x8d, 0x21, 0x23, 0x62, 0xe8, 0x94, 0x68, 0x6d, 0x9a, 0x63, 0x1c,
-	0x8d, 0xa3, 0x69, 0x4f, 0x36, 0x50, 0x08, 0x68, 0x65, 0xb4, 0xc4, 0xf8, 0xd1, 0x38, 0x9a, 0xb6,
-	0xa5, 0xab, 0x27, 0x3f, 0xa1, 0x23, 0xf1, 0xc7, 0x25, 0x5a, 0x16, 0x39, 0xbc, 0x60, 0xcc, 0x56,
-	0x5a, 0x65, 0x69, 0xb1, 0x50, 0xfa, 0x1b, 0x99, 0x32, 0x65, 0x45, 0x7a, 0x61, 0xfc, 0x80, 0x93,
-	0xdb, 0x39, 0xd8, 0x4f, 0x9c, 0xa5, 0xb3, 0x66, 0x74, 0xfe, 0x6f, 0x32, 0x28, 0x9d, 0x6c, 0xc9,
-	0x11, 0x3f, 0xdc, 0xfe, 0xd8, 0x83, 0x4e, 0x95, 0xde, 0x16, 0x94, 0x2e, 0x27, 0xbf, 0x22, 0xe8,
-	0x4a, 0xb4, 0x15, 0x69, 0x8b, 0xe2, 0x02, 0x5e, 0x3e, 0x64, 0xc0, 0x4f, 0x04, 0x07, 0x93, 0x4d,
-	0x0e, 0xfc, 0xe4, 0xc9, 0x96, 0xdc, 0xe3, 0x0d, 0xfd, 0xda, 0xc3, 0x69, 0xf0, 0xf0, 0x3b, 0x82,
-	0xbd, 0x4d, 0x5a, 0xe2, 0x03, 0xec, 0xde, 0xcb, 0x3c, 0x18, 0x79, 0x9e, 0x04, 0xbe, 0x59, 0xc5,
-	0xb1, 0xff, 0xca, 0x41, 0xe0, 0x03, 0x16, 0xaf, 0xa0, 0x5f, 0xad, 0x6e, 0xad, 0xfb, 0xb1, 0x8a,
-	0x0c, 0xbb, 0x15, 0xf4, 0xe4, 0x93, 0x86, 0x3c, 0x25, 0xc3, 0x62, 0x1f, 0xda, 0x58, 0x6f, 0x30,
-	0x7e, 0xec, 0xc4, 0x77, 0xfc, 0x5f, 0xba, 0xa5, 0x4a, 0xdf, 0x11, 0x53, 0xd8, 0x0d, 0x21, 0x7e,
-	0x39, 0xbf, 0xc0, 0x8c, 0xe7, 0x47, 0x71, 0xcb, 0x29, 0xdd, 0xa7, 0x27, 0x7f, 0x22, 0x18, 0x6d,
-	0x58, 0x91, 0x18, 0x42, 0x77, 0x45, 0x96, 0x75, 0x5a, 0x36, 0x67, 0xb2, 0xc6, 0xf5, 0x9d, 0xdc,
-	0x31, 0xe9, 0xea, 0x7a, 0xbe, 0x32, 0x74, 0xa5, 0x96, 0xe8, 0xfd, 0xf5, 0xe4, 0x1a, 0x8b, 0x67,
-	0xb0, 0xbd, 0x34, 0xea, 0x0a, 0x4d, 0x30, 0x13, 0x50, 0xcd, 0x1b, 0xcc, 0x15, 0xe9, 0xb8, 0xed,
-	0x79, 0x8f, 0xea, 0x0b, 0x65, 0x55, 0x22, 0x5d, 0x72, 0xbc, 0xed, 0x4e, 0xb1, 0x81, 0xe2, 0x35,
-	0x0c, 0x0c, 0x66, 0x06, 0x53, 0xc6, 0x85, 0xd2, 0x4b, 0xbc, 0x89, 0x3b, 0xe3, 0x68, 0xda, 0x95,
-	0xfd, 0x86, 0x9d, 0xd7, 0xa4, 0x18, 0x41, 0x2f, 0x4b, 0xb3, 0x15, 0x2e, 0x98, 0x8b, 0xb8, 0xeb,
-	0x24, 0xba, 0x8e, 0x38, 0xe3, 0xe2, 0xe0, 0x08, 0x5a, 0x9f, 0xc8, 0xa0, 0x78, 0x0f, 0xa3, 0xcf,
-	0xc8, 0xeb, 0x0c, 0xea, 0x88, 0xef, 0xe4, 0x20, 0xfa, 0x3e, 0xde, 0x90, 0xc7, 0x70, 0xd0, 0xc0,
-	0x70, 0x1f, 0xc9, 0xd7, 0x37, 0xff, 0xf5, 0x44, 0x73, 0x72, 0x2f, 0xf4, 0x7c, 0xdb, 0xc1, 0xc3,
-	0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x9b, 0x52, 0x9a, 0x18, 0xd9, 0x03, 0x00, 0x00,
+	// 571 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x25, 0x69, 0xd2, 0xa4, 0x93, 0x26, 0x2d, 0x2b, 0xd1, 0x5a, 0xed, 0x25, 0x04, 0x95, 0x46,
+	0x08, 0x1c, 0x29, 0x15, 0x52, 0x8f, 0x85, 0x12, 0x8a, 0xa5, 0xaa, 0xa9, 0x8c, 0x4f, 0x5c, 0x56,
+	0xce, 0x7a, 0x48, 0x96, 0x3a, 0x1e, 0xb3, 0xbb, 0xa6, 0xed, 0x5f, 0xf0, 0x2f, 0xfc, 0x20, 0xf2,
+	0xae, 0x4d, 0x55, 0xb8, 0x70, 0xf2, 0xbc, 0xf7, 0xc6, 0xa3, 0x99, 0x37, 0xb3, 0x70, 0xb2, 0x94,
+	0xc6, 0x4f, 0x25, 0x2a, 0xf2, 0x35, 0x4e, 0x28, 0xc7, 0xcc, 0x60, 0x2a, 0x68, 0xb2, 0xa4, 0x37,
+	0xfa, 0x36, 0xbf, 0x9b, 0xe4, 0x8a, 0x0c, 0x4d, 0xb4, 0x12, 0x13, 0x41, 0x0a, 0x7d, 0x0b, 0x59,
+	0xab, 0x8c, 0x0f, 0x9e, 0x65, 0x68, 0x6e, 0x49, 0xdd, 0x70, 0x4c, 0x71, 0x8d, 0x99, 0x71, 0xe2,
+	0xe8, 0x2d, 0xb4, 0x67, 0x4a, 0x91, 0x62, 0x1e, 0x74, 0xd6, 0xa8, 0x75, 0xbc, 0x44, 0xaf, 0x31,
+	0x6c, 0x8c, 0xb7, 0xc2, 0x1a, 0x32, 0x06, 0x2d, 0x41, 0x09, 0x7a, 0xcd, 0x61, 0x63, 0xdc, 0x0e,
+	0x6d, 0x3c, 0xfa, 0xb5, 0x01, 0x9d, 0x10, 0xbf, 0x17, 0xa8, 0x0d, 0x3b, 0x86, 0x9d, 0x5c, 0xd1,
+	0x0f, 0x99, 0xa0, 0xe2, 0x79, 0x5a, 0x2c, 0x65, 0x56, 0x55, 0x18, 0xd4, 0xf4, 0xb5, 0x65, 0xcb,
+	0x44, 0x85, 0x9a, 0x0a, 0x25, 0xb0, 0x4e, 0x6c, 0xba, 0xc4, 0x9a, 0xae, 0x12, 0x8f, 0x60, 0xa0,
+	0x50, 0x28, 0x8c, 0x0d, 0x72, 0x99, 0x25, 0x78, 0xe7, 0x6d, 0x0c, 0x1b, 0xe3, 0x6e, 0xd8, 0xaf,
+	0xd9, 0xa0, 0x24, 0xd9, 0x29, 0x78, 0x89, 0xd4, 0xf1, 0x22, 0x45, 0x9e, 0x48, 0x6d, 0x94, 0x5c,
+	0x14, 0x06, 0x13, 0x9e, 0x92, 0xb8, 0xf1, 0x5a, 0xf6, 0x87, 0xbd, 0x4a, 0xff, 0xf0, 0x20, 0x5f,
+	0x92, 0xb8, 0x29, 0x87, 0x35, 0x72, 0x8d, 0x54, 0x18, 0xaf, 0xed, 0x86, 0xad, 0x20, 0x3b, 0x84,
+	0x2d, 0x11, 0x8b, 0x15, 0x72, 0x63, 0x52, 0x6f, 0xd3, 0x6a, 0x5d, 0x4b, 0x44, 0x26, 0x65, 0x2f,
+	0xa1, 0x65, 0xee, 0x73, 0xf4, 0x3a, 0xc3, 0xc6, 0x78, 0x30, 0x65, 0xbe, 0x35, 0xb9, 0xb2, 0xc1,
+	0x8f, 0xee, 0x73, 0x0c, 0xad, 0x5e, 0x16, 0xa1, 0xc5, 0x37, 0x14, 0x86, 0xcb, 0xc4, 0xeb, 0xba,
+	0x22, 0x8e, 0x08, 0x12, 0x76, 0x00, 0xdd, 0x15, 0x69, 0x93, 0xc5, 0x6b, 0xf4, 0xb6, 0x9c, 0x56,
+	0xe3, 0xd2, 0xea, 0x9c, 0x94, 0xf1, 0xc0, 0xf2, 0x36, 0x1e, 0x05, 0xd0, 0x2a, 0x4b, 0xb3, 0x6d,
+	0xe8, 0x5e, 0xcd, 0x83, 0x88, 0x7f, 0x9e, 0x45, 0xbb, 0x4f, 0xd8, 0x1e, 0xb0, 0x8b, 0x59, 0xc4,
+	0xa3, 0xd9, 0xf9, 0xa7, 0xab, 0xe0, 0xfc, 0xdd, 0x25, 0x0f, 0xae, 0x3e, 0xce, 0x77, 0x1b, 0xec,
+	0x10, 0xf6, 0xff, 0xe5, 0xf9, 0xf5, 0x3c, 0x8c, 0x76, 0x9b, 0xa3, 0x9f, 0x4d, 0xe8, 0x86, 0xa8,
+	0x73, 0xca, 0x34, 0xb2, 0x63, 0xe8, 0x28, 0xd7, 0xba, 0x5d, 0x57, 0x6f, 0xda, 0x7f, 0x34, 0x4f,
+	0x58, 0xab, 0xec, 0x0c, 0x76, 0xfe, 0xba, 0x1d, 0xbb, 0xb6, 0xde, 0x74, 0xdf, 0xaf, 0xf8, 0xfa,
+	0xa4, 0x66, 0xee, 0x1b, 0x0e, 0x2a, 0xbe, 0xc2, 0xec, 0x05, 0xf4, 0xf3, 0xd5, 0xbd, 0x96, 0x22,
+	0x4e, 0xb9, 0x9d, 0x6f, 0xc3, 0xce, 0xb7, 0x5d, 0x93, 0xd7, 0xa4, 0x0c, 0x7b, 0x0e, 0x6d, 0x2c,
+	0x2f, 0xd1, 0xae, 0xae, 0x37, 0xed, 0xb9, 0x6e, 0xec, 0x71, 0x86, 0x4e, 0x61, 0xaf, 0xe0, 0x69,
+	0xd5, 0x14, 0x7f, 0xf0, 0xd7, 0x2d, 0x70, 0xa7, 0x12, 0xe6, 0xb5, 0xcd, 0x47, 0x30, 0xc0, 0x3b,
+	0x14, 0x85, 0x91, 0x94, 0xf1, 0x72, 0xbb, 0xd5, 0x36, 0xfb, 0x7f, 0xd8, 0x48, 0xae, 0x71, 0x7a,
+	0x06, 0xad, 0x73, 0x52, 0xc8, 0x4e, 0x61, 0xff, 0x02, 0x4d, 0x84, 0x62, 0x95, 0x95, 0x1d, 0x05,
+	0xd9, 0x57, 0x52, 0xeb, 0xb8, 0x4c, 0x63, 0x8f, 0x7d, 0x39, 0x18, 0xd4, 0xd0, 0xf9, 0xf8, 0xde,
+	0xff, 0xf2, 0xfa, 0xbf, 0x5e, 0xe5, 0x92, 0xec, 0xa3, 0x5c, 0x6c, 0x5a, 0x78, 0xf2, 0x3b, 0x00,
+	0x00, 0xff, 0xff, 0x73, 0x07, 0x57, 0x16, 0xcc, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -419,7 +355,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CoreClient interface {
-	GetTechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	GetTechnicalInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type coreClient struct {
@@ -430,9 +366,9 @@ func NewCoreClient(cc grpc.ClientConnInterface) CoreClient {
 	return &coreClient{cc}
 }
 
-func (c *coreClient) GetTechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (c *coreClient) GetTechnicalInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/core.Core/GetTechnicalPortInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Core/GetTechnicalInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -441,35 +377,35 @@ func (c *coreClient) GetTechnicalPortInformation(ctx context.Context, in *Reques
 
 // CoreServer is the server API for Core service.
 type CoreServer interface {
-	GetTechnicalPortInformation(context.Context, *Request) (*Response, error)
+	GetTechnicalInformation(context.Context, *Request) (*Response, error)
 }
 
 // UnimplementedCoreServer can be embedded to have forward compatible implementations.
 type UnimplementedCoreServer struct {
 }
 
-func (*UnimplementedCoreServer) GetTechnicalPortInformation(ctx context.Context, req *Request) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTechnicalPortInformation not implemented")
+func (*UnimplementedCoreServer) GetTechnicalInformation(ctx context.Context, req *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTechnicalInformation not implemented")
 }
 
 func RegisterCoreServer(s *grpc.Server, srv CoreServer) {
 	s.RegisterService(&_Core_serviceDesc, srv)
 }
 
-func _Core_GetTechnicalPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Core_GetTechnicalInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).GetTechnicalPortInformation(ctx, in)
+		return srv.(CoreServer).GetTechnicalInformation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/GetTechnicalPortInformation",
+		FullMethod: "/core.Core/GetTechnicalInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).GetTechnicalPortInformation(ctx, req.(*Request))
+		return srv.(CoreServer).GetTechnicalInformation(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -479,8 +415,8 @@ var _Core_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*CoreServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetTechnicalPortInformation",
-			Handler:    _Core_GetTechnicalPortInformation_Handler,
+			MethodName: "GetTechnicalInformation",
+			Handler:    _Core_GetTechnicalInformation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

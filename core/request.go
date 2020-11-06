@@ -24,31 +24,16 @@ package core
 
 import (
 	"context"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
-)
-
-// ReqestType is the possible requsts that can be made to swpx
-// they maps to a switchcase on each request
-type RequestType uint
-
-// The request possible to use in swpx right now
-const (
-	GetTechnicalInformationPort RequestType = iota
-	GetTechnicalInformationElement
+	
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
 // Request is the internal representation of a incoming request
 // it is passed between the api and the core
 type Request struct {
-	ObjectID                string
-	NetworkElement          string
-	NetworkElementInterface *string
-	Provider                string
-	Resource                string
-	DontUseIndex            bool
-
+	*pb_core.Request
 	// metadata to handle the request
-	Response chan *resource.TechnicalInformationResponse
+	
+	Response chan *pb_core.Response
 	Context  context.Context
-	Type     RequestType
 }

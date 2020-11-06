@@ -53,14 +53,14 @@ type Resource interface {
 	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
 
 	// Set/Get configuraiton from provider
-	SetConfiguration(ctx context.Context, conf Configuration) error
-	GetConfiguration(ctx context.Context) (Configuration, error)
+	SetConfiguration(ctx context.Context, conf *Configuration) error
+	GetConfiguration(ctx context.Context) (*Configuration, error)
 }
 
 // Here is an implementation that talks over RPC
 type ResourceGRPCClient struct {
 	client proto.ResourceClient
-	conf   Configuration
+	conf   *Configuration
 }
 
 // MapInterface is the client implementation for the plugin-resource. Connects to the RPC
@@ -85,11 +85,11 @@ func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, pr
 	return rpc.client.GetTransceiverInformation(ctx, proto)
 }
 
-func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (Configuration, error) {
+func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (*Configuration, error) {
 	return rpc.conf, nil
 }
 
-func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf Configuration) error {
+func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf *Configuration) error {
 	rpc.conf = conf
 
 	return nil
@@ -112,7 +112,7 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 type ResourceGRPCServer struct {
 	// *plugin.MuxBroker
 	Impl Resource
-	conf Configuration
+	conf *Configuration
 }
 
 // Version returns the current version
@@ -140,7 +140,7 @@ func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, ne *proto.
 	return rpc.Impl.MapEntityPhysical(ctx, ne)
 }
 
-func (rpc *ResourceGRPCServer) GetConfiguration(ctx context.Context) (Configuration, error) {
+func (rpc *ResourceGRPCServer) GetConfiguration(ctx context.Context) (*Configuration, error) {
 	return rpc.conf, nil
 }
 
@@ -148,7 +148,7 @@ func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, ne
 	return rpc.Impl.GetTransceiverInformation(ctx, ne)
 }
 
-func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf Configuration) error {
+func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf *Configuration) error {
 	rpc.conf = conf
 
 	return nil
