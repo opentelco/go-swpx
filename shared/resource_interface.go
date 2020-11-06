@@ -25,8 +25,8 @@ package shared
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 )
@@ -39,13 +39,20 @@ type Resource interface {
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 
 	AllPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
-
+	
+	// Map interfaces (IF-MIB) from device with the swpx model
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
+	
+	// Map interfcaes from Envirnment MIB to the swpx model
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
+	
+	// Get SFP (transceiver) information
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
+	
 	// Maps transceivers to corresponding interfaces using physical port information in the wrapper
 	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
 
+	// Set/Get configuraiton from provider
 	SetConfiguration(ctx context.Context, conf Configuration) error
 	GetConfiguration(ctx context.Context) (Configuration, error)
 }

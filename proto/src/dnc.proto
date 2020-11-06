@@ -23,22 +23,21 @@
 
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/dnc";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/resource";
-
-package resource;
-
-message Empty {}
+package dnc;
 
 
-
-message PollNetworkElementRequest {
-  string version = 1;
+message Payload {
+  string hostname = 1;
+  string password = 2;
 }
 
-// Responses in event queue
-message PollNetworkElement {
-  string version = 1;
+message LookupResponse {
+  string origin_id = 1;
+}
+
+message LookupRequest {
+  string origin_id = 1;
 }
 

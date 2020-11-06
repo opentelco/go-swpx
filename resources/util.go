@@ -3,7 +3,7 @@ package resources
 import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"regexp"

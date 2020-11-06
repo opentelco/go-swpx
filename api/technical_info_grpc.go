@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"log"

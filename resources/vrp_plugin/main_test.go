@@ -30,7 +30,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 	"testing"
 
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 )
 
 func TestMapInterface(t *testing.T) {

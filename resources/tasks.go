@@ -30,7 +30,7 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/protobuf/ssh"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/golang/protobuf/ptypes"

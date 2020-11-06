@@ -3,7 +3,7 @@ package tests
 import (
 	"context"
 	"encoding/json"
-	"git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"google.golang.org/grpc"
 	"log"
 	"testing"

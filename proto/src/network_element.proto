@@ -24,9 +24,9 @@ syntax = "proto3";
 package networkelement;
 
 import "google/protobuf/timestamp.proto";
-import "traffic_policy/traffic_policy.proto";
+import "traffic_policy.proto";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/networkelement";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelement";
 
 message Element {
   string hostname = 1;

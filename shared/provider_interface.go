@@ -25,10 +25,14 @@ package shared
 import (
 	"context"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/proto/dnc"
-	proto "git.liero.se/opentelco/go-swpx/proto/provider"
+	
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/dnc"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
 
 // NetworkElementPlugin is the interface that we're exposing as a plugin.
@@ -39,6 +43,14 @@ type Provider interface {
 	Match(string) (bool, error)
 	Lookup(string) (string, error)
 	Weight() (int64, error)
+	
+	
+	// Process the request before it hits the main functions  in the Core
+	PreHandler(ctx context.Context, request *core.Request) (*core.Request, error)
+	
+	// Process the network element after data has been collected
+	PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
+	
 
 	GetConfiguration(ctx context.Context) (Configuration, error)
 }
@@ -77,6 +89,16 @@ func (p *ProviderGRPCClient) Lookup(id string) (string, error) {
 func (p *ProviderGRPCClient) Weight() (int64, error) {
 	resp, err := p.client.Weight(context.Background(), &proto.Empty{})
 	return resp.GetWeight(), err
+
+}
+
+func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
+	return nil, nil
+}
+
+// Process the network element after data has been collected
+func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Response,error) {
+	return nil, nil
 
 }
 
@@ -126,7 +148,16 @@ func (rpc *ProviderGRPCServer) Weight(ctx context.Context, _ *proto.Empty) (*pro
 	return &proto.WeightResponse{Weight: res}, err
 }
 
-func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context, _ *proto.Empty) (*proto.Configuration, error) {
+func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {
+	return nil, nil
+	
+}
+
+func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response)  (*pb_core.Response, error) {
+	return nil,nil
+}
+
+func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context,  _ *proto.Empty) (*proto.Configuration, error) {
 	res, err := rpc.Impl.GetConfiguration(ctx)
 	if err != nil {
 		return nil, err

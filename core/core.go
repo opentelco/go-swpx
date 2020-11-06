@@ -23,11 +23,6 @@
 package core
 
 import (
-	"fmt"
-	"git.liero.se/opentelco/go-swpx/shared"
-	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-version"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,6 +30,12 @@ import (
 	"os/signal"
 	"path"
 	"sort"
+	
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-version"
+	
+	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 const (
@@ -63,25 +64,21 @@ var (
 func init() {
 	// Create an hclog.Logger
 	VERSION, _ = version.NewVersion(VersionString)
-	logger = hclog.New(&hclog.LoggerOptions{
-		Name:   AppName,
-		Output: os.Stdout,
-		Level:  hclog.Debug,
-	})
 
 }
 
 // LoadPlugins loads plugins in a given folder
 func LoadPlugins(pluginPath string) (map[string]*plugin.Client, error) {
 	loadedPlugins := make(map[string]*plugin.Client)
+	logger.Debug("searching for plugins", "path", pluginPath)
 	plugs, err := ioutil.ReadDir(pluginPath)
 	if err != nil {
 		return loadedPlugins, err
 	}
 	for _, p := range plugs {
 		if !p.IsDir() {
+			logger.Debug("found plugin", "plugin",p.Name())
 			loadedPlugins[p.Name()] = plugin.NewClient(&plugin.ClientConfig{
-
 				HandshakeConfig:  shared.Handshake,
 				Plugins:          shared.PluginMap,
 				Cmd:              exec.Command(path.Join(pluginPath, p.Name())),
@@ -107,45 +104,52 @@ type Transport interface {
 // core app
 type Core struct {
 	// workers and queues
-	Swarm *workerPool
+	swarm *workerPool
 
 	transport Transport
+	logger hclog.Logger
 }
 
 // start the core app
-func (c *Core) Start() {
-	c.Swarm.start(RequestQueue)
+func (c *Core) Start() error{
+	c.swarm.start(RequestQueue)
 
 	// catch interrupt and kill all plugins
 	csig := make(chan os.Signal, 1)
 	signal.Notify(csig, os.Interrupt)
-	go func() {
-		for range csig {
-			plugin.CleanupClients()
-			os.Exit(1)
-		}
-	}()
-
+	for range csig {
+		
+		plugin.CleanupClients()
+		// TODO need to close swarm c.swarm.Close() ?
+		return nil
+		
+	}
+	
+	
 }
 
 //
-func CreateCore() *Core {
+func New(log hclog.Logger) (*Core,error) {
 	var err error
 
+	if log != nil {
+		logger = log
+	}
+	
 	// create core
 	core := &Core{
-		Swarm: newWorkerPool(WORKERS, MaxRequests),
+		swarm: newWorkerPool(WORKERS, MaxRequests),
 		//transport: Transport(t),
 	}
 	conf := shared.GetConfig()
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = LoadPlugins(path.Join(PluginPath, Providers)); err != nil {
-		logger.Error(err.Error())
+		logger.Error("error getting available provider resources", "error", err)
 	}
 	// load resource plugins, vrp etc
 	if availableResources, err = LoadPlugins(path.Join(PluginPath, Resources)); err != nil {
-		logger.Error(err.Error())
+		logger.Error("error getting available resources resources", "error", err)
 	}
 
 	loadResources()
@@ -163,24 +167,26 @@ func CreateCore() *Core {
 	// setup mongodb cache
 	mongoClient, err := initMongoDB(conf.InterfaceCache)
 	if err != nil {
-		logger.Warn("could not establish mongodb connection: %s", err.Error())
+		logger.Warn("could not establish mongodb connection","error", err)
+		logger.Info("no mongo connection established","cache_enabled", false)
 		useCache = false
-		return core
+		return core, nil
 	}
 	if InterfaceCache, err = NewCache(mongoClient, logger, conf.InterfaceCache); err != nil {
-		logger.Error("cannot set interface cache: %s", err.Error())
+		logger.Error("error creating cache", "error", err)
+		logger.Info("no mongo connection established","cache_enabled", false)
 		useCache = false
-		return core
+		return core,nil
 	}
 
 	if ResponseCache, err = NewCache(mongoClient, logger, conf.ResponseCache); err != nil {
-		logger.Error("cannot set response cache: %s", err.Error())
-		return core
+		logger.Error("cannot set response cache", "error", err)
+		return core, nil
 	}
 
 	useCache = true
 
-	return core
+	return core,nil
 }
 
 // iterate the resources and connect to the plugin
@@ -197,20 +203,19 @@ func loadResources() {
 		}
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-			logger.Info("succesfully dispensed resource plugin (%s)", name)
+			logger.Info("succesfully dispensed resource plugin","plugin", name)
 			if resource, ok := raw.(shared.Resource); ok {
-				v, err := resource.Version()
+				_, err := resource.Version()
 				resources[name] = resource
 				if err != nil {
-					logger.Error("something went wrong", "version", v, "error", err.Error())
-				}
+					logger.Error("could not get version for plugin", "plugin", name, "error", err.Error())
+					}
 			} else {
-				logger.Error(fmt.Sprintf("type assertions failed. %s plugin does not implement Plugin %T", name, raw))
+				logger.Error("type assertions failed for plugin", "plugin", name)
 				os.Exit(1)
 			}
-
 		} else {
-			logger.Error("error trying to dispense resource or provider: '", err.Error(), "'")
+			logger.Error("failed to dispense resource or provider", "error", err.Error())
 		}
 
 	}
@@ -222,7 +227,7 @@ func loadProviders() {
 		var raw interface{}
 		var err error
 
-		logger.Debug("connect to plugin %s", name)
+		logger.Debug("connecting to plugin","plugin", name)
 		rpc, err := p.Client()
 		if err != nil {
 			logger.Error(err.Error())
@@ -261,7 +266,7 @@ func loadProviders() {
 
 			rpcErr := rpc.Close()
 			if rpcErr != nil {
-				logger.Error("error trying to dispense resource or provider: '", rpcErr.Error(), "'")
+				logger.Error("error trying to dispense resource or provider", rpcErr.Error(), "'")
 			}
 		}
 	}

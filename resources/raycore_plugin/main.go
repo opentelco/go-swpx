@@ -25,20 +25,20 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"sort"
+	"strconv"
+	"strings"
+	
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/pkg/errors"
-	"log"
-	"os"
-	"sort"
-	"strconv"
-	"strings"
-
+	
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
@@ -65,7 +65,7 @@ type RaycoreDriver struct {
 }
 
 func (d *RaycoreDriver) Version() (string, error) {
-	
+	return VERSION_BASE,nil
 }
 
 // handshakeConfigs are used to just do a basic handshake between
@@ -80,12 +80,12 @@ var handshakeConfig = plugin.HandshakeConfig{
 
 func main() {
 	logger := hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("%s@%s", DRIVER_NAME, VERSION.String()),
+		Name:       fmt.Sprintf("raycore@%s", VERSION.String()),
 		Level:      hclog.Trace,
-		Output:     os.Stderr,
-		JSONFormat: true,
+		Color: hclog.AutoColor,
+		IncludeLocation: true,
 	})
-	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
+	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
 
 	sharedConf := shared.GetConfig()
 

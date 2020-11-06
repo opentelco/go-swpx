@@ -37,6 +37,7 @@ import (
 )
 
 var port string
+var logger hclog.Logger
 
 func init() {
 	Root.AddCommand(Version)
@@ -56,8 +57,19 @@ var Start = &cobra.Command{
 	Short: "start the swpx daemon",
 	Long:  `switchpoller x. the long description of the application`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c := core.CreateCore()
-		c.Start()
+		logger = hclog.New(&hclog.LoggerOptions{
+			Name:   APP_NAME,
+			Level:  hclog.Debug,
+			Color: hclog.AutoColor,
+		})
+		
+		c,err := core.New(logger)
+		if err != nil {
+			panic(err)
+		}
+		if err := c.Start(); err != nil {
+			panic(err)
+		}
 
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it.
@@ -65,7 +77,7 @@ var Start = &cobra.Command{
 		server := api.NewServer(core.RequestQueue)
 		//server := api.NewGRPCServer(core.RequestQueue)
 
-		err := server.ListenAndServe(":" + port)
+		err = server.ListenAndServe(":" + port)
 		if err != nil {
 			panic(err)
 		}

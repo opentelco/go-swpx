@@ -22,10 +22,11 @@
 
 syntax = "proto3";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/provider";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/provider";
 
 package provider;
-import "dnc/dnc.proto";
+import "dnc.proto";
+import "core.proto";
 
 
 message Empty{}
@@ -105,6 +106,8 @@ message Configuration{
 }
 
 
+
+
 service Provider {
   rpc Name(Empty) returns (NameResponse);
   rpc Version(Empty) returns (VersionResponse);
@@ -112,6 +115,9 @@ service Provider {
   rpc Match(MatchRequest) returns (MatchResponse);
   rpc Lookup(dnc.LookupRequest) returns (dnc.LookupResponse);
   rpc Weight(Empty) returns (WeightResponse);
+
+  rpc PreHandler(core.Request) returns (core.Request);
+  rpc PostHandler(core.Response) returns (core.Response);
 
   rpc GetConfiguration(Empty) returns (Configuration);
 

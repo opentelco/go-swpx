@@ -1,7 +1,7 @@
 package main
 
 import (
-	"git.liero.se/opentelco/go-swpx/proto/traffic_policy"
+	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 	"testing"
 )
 

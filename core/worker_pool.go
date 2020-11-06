@@ -31,7 +31,7 @@ import (
 	"github.com/segmentio/ksuid"
 
 	"git.liero.se/opentelco/go-swpx/errors"
-	"git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -125,13 +125,13 @@ func (b *workerPool) print() {
 	sum := 0
 	sumsq := 0
 	for _, w := range b.pool {
-		fmt.Printf("%3d ", w.Pending)
+		// fmt.Printf("%3d ", w.Pending)
 		sum += w.Pending
 		sumsq += w.Pending * w.Pending
 	}
 	avg := float64(sum) / float64(len(b.pool))
 	variance := float64(sumsq)/float64(len(b.pool)) - avg*avg
-	fmt.Printf("   %3.2f %3.2f   ops: %10d     elapsed/s: %8.2f  avg/s: %.1f\n", avg, variance, b.ops, time.Since(start).Seconds(), float64(b.ops)/float64(time.Since(start).Seconds()))
+	logger.Info("statistics", "avg", avg, "variance", variance, "ops", b.ops, "elapsed",time.Since(start).Seconds(),  "avgs", float64(b.ops)/float64(time.Since(start).Seconds()))
 }
 
 // format stats from the workerPool of workers

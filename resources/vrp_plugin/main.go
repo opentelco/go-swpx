@@ -37,8 +37,8 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -261,7 +261,6 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 }
 
 func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
-	dncChan <- "ok"
 	d.logger.Info("running technical port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	errs := make([]*networkelement.TransientError, 0)
 
@@ -410,7 +409,11 @@ func main() {
 	natsConf := sharedConf.NATS
 	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
 	dncChan = make(chan string)
-	enc, _ := nats.NewEncodedConn(nc, "json")
+	enc, err := nats.NewEncodedConn(nc, "json")
+	if err != nil {
+		logger.Error("failed to create dnc connection", "error", err)
+		os.Exit(1)
+	}
 	enc.BindSendChan("vrp-driver", dncChan)
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
@@ -418,6 +421,7 @@ func main() {
 	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
 	driver := &VRPDriver{
 		logger: logger,

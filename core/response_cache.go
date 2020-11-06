@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"errors"
-	"git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.mongodb.org/mongo-driver/bson"

@@ -25,8 +25,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
-	"git.liero.se/opentelco/go-swpx/proto/traffic_policy"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 	"regexp"
 	"strconv"
 	"strings"

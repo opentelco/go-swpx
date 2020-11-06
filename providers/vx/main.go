@@ -26,9 +26,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
-
+	
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -56,7 +56,7 @@ func init() {
 	}
 }
 
-// Here is a real implementation of Greeter
+// Provider is the implementation of the GRPC
 type Provider struct {
 	logger hclog.Logger
 }
@@ -85,6 +85,18 @@ func (p *Provider) Match(id string) (bool, error) {
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
+
+func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*core.Response, error) {
+	p.logger.Named("post-handler").Debug("processing response", "changes", 0)
+	return request, nil
+}
+
+func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*core.Request, error) {
+	p.logger.Named("pre-handler").Debug("processing request in",  "changes", 0)
+	return response, nil
+}
+
+
 
 func (p *Provider) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
 	return conf, nil
@@ -116,7 +128,7 @@ func loadConfig(logger hclog.Logger) {
 
 	err = viper.Unmarshal(&conf)
 	if err != nil {
-		panic(fmt.Errorf("Unable to decode Config: %s \n", err))
+		panic(fmt.Errorf("unable to decode Config: %s \n", err))
 	}
 }
 
@@ -133,9 +145,8 @@ var handshakeConfig = plugin.HandshakeConfig{
 func main() {
 	logger = hclog.New(&hclog.LoggerOptions{
 		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
-		Level:      hclog.Trace,
-		Output:     os.Stderr,
-		JSONFormat: true,
+		Level:      hclog.Debug,
+		Color: hclog.AutoColor,
 	})
 
 	loadConfig(logger)

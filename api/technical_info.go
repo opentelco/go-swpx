@@ -27,7 +27,7 @@ import (
 	"encoding/json"
 	"git.liero.se/opentelco/go-swpx/core"
 	"git.liero.se/opentelco/go-swpx/errors"
-	"git.liero.se/opentelco/go-swpx/proto/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"net"

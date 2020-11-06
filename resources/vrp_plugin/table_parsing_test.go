@@ -23,7 +23,7 @@
 package main
 
 import (
-	"git.liero.se/opentelco/go-swpx/proto/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"testing"
 )
 

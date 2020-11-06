@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"errors"
-	proto "git.liero.se/opentelco/go-swpx/proto/resource"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )

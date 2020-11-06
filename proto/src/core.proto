@@ -21,24 +21,47 @@
  */
 
 syntax = "proto3";
+package core;
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/core";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/healthcheck";
+import "network_element.proto";
 
-package healthcheck;
-
-message HealthCheckRequest {
-  string service = 1;
+message Error {
+    string message = 1;
+    int32 code = 2;
 }
 
-message HealthCheckResponse {
-  enum ServingStatus {
-    UNKNOWN = 0;
-    SERVING = 1;
-    NOT_SERVING = 2;
-  }
-  ServingStatus status = 1;
+message Request {
+    oneof payload {
+        TechnicalInformationRequest technical_information_request = 1;
+    }
 }
 
-service Health {
-  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+message Response{
+    oneof Payload {
+        TechnicalInformationResponse technical_information_response = 1;
+    }
 }
+
+service Core {
+    rpc GetTechnicalPortInformation(Request) returns (Response);
+}
+
+message TechnicalInformationResponse {
+    networkelement.Element network_element = 1;
+    string physical_port = 2;
+    Error error = 3;
+    string RequestObjectID = 4;
+}
+
+message TechnicalInformationRequest {
+    string hostname = 1;
+    string port = 2;
+    string provider = 3;
+    string driver = 4;
+    string region = 5;
+    int32 timeout = 6;
+    bool recreate_index = 7;
+    int32 cache_ttl = 8;
+}
+

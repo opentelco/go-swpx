@@ -20,35 +20,25 @@
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package core
 
-import (
-	"context"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
-)
+syntax = "proto3";
 
-// ReqestType is the possible requsts that can be made to swpx
-// they maps to a switchcase on each request
-type RequestType uint
+import "google/protobuf/timestamp.proto";
 
-// The request possible to use in swpx right now
-const (
-	GetTechnicalInformationPort RequestType = iota
-	GetTechnicalInformationElement
-)
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
 
-// Request is the internal representation of a incoming request
-// it is passed between the api and the core
-type Request struct {
-	ObjectID                string
-	NetworkElement          string
-	NetworkElementInterface *string
-	Provider                string
-	Resource                string
-	DontUseIndex            bool
+package resource;
 
-	// metadata to handle the request
-	Response chan *resource.TechnicalInformationResponse
-	Context  context.Context
-	Type     RequestType
+message Empty {}
+
+
+
+message PollNetworkElementRequest {
+  string version = 1;
 }
+
+// Responses in event queue
+message PollNetworkElement {
+  string version = 1;
+}
+
