@@ -30,13 +30,6 @@ import "core.proto";
 
 message Empty{}
 
-// Name() (string, error)
-// Version() (string, error)
-
-// Match(string) (bool, error)
-// Lookup(string) (DNCRequest, error)
-// Weight() (int, error)
-
 message NameResponse {
   string name = 1;
 }
@@ -89,15 +82,10 @@ message Configuration{
   configSSH Ssh = 3;
 }
 
-
-
-
 service Provider {
   rpc Name(Empty) returns (NameResponse);
   rpc Version(Empty) returns (VersionResponse);
 
   rpc PreHandler(core.Request) returns (core.Request);
-  rpc PostHandler(core.Response) returns (core.Response);
-
-  rpc GetConfiguration(Empty) returns (Configuration);
+//  rpc PostHandler(core.Response) returns (core.Response);
 }

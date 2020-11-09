@@ -24,7 +24,8 @@ pb:
 providers:
 	# Building PROVIDERS
 	@rm -f $(providers_bin)/*
-	@cd $(providers_dir)/vx/; go build -o $(providers_plugin_dir)/vx .
+#	@cd $(providers_dir)/vx/; go build -o $(providers_plugin_dir)/vx .
+	@cd $(providers_dir)/default/; go build -o $(providers_plugin_dir)/default .
 
 resources:
 	# Building RESOURCES

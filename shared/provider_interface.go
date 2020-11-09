@@ -24,12 +24,10 @@ package shared
 
 import (
 	"context"
-	"fmt"
 	
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 	
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
@@ -40,13 +38,11 @@ type Provider interface {
 	Version() (string, error)
 
 	// Process the request before it hits the main functions  in the Core
-	PreHandler(ctx context.Context, request *core.Request) (*core.Request, error)
+	PreHandler(ctx context.Context, request *pb_core.Request) (*pb_core.Request, error)
 	
 	// Process the network element after data has been collected
-	PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
-	
+	// PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
 
-	GetConfiguration(ctx context.Context) (*Configuration, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -64,33 +60,22 @@ func (p *ProviderGRPCClient) Version() (string, error) {
 	if err != nil {
 		return resp.Version, err
 	}
-
 	return resp.Version, err
 }
 
 
-func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
-	return p.client.PreHandler(context.Background(), request)
+func (p *ProviderGRPCClient) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
+	return p.client.PreHandler(ctx, req)
 }
 
-// Process the network element after data has been collected
-func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Response,error) {
-	return p.client.PostHandler(context.Background(), resp)
-}
-
-// GetConfiguration returns the configuration of the Provider.
-func (p *ProviderGRPCClient) GetConfiguration(ctx context.Context) (*Configuration, error) {
-	resp, err := p.client.GetConfiguration(ctx, &proto.Empty{})
-	if err != nil {
-		return &Configuration{}, err
-	}
-
-	if resp.Telnet == nil || resp.Ssh == nil || resp.SNMP == nil {
-		return &Configuration{}, fmt.Errorf("invalid config, restore to default")
-	}
-
-	return Proto2conf(resp), nil
-}
+// func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
+// 	return p.client.PreHandler(context.Background(), request)
+// }
+//
+// // Process the network element after data has been collected
+// func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Response,error) {
+// 	return p.client.PostHandler(context.Background(), resp)
+// }
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {
@@ -107,22 +92,17 @@ func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*pr
 	return &proto.VersionResponse{Version: res}, err
 }
 
-func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {
-	return rpc.Impl.PreHandler(ctx, resp)
+func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, r *pb_core.Request) (*pb_core.Request, error) {
+	return rpc.Impl.PreHandler(ctx, r)
 }
 
-func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response)  (*pb_core.Response, error) {
-	return rpc.Impl.PostHandler(ctx, resp)
-}
-
-func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context,  _ *proto.Empty) (*proto.Configuration, error) {
-	res, err := rpc.Impl.GetConfiguration(ctx)
-	if err != nil {
-		return nil, err
-	}
-	protoConf := Conf2proto(res)
-	return protoConf, err
-}
+// func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {
+// 	return rpc.Impl.PreHandler(ctx, resp)
+// }
+//
+// func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response)  (*pb_core.Response, error) {
+// 	return rpc.Impl.PostHandler(ctx, resp)
+// }
 
 type ProviderPlugin struct {
 	// Implement the plugin interface

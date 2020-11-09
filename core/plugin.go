@@ -42,8 +42,8 @@ func (p providerMap) Slice() (ps []shared.Provider) {
 type resourceMap map[string]shared.Resource
 
 var (
-	availableResources map[string]*plugin.Client = make(map[string]*plugin.Client)
-	availableProviders map[string]*plugin.Client = make(map[string]*plugin.Client)
+	availableResources = make(map[string]*plugin.Client)
+	availableProviders = make(map[string]*plugin.Client)
 
 	resources       resourceMap = make(map[string]shared.Resource)
 	providers       providerMap = make(map[string]shared.Provider)

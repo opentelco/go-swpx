@@ -25,12 +25,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
+	"os"
 	
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-	"github.com/spf13/viper"
 	
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -45,13 +44,20 @@ const (
 
 var PROVIDER_NAME = "vx"
 
-var conf *shared.Configuration
 
 func init() {
-	// var err error
-	// if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
-	// 	log.Fatal(err)
-	// }
+	var err error
+	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	logger = hclog.New(&hclog.LoggerOptions{
+		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
+		Level:      hclog.Debug,
+		Color: hclog.AutoColor,
+	})
+	
+	
 }
 
 // Provider is the implementation of the GRPC
@@ -60,7 +66,6 @@ type Provider struct {
 }
 
 func (g *Provider) Version() (string, error) {
-	g.logger.Debug("message from provider, running version:", VERSION)
 	return fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()), nil
 }
 
@@ -79,60 +84,21 @@ func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*cor
 }
 
 func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return conf, nil
+	return nil, nil
 }
 
-func loadConfig(logger hclog.Logger) {
-
-	defaultSnmpConf := shared.ConfigSNMP{
-		Community: "semipublic",
-		Retries:   3,
-		Version:   2,
-		Timeout:   time.Second * 5,
-	}
-
-	viper.SetDefault("snmp", defaultSnmpConf)
-	err := viper.ReadInConfig()
-	if err != nil {
-		return
-	}
-
-	err = viper.Unmarshal(&conf)
-	if err != nil {
-		panic(fmt.Errorf("unable to decode Config: %s \n", err))
-	}
-}
-
-// handshakeConfigs are used to just do a basic handshake between
-// a plugin and host. If the handshake fails, a user friendly error is shown.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
-var handshakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   shared.MagicCookieKey,
-	MagicCookieValue: shared.MagicCookieValue,
-	
-}
 
 func main() {
-	logger = hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
-		Level:      hclog.Debug,
-		Color: hclog.AutoColor,
-	})
-
-	// loadConfig(logger)
-	
 	prov := &Provider{logger: logger}
 	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: handshakeConfig,
+		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{
 			shared.PluginProviderKey: &shared.ProviderPlugin{
 				Impl:   prov,
 			},
 		},
 		GRPCServer:       plugin.DefaultGRPCServer,
-		// Logger:           logger,
+		Logger:           logger,
 	})
 	
 }

@@ -25,12 +25,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"math/rand"
-	"os"
-	"time"
-
+	"context"
+	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/shared"
-
+	
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
@@ -62,49 +60,29 @@ func (g *Provider) Version() (string, error) {
 	return fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()), nil
 }
 
-func (g *Provider) Weight() (int64, error) {
-	// g.logger.Debug("return the weight", PROVIDER_NAME)
-	return WEIGHT, nil
-}
-
-func (p *Provider) Lookup(id string) (string, error) {
-	duration := time.Duration(time.Millisecond * time.Duration(rand.Intn(1000-400)+400))
-	time.Sleep(duration)
-	p.logger.Debug("done", "execution_time", duration.String())
-	return "nonon", nil
-}
-
-func (p *Provider) Match(id string) (bool, error) {
-	return true, nil
-}
-
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 
 }
 
-// handshakeConfigs are used to just do a basic handshake between
-// a plugin and host. If the handshake fails, a user friendly error is shown.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
-var handshakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   shared.MagicCookieKey,
-	MagicCookieValue: shared.MagicCookieValue,
+func (p *Provider) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
+	return req, nil
 }
+// func (p *Provider)  PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {return nil,nil}
+// func (p *Provider)  PostHandler(ctx context.Context, response *core.Response) (*core.Response, error) {return nil,nil}
 
 func main() {
 	logger = hclog.New(&hclog.LoggerOptions{
 		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
 		Level:      hclog.Trace,
-		Output:     os.Stderr,
-		JSONFormat: true,
 	})
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{
-			shared.PluginProviderKey: &shared.ProviderPlugin{Impl: &Provider{logger: logger}},
+			shared.PluginProviderKey: &shared.ProviderPlugin{
+				Impl: &Provider{logger: logger},
+			},
 		},
 		GRPCServer: plugin.DefaultGRPCServer,
 	})

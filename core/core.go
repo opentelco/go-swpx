@@ -85,7 +85,7 @@ func LoadPlugins(pluginPath string) (map[string]*plugin.Client, error) {
 				AllowedProtocols: []plugin.Protocol{plugin.ProtocolNetRPC, plugin.ProtocolGRPC}, // Only allow GRPC
 				Logger:           logger,
 			})
-			defer loadedPlugins[p.Name()].Kill()
+			// defer loadedPlugins[p.Name()].Kill()
 
 		}
 	}
@@ -227,6 +227,7 @@ func loadProviders() {
 		if err != nil {
 			logger.Error("could nog ping", "error", err)
 		}
+		
 
 		raw, err = rpc.Dispense("provider")
 		if err == nil {

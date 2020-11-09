@@ -5,6 +5,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"context"
+	"fmt"
 )
 
 // TODO this just runs some functions.. not a real implementation
@@ -42,7 +43,6 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 	
 	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
 	var providerConf *shared.Configuration
-	var err error
 	defaultConf := shared.GetConfig()
 	
 	// check if a provider is selected in the request
@@ -54,11 +54,7 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 		}
 		// run some provider funcs
 		providerFunc(provider, msg)
-		providerConf, err = provider.GetConfiguration(msg.Context)
-		
-		if err != nil {
-			providerConf = defaultConf
-		}
+		providerConf = defaultConf
 		
 	} else {
 		// no provider selected, walk all providers
@@ -199,6 +195,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		return err
 	}
 	
+	fmt.Println(req)
 	//if the return is 0 something went wrong
 	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
