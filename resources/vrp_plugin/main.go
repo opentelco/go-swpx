@@ -70,14 +70,14 @@ func init() {
 type VRPDriver struct {
 	logger hclog.Logger
 	dnc    client.Client
-	conf   shared.Configuration
+	conf   *shared.Configuration
 }
 
-func (d *VRPDriver) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+func (d *VRPDriver) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
 	return d.conf, nil
 }
 
-func (d *VRPDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
+func (d *VRPDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
 	d.conf = conf
 
 	return nil

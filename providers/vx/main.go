@@ -47,7 +47,7 @@ const (
 
 var PROVIDER_NAME = "vx_provider"
 
-var conf shared.Configuration
+var conf *shared.Configuration
 
 func init() {
 	var err error
@@ -98,7 +98,7 @@ func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*cor
 
 
 
-func (p *Provider) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
 	return conf, nil
 }
 

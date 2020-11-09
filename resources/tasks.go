@@ -39,7 +39,7 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func CreateDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -71,7 +71,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf shared.Configuration) *tr
 }
 
 // createMsg uses the pbuf transport for DNC..
-func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -109,7 +109,7 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf shared.Conf
 	return message
 }
 
-func CreateTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -146,7 +146,7 @@ func CreateTaskSystemInfo(el *proto.NetworkElement, conf shared.Configuration) *
 	return message
 }
 
-func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -194,7 +194,7 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf shared.C
 }
 
 // CreateMsg uses the pbuf transport for DNC..
-func CreateMsg(conf shared.Configuration) *transport.Message {
+func CreateMsg(conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -235,7 +235,7 @@ func CreateMsg(conf shared.Configuration) *transport.Message {
 	return message
 }
 
-func CreatePortInformationMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -264,7 +264,7 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf shared.Configuratio
 	return message
 }
 
-func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -299,7 +299,7 @@ func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration
 	return message
 }
 
-func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &telnet.Task{
 		Type: telnet.Type_GET,
 		Payload: []*telnet.Payload{
@@ -348,7 +348,7 @@ func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf shared.Configurati
 
 }
 
-func CreateSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &ssh.Task{
 		Type: ssh.Type_GET,
 		Payload: []*ssh.Payload{
@@ -398,7 +398,7 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf shared.Configuration)
 
 }
 
-func CreateAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -436,7 +436,7 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf shared.Configuration) *tra
 }
 
 // Before the task is sent we need to set the MaxRepetitions to X
-func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configuration, maxRepetitions int32) *transport.Message {
+func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuration, maxRepetitions int32) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
@@ -472,7 +472,7 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf shared.Configurat
 	return message
 }
 
-func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf shared.Configuration) *transport.Message {
+func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &telnet.Task{
 		Type: telnet.Type_GET,
 		Payload: []*telnet.Payload{
