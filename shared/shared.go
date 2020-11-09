@@ -67,8 +67,6 @@ var PluginMap = map[string]plugin.Plugin{
 	PluginProviderKey: &ProviderPlugin{},
 }
 
-type Confi struct {
-}
 type ConfigTelnet struct {
 	Username            string        `json:"username" mapstructure:"username" yaml:"username" toml:"username"`
 	Password            string        `json:"password" mapstructure:"password" yaml:"password" toml:"password"`

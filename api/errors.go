@@ -24,14 +24,14 @@ package api
 
 import (
 	"net/http"
-
-	"git.liero.se/opentelco/go-swpx/errors"
+	
+	"git.liero.se/opentelco/go-swpx/core"
 )
 
 // ErrorStatusInvalidAddr is the status response when the app cannot do anything about the host
 // the error can be traced back to bad dns settings
 var ErrorStatusInvalidAddr = &ResponseStatus{
-	AppErrorCode:    errors.ErrInvalidAddr,
+	AppErrorCode:    core.ErrInvalidAddr,
 	AppErrorMessage: "",
 
 	Error:   true,
@@ -41,7 +41,7 @@ var ErrorStatusInvalidAddr = &ResponseStatus{
 }
 
 var ErrorStatusInvalidProvider = &ResponseStatus{
-	AppErrorCode:    errors.ErrInvalidProvider,
+	AppErrorCode:    core.ErrInvalidProvider,
 	AppErrorMessage: "",
 
 	Error:   true,
@@ -51,7 +51,7 @@ var ErrorStatusInvalidProvider = &ResponseStatus{
 }
 
 var ErrorStatusRequestTimeout = &ResponseStatus{
-	AppErrorCode:    errors.ErrTimeoutRequest,
+	AppErrorCode:    core.ErrTimeoutRequest,
 	AppErrorMessage: "",
 
 	Error:   true,

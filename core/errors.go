@@ -22,19 +22,35 @@
 
 package core
 
-//
-// Functions
-//
+import (
+	"fmt"
 
-// func PrettyPrint(v interface{}) string {
-// 	b, err := json.Marshal(v)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	var p bytes.Buffer
-// 	err = json.Indent(&p, b, "", "\t")
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	return string(p.Bytes())
-// }
+	"github.com/pkg/errors"
+)
+
+type ErrorCode int
+
+// Wraps the Wrap function..
+func Wrap(err error, msg string) error {
+	return errors.Wrap(err, msg)
+}
+
+// Error is a local error type
+type Error struct {
+	Message    string
+	Code       ErrorCode
+	StatusCode uint
+}
+
+// Error implements the Error interface
+func (e Error) Error() string {
+	return fmt.Sprintf("%d: %s", e.Code, e.Message)
+}
+
+// New creates a new error with a code
+func NewError(msg string, code ErrorCode) Error {
+	return Error{
+		Message: msg,
+		Code:    code,
+	}
+}

@@ -41,7 +41,7 @@ func (c *cache) SetInterface(ne *proto.NetworkElement, interfaces *proto.Network
 			})
 
 			if err != nil {
-				logger.Error("Error saving info in cache: ", err.Error())
+				logger.Error("error saving interfaceinfo in cache","error", err, "hostname", ne.Hostname, "port", v.Description)
 				return err
 			}
 

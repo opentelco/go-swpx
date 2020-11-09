@@ -25,7 +25,6 @@ syntax = "proto3";
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/provider";
 
 package provider;
-import "dnc.proto";
 import "core.proto";
 
 
@@ -45,21 +44,6 @@ message NameResponse {
 message VersionResponse {
   string version = 1;
 }
-
-
-message MatchRequest {
-  string origin_id = 1;
-}
-
-message MatchResponse {
-  bool match = 1;
-}
-
-
-message WeightResponse {
-  int64 weight = 1;
-}
-
 
 message configTelnet {
   string User = 1;
@@ -112,13 +96,8 @@ service Provider {
   rpc Name(Empty) returns (NameResponse);
   rpc Version(Empty) returns (VersionResponse);
 
-  rpc Match(MatchRequest) returns (MatchResponse);
-  rpc Lookup(dnc.LookupRequest) returns (dnc.LookupResponse);
-  rpc Weight(Empty) returns (WeightResponse);
-
   rpc PreHandler(core.Request) returns (core.Request);
   rpc PostHandler(core.Response) returns (core.Response);
 
   rpc GetConfiguration(Empty) returns (Configuration);
-
 }

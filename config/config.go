@@ -37,3 +37,46 @@ type DriverConfig struct {
 	OIDs          []string
 	RegexMatchOID string
 }
+
+type MongoConfig struct {
+	Addr string `hcl:"addr"`
+	Port int `hcl:"port"`
+	Database string `hcl:"database"`
+	User string `hcl:"user,optional"`
+	Password string `hcl:"password,optional`
+}
+
+type LoggerConf struct {
+	Level string `hcl:"level,optional"`
+	AsJson bool `hcl:"as_json,optional"`
+}
+
+
+type Configuration struct {
+	Logger LoggerConf `hcl:"logger,block"`
+	MongoConfig *MongoConfig `hcl:"mongo,block"`
+	
+	// Drivers and Resources
+	Resources []*Resource `hcl:"resource,block"`
+	Providers []*Provider `hcl:"provider,block"`
+}
+
+
+type Resource struct {
+	Plugin string `hcl:",label"`
+	Name string `hcl:"name"`
+	Description string `hcl:"description,optional"`
+	Version string `hcl:"version"`
+	
+}
+
+
+type Provider struct {
+	Plugin string `hcl:",label"`
+	Name string `hcl:"name"`
+	Description string `hcl:"description,optional"`
+	Version string `hcl:"version"`
+	
+	
+	
+}

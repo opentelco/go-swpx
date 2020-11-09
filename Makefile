@@ -24,13 +24,13 @@ pb:
 providers:
 	# Building PROVIDERS
 	@rm -f $(providers_bin)/*
-	@cd $(providers_dir)/vx/; go build -o $(providers_plugin_dir)/providers_vx .
+	@cd $(providers_dir)/vx/; go build -o $(providers_plugin_dir)/vx .
 
 resources:
 	# Building RESOURCES
 	@rm -f $(resources_bin)/*
-	@cd $(resources_dir)/vrp_plugin/; go build -o $(resources_plugin_dir)/resource_vrp .
-	@cd $(resources_dir)/raycore_plugin/; go build -o $(resources_plugin_dir)/resource_raycore .
+	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .
+	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
 
 
 core:
@@ -53,7 +53,7 @@ linux:
 
 	rm -rf build/linux
 	mkdir -p build/linux/plugins/resources;mkdir -p build/linux/plugins/providers;mkdir -p build/linux/config
-	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/resource_vrp_plug ./resources/vrp_plugin/
+	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/vrp_plug ./resources/vrp/
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/providers/provider_vx ./providers/vx/main.go
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/swpx main.go
 	cp config/config.yml build/linux/config/

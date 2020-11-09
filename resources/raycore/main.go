@@ -61,7 +61,7 @@ func init() {
 type RaycoreDriver struct {
 	logger hclog.Logger
 	dnc    client.Client
-	conf   shared.Configuration
+	conf   *shared.Configuration
 }
 
 func (d *RaycoreDriver) Version() (string, error) {
@@ -197,12 +197,12 @@ func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto
 	return nil, nil
 }
 
-func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf shared.Configuration) error {
+func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
 	d.conf = conf
 
 	return nil
 }
-func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (shared.Configuration, error) {
+func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
 	return d.conf, nil
 }
 

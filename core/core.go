@@ -29,7 +29,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
-	"sort"
 	
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -114,16 +113,15 @@ type Core struct {
 func (c *Core) Start() error{
 	c.swarm.start(RequestQueue)
 
+	go func() {
 	// catch interrupt and kill all plugins
 	csig := make(chan os.Signal, 1)
 	signal.Notify(csig, os.Interrupt)
 	for range csig {
-		
 		plugin.CleanupClients()
 		// TODO need to close swarm c.swarm.Close() ?
-		return nil
-		
 	}
+	}()
 	
 	return nil
 }
@@ -155,17 +153,8 @@ func New(log hclog.Logger) (*Core,error) {
 	loadResources()
 	loadProviders()
 
-	// Sort the list of providers by their Weight()
-	sortedProviders = providers.Slice()
-	sort.Sort(byWeight(sortedProviders))
-	for n, p := range sortedProviders {
-		name, _ := p.Name()
-		w, _ := p.Weight()
-		println(n, name, w)
-	}
-
 	// setup mongodb cache
-	mongoClient, err := initMongoDB(conf.InterfaceCache)
+	mongoClient, err := initMongoDb(conf.InterfaceCache, logger.Named("mongodb"))
 	if err != nil {
 		logger.Warn("could not establish mongodb connection","error", err)
 		logger.Info("no mongo connection established","cache_enabled", false)
@@ -227,18 +216,23 @@ func loadProviders() {
 		var raw interface{}
 		var err error
 
-		logger.Debug("connecting to plugin","plugin", name)
+		logger.Debug("connecting to plugin","plugin", name, "version", p.NegotiatedVersion(), "protocol", p.Protocol())
+		
 		rpc, err := p.Client()
 		if err != nil {
 			logger.Error(err.Error())
 			continue
+		}
+		err = rpc.Ping()
+		if err != nil {
+			logger.Error("could nog ping", "error", err)
 		}
 
 		raw, err = rpc.Dispense("provider")
 		if err == nil {
 			provider, ok := raw.(shared.Provider)
 			if !ok || provider == nil {
-				logger.Error("failed to load provider_plugin", "plugin", name)
+				logger.Error("failed to load provider_plugin", "plugin", name, "provider", provider, "ok", ok)
 				continue
 			}
 			
@@ -255,9 +249,6 @@ func loadProviders() {
 				log.Fatal("could not load provider")
 			}
 			if v, err = provider.Version(); err != nil {
-				log.Fatal("could not load provider")
-			}
-			if w, err = provider.Weight(); err != nil {
 				log.Fatal("could not load provider")
 			}
 

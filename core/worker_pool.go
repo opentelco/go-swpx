@@ -24,16 +24,12 @@ package core
 
 import (
 	"container/heap"
-	"context"
 	"fmt" // "github.com/davecgh/go-spew/spew"
 	"time"
-
+	
 	"github.com/segmentio/ksuid"
-
-	"git.liero.se/opentelco/go-swpx/errors"
+	
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 var start time.Time
@@ -42,17 +38,7 @@ func init() {
 	start = time.Now()
 }
 
-// worker that does the work
-type worker struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Pending  int    `json:"pending"`
-	Executed int    `json:"executed"`
-	TimedOut int    `json:"timed_out"`
-	messages chan *Request
-}
 
-type workers []*worker
 
 // implementation
 type workerPool struct {
@@ -96,7 +82,6 @@ func newWorkerPool(nWorker int, nRequester int) *workerPool {
 
 // start the workerPool and listen for new events on the channel
 func (b *workerPool) start(requestChan chan *Request) {
-	// print status every 30 secs. not for production
 	// TODO prometheus endpoint.. ?
 	go func() {
 		for {
@@ -193,292 +178,5 @@ func (b *workerPool) completed(w *worker) {
 	heap.Push(&b.pool, w)
 }
 
-// Heap implementation for worker-pool
-func (p workers) Len() int           { return len(p) }
-func (p workers) Less(i, j int) bool { return p[i].Pending < p[j].Pending }
 
-func (p *workers) Swap(i, j int) {
-	a := *p
-	a[i], a[j] = a[j], a[i]
-	a[i].Id = i
-	a[j].Id = j
-}
 
-func (p *workers) Push(x interface{}) {
-	a := *p
-	n := len(a)
-	a = a[0 : n+1]
-	w := x.(*worker)
-	a[n] = w
-	w.Id = n
-	*p = a
-}
-
-func (p *workers) Pop() interface{} {
-	a := *p
-	*p = a[0 : len(a)-1]
-	w := a[len(a)-1]
-	w.Id = -1 // for safety
-	return w
-}
-
-// worker stats
-type wresp struct {
-	Workers    []worker `json:"workers"`
-	Variance   float64  `json:"variance"`
-	Average    float64  `json:"average"`
-	Operations int      `json:"total_operations"`
-	Failed     int      `json:"failed_operations"`
-	Elapsed    float64  `json:"elapsed"`
-	OpsSecond  float64  `json:"operations_second"`
-}
-
-// start the worker and ready it to accept payloads
-func (w *worker) start(done chan *worker) {
-	for {
-		select {
-		case msg := <-w.messages:
-			resp := &pb_core.Response{RequestObjectId: msg.ObjectId}
-
-			// do work with payload
-			err := handle(msg.Context, msg, resp, handleMsg)
-
-			if err != nil {
-				resp.Error = &pb_core.Error{Message: err.Error()}
-				w.TimedOut++
-			}
-
-			msg.Response <- resp
-			w.Executed++
-			// response is not nandled this way right now. May never be.
-
-			logger.Debug("response back in queue.")
-			done <- w
-		}
-	}
-}
-
-// TODO this just runs some functions.. not a real implementation
-func providerFunc(provider shared.Provider, msg *Request) {
-	name, err := provider.Name()
-	if err != nil {
-		logger.Debug("getting provider name failed", "error", err)
-	}
-	ver, err := provider.Version()
-	if err != nil {
-		logger.Debug("getting provider name failed", "error", err)
-	}
-	weight, err := provider.Weight()
-	if err != nil {
-		logger.Debug("getting provider name failed", "error", err)
-	}
-
-	l, err := provider.Lookup(msg.ObjectId)
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	logger.Debug("this is coming back from the plugin", "id", l)
-	logger.Debug("data from provider plugin", "provider", name, "version", ver, "weight", weight)
-}
-
-func handle(ctx context.Context, msg *Request, resp *pb_core.Response, f func(msg *Request, resp *pb_core.Response) error) error {
-	c := make(chan error, 1)
-	go func() { c <- f(msg, resp) }()
-	select {
-	case <-ctx.Done():
-		logger.Error("got a timeout, letrs go")
-		return ctx.Err()
-	case err := <-c:
-		if err != nil {
-			logger.Error("err: ", err.Error())
-		}
-		return err
-	}
-}
-
-func handleMsg(msg *Request, resp *pb_core.Response) error {
-	logger.Debug("worker has payload")
-	logger.Info("selected provider", "provider", msg.ProviderPlugin)
-
-	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
-	var providerConf *shared.Configuration
-	var err error
-	defaultConf := shared.GetConfig()
-
-	// check if a provider is selected in the request
-	if msg.ProviderPlugin != "" {
-		provider := providers[msg.ProviderPlugin]
-		if provider == nil {
-			resp.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: errors.ErrInvalidProvider}
-			return errors.New(resp.Error.Message, errors.ErrorCode(resp.Error.Code))
-		}
-		// run some provider funcs
-		providerFunc(provider, msg)
-		providerConf, err = provider.GetConfiguration(msg.Context)
-
-		if err != nil {
-			providerConf = defaultConf
-		}
-
-	} else {
-		// no provider selected, walk all providers
-		for pname, provider := range providers {
-			logger.Debug("parsing provider", "provider", pname)
-			providerFunc(provider, msg)
-		}
-	}
-
-	// select resource-plugin to send the requests to
-	plugin := resources[msg.ResourcePlugin]
-	if plugin == nil {
-		logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", msg.ResourcePlugin)
-		resp.Error = &pb_core.Error{
-			Message: "selected driver is missing/does not exist",
-			Code:    errors.ErrInvalidResource,
-		}
-		return nil
-	}
-	plugin.SetConfiguration(msg.Context, providerConf)
-
-	// implementation of different messages that SWP-X can handle right now
-	// TODO is this the best way to to this.. ?
-	switch msg.Type {
-	case pb_core.Request_GET_TECHNICAL_INFO:
-		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
-	case pb_core.Request_GET_TECHNICAL_INFO_PORT:
-		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
-	}
-
-	return nil
-}
-
-// handleGetTechnicalInformationElement gets full information of an Element
-func handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protoConf := shared.Conf2proto(conf)
-
-	req := &resource.NetworkElement{
-		Interface: "",
-		Hostname:  msg.Hostname,
-		Conf:      protoConf,
-	}
-
-	physPortResponse, err := plugin.MapEntityPhysical(msg.Context, req)
-	if err != nil {
-		logger.Error("error fetching physical entities:", err.Error())
-		return err
-	}
-
-	allPortInformation, err := plugin.AllPortInformation(msg.Context, req)
-	if err != nil {
-		logger.Error("error fetching port information for all interfaces:", err.Error())
-		return err
-	}
-
-	var matchingInterfaces int32 = 0
-	for _, iface := range allPortInformation.Interfaces {
-		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
-			matchingInterfaces++
-		}
-	}
-	allPortInformation, err = plugin.GetAllTransceiverInformation(msg.Context, &resource.NetworkElementWrapper{
-		Element:        req,
-		NumInterfaces:  matchingInterfaces,
-		FullElement:    allPortInformation,
-		PhysInterfaces: physPortResponse,
-	})
-	if err != nil {
-		logger.Error("error fetching transceiver information: ", err)
-	}
-
-	resp.NetworkElement = allPortInformation
-
-	return nil
-}
-
-// handleGetTechnicalInformationPort gets information related to the selected interface
-func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protConf := shared.Conf2proto(conf)
-	req := &resource.NetworkElement{
-		Hostname:  msg.Hostname,
-		Interface: msg.Port,
-		Conf:      protConf,
-	}
-
-	mapInterfaceResponse := &resource.NetworkElementInterfaces{}
-	var cachedInterface *CachedInterface
-	var err error
-
-	if useCache && !msg.RecreateIndex{
-		logger.Debug("cache enabled, pop object from cache")
-		cachedInterface, err = InterfaceCache.PopInterface(req.Hostname, req.Interface)
-		if cachedInterface != nil {
-			resp.PhysicalPort = cachedInterface.Port
-			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
-			req.InterfaceIndex = cachedInterface.InterfaceIndex
-		}
-	}
-
-	// did not find cached item or cached is disabled
-	if cachedInterface == nil || !useCache {
-		var physPortResponse *resource.NetworkElementInterfaces
-		logger.Debug("run mapEntity")
-		if physPortResponse, err = plugin.MapEntityPhysical(msg.Context, req); err != nil {
-			logger.Error("error running getphysport", "err", err.Error())
-			resp.Error = &pb_core.Error{
-				Message: err.Error(),
-				Code:    errors.ErrInvalidPort,
-			}
-			return err
-		}
-		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
-			resp.PhysicalPort = val.Description
-			req.PhysicalIndex = val.Index
-		}
-
-		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
-			logger.Error("error running map interface", "err", err.Error())
-			resp.Error = &pb_core.Error{
-				Message: err.Error(),
-				Code:    errors.ErrInvalidPort,
-			}
-			return err
-		}
-		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
-			req.InterfaceIndex = val.Index
-		}
-
-		// save in cache upon success (if enabled)
-		if useCache {
-			if err = InterfaceCache.SetInterface(req, mapInterfaceResponse, physPortResponse); err != nil {
-				return err
-			}
-		}
-
-	} else if err != nil {
-		logger.Error("error fetching from cache:", err.Error())
-		return err
-	}
-
-	//if the return is 0 something went wrong
-	if req.InterfaceIndex == 0 {
-		logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = &pb_core.Error{
-			Message: "interface index returned zero",
-			Code:    errors.ErrInvalidPort,
-		}
-		return err
-	}
-
-	logger.Info("found index for selected interface", "index", req.InterfaceIndex)
-
-	ti, err := plugin.TechnicalPortInformation(msg.Context, req)
-	if err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-	logger.Info("calling technical info ok ", "result", ti)
-	resp.NetworkElement = ti
-
-	return nil
-}

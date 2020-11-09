@@ -5,17 +5,17 @@ snmp:
   retries: 3
   dynamic_repetitions: true
 interface_cache:
-  server: mongodb://192.168.0.12:27017
+  server: mongodb://localhost:27027
   database: test
   collection: interface_cache
   timeout_seconds: 30
 response_cache:
-  server: mongodb://192.168.0.12:27017
+  server: mongodb://localhost:27027
   database: test
   collection: response_cache
   timeout_seconds: 30
 nats:
-  event_servers: ['nats://192.168.0.12:14222', 'nats://192.168.0.12:24222', 'nats://192.168.0.12:34222']
+  event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
 ssh:
   username: "root-ssh"
   password: "qwerty1234"

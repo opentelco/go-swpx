@@ -25,15 +25,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
+	
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 var VERSION *version.Version
@@ -41,19 +41,17 @@ var logger hclog.Logger
 
 const (
 	VERSION_BASE string = "1.0-beta"
-	//PROVIDER_NAME string = "vx_provider"
-	WEIGHT int64 = 23
 )
 
-var PROVIDER_NAME = "vx_provider"
+var PROVIDER_NAME = "vx"
 
 var conf *shared.Configuration
 
 func init() {
-	var err error
-	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
-		log.Fatal(err)
-	}
+	// var err error
+	// if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 // Provider is the implementation of the GRPC
@@ -64,22 +62,6 @@ type Provider struct {
 func (g *Provider) Version() (string, error) {
 	g.logger.Debug("message from provider, running version:", VERSION)
 	return fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()), nil
-}
-
-func (g *Provider) Weight() (int64, error) {
-	// g.logger.Debug("return the weight", PROVIDER_NAME)
-	return WEIGHT, nil
-}
-
-func (p *Provider) Lookup(id string) (string, error) {
-	// duration := time.Duration(time.Millisecond * time.Duration(rand.Intn(1000-400)+400))
-	// time.Sleep(duration)
-	// p.logger.Debug("done", "execution_time", duration.String())
-	return "nonon", nil
-}
-
-func (p *Provider) Match(id string) (bool, error) {
-	return true, nil
 }
 
 func (p *Provider) Name() (string, error) {
@@ -96,22 +78,11 @@ func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*cor
 	return response, nil
 }
 
-
-
 func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
 	return conf, nil
 }
 
 func loadConfig(logger hclog.Logger) {
-
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("./" + PROVIDER_NAME)
-	viper.AddConfigPath("./config")
-	viper.AddConfigPath(".providers/" + PROVIDER_NAME)
-	viper.AddConfigPath("$HOME/." + PROVIDER_NAME)
 
 	defaultSnmpConf := shared.ConfigSNMP{
 		Community: "semipublic",
@@ -140,6 +111,7 @@ var handshakeConfig = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   shared.MagicCookieKey,
 	MagicCookieValue: shared.MagicCookieValue,
+	
 }
 
 func main() {
@@ -149,13 +121,18 @@ func main() {
 		Color: hclog.AutoColor,
 	})
 
-	loadConfig(logger)
-
+	// loadConfig(logger)
+	
+	prov := &Provider{logger: logger}
 	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
+		HandshakeConfig: handshakeConfig,
 		Plugins: map[string]plugin.Plugin{
-			shared.PluginProviderKey: &shared.ProviderPlugin{Impl: &Provider{logger: logger}},
+			shared.PluginProviderKey: &shared.ProviderPlugin{
+				Impl:   prov,
+			},
 		},
-		GRPCServer: plugin.DefaultGRPCServer,
+		GRPCServer:       plugin.DefaultGRPCServer,
+		// Logger:           logger,
 	})
+	
 }

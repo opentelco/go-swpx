@@ -25,7 +25,7 @@ package api
 import (
 	"net/http"
 
-	"git.liero.se/opentelco/go-swpx/errors"
+	"git.liero.se/opentelco/go-swpx/core"
 )
 
 // Response is the main struct that returns to the client
@@ -37,7 +37,7 @@ type Response struct {
 // ResponseStatus is the status of a Response.
 type ResponseStatus struct {
 	// AppErrorCode is used for internal
-	AppErrorCode    errors.ErrorCode `json:"-" bson:"-"`
+	AppErrorCode    core.ErrorCode `json:"-" bson:"-"`
 	AppErrorMessage string           `json:"-" bson:"-"`
 
 	// Sent to the client
@@ -56,7 +56,7 @@ func (rs *Response) Render(w http.ResponseWriter, r *http.Request) error {
 // if no response is passed as argument it will create a OK.
 func NewResponse(status *ResponseStatus, payload interface{}) *Response {
 	if payload != nil {
-		if err, ok := payload.(errors.Error); ok {
+		if err, ok := payload.(core.Error); ok {
 			status.AppErrorMessage = err.Error()
 			status.AppErrorCode = err.Code
 			payload = nil

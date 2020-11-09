@@ -33,7 +33,6 @@ import (
 	"github.com/go-chi/render"
 	
 	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/errors"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
@@ -82,7 +81,7 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 func (r *TechnicalInformationRequest) Parse() error {
 	if err := r.parseAddr(); err != nil {
 		logger.Error(err.Error())
-		return errors.New(err.Error(), errors.ErrInvalidAddr)
+		return core.NewError(err.Error(), core.ErrInvalidAddr)
 	}
 	return nil
 }

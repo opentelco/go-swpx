@@ -40,15 +40,6 @@ func (p providerMap) Slice() (ps []shared.Provider) {
 
 // sorters
 type resourceMap map[string]shared.Resource
-type byWeight []shared.Provider
-
-func (p byWeight) Less(i int, j int) bool {
-	pi, _ := p[i].Weight()
-	pj, _ := p[j].Weight()
-	return pi < pj
-}
-func (p byWeight) Len() int          { return len(p) }
-func (p byWeight) Swap(i int, j int) { p[i], p[j] = p[j], p[i] }
 
 var (
 	availableResources map[string]*plugin.Client = make(map[string]*plugin.Client)

@@ -24,15 +24,13 @@ package core
 
 import (
 	"context"
-	"fmt"
-	"git.liero.se/opentelco/go-swpx/shared"
-	codecs "github.com/amsokol/mongo-go-driver-protobuf"
+	
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"time"
+	
+	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 type cache struct {
@@ -48,59 +46,36 @@ func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo
 		Keys:    bson.M{"hostname": -1, "port": -1},
 		Options: options.Index().SetUnique(true),
 	}
+c := &cache{
+	client: client,
+	col:    col,
+	logger: logger,
+}
+	err := c.createIndex(col, model, logger)
+	if err != nil {
+		return nil, err
+	}
 
-	createIndex(col, model, logger)
-
-	return &cache{
-		client: client,
-		col:    col,
-		logger: logger,
-	}, nil
+	return c, nil
 }
 
-func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) {
+// create index for cache
+func (c *cache) createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) error {
 	cursor, err := col.Indexes().List(context.TODO(), options.ListIndexes())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	var indexes []bson.M
 	if err = cursor.All(context.TODO(), &indexes); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if len(indexes) == 0 {
 		if _, err := col.Indexes().CreateOne(context.Background(), model); err != nil {
-			logger.Warn("can't create index:", err.Error())
+			c.logger.Warn("can't create index","error", err)
+			return err
 		}
 	}
+	return nil
 }
 
-func initMongoDB(conf shared.ConfigMongo) (*mongo.Client, error) {
-	logger.Info(fmt.Sprintf("Attempting to connect to MongoDB: %s", conf.Server))
-
-	// Register custom codecs for protobuf Timestamp and wrapper types
-	reg := codecs.Register(bson.NewRegistryBuilder()).Build()
-
-	var err error
-	var mongoClient *mongo.Client
-	if mongoClient, err = mongo.NewClient(options.Client().ApplyURI(conf.Server), &options.ClientOptions{Registry: reg}); err != nil {
-		logger.Error(fmt.Sprintf("error initializing Mongo client: %s", err.Error()))
-		return nil, err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(conf.TimeoutSeconds)*time.Second)
-	defer cancel()
-	if err = mongoClient.Connect(ctx); err != nil {
-		logger.Error(fmt.Sprintf("error connecting Mongo client: %s", err.Error()))
-		return nil, err
-	}
-
-	// Check the connection
-	if err = mongoClient.Ping(context.TODO(), nil); err != nil {
-		logger.Error(fmt.Sprintf("Can't ping mongo server: %s", err.Error()))
-		return nil, fmt.Errorf("can't reach mongo server")
-	}
-
-	logger.Info("Successfully connected to MongoDB")
-	return mongoClient, nil
-}

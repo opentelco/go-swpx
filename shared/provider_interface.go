@@ -31,7 +31,6 @@ import (
 	
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/dnc"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
 
@@ -40,11 +39,6 @@ type Provider interface {
 	Name() (string, error)
 	Version() (string, error)
 
-	Match(string) (bool, error)
-	Lookup(string) (string, error)
-	Weight() (int64, error)
-	
-	
 	// Process the request before it hits the main functions  in the Core
 	PreHandler(ctx context.Context, request *core.Request) (*core.Request, error)
 	
@@ -56,7 +50,9 @@ type Provider interface {
 }
 
 // Here is an implementation that talks over GRPC
-type ProviderGRPCClient struct{ client proto.ProviderClient }
+type ProviderGRPCClient struct {
+	client proto.ProviderClient
+}
 
 func (p *ProviderGRPCClient) Name() (string, error) {
 	resp, err := p.client.Name(context.Background(), &proto.Empty{})
@@ -72,34 +68,14 @@ func (p *ProviderGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
-// Match is used to match the ID with the provider.
-func (p *ProviderGRPCClient) Match(id string) (bool, error) {
-	resp, err := p.client.Match(context.Background(), &proto.MatchRequest{OriginId: id})
-	return resp.Match, err
-}
-
-// Lookup returns a Request after doing a lookup against the provider.
-func (p *ProviderGRPCClient) Lookup(id string) (string, error) {
-	res, err := p.client.Lookup(context.Background(), &dnc.LookupRequest{OriginId: id})
-
-	return res.OriginId, err
-}
-
-// Weight returns the weight of the Provider. Lower to higher.
-func (p *ProviderGRPCClient) Weight() (int64, error) {
-	resp, err := p.client.Weight(context.Background(), &proto.Empty{})
-	return resp.GetWeight(), err
-
-}
 
 func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
-	return nil, nil
+	return p.client.PreHandler(context.Background(), request)
 }
 
 // Process the network element after data has been collected
 func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Response,error) {
-	return nil, nil
-
+	return p.client.PostHandler(context.Background(), resp)
 }
 
 // GetConfiguration returns the configuration of the Provider.
@@ -131,30 +107,12 @@ func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*pr
 	return &proto.VersionResponse{Version: res}, err
 }
 
-func (rpc *ProviderGRPCServer) Lookup(ctx context.Context, req *dnc.LookupRequest) (*dnc.LookupResponse, error) {
-	res, err := rpc.Impl.Lookup(req.OriginId)
-	return &dnc.LookupResponse{
-		OriginId: res,
-	}, err
-}
-
-func (rpc *ProviderGRPCServer) Match(ctx context.Context, req *proto.MatchRequest) (*proto.MatchResponse, error) {
-	res, err := rpc.Impl.Match(req.OriginId)
-	return &proto.MatchResponse{Match: res}, err
-}
-
-func (rpc *ProviderGRPCServer) Weight(ctx context.Context, _ *proto.Empty) (*proto.WeightResponse, error) {
-	res, err := rpc.Impl.Weight()
-	return &proto.WeightResponse{Weight: res}, err
-}
-
 func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {
-	return nil, nil
-	
+	return rpc.Impl.PreHandler(ctx, resp)
 }
 
 func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response)  (*pb_core.Response, error) {
-	return nil,nil
+	return rpc.Impl.PostHandler(ctx, resp)
 }
 
 func (rpc *ProviderGRPCServer) GetConfiguration(ctx context.Context,  _ *proto.Empty) (*proto.Configuration, error) {
