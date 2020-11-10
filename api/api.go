@@ -24,18 +24,19 @@ package api
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-hclog"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-
-	"git.liero.se/opentelco/go-swpx/core"
+	
+	"github.com/hashicorp/go-hclog"
+	
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/gorilla/context"
-
+	
+	"git.liero.se/opentelco/go-swpx/core"
+	
 	"github.com/go-chi/chi"
 )
 
@@ -61,31 +62,32 @@ func (d TimeoutDuration) MarshalJSON() (b []byte, err error) {
 
 type Server struct {
 	*chi.Mux
-
-	requests chan *core.Request
+	
+	core *core.Core
+	logger hclog.Logger
 }
 
 func (s *Server) ListenAndServe(host string) error {
-	logger.Info(fmt.Sprintf("Listen on %s\n", host))
+	s.logger.Info(fmt.Sprintf("Listen on %s\n", host))
 	return http.ListenAndServe(host, context.ClearHandler(s))
 }
 
 // NewServer creates and returns a server.
-func NewServer(requestQueue chan *core.Request) *Server {
-	if requestQueue == nil {
-		log.Fatal("channel is nil, requests needs to be handled..")
+func NewServer(core *core.Core, logger hclog.Logger) *Server {
+	if logger != nil {
+		logger = hclog.New(&hclog.LoggerOptions{
+			Name:   APP_NAME,
+			Output: os.Stdout,
+			Level:  hclog.Debug,
+		})
 	}
-
-	logger = hclog.New(&hclog.LoggerOptions{
-		Name:   APP_NAME,
-		Output: os.Stdout,
-		Level:  hclog.Debug,
-	})
-
+	
 	srv := &Server{
 		Mux:      chi.NewRouter(),
-		requests: requestQueue,
+		core: core,
+		logger: logger,
 	}
+	
 	srv.Use(middleware.RequestID,
 		middleware.RealIP,
 		middleware.Recoverer,
@@ -98,7 +100,7 @@ func NewServer(requestQueue chan *core.Request) *Server {
 	})
 
 	srv.Route("/v1", func(r chi.Router) {
-		r.Mount("/ti", NewServiceTechnicalInformation(srv.requests))
+		r.Mount("/ti", NewServiceTechnicalInformation(core, logger))
 	})
 	return srv
 }

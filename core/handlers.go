@@ -1,11 +1,13 @@
 package core
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
-	"context"
-	"fmt"
 )
 
 // TODO this just runs some functions.. not a real implementation
@@ -131,6 +133,7 @@ func handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, 
 	return nil
 }
 
+
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
@@ -146,7 +149,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 	
 	if useCache && !msg.RecreateIndex{
 		logger.Debug("cache enabled, pop object from cache")
-		cachedInterface, err = InterfaceCache.PopInterface(req.Hostname, req.Interface)
+		cachedInterface, err = CacheInterface.Pop(context.TODO(), req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			resp.PhysicalPort = cachedInterface.Port
 			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
@@ -154,6 +157,9 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		}
 	}
 	
+	
+	js, _:= json.MarshalIndent(req, "", "  ")
+	fmt.Println(string(js))
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
 		var physPortResponse *resource.NetworkElementInterfaces
@@ -166,6 +172,10 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 			}
 			return err
 		}
+		
+		
+		
+		
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
 			resp.PhysicalPort = val.Description
 			req.PhysicalIndex = val.Index
@@ -185,7 +195,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		
 		// save in cache upon success (if enabled)
 		if useCache {
-			if err = InterfaceCache.SetInterface(req, mapInterfaceResponse, physPortResponse); err != nil {
+			if err = CacheInterface.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
 		}
@@ -195,7 +205,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		return err
 	}
 	
-	fmt.Println(req)
 	//if the return is 0 something went wrong
 	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")

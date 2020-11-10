@@ -55,9 +55,7 @@ var (
 	// Global request queue
 	RequestQueue = make(chan *Request, RequestBufferSize)
 
-	useCache       bool
-	InterfaceCache *cache
-	ResponseCache  *cache
+	
 )
 
 func init() {
@@ -137,6 +135,7 @@ func New(log hclog.Logger) (*Core,error) {
 	// create core
 	core := &Core{
 		swarm: newWorkerPool(WORKERS, MaxRequests),
+		logger: log,
 		//transport: Transport(t),
 	}
 	conf := shared.GetConfig()
@@ -161,14 +160,14 @@ func New(log hclog.Logger) (*Core,error) {
 		useCache = false
 		return core, nil
 	}
-	if InterfaceCache, err = NewCache(mongoClient, logger, conf.InterfaceCache); err != nil {
+	if CacheInterface, err = newInterfaceCache(mongoClient, logger, conf.InterfaceCache); err != nil {
 		logger.Error("error creating cache", "error", err)
 		logger.Info("no mongo connection established","cache_enabled", false)
 		useCache = false
 		return core,nil
 	}
 
-	if ResponseCache, err = NewCache(mongoClient, logger, conf.ResponseCache); err != nil {
+	if CacheResponse, err = newResponseCache(mongoClient, logger, conf.ResponseCache); err != nil {
 		logger.Error("cannot set response cache", "error", err)
 		return core, nil
 	}

@@ -29,38 +29,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	
-	"git.liero.se/opentelco/go-swpx/shared"
 )
 
-type cache struct {
-	client *mongo.Client
-	col    *mongo.Collection
-	logger hclog.Logger
-}
 
-func NewCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (*cache, error) {
-	col := client.Database(conf.Database).Collection(conf.Collection)
+const (
+	collectionInterfaceCache = "cache_interface"
+	collectionResponseCache = "cache_response"
+)
+var(
+	// exported to be reacable from API etc
+	CacheInterface InterfaceCache
+	CacheResponse  ResponseCache
+	
+	useCache       bool
+)
 
-	model := mongo.IndexModel{
-		Keys:    bson.M{"hostname": -1, "port": -1},
-		Options: options.Index().SetUnique(true),
-	}
-c := &cache{
-	client: client,
-	col:    col,
-	logger: logger,
-}
-	err := c.createIndex(col, model, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
-}
 
 // create index for cache
-func (c *cache) createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) error {
+func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) error {
 	cursor, err := col.Indexes().List(context.TODO(), options.ListIndexes())
 	if err != nil {
 		return err
@@ -72,7 +58,6 @@ func (c *cache) createIndex(col *mongo.Collection, model mongo.IndexModel, logge
 
 	if len(indexes) == 0 {
 		if _, err := col.Indexes().CreateOne(context.Background(), model); err != nil {
-			c.logger.Warn("can't create index","error", err)
 			return err
 		}
 	}

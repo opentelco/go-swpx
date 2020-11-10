@@ -17,6 +17,7 @@ require (
 	github.com/hashicorp/go-hclog v0.15.0
 	github.com/hashicorp/go-plugin v1.4.0
 	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/hcl/v2 v2.7.0
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/klauspost/compress v1.11.2 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
@@ -31,11 +32,11 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.mongodb.org/mongo-driver v1.4.3
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
-	golang.org/x/net v0.0.0-20201109172640-a11eb1b685be // indirect
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	golang.org/x/sys v0.0.0-20201109165425-215b40eba54c // indirect
 	golang.org/x/text v0.3.4 // indirect
-	google.golang.org/genproto v0.0.0-20201109203340-2640f1f9cdfb // indirect
+	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a // indirect
 	google.golang.org/grpc v1.33.2
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/ini.v1 v1.62.0 // indirect

@@ -25,25 +25,28 @@ package main
 import (
 	"context"
 	"fmt"
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
-	"git.liero.se/opentelco/go-swpx/resources"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
-
+	
+	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"github.com/pkg/errors"
+	
+	"git.liero.se/opentelco/go-swpx/resources"
+	
 	"git.liero.se/opentelco/go-swpx/shared/oids"
-
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
+	
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/nats-io/nats.go"
+	
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 var VERSION *version.Version
@@ -120,8 +123,12 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 				d.logger.Error("can't convert phys.port to int: ", err.Error())
 				return nil, err
 			}
-
-			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
+			
+			if m.Error != "" {
+				d.logger.Error("problem with snmp collection", "error", m.Error)
+				
+			}
+ 			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
 				Alias:       m.Name,
 				Index:       int64(index),
 				Description: m.GetStringValue(),

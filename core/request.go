@@ -24,6 +24,8 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"time"
 	
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
@@ -36,4 +38,51 @@ type Request struct {
 	
 	Response chan *pb_core.Response
 	Context  context.Context
+}
+// GetCacheTTL is a helper function
+func (r *Request) GetCacheTTL() time.Duration {
+	ttl, err := time.ParseDuration(r.CacheTtl)
+	if err != nil {
+		return 0
+	}
+	return ttl
+}
+
+// SendRequest to CORE
+func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error){
+	// if recreate is set no use to get the cache
+	if !request.RecreateIndex && request.GetCacheTTL() != 0 {
+		cr, err := CacheResponse.Pop(ctx, request.Hostname, request.Port, request.Type)
+		if err != nil {
+			c.logger.Warn("could not pop from cache", "error", err)
+		}
+		// if a cached response exists
+		if cr != nil {
+			if time.Since(cr.Timestamp.AsTime()) < request.GetCacheTTL() {
+				c.logger.Info("found response in cache")
+				return cr.Response, nil
+			}
+			// if response is cached but ttl ran out, clear it from the cache
+			if err := CacheResponse.Clear(context.TODO(), request.Hostname, request.Port, request.Type); err != nil {
+				logger.Error("error clearing cache:", err)
+			}
+		}
+	}
+	
+	RequestQueue <- request
+	// cache is not set
+	for {
+		select {
+		case resp := <-request.Response:
+			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.Type, resp); err != nil {
+				logger.Error("error saving response to cache: ", err.Error())
+			}
+			
+			return resp, nil
+		case <-request.Context.Done():
+			c.logger.Error("timeout for request was hit")
+			return nil, fmt.Errorf("timeout for request reached")
+			
+		}
+	}
 }

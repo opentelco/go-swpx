@@ -78,9 +78,7 @@ var Start = &cobra.Command{
 		// the queue is initated in the core and n workers takes request from it.
 		
 		
-		server := api.NewServer(core.RequestQueue)
-		//server := api.NewGRPCServer(core.RequestQueue)
-
+		server := api.NewServer(c, logger)
 		go func() {
 			err = server.ListenAndServe(":" + port)
 			if err != nil {

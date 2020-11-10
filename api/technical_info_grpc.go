@@ -38,7 +38,7 @@ func (s *GRPCServer) GetTechnicalInformation(ctx context.Context, request *pb_co
 	// 	req.Type = core.GetTechnicalInformationElement
 	// }
 	//
-	// cachedResponse, err := core.ResponseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
+	// cachedResponse, err := core.responseCache.PopResponse(req.NetworkElement, *req.NetworkElementInterface, req.Type)
 	// if err != nil {
 	// 	logger.Error("error popping from cache: ", err.Error())
 	// 	return nil, err
@@ -51,7 +51,7 @@ func (s *GRPCServer) GetTechnicalInformation(ctx context.Context, request *pb_co
 	// 		return cachedResponse.Response, nil
 	// 	}
 	// 	// if response is cached but ttl ran out, clear it from the cache
-	// 	if err := core.ResponseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
+	// 	if err := core.responseCache.Clear(req.NetworkElement, *req.NetworkElementInterface, req.Type); err != nil {
 	// 		logger.Error("error clearing cache:", err)
 	// 	}
 	// }
@@ -65,7 +65,7 @@ func (s *GRPCServer) GetTechnicalInformation(ctx context.Context, request *pb_co
 	// 			return nil, errors.New(resp.Error.Message)
 	// 		}
 	//
-	// 		if err := core.ResponseCache.SetResponse(req.Hostname, *req.NetworkElementInterface, req.Type, resp); err != nil {
+	// 		if err := core.responseCache.SetResponse(req.Hostname, *req.NetworkElementInterface, req.Type, resp); err != nil {
 	// 			logger.Error("error saving response to cache: ", err.Error())
 	// 			return nil, err
 	// 		}

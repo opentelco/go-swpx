@@ -2,11 +2,23 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
+	
+	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type InterfaceCache interface {
+	Pop(ctx context.Context, hostname, port string) (*CachedInterface, error)
+	Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
+}
 
 // CachedInterface is the data object stored in mongo for a cached interface
 type CachedInterface struct {
@@ -18,7 +30,34 @@ type CachedInterface struct {
 	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
-func (c *cache) PopInterface(hostname, iface string) (*CachedInterface, error) {
+func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (InterfaceCache, error) {
+	col := client.Database(conf.Database).Collection(collectionInterfaceCache)
+	// Create the model
+	model := mongo.IndexModel{
+		Keys:    bson.M{"hostname": -1, "port": -1},
+		Options: options.Index().SetUnique(true),
+	}
+	c := &ifCacheImpl{
+		client: client,
+		col:    col,
+		logger: logger,
+	}
+	err := createIndex(col, model, logger)
+	if err != nil {
+		return nil, err
+	}
+	
+	return c, nil
+}
+
+type ifCacheImpl struct {
+	client *mongo.Client
+	col    *mongo.Collection
+	logger hclog.Logger
+}
+
+
+func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedInterface, error) {
 	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface})
 	obj := &CachedInterface{}
 	if err := res.Decode(obj); err != nil {
@@ -30,7 +69,16 @@ func (c *cache) PopInterface(hostname, iface string) (*CachedInterface, error) {
 	return obj, nil
 }
 
-func (c *cache) SetInterface(ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
+func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
+	js, _ := json.MarshalIndent(ne, "", "  ")
+	fmt.Println(string(js))
+	
+	js, _ = json.MarshalIndent(interfaces, "", "  ")
+	fmt.Println(string(js))
+	
+	js, _ = json.MarshalIndent(phys, "", "  ")
+	fmt.Println(string(js))
+	
 	for k, v := range interfaces.Interfaces {
 		if physInterface, ok := phys.Interfaces[k]; ok {
 			_, err := c.col.InsertOne(context.Background(), bson.M{

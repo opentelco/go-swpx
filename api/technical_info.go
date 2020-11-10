@@ -27,10 +27,10 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"time"
 	
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-hclog"
 	
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -47,6 +47,8 @@ type TechnicalInformationRequest struct {
 	Timeout       TimeoutDuration `json:"timeout"`
 	CacheTTL      TimeoutDuration `json:"cache_ttl"`
 	ipAddr        []net.IP
+	
+	logger hclog.Logger
 }
 
 func (req *TechnicalInformationRequest) Bind(r *http.Request) error {
@@ -61,13 +63,13 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 	// Parse hostname/ip for host
 	addrs, err := net.LookupHost(r.Hostname)
 	if err != nil {
-		logger.Error(err.Error())
+		r.logger.Error(err.Error())
 		return err
 	}
 
 	for _, addr := range addrs {
 		addr := net.ParseIP(addr)
-		logger.Info("addr:", addr.String())
+		r.logger.Info("addr:", addr.String())
 		if addr == nil {
 			r.ipAddr = append(r.ipAddr, addr)
 		} else {
@@ -80,7 +82,7 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 // Parse the incoming request
 func (r *TechnicalInformationRequest) Parse() error {
 	if err := r.parseAddr(); err != nil {
-		logger.Error(err.Error())
+		r.logger.Error(err.Error())
 		return core.NewError(err.Error(), core.ErrInvalidAddr)
 	}
 	return nil
@@ -88,16 +90,18 @@ func (r *TechnicalInformationRequest) Parse() error {
 
 type ServiceTechnicalInformation struct {
 	*chi.Mux
-
-	requests chan *core.Request
+	core *core.Core
+	logger hclog.Logger
 	storage  interface{}
 }
 
-func NewServiceTechnicalInformation(requestChan chan *core.Request) *ServiceTechnicalInformation {
+func NewServiceTechnicalInformation(core *core.Core, logger hclog.Logger) *ServiceTechnicalInformation {
 	h := &ServiceTechnicalInformation{
 		Mux: chi.NewRouter(),
-
-		requests: requestChan,
+		
+		core: core,
+		logger: logger,
+		
 	}
 	h.Post("/", h.GetTI)
 	return h
@@ -105,7 +109,9 @@ func NewServiceTechnicalInformation(requestChan chan *core.Request) *ServiceTech
 
 // GetTI is the ti
 func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Request) {
-	data := &TechnicalInformationRequest{}
+	data := &TechnicalInformationRequest{
+		logger: s.logger,
+	}
 
 	if err := render.Bind(r, data); err != nil {
 		logger.Error(err.Error())
@@ -113,7 +119,7 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	ti, _ := json.Marshal(data)
-	logger.Info("TI:", string(ti))
+	s.logger.Info("TI:", string(ti))
 	if err := data.Parse(); err != nil {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
@@ -137,64 +143,22 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 		Response: make(chan *pb_core.Response, 1),
 		Context:  ctx,
 	}
-	if data.Port != "" {
-	
-	}
 	
 	if data.Port != "" {
 		req.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
 		// check response cache before sending request
-		if s.hasCachedResponse(w, r, req, data) {
-			return
-		}
 	}
-
+	
 	// send the request
-	s.requests <- req
+	
+	resp, err := s.core.SendRequest(ctx, req)
+	if err != nil {
+		render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
+	}
+	wrappedResponse := NewResponse(ResponseStatusOK, resp)
+	render.JSON(w, r, wrappedResponse)
 
 	// handle it
-	for {
-		select {
-		case resp := <-req.Response:
-			if resp.Error != nil {
-				render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
-				return
-			}
-			wrappedResponse := NewResponse(ResponseStatusOK, resp)
-			if err := core.ResponseCache.SetResponse(req.Hostname, req.Port, req.Type, resp); err != nil {
-				logger.Error("error saving response to cache: ", err.Error())
-			}
 
-			render.JSON(w, r, wrappedResponse)
-			return
-		case <-req.Context.Done():
-			logger.Info("timeout for request was hit")
-
-			render.JSON(w, r, NewResponse(ErrorStatusRequestTimeout, nil))
-			return
-		}
-
-	}
 }
 
-func (s *ServiceTechnicalInformation) hasCachedResponse(w http.ResponseWriter, r *http.Request, req *core.Request, data *TechnicalInformationRequest) bool {
-	cachedResponse, err := core.ResponseCache.PopResponse(req.Hostname, req.Port, req.Type)
-	if err != nil {
-		logger.Error("error popping from cache: ", err.Error())
-		render.JSON(w, r, NewResponse(ResponseStatusError, err.Error()))
-		return true
-	}
-
-	if cachedResponse != nil {
-		if time.Since(cachedResponse.Timestamp.AsTime()) < data.CacheTTL.Duration {
-			logger.Info("found response in cache")
-			render.JSON(w, r, NewResponse(ResponseStatusOK, cachedResponse.Response))
-			return true
-		}
-		// if response is cached but ttl ran out, clear it from the cache
-		if err := core.ResponseCache.Clear(req.Hostname, req.Port, req.Type); err != nil {
-			logger.Error("error clearing cache:", err)
-		}
-	}
-	return false
-}
