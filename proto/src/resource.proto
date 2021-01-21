@@ -24,6 +24,7 @@ syntax = "proto3";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
 import "network_element.proto";
+import "google/protobuf/empty.proto";
 import "provider.proto";
 
 
@@ -73,13 +74,13 @@ message Transceivers {
 
 message NetworkElementWrapper {
   NetworkElement element = 1;
-  int32 numInterfaces = 2;
-  networkelement.Element fullElement = 3;
-  NetworkElementInterfaces physInterfaces = 4;
+  int32 num_interfaces = 2;
+  networkelement.Element full_element = 3;
+  NetworkElementInterfaces phys_interfaces = 4;
 }
 
 service Resource {
-  rpc Version(Empty) returns (VersionResponse);
+  rpc Version(google.protobuf.Empty) returns (VersionResponse);
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   rpc AllPortInformation(NetworkElement) returns (networkelement.Element);
   rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);

@@ -25,19 +25,25 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
-	
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-hclog"
-	
+
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
+var (
+	ErrInvalidRequest = fmt.Errorf("invalid request body")
+)
+
 // TechnicalInformationRequest is the request that holdes the TI request.
 type TechnicalInformationRequest struct {
+	AccessId      string          `json:"access_id"`
 	Hostname      string          `json:"hostname"`
 	Port          string          `json:"port"`
 	Provider      string          `json:"provider"`
@@ -47,7 +53,7 @@ type TechnicalInformationRequest struct {
 	Timeout       TimeoutDuration `json:"timeout"`
 	CacheTTL      TimeoutDuration `json:"cache_ttl"`
 	ipAddr        []net.IP
-	
+
 	logger hclog.Logger
 }
 
@@ -61,6 +67,7 @@ func (r *TechnicalInformationRequest) parseDriver() error {
 
 func (r *TechnicalInformationRequest) parseAddr() error {
 	// Parse hostname/ip for host
+
 	addrs, err := net.LookupHost(r.Hostname)
 	if err != nil {
 		r.logger.Error(err.Error())
@@ -81,27 +88,32 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 
 // Parse the incoming request
 func (r *TechnicalInformationRequest) Parse() error {
-	if err := r.parseAddr(); err != nil {
-		r.logger.Error(err.Error())
-		return core.NewError(err.Error(), core.ErrInvalidAddr)
+
+	if r.AccessId == "" && r.Hostname == "" {
+		return fmt.Errorf("access_id and hostname cannot both be empty: %w", ErrInvalidRequest)
+	}
+	if r.AccessId == "" && r.Hostname != "" {
+		if err := r.parseAddr(); err != nil {
+			r.logger.Error(err.Error())
+			return core.NewError(err.Error(), core.ErrInvalidAddr)
+		}
 	}
 	return nil
 }
 
 type ServiceTechnicalInformation struct {
 	*chi.Mux
-	core *core.Core
-	logger hclog.Logger
-	storage  interface{}
+	core    *core.Core
+	logger  hclog.Logger
+	storage interface{}
 }
 
 func NewServiceTechnicalInformation(core *core.Core, logger hclog.Logger) *ServiceTechnicalInformation {
 	h := &ServiceTechnicalInformation{
 		Mux: chi.NewRouter(),
-		
-		core: core,
+
+		core:   core,
 		logger: logger,
-		
 	}
 	h.Post("/", h.GetTI)
 	return h
@@ -136,21 +148,21 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 			CacheTtl:               data.CacheTTL.String(),
 			Hostname:               data.Hostname,
 			Port:                   data.Port,
-			Type: pb_core.Request_GET_TECHNICAL_INFO,
+			Type:                   pb_core.Request_GET_TECHNICAL_INFO,
 		},
 
 		// Metadata
 		Response: make(chan *pb_core.Response, 1),
 		Context:  ctx,
 	}
-	
+
 	if data.Port != "" {
 		req.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
 		// check response cache before sending request
 	}
-	
+
 	// send the request
-	
+
 	resp, err := s.core.SendRequest(ctx, req)
 	if err != nil {
 		render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
@@ -161,4 +173,3 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 	// handle it
 
 }
-

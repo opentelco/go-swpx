@@ -26,12 +26,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-	
+
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -44,7 +45,6 @@ const (
 
 var PROVIDER_NAME = "vx"
 
-
 func init() {
 	var err error
 	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
@@ -52,12 +52,11 @@ func init() {
 		os.Exit(1)
 	}
 	logger = hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
-		Level:      hclog.Debug,
+		Name:  fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
+		Level: hclog.Debug,
 		Color: hclog.AutoColor,
 	})
-	
-	
+
 }
 
 // Provider is the implementation of the GRPC
@@ -72,6 +71,10 @@ func (g *Provider) Version() (string, error) {
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
+func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
+
+	return &provider.SetupResponse{}, nil
+}
 
 func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*core.Response, error) {
 	p.logger.Named("post-handler").Debug("processing response", "changes", 0)
@@ -79,7 +82,7 @@ func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*co
 }
 
 func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*core.Request, error) {
-	p.logger.Named("pre-handler").Debug("processing request in",  "changes", 0)
+	p.logger.Named("pre-handler").Debug("processing request in", "changes", 0)
 	return response, nil
 }
 
@@ -87,18 +90,17 @@ func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration,
 	return nil, nil
 }
 
-
 func main() {
 	prov := &Provider{logger: logger}
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{
 			shared.PluginProviderKey: &shared.ProviderPlugin{
-				Impl:   prov,
+				Impl: prov,
 			},
 		},
-		GRPCServer:       plugin.DefaultGRPCServer,
-		Logger:           logger,
+		GRPCServer: plugin.DefaultGRPCServer,
+		Logger:     logger,
 	})
-	
+
 }

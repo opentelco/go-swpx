@@ -61,7 +61,7 @@ func (w *worker) start(done chan *worker) {
 	for {
 		select {
 		case msg := <-w.messages:
-			resp := &pb_core.Response{RequestObjectId: msg.ObjectId}
+			resp := &pb_core.Response{RequestAccessId: msg.AccessId}
 
 			// do work with payload
 			err := handle(msg.Context, msg, resp, handleMsg)

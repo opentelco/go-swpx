@@ -24,11 +24,12 @@ package main
 
 import (
 	"context"
+	"testing"
+
 	"git.liero.se/opentelco/go-dnc/models/protobuf/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
-	"testing"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 )
@@ -38,7 +39,7 @@ func TestMapInterface(t *testing.T) {
 	driver := &VRPDriver{
 		logger: nil,
 		dnc:    &MockClient{},
-		conf:   shared.Configuration{},
+		conf:   &shared.Configuration{},
 	}
 
 	req := &proto.NetworkElement{

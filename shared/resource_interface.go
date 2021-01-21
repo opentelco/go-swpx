@@ -27,6 +27,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 )
@@ -39,16 +40,16 @@ type Resource interface {
 	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 
 	AllPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
-	
+
 	// Map interfaces (IF-MIB) from device with the swpx model
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
-	
+
 	// Map interfcaes from Envirnment MIB to the swpx model
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
-	
+
 	// Get SFP (transceiver) information
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
-	
+
 	// Maps transceivers to corresponding interfaces using physical port information in the wrapper
 	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
 
@@ -100,7 +101,7 @@ func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context,
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
-	resp, err := rpc.client.Version(context.Background(), &proto.Empty{})
+	resp, err := rpc.client.Version(context.Background(), &empty.Empty{})
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +117,7 @@ type ResourceGRPCServer struct {
 }
 
 // Version returns the current version
-func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*proto.VersionResponse, error) {
+func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *empty.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
 }

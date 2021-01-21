@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	
+
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -20,7 +20,7 @@ func providerFunc(provider shared.Provider, msg *Request) {
 	if err != nil {
 		logger.Debug("getting provider name failed", "error", err)
 	}
-	
+
 	logger.Debug("data from provider plugin", "provider", name, "version", ver)
 }
 
@@ -42,22 +42,29 @@ func handle(ctx context.Context, msg *Request, resp *pb_core.Response, f func(ms
 func handleMsg(msg *Request, resp *pb_core.Response) error {
 	logger.Debug("worker has payload")
 	logger.Info("selected provider", "provider", msg.ProviderPlugin)
-	
+
 	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
 	var providerConf *shared.Configuration
 	defaultConf := shared.GetConfig()
-	
+
 	// check if a provider is selected in the request
 	if msg.ProviderPlugin != "" {
+		var err error
 		provider := providers[msg.ProviderPlugin]
 		if provider == nil {
 			resp.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
 			return NewError(resp.Error.Message, ErrorCode(resp.Error.Code))
 		}
 		// run some provider funcs
+		// TODO MSG IS EMPTY BUGG
+		fmt.Println(msg.AccessId)
+		msg.Request, err = provider.PreHandler(context.Background(), msg.Request)
+		if err != nil {
+			return err
+		}
 		providerFunc(provider, msg)
 		providerConf = defaultConf
-		
+
 	} else {
 		// no provider selected, walk all providers
 		for pname, provider := range providers {
@@ -65,7 +72,7 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 			providerFunc(provider, msg)
 		}
 	}
-	
+
 	// select resource-plugin to send the requests to
 	plugin := resources[msg.ResourcePlugin]
 	if plugin == nil {
@@ -77,7 +84,7 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 		return nil
 	}
 	plugin.SetConfiguration(msg.Context, providerConf)
-	
+
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
@@ -86,32 +93,32 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 	case pb_core.Request_GET_TECHNICAL_INFO_PORT:
 		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
 	}
-	
+
 	return nil
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
 func handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
-	
+
 	req := &resource.NetworkElement{
 		Interface: "",
 		Hostname:  msg.Hostname,
 		Conf:      protoConf,
 	}
-	
+
 	physPortResponse, err := plugin.MapEntityPhysical(msg.Context, req)
 	if err != nil {
 		logger.Error("error fetching physical entities:", err.Error())
 		return err
 	}
-	
+
 	allPortInformation, err := plugin.AllPortInformation(msg.Context, req)
 	if err != nil {
 		logger.Error("error fetching port information for all interfaces:", err.Error())
 		return err
 	}
-	
+
 	var matchingInterfaces int32 = 0
 	for _, iface := range allPortInformation.Interfaces {
 		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
@@ -127,12 +134,11 @@ func handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, 
 	if err != nil {
 		logger.Error("error fetching transceiver information: ", err)
 	}
-	
+
 	resp.NetworkElement = allPortInformation
-	
+
 	return nil
 }
-
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
@@ -142,12 +148,12 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		Interface: msg.Port,
 		Conf:      protConf,
 	}
-	
+
 	mapInterfaceResponse := &resource.NetworkElementInterfaces{}
 	var cachedInterface *CachedInterface
 	var err error
-	
-	if useCache && !msg.RecreateIndex{
+
+	if useCache && !msg.RecreateIndex {
 		logger.Debug("cache enabled, pop object from cache")
 		cachedInterface, err = CacheInterface.Pop(context.TODO(), req.Hostname, req.Interface)
 		if cachedInterface != nil {
@@ -156,9 +162,8 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 			req.InterfaceIndex = cachedInterface.InterfaceIndex
 		}
 	}
-	
-	
-	js, _:= json.MarshalIndent(req, "", "  ")
+
+	js, _ := json.MarshalIndent(req, "", "  ")
 	fmt.Println(string(js))
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
@@ -172,15 +177,12 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 			}
 			return err
 		}
-		
-		
-		
-		
+
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
 			resp.PhysicalPort = val.Description
 			req.PhysicalIndex = val.Index
 		}
-		
+
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.Context, req); err != nil {
 			logger.Error("error running map interface", "err", err.Error())
 			resp.Error = &pb_core.Error{
@@ -192,19 +194,19 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
 			req.InterfaceIndex = val.Index
 		}
-		
+
 		// save in cache upon success (if enabled)
 		if useCache {
 			if err = CacheInterface.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
 				return err
 			}
 		}
-		
+
 	} else if err != nil {
 		logger.Error("error fetching from cache:", err.Error())
 		return err
 	}
-	
+
 	//if the return is 0 something went wrong
 	if req.InterfaceIndex == 0 {
 		logger.Error("error running map interface", "err", "index is zero")
@@ -214,9 +216,9 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		}
 		return err
 	}
-	
+
 	logger.Info("found index for selected interface", "index", req.InterfaceIndex)
-	
+
 	ti, err := plugin.TechnicalPortInformation(msg.Context, req)
 	if err != nil {
 		logger.Error(err.Error())
@@ -224,6 +226,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 	}
 	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
-	
+
 	return nil
 }

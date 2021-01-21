@@ -26,9 +26,8 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/provider";
 
 package provider;
 import "core.proto";
+import "google/protobuf/empty.proto";
 
-
-message Empty{}
 
 message NameResponse {
   string name = 1;
@@ -82,9 +81,13 @@ message Configuration{
   configSSH Ssh = 3;
 }
 
+message SetupConfiguration {}
+message SetupResponse {}
+
 service Provider {
-  rpc Name(Empty) returns (NameResponse);
-  rpc Version(Empty) returns (VersionResponse);
+  rpc Setup(SetupConfiguration) returns (SetupResponse);
+  rpc Name(google.protobuf.Empty) returns (NameResponse);
+  rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
   rpc PreHandler(core.Request) returns (core.Request);
 //  rpc PostHandler(core.Response) returns (core.Response);

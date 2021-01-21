@@ -49,7 +49,7 @@ message Request {
     Type type = 7;
 
     // used to locate the resource
-    string object_id = 8;
+    string access_id = 8;
     string hostname = 9;
     string port = 10;
 }
@@ -60,7 +60,7 @@ message Response{
 
     string physical_port = 3;
     Error error = 4;
-    string request_object_id = 5;
+    string request_access_id = 5;
     string execution_time = 6;
 }
 

@@ -24,10 +24,11 @@ package shared
 
 import (
 	"context"
-	
+
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
-	
+
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
@@ -39,10 +40,12 @@ type Provider interface {
 
 	// Process the request before it hits the main functions  in the Core
 	PreHandler(ctx context.Context, request *pb_core.Request) (*pb_core.Request, error)
-	
+
 	// Process the network element after data has been collected
 	// PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
 
+	// Setup and initiate configuration and other things
+	Setup(ctx context.Context, request *proto.SetupConfiguration) (*proto.SetupResponse, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -51,21 +54,24 @@ type ProviderGRPCClient struct {
 }
 
 func (p *ProviderGRPCClient) Name() (string, error) {
-	resp, err := p.client.Name(context.Background(), &proto.Empty{})
+	resp, err := p.client.Name(context.Background(), &empty.Empty{})
 	return resp.Name, err
 }
 
 func (p *ProviderGRPCClient) Version() (string, error) {
-	resp, err := p.client.Version(context.Background(), &proto.Empty{})
+	resp, err := p.client.Version(context.Background(), &empty.Empty{})
 	if err != nil {
 		return resp.Version, err
 	}
 	return resp.Version, err
 }
 
-
 func (p *ProviderGRPCClient) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
 	return p.client.PreHandler(ctx, req)
+}
+
+func (rpc *ProviderGRPCClient) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
+	return rpc.client.Setup(ctx, r)
 }
 
 // func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
@@ -82,18 +88,22 @@ type ProviderGRPCServer struct {
 	Impl Provider
 }
 
-func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *proto.Empty) (*proto.NameResponse, error) {
+func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *empty.Empty) (*proto.NameResponse, error) {
 	res, err := rpc.Impl.Name()
 	return &proto.NameResponse{Name: res}, err
 }
 
-func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *proto.Empty) (*proto.VersionResponse, error) {
+func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *empty.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
 }
 
 func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, r *pb_core.Request) (*pb_core.Request, error) {
 	return rpc.Impl.PreHandler(ctx, r)
+}
+
+func (rpc *ProviderGRPCServer) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
+	return rpc.Impl.Setup(ctx, r)
 }
 
 // func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {

@@ -23,12 +23,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"context"
+
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	provider "git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
@@ -65,16 +67,22 @@ func (p *Provider) Name() (string, error) {
 
 }
 
+func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
+	p.logger.Info("Called SETUP on default provider")
+	return &provider.SetupResponse{}, nil
+}
+
 func (p *Provider) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
 	return req, nil
 }
+
 // func (p *Provider)  PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {return nil,nil}
 // func (p *Provider)  PostHandler(ctx context.Context, response *core.Response) (*core.Response, error) {return nil,nil}
 
 func main() {
 	logger = hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
-		Level:      hclog.Trace,
+		Name:  fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
+		Level: hclog.Trace,
 	})
 
 	plugin.Serve(&plugin.ServeConfig{
