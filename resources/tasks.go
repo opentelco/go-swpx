@@ -72,6 +72,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 }
 
 // createMsg uses the pbuf transport for DNC..
+// Default IF-MIB values
 func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
@@ -93,7 +94,6 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 			{Oid: fmt.Sprintf(oids.IfAdminStatusF, index), Name: "ifAdminStatus", Type: metric.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfOperStatusF, index), Name: "ifOperStatus", Type: metric.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfLastChangeF, index), Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
-
 			{Oid: fmt.Sprintf(oids.IfHighSpeedF, index), Name: "ifHighSpeed", Type: metric.MetricType_INT},
 		},
 	}
@@ -174,11 +174,6 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 			{Oid: fmt.Sprintf(oids.IfInUcastPktsF, index), Name: "ifInUcastPkts", Type: metric.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfInBroadcastPktsF, index), Name: "ifInBroadcastPkts", Type: metric.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfInMulticastPktsF, index), Name: "ifInMulticastPkts", Type: metric.MetricType_INT},
-
-			// huawei spec.
-			{Oid: fmt.Sprintf(oids.HuaIfEtherStatInCRCPktsF, index), Name: "HuaIfEtherStatInCRCPkts", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfEtherStatInPausePktsF, index), Name: "HuaIfEtherStatInPausePkts", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfEtherStatOutPausePktsF, index), Name: "HuaIfEtherStatOutPausePkts", Type: metric.MetricType_INT},
 		},
 	}
 

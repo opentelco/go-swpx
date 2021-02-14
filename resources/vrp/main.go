@@ -276,7 +276,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	var msgs []*transport.Message
 	if el.InterfaceIndex != 0 {
 		msgs = append(msgs, resources.CreateSinglePortMsg(el.InterfaceIndex, el, conf))
-		msgs = append(msgs, resources.CreateTaskGetPortStats(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
 	} else {
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
@@ -286,6 +286,8 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
+
+	// Create the model
 	elementInterface := &networkelement.Interface{
 		Stats: &networkelement.InterfaceStatistics{
 			Input:  &networkelement.InterfaceStatisticsInput{},
@@ -295,7 +297,6 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	var err error
 
 	for _, msg := range msgs {
-		d.logger.Debug("sending msg")
 		reply, err := d.dnc.Put(ctx, msg)
 		if err != nil {
 			d.logger.Error(err.Error())
@@ -304,18 +305,21 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 
 		switch task := reply.Task.(type) {
 		case *transport.Message_Snmpc:
-			d.logger.Debug("the reply returns from dnc", "status", reply.Status.String(), "completed", reply.Completed.String(), "execution_time", reply.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+			d.logger.Debug("the reply returns from dnc",
+				"status", reply.Status.String(),
+				"completed", reply.Completed.String(),
+				"execution_time", reply.ExecutionTime.String(),
+				"size", len(task.Snmpc.Metrics))
 
 			elementInterface.Index = el.InterfaceIndex
 
 			for _, m := range task.Snmpc.Metrics {
-				d.logger.Debug(m.GetStringValue())
 				switch {
 				case strings.HasPrefix(m.Oid, oids.SysPrefix):
 					resources.GetSystemInformation(m, ne)
 
 				case strings.HasPrefix(m.Oid, oids.HuaPrefix):
-					resources.GetHuaweiInformation(m, elementInterface)
+					d.getHuaweiInterfaceStats(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
 					d.getIfEntryInformation(m, elementInterface)

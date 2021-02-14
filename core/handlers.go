@@ -2,8 +2,6 @@ package core
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
@@ -169,7 +167,7 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 	var err error
 
 	if useCache && !msg.RecreateIndex {
-		logger.Debug("cache enabled, pop object from cache")
+		logger.Debug("cache is enabled, pop index from cache")
 		cachedInterface, err = CacheInterface.Pop(context.TODO(), req.Hostname, req.Interface)
 		if cachedInterface != nil {
 			resp.PhysicalPort = cachedInterface.Port
@@ -178,8 +176,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		}
 	}
 
-	js, _ := json.MarshalIndent(req, "", "  ")
-	fmt.Println(string(js))
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !useCache {
 		var physPortResponse *resource.NetworkElementInterfaces
@@ -239,7 +235,6 @@ func handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plu
 		logger.Error(err.Error())
 		return err
 	}
-	logger.Info("calling technical info ok ", "result", ti)
 	resp.NetworkElement = ti
 
 	return nil

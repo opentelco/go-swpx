@@ -146,7 +146,8 @@ const (
 	//Pause
 	HuaIfEtherStatInPausePkts  = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.18"
 	HuaIfEtherStatOutPausePkts = "	1.3.6.1.4.1.2011.5.25.41.1.6.1.1.22"
-	// PAuse with format
+
+	// Pause with format
 	HuaIfEtherStatInPausePktsF  = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.18.%d"
 	HuaIfEtherStatOutPausePktsF = ".1.3.6.1.4.1.2011.5.25.41.1.6.1.1.22.%d"
 
@@ -163,7 +164,7 @@ const (
 	HuaIfVRPOpticalRxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.8.%d"
 	HuaIfVRPOpticalTxPowerF     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.9.%d"
 	HuaIfVRPVendorPNF           = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.25.%d"
-	
+
 	HuaIfVRPOpticalVendorSN    = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.4"
 	HuaIfVRPOpticalTemperature = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.5"
 	HuaIfVRPOpticalVoltage     = ".1.3.6.1.4.1.2011.5.25.31.1.1.3.1.6"

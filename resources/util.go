@@ -143,22 +143,6 @@ func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 
 }
 
-func GetHuaweiInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
-	switch {
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
-		elementInterface.Stats.Input.CrcErrors = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
-		elementInterface.Stats.Input.Pauses = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
-		elementInterface.Stats.Resets = m.GetIntValue()
-
-	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
-		elementInterface.Stats.Output.Pauses = m.GetIntValue()
-	}
-}
-
 func GetSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	switch m.Oid {
 	case oids.SysContact:

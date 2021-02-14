@@ -25,6 +25,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
@@ -45,6 +46,8 @@ const (
 	SDD_VLAN            = 296
 )
 
+var SDDNetwork *net.IPNet
+
 var PROVIDER_NAME = "sait"
 
 func init() {
@@ -58,6 +61,12 @@ func init() {
 		Level: hclog.Debug,
 		Color: hclog.AutoColor,
 	})
+
+	_, SDDNetwork, err = net.ParseCIDR("192.168.112.0/23")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 }
 
@@ -110,6 +119,21 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			return request, fmt.Errorf("access id was not found with selected provider")
 		}
 	} else {
+		var ip net.IP
+		ip = net.ParseIP(request.Hostname)
+		if ip != nil {
+			addrs, err := net.LookupHost(request.Hostname)
+			if err != nil || len(addrs) == 0 {
+				p.logger.Error("could not find host", "host", request.Hostname, "error", err)
+				return nil, fmt.Errorf("could not find host, %w", err)
+			}
+			ip = net.ParseIP(addrs[0])
+		}
+
+		if SDDNetwork.Contains(ip) {
+			request.ResourcePlugin = "raycore"
+		}
+
 		p.logger.Named("pre-handler").Debug("access id is empty")
 	}
 

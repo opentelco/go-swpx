@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
+	"log"
+	"net"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
-	"log"
-	"net"
 
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -20,6 +21,7 @@ type GRPCServer struct {
 
 //  Request to SWP-core
 func (s *GRPCServer) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
+
 	req := &core.Request{
 		Request: request,
 		// Metadata

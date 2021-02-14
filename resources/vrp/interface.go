@@ -1,12 +1,68 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
+	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/segmentio/ksuid"
 )
+
+func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: false,
+			NonRepeaters:       12,
+			MaxIterations:      1,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_GET,
+		Oids: []*snmpc.Oid{
+
+			// OUT
+			{Oid: fmt.Sprintf(oids.IfOutErrorsF, index), Name: "ifOutErrors", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOutOctetsF, index), Name: "ifOutOctets", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOutUcastPktsF, index), Name: "ifOutUcastPkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOutBroadcastPktsF, index), Name: "ifOutBroadcastPkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOutMulticastPktsF, index), Name: "ifOutMulticastPkts", Type: metric.MetricType_INT},
+
+			// In
+			{Oid: fmt.Sprintf(oids.IfInErrorsF, index), Name: "ifInErrors", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfInOctetsF, index), Name: "ifInOctetsF", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfInUcastPktsF, index), Name: "ifInUcastPkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfInBroadcastPktsF, index), Name: "ifInBroadcastPkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfInMulticastPktsF, index), Name: "ifInMulticastPkts", Type: metric.MetricType_INT},
+
+			// huawei spec.
+			{Oid: fmt.Sprintf(oids.HuaIfEtherStatInCRCPktsF, index), Name: "HuaIfEtherStatInCRCPkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfEtherStatInPausePktsF, index), Name: "HuaIfEtherStatInPausePkts", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.HuaIfEtherStatOutPausePktsF, index), Name: "HuaIfEtherStatOutPausePkts", Type: metric.MetricType_INT},
+		},
+	}
+
+	// task.Parameters = params
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_SNMP,
+		Task:    &transport.Message_Snmpc{Snmpc: task},
+		Status:  shared2.Status_NEW,
+		Created: &timestamp.Timestamp{},
+	}
+	return message
+}
 
 func (v *VRPDriver) getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
@@ -46,5 +102,21 @@ func (v *VRPDriver) getIfEntryInformation(m *metric.Metric, elementInterface *ne
 	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
 		elementInterface.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
 
+	}
+}
+
+func (v *VRPDriver) getHuaweiInterfaceStats(m *metric.Metric, elementInterface *networkelement.Interface) {
+	switch {
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
+		elementInterface.Stats.Input.CrcErrors = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInPausePkts):
+		elementInterface.Stats.Input.Pauses = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEthIfStatReset):
+		elementInterface.Stats.Resets = m.GetIntValue()
+
+	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatOutPausePkts):
+		elementInterface.Stats.Output.Pauses = m.GetIntValue()
 	}
 }

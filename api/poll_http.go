@@ -24,7 +24,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -130,8 +129,6 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
 	}
-	ti, _ := json.Marshal(data)
-	s.logger.Info("TI:", string(ti))
 	if err := data.Parse(); err != nil {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
@@ -156,11 +153,6 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		// Metadata
 		Response: make(chan *pb_core.Response, 1),
 		Context:  ctx,
-	}
-
-	if data.Port != "" {
-		req.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
-		// check response cache before sending request
 	}
 
 	// send the request

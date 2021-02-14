@@ -74,23 +74,26 @@ func (r *Request) GetCacheTTL() time.Duration {
 // SendRequest to CORE
 func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error) {
 
+	// TODO: fix the request type so it matches the expected output
+	if request.Type == pb_core.Request_GET_TECHNICAL_INFO && (request.Port != "" || request.AccessId != "") {
+		request.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
+		// check response cache before sending request
+	}
 	// TODO: move to handler, provider calls should not care about this?
 	// if recreate is set no use to get the cache
 	if !request.RecreateIndex && request.GetCacheTTL() != 0 {
-		cr, err := CacheResponse.Pop(ctx, request.Hostname, request.Port, request.Type)
+		cr, err := CacheResponse.Pop(ctx, request.Hostname, request.Port, request.AccessId, request.Type)
 		if err != nil {
 			c.logger.Warn("could not pop from cache", "error", err)
 		}
 		// if a cached response exists
 		if cr != nil {
-			if time.Since(cr.Timestamp.AsTime()) < request.GetCacheTTL() {
+			c.logger.Debug("found cached item", "age", time.Since(cr.Timestamp))
+			if time.Since(cr.Timestamp) < request.GetCacheTTL() {
 				c.logger.Info("found response in cache")
 				return cr.Response, nil
 			}
-			// if response is cached but ttl ran out, clear it from the cache
-			if err := CacheResponse.Clear(context.TODO(), request.Hostname, request.Port, request.Type); err != nil {
-				logger.Error("error clearing cache:", err)
-			}
+
 		}
 	}
 
@@ -99,7 +102,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 	for {
 		select {
 		case resp := <-request.Response:
-			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.Type, resp); err != nil {
+			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
 

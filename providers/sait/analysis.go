@@ -4,7 +4,7 @@
  * File Created: Sunday, 14th February 2021 2:19:48 pm
  * Author: Mathias Ehrlin (mathias.ehrlin@vx.se)
  * -----
- * Last Modified: Sunday, 14th February 2021 2:34:29 pm
+ * Last Modified: Sunday, 14th February 2021 9:11:06 pm
  * Modified By: Mathias Ehrlin (mathias.ehrlin@vx.se>)
  * -----
  * Copyright - 2021 VX Service Delivery AB
@@ -31,6 +31,9 @@ const (
 func doAnalysis(n *networkelement.Element, changes *int) {
 
 	for ix, i := range n.Interfaces {
+		if i.Transceiver == nil || i.Transceiver.Stats == nil {
+			continue
+		}
 		for _, stats := range i.Transceiver.Stats {
 			if n.Interfaces[ix].Transceiver.Analysis == nil {
 				n.Interfaces[ix].Transceiver.Analysis = make([]*analysis.Analysis, 0)

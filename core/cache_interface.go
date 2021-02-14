@@ -2,13 +2,11 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	
+
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -46,7 +44,7 @@ func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf shared.Co
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return c, nil
 }
 
@@ -56,9 +54,12 @@ type ifCacheImpl struct {
 	logger hclog.Logger
 }
 
-
 func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedInterface, error) {
-	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface})
+
+	opts := &options.FindOneOptions{
+		Sort: bson.M{"_id": -1},
+	}
+	res := c.col.FindOne(context.Background(), bson.M{"hostname": hostname, "port": iface}, opts)
 	obj := &CachedInterface{}
 	if err := res.Decode(obj); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -70,15 +71,6 @@ func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedI
 }
 
 func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
-	js, _ := json.MarshalIndent(ne, "", "  ")
-	fmt.Println(string(js))
-	
-	js, _ = json.MarshalIndent(interfaces, "", "  ")
-	fmt.Println(string(js))
-	
-	js, _ = json.MarshalIndent(phys, "", "  ")
-	fmt.Println(string(js))
-	
 	for k, v := range interfaces.Interfaces {
 		if physInterface, ok := phys.Interfaces[k]; ok {
 			_, err := c.col.InsertOne(context.Background(), bson.M{
@@ -89,7 +81,7 @@ func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, inte
 			})
 
 			if err != nil {
-				logger.Error("error saving interfaceinfo in cache","error", err, "hostname", ne.Hostname, "port", v.Description)
+				logger.Error("error saving interfaceinfo in cache", "error", err, "hostname", ne.Hostname, "port", v.Description)
 				return err
 			}
 
