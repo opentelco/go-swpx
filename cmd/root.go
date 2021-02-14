@@ -38,7 +38,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var port string
+var httpPort string
+var grpcPort string
 var logger hclog.Logger
 
 func init() {
@@ -46,7 +47,8 @@ func init() {
 	Root.AddCommand(Start)
 	Root.AddCommand(Test)
 
-	Start.Flags().StringVarP(&port, "port", "p", "1337", "the port to use")
+	Start.Flags().StringVarP(&httpPort, "port", "p", "1337", "the port to use for http")
+	Start.Flags().StringVarP(&grpcPort, "grpc-port", "g", "1338", "the port to use for grpc")
 }
 
 const APP_NAME = "go-swpx"
@@ -77,14 +79,24 @@ var Start = &cobra.Command{
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it.
 		
-		
+
+		// HTTP
 		server := api.NewServer(c, logger)
 		go func() {
-			err = server.ListenAndServe(":" + port)
+			err = server.ListenAndServe(":" + httpPort)
 			if err != nil {
 				panic(err)
 			}
 		}()
+		// GRPC
+		grpcServer := api.NewGRPCServer(c, logger)
+		go func() {
+			err = grpcServer.ListenAndServe(":" + grpcPort)
+			if err != nil {
+				panic(err)
+			}
+		}()
+
 		signalChan := make(chan os.Signal, 1)
 		
 		signal.Notify(
