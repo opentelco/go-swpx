@@ -28,15 +28,15 @@ import (
 	"os"
 	"strings"
 	"time"
-	
+
 	"github.com/hashicorp/go-hclog"
-	
+
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/gorilla/context"
-	
+
 	"git.liero.se/opentelco/go-swpx/core"
-	
+
 	"github.com/go-chi/chi"
 )
 
@@ -62,8 +62,8 @@ func (d TimeoutDuration) MarshalJSON() (b []byte, err error) {
 
 type Server struct {
 	*chi.Mux
-	
-	core *core.Core
+
+	core   *core.Core
 	logger hclog.Logger
 }
 
@@ -81,13 +81,13 @@ func NewServer(core *core.Core, logger hclog.Logger) *Server {
 			Level:  hclog.Debug,
 		})
 	}
-	
+
 	srv := &Server{
-		Mux:      chi.NewRouter(),
-		core: core,
+		Mux:    chi.NewRouter(),
+		core:   core,
 		logger: logger,
 	}
-	
+
 	srv.Use(middleware.RequestID,
 		middleware.RealIP,
 		middleware.Recoverer,
@@ -100,7 +100,7 @@ func NewServer(core *core.Core, logger hclog.Logger) *Server {
 	})
 
 	srv.Route("/v1", func(r chi.Router) {
-		r.Mount("/ti", NewServiceTechnicalInformation(core, logger))
+		r.Mount("/poll", NewPollService(core, logger))
 	})
 	return srv
 }

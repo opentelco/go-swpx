@@ -101,26 +101,26 @@ func (r *Poll) Parse() error {
 	return nil
 }
 
-type ServiceTechnicalInformation struct {
+type PollService struct {
 	*chi.Mux
 	core    *core.Core
 	logger  hclog.Logger
 	storage interface{}
 }
 
-func NewServiceTechnicalInformation(core *core.Core, logger hclog.Logger) *ServiceTechnicalInformation {
-	h := &ServiceTechnicalInformation{
+func NewPollService(core *core.Core, logger hclog.Logger) *PollService {
+	h := &PollService{
 		Mux: chi.NewRouter(),
 
 		core:   core,
 		logger: logger,
 	}
-	h.Post("/", h.GetTI)
+	h.Post("/", h.Poll)
 	return h
 }
 
-// GetTI is the ti
-func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Request) {
+// Poll is the ti
+func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	data := &Poll{
 		logger: s.logger,
 	}
