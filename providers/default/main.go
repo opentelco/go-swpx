@@ -76,6 +76,10 @@ func (p *Provider) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_co
 	return req, nil
 }
 
+func (p *Provider) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
+	return resp, nil
+}
+
 // func (p *Provider)  PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {return nil,nil}
 // func (p *Provider)  PostHandler(ctx context.Context, response *core.Response) (*core.Response, error) {return nil,nil}
 

@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
@@ -42,7 +43,7 @@ type Provider interface {
 	PreHandler(ctx context.Context, request *pb_core.Request) (*pb_core.Request, error)
 
 	// Process the network element after data has been collected
-	// PostHandler(ctx context.Context,  response *core.Response) (*core.Response, error)
+	PostHandler(ctx context.Context, response *core.Response) (*pb_core.Response, error)
 
 	// Setup and initiate configuration and other things
 	Setup(ctx context.Context, request *proto.SetupConfiguration) (*proto.SetupResponse, error)
@@ -68,6 +69,10 @@ func (p *ProviderGRPCClient) Version() (string, error) {
 
 func (p *ProviderGRPCClient) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
 	return p.client.PreHandler(ctx, req)
+}
+
+func (p *ProviderGRPCClient) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
+	return p.client.PostHandler(ctx, resp)
 }
 
 func (rpc *ProviderGRPCClient) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
@@ -102,17 +107,13 @@ func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, r *pb_core.Reques
 	return rpc.Impl.PreHandler(ctx, r)
 }
 
+func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
+	return rpc.Impl.PostHandler(ctx, resp)
+}
+
 func (rpc *ProviderGRPCServer) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
 	return rpc.Impl.Setup(ctx, r)
 }
-
-// func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, resp *pb_core.Request) (*pb_core.Request, error)  {
-// 	return rpc.Impl.PreHandler(ctx, resp)
-// }
-//
-// func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response)  (*pb_core.Response, error) {
-// 	return rpc.Impl.PostHandler(ctx, resp)
-// }
 
 type ProviderPlugin struct {
 	// Implement the plugin interface

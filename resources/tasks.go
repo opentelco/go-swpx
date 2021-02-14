@@ -24,6 +24,7 @@ package resources
 
 import (
 	"fmt"
+
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
@@ -249,41 +250,6 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configurati
 		Type: snmpc.Type_WALK,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metric.MetricType_STRING},
-		},
-	}
-
-	// task.Parameters = params
-	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
-	}
-	return message
-}
-
-func CreateVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &snmpc.Task{
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: true,
-			MaxIterations:      1,
-			NonRepeaters:       0,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_GET,
-		Oids: []*snmpc.Oid{
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVendorSNF, el.PhysicalIndex), Name: "hwEntityOpticalVendorSn", Type: metric.MetricType_STRING},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTemperatureF, el.PhysicalIndex), Name: "hwEntityOpticalTemperature", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVoltageF, el.PhysicalIndex), Name: "hwEntityOpticalVoltage", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalBiasF, el.PhysicalIndex), Name: "hwEntityOpticalBiasCurrent", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalRxPowerF, el.PhysicalIndex), Name: "hwEntityOpticalRxPower", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTxPowerF, el.PhysicalIndex), Name: "hwEntityOpticalTxPower", Type: metric.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPVendorPNF, el.PhysicalIndex), Name: "hwEntityOpticalVenderPn", Type: metric.MetricType_STRING},
 		},
 	}
 

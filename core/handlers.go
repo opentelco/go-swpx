@@ -27,9 +27,10 @@ func providerFunc(provider shared.Provider, msg *Request) {
 func handle(ctx context.Context, msg *Request, resp *pb_core.Response, f func(msg *Request, resp *pb_core.Response) error) error {
 	c := make(chan error, 1)
 	go func() { c <- f(msg, resp) }()
+
 	select {
 	case <-ctx.Done():
-		logger.Error("got a timeout, letrs go")
+		logger.Error("timeout reached or context cancelled")
 		return ctx.Err()
 	case err := <-c:
 		if err != nil {
@@ -40,37 +41,29 @@ func handle(ctx context.Context, msg *Request, resp *pb_core.Response, f func(ms
 }
 
 func handleMsg(msg *Request, resp *pb_core.Response) error {
-	logger.Debug("worker has payload")
+	var err error
 	logger.Info("selected provider", "provider", msg.ProviderPlugin)
 
 	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
 	var providerConf *shared.Configuration
 	defaultConf := shared.GetConfig()
 
+	var selectedProvider shared.Provider
 	// check if a provider is selected in the request
 	if msg.ProviderPlugin != "" {
 		var err error
-		provider := providers[msg.ProviderPlugin]
-		if provider == nil {
+		selectedProvider = providers[msg.ProviderPlugin]
+		if selectedProvider == nil {
 			resp.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
 			return NewError(resp.Error.Message, ErrorCode(resp.Error.Code))
 		}
-		// run some provider funcs
-		// TODO MSG IS EMPTY BUGG
-		fmt.Println(msg.AccessId)
-		msg.Request, err = provider.PreHandler(context.Background(), msg.Request)
+		// Pre-process the request with provider func
+		msg.Request, err = selectedProvider.PreHandler(context.Background(), msg.Request)
 		if err != nil {
 			return err
 		}
-		providerFunc(provider, msg)
 		providerConf = defaultConf
 
-	} else {
-		// no provider selected, walk all providers
-		for pname, provider := range providers {
-			logger.Debug("parsing provider", "provider", pname)
-			providerFunc(provider, msg)
-		}
 	}
 
 	// select resource-plugin to send the requests to
@@ -83,18 +76,40 @@ func handleMsg(msg *Request, resp *pb_core.Response) error {
 		}
 		return nil
 	}
-	plugin.SetConfiguration(msg.Context, providerConf)
+
+	err = plugin.SetConfiguration(msg.Context, providerConf)
+	if err != nil {
+		return nil
+	}
 
 	// implementation of different messages that SWP-X can handle right now
 	// TODO is this the best way to to this.. ?
 	switch msg.Type {
 	case pb_core.Request_GET_TECHNICAL_INFO:
-		return handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
+		err := handleGetTechnicalInformationElement(msg, resp, plugin, providerConf)
+		if err != nil {
+			return err
+		}
 	case pb_core.Request_GET_TECHNICAL_INFO_PORT:
-		return handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
+		err := handleGetTechnicalInformationPort(msg, resp, plugin, providerConf)
+		if err != nil {
+			return err
+		}
+	}
+
+	if selectedProvider != nil {
+		// Post-Process the provider
+
+		nr, err := selectedProvider.PostHandler(context.Background(), resp)
+		if err != nil {
+			return nil
+		}
+		// cant keep the pointer over the wire
+		resp.NetworkElement = nr.NetworkElement
 	}
 
 	return nil
+
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element

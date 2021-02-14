@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
@@ -41,6 +42,7 @@ var logger hclog.Logger
 
 const (
 	VERSION_BASE string = "1.0-beta"
+	SDD_VLAN            = 296
 )
 
 var PROVIDER_NAME = "sait"
@@ -72,9 +74,22 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*core.Response, error) {
-	p.logger.Named("post-handler").Debug("processing response", "changes", 0)
-	return request, nil
+func (p *Provider) PostHandler(ctx context.Context, r *core.Response) (*core.Response, error) {
+	changes := 0
+	for ri, i := range r.NetworkElement.Interfaces {
+		for _, d := range i.DhcpTable {
+			if d.Vlan == SDD_VLAN {
+				p.logger.Debug("found SDD on interface", "interface", i.Description, "sdd-ipAddr", d.IpAddress, "sdd-mac", d.HardwareAddress)
+				r.NetworkElement.Interfaces[ri].ConnectedSdd = &networkelement.Element{BridgeMacAddress: d.HardwareAddress, Hostname: d.IpAddress}
+				changes++
+			}
+		}
+	}
+
+	doAnalysis(r.NetworkElement, &changes)
+
+	p.logger.Named("post-handler").Debug("processing response", "changes", changes)
+	return r, nil
 }
 
 func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
@@ -92,7 +107,7 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			}
 		} else {
 			p.logger.Named("pre-handler").Warn("could not find access id on provider", "access_id", request.AccessId)
-			return nil, fmt.Errorf("access id was not found with selected provider")
+			return request, fmt.Errorf("access id was not found with selected provider")
 		}
 	} else {
 		p.logger.Named("pre-handler").Debug("access id is empty")

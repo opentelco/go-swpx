@@ -25,6 +25,7 @@ package networkelement;
 
 import "google/protobuf/timestamp.proto";
 import "traffic_policy.proto";
+import "analysis.proto";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelement";
 
@@ -178,6 +179,9 @@ message Transceiver {
   string part_number = 8;
   string manufacturing_date = 9;
   repeated TransceiverStatistics stats = 10;
+  
+  repeated analysis.Analysis analysis = 11;
+  
 }
 
 message TransceiverStatistics {

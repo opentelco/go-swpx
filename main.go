@@ -36,6 +36,7 @@ import (
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/core.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/network_element.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/traffic_policy.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/analysis.proto
 
 func main() {
 	if err := cmd.Root.Execute(); err != nil {

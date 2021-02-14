@@ -1,14 +1,16 @@
 package resources
 
 import (
+	"math"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 var ReFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
@@ -232,30 +234,9 @@ func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
 	return iface
 }
 
-func ParseTransceiverMessage(task *transport.Message_Snmpc, startIndex int) *networkelement.Transceiver {
-	tempInt := task.Snmpc.Metrics[startIndex+1].GetIntValue()
-	voltInt := task.Snmpc.Metrics[startIndex+2].GetIntValue()
-	curInt := task.Snmpc.Metrics[startIndex+3].GetIntValue()
-	rxInt := task.Snmpc.Metrics[startIndex+4].GetIntValue()
-	txInt := task.Snmpc.Metrics[startIndex+5].GetIntValue()
-
-	// no transceiver available, return nil
-	if tempInt == -255 || rxInt == -1 || txInt == -1 {
-		return nil
-	}
-
-	val := &networkelement.Transceiver{
-		SerialNumber: strings.Trim(task.Snmpc.Metrics[startIndex+0].GetStringValue(), " "),
-		Stats: []*networkelement.TransceiverStatistics{
-			{
-				Temp:    float64(tempInt),
-				Voltage: float64(voltInt) / 1000,
-				Current: float64(curInt) / 1000,
-				Rx:      float64(rxInt) / 1000,
-				Tx:      float64(txInt) / 1000,
-			},
-		},
-		PartNumber: task.Snmpc.Metrics[startIndex+6].GetStringValue(),
-	}
-	return val
+// convert uW(int) to dB(float64)
+// rounds to 2 nearest decimals
+func ConvertToDb(uw int64) float64 {
+	v := 10 * math.Log10(float64(uw)/1000)
+	return math.Round(v*100) / 100
 }

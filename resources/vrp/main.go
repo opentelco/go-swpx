@@ -30,20 +30,20 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	
+
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"github.com/pkg/errors"
-	
+
 	"git.liero.se/opentelco/go-swpx/resources"
-	
+
 	"git.liero.se/opentelco/go-swpx/shared/oids"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"github.com/nats-io/nats.go"
-	
+
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -123,12 +123,12 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 				d.logger.Error("can't convert phys.port to int: ", err.Error())
 				return nil, err
 			}
-			
+
 			if m.Error != "" {
 				d.logger.Error("problem with snmp collection", "error", m.Error)
-				
+
 			}
- 			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
+			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
 				Alias:       m.Name,
 				Index:       int64(index),
 				Description: m.GetStringValue(),
@@ -156,7 +156,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 	case *transport.Message_Snmpc:
 		for i := 0; i < len(task.Snmpc.Metrics); i += 7 {
 			index, _ := strconv.Atoi(resources.ReFindIndexinOID.FindString(task.Snmpc.Metrics[i].Oid))
-			if transceiver := resources.ParseTransceiverMessage(task, i); transceiver != nil {
+			if transceiver := d.parseTransceiverMessage(task, i); transceiver != nil {
 				result[int32(index)] = transceiver
 			}
 		}
@@ -175,7 +175,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	conf := shared.Proto2conf(el.Conf)
 
-	vrpMsg := resources.CreateVRPTransceiverMsg(el, conf)
+	vrpMsg := createVRPTransceiverMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
 		d.logger.Error("transceiver put error", err.Error())
@@ -185,7 +185,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		if len(task.Snmpc.Metrics) >= 7 {
-			return resources.ParseTransceiverMessage(task, 0), nil
+			return d.parseTransceiverMessage(task, 0), nil
 		}
 	}
 	return nil, errors.Errorf("Unsupported message type")

@@ -91,5 +91,5 @@ service Provider {
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
   rpc PreHandler(core.Request) returns (core.Request);
-//  rpc PostHandler(core.Response) returns (core.Response);
+  rpc PostHandler(core.Response) returns (core.Response);
 }

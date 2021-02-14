@@ -1,0 +1,37 @@
+/*
+ * File: analysis.proto
+ * Project: src
+ * File Created: Sunday, 14th February 2021 1:47:04 pm
+ * Author: Mathias Ehrlin (mathias.ehrlin@vx.se)
+ * -----
+ * Last Modified: Sunday, 14th February 2021 1:56:06 pm
+ * Modified By: Mathias Ehrlin (mathias.ehrlin@vx.se>)
+ * -----
+ * Copyright - 2021 VX Service Delivery AB
+ * 
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * -----
+ */
+
+
+
+syntax = "proto3";
+package analysis;
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/analysis";
+
+
+
+message Analysis {
+    enum Level {
+        NOT_SET = 0;
+        FAILURE = 1;
+        WARNING = 2;
+        OK = 3;
+    }
+    Level level = 1;
+    string message = 2;
+    string value = 3;
+    string threshold = 4;
+    string type = 5;
+}
