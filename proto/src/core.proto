@@ -25,11 +25,13 @@ package core;
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/core";
 
 import "network_element.proto";
+import "google/protobuf/empty.proto";
 
 message Error {
     string message = 1;
     int32 code = 2;
 }
+
 
 message Request {
     // settings for the request
@@ -41,7 +43,7 @@ message Request {
     string cache_ttl = 6;
 
     enum Type {
-        NOIT_SET = 0;
+        NOT_SET = 0;
         GET_TECHNICAL_INFO = 1;
         GET_TECHNICAL_INFO_PORT = 2;
     }
@@ -64,7 +66,41 @@ message Response{
     string execution_time = 6;
 }
 
+
+message CommandRequest {}
+message CommandResponse {}
+message InformationResponse {}
+
 service Core {
-    rpc GetTechnicalInformation(Request) returns (Response);
+    // SWP Polling call to get technical Information
+    rpc Poll(Request) returns (Response);
+
+    // Send a command to a network device through the Poller
+    rpc Command(CommandRequest) returns (CommandResponse);
+    
+    // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
+    rpc Information(google.protobuf.Empty) returns (InformationResponse);
 }
 
+
+
+message ProvideCPERequest {}
+message ProvideCPEResponse {}
+message ProvideAccessRequest {}
+message ProvideAccessResponse {}
+
+// Provide 
+service Provide {
+    // Ask provider to return a valid CPE for a access
+    rpc CPE(ProvideCPERequest) returns (ProvideCPEResponse);
+    
+    // Ask a provider to return information about a selected access
+    rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
+
+}
+
+
+
+// gRPC.Provide.CPE()
+// gRPC.Provide.Access()
+// gRPC.Core.Poll()

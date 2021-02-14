@@ -86,6 +86,7 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			p.logger.Named("pre-handler").Info("found access ID on provider", "access_id", request.AccessId, "network_element", access.NetworkElement, "port", access.Interface)
 			request.Hostname = access.NetworkElement
 			request.Port = access.Interface
+			request.ResourcePlugin = access.ResourcePlugin
 		} else {
 			p.logger.Named("pre-handler").Warn("could not find access id on provider", "access_id", request.AccessId)
 			return nil, fmt.Errorf("access id was not found with selected provider")

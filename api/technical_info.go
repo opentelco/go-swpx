@@ -47,7 +47,7 @@ type TechnicalInformationRequest struct {
 	Hostname      string          `json:"hostname"`
 	Port          string          `json:"port"`
 	Provider      string          `json:"provider"`
-	Driver        string          `json:"driver"`
+	Driver        string          `json:"driver"` // optional, need to be able to set with provider
 	Region        string          `json:"region"`
 	RecreateIndex bool            `json:"recreate_index"`
 	Timeout       TimeoutDuration `json:"timeout"`
@@ -144,11 +144,13 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 			ResourcePlugin:         data.Driver,
 			RecreateIndex:          data.RecreateIndex,
 			DisableDistributedLock: false,
-			Timeout:                data.Timeout.String(),
-			CacheTtl:               data.CacheTTL.String(),
-			Hostname:               data.Hostname,
-			Port:                   data.Port,
-			Type:                   pb_core.Request_GET_TECHNICAL_INFO,
+
+			Timeout:  data.Timeout.String(),
+			CacheTtl: data.CacheTTL.String(),
+			AccessId: data.AccessId, // if set Hostname and port should be overriden
+			Hostname: data.Hostname,
+			Port:     data.Port,
+			Type:     pb_core.Request_GET_TECHNICAL_INFO,
 		},
 
 		// Metadata

@@ -8,10 +8,10 @@ import (
 	fmt "fmt"
 	core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	proto "github.com/golang/protobuf/proto"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	math "math"
 )
 
@@ -628,8 +628,8 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ProviderClient interface {
 	Setup(ctx context.Context, in *SetupConfiguration, opts ...grpc.CallOption) (*SetupResponse, error)
-	Name(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NameResponse, error)
-	Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	Name(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NameResponse, error)
+	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	PreHandler(ctx context.Context, in *core.Request, opts ...grpc.CallOption) (*core.Request, error)
 }
 
@@ -650,7 +650,7 @@ func (c *providerClient) Setup(ctx context.Context, in *SetupConfiguration, opts
 	return out, nil
 }
 
-func (c *providerClient) Name(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NameResponse, error) {
+func (c *providerClient) Name(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NameResponse, error) {
 	out := new(NameResponse)
 	err := c.cc.Invoke(ctx, "/provider.Provider/Name", in, out, opts...)
 	if err != nil {
@@ -659,7 +659,7 @@ func (c *providerClient) Name(ctx context.Context, in *empty.Empty, opts ...grpc
 	return out, nil
 }
 
-func (c *providerClient) Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
+func (c *providerClient) Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/provider.Provider/Version", in, out, opts...)
 	if err != nil {
@@ -680,8 +680,8 @@ func (c *providerClient) PreHandler(ctx context.Context, in *core.Request, opts 
 // ProviderServer is the server API for Provider service.
 type ProviderServer interface {
 	Setup(context.Context, *SetupConfiguration) (*SetupResponse, error)
-	Name(context.Context, *empty.Empty) (*NameResponse, error)
-	Version(context.Context, *empty.Empty) (*VersionResponse, error)
+	Name(context.Context, *emptypb.Empty) (*NameResponse, error)
+	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
 	PreHandler(context.Context, *core.Request) (*core.Request, error)
 }
 
@@ -692,10 +692,10 @@ type UnimplementedProviderServer struct {
 func (*UnimplementedProviderServer) Setup(ctx context.Context, req *SetupConfiguration) (*SetupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Setup not implemented")
 }
-func (*UnimplementedProviderServer) Name(ctx context.Context, req *empty.Empty) (*NameResponse, error) {
+func (*UnimplementedProviderServer) Name(ctx context.Context, req *emptypb.Empty) (*NameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Name not implemented")
 }
-func (*UnimplementedProviderServer) Version(ctx context.Context, req *empty.Empty) (*VersionResponse, error) {
+func (*UnimplementedProviderServer) Version(ctx context.Context, req *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
 func (*UnimplementedProviderServer) PreHandler(ctx context.Context, req *core.Request) (*core.Request, error) {
@@ -725,7 +725,7 @@ func _Provider_Setup_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _Provider_Name_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -737,13 +737,13 @@ func _Provider_Name_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: "/provider.Provider/Name",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).Name(ctx, req.(*empty.Empty))
+		return srv.(ProviderServer).Name(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_Version_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -755,7 +755,7 @@ func _Provider_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/provider.Provider/Version",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).Version(ctx, req.(*empty.Empty))
+		return srv.(ProviderServer).Version(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

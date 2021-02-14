@@ -26,19 +26,42 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
+
+type _Metadata struct{}
+
+// TODO: Change Request to interface so we can handl different types of requests?
+// - ProvideRequest
+//    Provide.CPE()
+//    Provide.XXX_()
+// - Core.Poll?
+//    - PollRequest with different Types?
+//       - GET_TECHNICAL_INFO
+//       - GET_TECHNICAL_INFO_PORT
+//       - GET_MAC_TABLE...
+type _Request interface {
+	// Get how long the requset has left to live
+	TTL() time.Time
+
+	// Get the value of Timeout
+	Timeout() time.Duration
+
+	// Get the raw underlaying request
+	Raw() interface{}
+}
 
 // Request is the internal representation of a incoming request
 // it is passed between the api and the core
 type Request struct {
 	*pb_core.Request
 	// metadata to handle the request
-	
+
 	Response chan *pb_core.Response
 	Context  context.Context
 }
+
 // GetCacheTTL is a helper function
 func (r *Request) GetCacheTTL() time.Duration {
 	ttl, err := time.ParseDuration(r.CacheTtl)
@@ -49,7 +72,9 @@ func (r *Request) GetCacheTTL() time.Duration {
 }
 
 // SendRequest to CORE
-func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error){
+func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error) {
+
+	// TODO: move to handler, provider calls should not care about this?
 	// if recreate is set no use to get the cache
 	if !request.RecreateIndex && request.GetCacheTTL() != 0 {
 		cr, err := CacheResponse.Pop(ctx, request.Hostname, request.Port, request.Type)
@@ -68,7 +93,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 			}
 		}
 	}
-	
+
 	RequestQueue <- request
 	// cache is not set
 	for {
@@ -77,12 +102,12 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
-			
+
 			return resp, nil
 		case <-request.Context.Done():
 			c.logger.Error("timeout for request was hit")
 			return nil, fmt.Errorf("timeout for request reached")
-			
+
 		}
 	}
 }

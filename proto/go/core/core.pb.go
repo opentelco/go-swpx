@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	math "math"
 )
 
@@ -28,19 +29,19 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 type Request_Type int32
 
 const (
-	Request_NOIT_SET                Request_Type = 0
+	Request_NOT_SET                 Request_Type = 0
 	Request_GET_TECHNICAL_INFO      Request_Type = 1
 	Request_GET_TECHNICAL_INFO_PORT Request_Type = 2
 )
 
 var Request_Type_name = map[int32]string{
-	0: "NOIT_SET",
+	0: "NOT_SET",
 	1: "GET_TECHNICAL_INFO",
 	2: "GET_TECHNICAL_INFO_PORT",
 }
 
 var Request_Type_value = map[string]int32{
-	"NOIT_SET":                0,
+	"NOT_SET":                 0,
 	"GET_TECHNICAL_INFO":      1,
 	"GET_TECHNICAL_INFO_PORT": 2,
 }
@@ -189,7 +190,7 @@ func (m *Request) GetType() Request_Type {
 	if m != nil {
 		return m.Type
 	}
-	return Request_NOIT_SET
+	return Request_NOT_SET
 }
 
 func (m *Request) GetAccessId() string {
@@ -292,11 +293,235 @@ func (m *Response) GetExecutionTime() string {
 	return ""
 }
 
+type CommandRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CommandRequest) Reset()         { *m = CommandRequest{} }
+func (m *CommandRequest) String() string { return proto.CompactTextString(m) }
+func (*CommandRequest) ProtoMessage()    {}
+func (*CommandRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{3}
+}
+
+func (m *CommandRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CommandRequest.Unmarshal(m, b)
+}
+func (m *CommandRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CommandRequest.Marshal(b, m, deterministic)
+}
+func (m *CommandRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CommandRequest.Merge(m, src)
+}
+func (m *CommandRequest) XXX_Size() int {
+	return xxx_messageInfo_CommandRequest.Size(m)
+}
+func (m *CommandRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CommandRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CommandRequest proto.InternalMessageInfo
+
+type CommandResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CommandResponse) Reset()         { *m = CommandResponse{} }
+func (m *CommandResponse) String() string { return proto.CompactTextString(m) }
+func (*CommandResponse) ProtoMessage()    {}
+func (*CommandResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{4}
+}
+
+func (m *CommandResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CommandResponse.Unmarshal(m, b)
+}
+func (m *CommandResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CommandResponse.Marshal(b, m, deterministic)
+}
+func (m *CommandResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CommandResponse.Merge(m, src)
+}
+func (m *CommandResponse) XXX_Size() int {
+	return xxx_messageInfo_CommandResponse.Size(m)
+}
+func (m *CommandResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CommandResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CommandResponse proto.InternalMessageInfo
+
+type InformationResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *InformationResponse) Reset()         { *m = InformationResponse{} }
+func (m *InformationResponse) String() string { return proto.CompactTextString(m) }
+func (*InformationResponse) ProtoMessage()    {}
+func (*InformationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{5}
+}
+
+func (m *InformationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_InformationResponse.Unmarshal(m, b)
+}
+func (m *InformationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_InformationResponse.Marshal(b, m, deterministic)
+}
+func (m *InformationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InformationResponse.Merge(m, src)
+}
+func (m *InformationResponse) XXX_Size() int {
+	return xxx_messageInfo_InformationResponse.Size(m)
+}
+func (m *InformationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_InformationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InformationResponse proto.InternalMessageInfo
+
+type ProvideCPERequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProvideCPERequest) Reset()         { *m = ProvideCPERequest{} }
+func (m *ProvideCPERequest) String() string { return proto.CompactTextString(m) }
+func (*ProvideCPERequest) ProtoMessage()    {}
+func (*ProvideCPERequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{6}
+}
+
+func (m *ProvideCPERequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProvideCPERequest.Unmarshal(m, b)
+}
+func (m *ProvideCPERequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProvideCPERequest.Marshal(b, m, deterministic)
+}
+func (m *ProvideCPERequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProvideCPERequest.Merge(m, src)
+}
+func (m *ProvideCPERequest) XXX_Size() int {
+	return xxx_messageInfo_ProvideCPERequest.Size(m)
+}
+func (m *ProvideCPERequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProvideCPERequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProvideCPERequest proto.InternalMessageInfo
+
+type ProvideCPEResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProvideCPEResponse) Reset()         { *m = ProvideCPEResponse{} }
+func (m *ProvideCPEResponse) String() string { return proto.CompactTextString(m) }
+func (*ProvideCPEResponse) ProtoMessage()    {}
+func (*ProvideCPEResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{7}
+}
+
+func (m *ProvideCPEResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProvideCPEResponse.Unmarshal(m, b)
+}
+func (m *ProvideCPEResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProvideCPEResponse.Marshal(b, m, deterministic)
+}
+func (m *ProvideCPEResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProvideCPEResponse.Merge(m, src)
+}
+func (m *ProvideCPEResponse) XXX_Size() int {
+	return xxx_messageInfo_ProvideCPEResponse.Size(m)
+}
+func (m *ProvideCPEResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProvideCPEResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProvideCPEResponse proto.InternalMessageInfo
+
+type ProvideAccessRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProvideAccessRequest) Reset()         { *m = ProvideAccessRequest{} }
+func (m *ProvideAccessRequest) String() string { return proto.CompactTextString(m) }
+func (*ProvideAccessRequest) ProtoMessage()    {}
+func (*ProvideAccessRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{8}
+}
+
+func (m *ProvideAccessRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProvideAccessRequest.Unmarshal(m, b)
+}
+func (m *ProvideAccessRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProvideAccessRequest.Marshal(b, m, deterministic)
+}
+func (m *ProvideAccessRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProvideAccessRequest.Merge(m, src)
+}
+func (m *ProvideAccessRequest) XXX_Size() int {
+	return xxx_messageInfo_ProvideAccessRequest.Size(m)
+}
+func (m *ProvideAccessRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProvideAccessRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProvideAccessRequest proto.InternalMessageInfo
+
+type ProvideAccessResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProvideAccessResponse) Reset()         { *m = ProvideAccessResponse{} }
+func (m *ProvideAccessResponse) String() string { return proto.CompactTextString(m) }
+func (*ProvideAccessResponse) ProtoMessage()    {}
+func (*ProvideAccessResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_47606d63192e4934, []int{9}
+}
+
+func (m *ProvideAccessResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProvideAccessResponse.Unmarshal(m, b)
+}
+func (m *ProvideAccessResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProvideAccessResponse.Marshal(b, m, deterministic)
+}
+func (m *ProvideAccessResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProvideAccessResponse.Merge(m, src)
+}
+func (m *ProvideAccessResponse) XXX_Size() int {
+	return xxx_messageInfo_ProvideAccessResponse.Size(m)
+}
+func (m *ProvideAccessResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProvideAccessResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProvideAccessResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterEnum("core.Request_Type", Request_Type_name, Request_Type_value)
 	proto.RegisterType((*Error)(nil), "core.Error")
 	proto.RegisterType((*Request)(nil), "core.Request")
 	proto.RegisterType((*Response)(nil), "core.Response")
+	proto.RegisterType((*CommandRequest)(nil), "core.CommandRequest")
+	proto.RegisterType((*CommandResponse)(nil), "core.CommandResponse")
+	proto.RegisterType((*InformationResponse)(nil), "core.InformationResponse")
+	proto.RegisterType((*ProvideCPERequest)(nil), "core.ProvideCPERequest")
+	proto.RegisterType((*ProvideCPEResponse)(nil), "core.ProvideCPEResponse")
+	proto.RegisterType((*ProvideAccessRequest)(nil), "core.ProvideAccessRequest")
+	proto.RegisterType((*ProvideAccessResponse)(nil), "core.ProvideAccessResponse")
 }
 
 func init() {
@@ -304,43 +529,52 @@ func init() {
 }
 
 var fileDescriptor_47606d63192e4934 = []byte{
-	// 571 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xc1, 0x4e, 0xdb, 0x40,
-	0x10, 0x6d, 0x42, 0x42, 0xcc, 0x84, 0x18, 0xba, 0x52, 0x61, 0x05, 0x97, 0x34, 0x15, 0x25, 0xaa,
-	0x5a, 0x47, 0x0a, 0xaa, 0xc4, 0x11, 0x4a, 0x53, 0x6a, 0x09, 0x01, 0x72, 0x7d, 0xea, 0x65, 0x65,
-	0xd6, 0xd3, 0x64, 0x85, 0xed, 0x75, 0x77, 0xd7, 0x05, 0xfe, 0xa2, 0xff, 0xd2, 0x1f, 0xac, 0xbc,
-	0x6b, 0x17, 0xd1, 0x5e, 0x7a, 0xf2, 0xbc, 0xf7, 0xc6, 0xa3, 0x99, 0x37, 0xb3, 0x70, 0xb4, 0x14,
-	0x26, 0xc8, 0x04, 0x2a, 0x19, 0x68, 0x9c, 0xc9, 0x12, 0x0b, 0x83, 0x19, 0x97, 0xb3, 0xa5, 0x7c,
-	0xa7, 0xef, 0xca, 0xfb, 0x59, 0xa9, 0xa4, 0x91, 0x33, 0xad, 0xf8, 0x8c, 0x4b, 0x85, 0x81, 0x85,
-	0xa4, 0x57, 0xc7, 0x7b, 0x2f, 0x0a, 0x34, 0x77, 0x52, 0xdd, 0x32, 0xcc, 0x30, 0xc7, 0xc2, 0x38,
-	0x71, 0xf2, 0x1e, 0xfa, 0x0b, 0xa5, 0xa4, 0x22, 0x14, 0x06, 0x39, 0x6a, 0x9d, 0x2c, 0x91, 0x76,
-	0xc6, 0x9d, 0xe9, 0x46, 0xd4, 0x42, 0x42, 0xa0, 0xc7, 0x65, 0x8a, 0xb4, 0x3b, 0xee, 0x4c, 0xfb,
-	0x91, 0x8d, 0x27, 0xbf, 0xd6, 0x60, 0x10, 0xe1, 0xf7, 0x0a, 0xb5, 0x21, 0x87, 0xb0, 0x55, 0x2a,
-	0xf9, 0x43, 0xa4, 0xa8, 0x58, 0x99, 0x55, 0x4b, 0x51, 0x34, 0x15, 0xfc, 0x96, 0xbe, 0xb6, 0x6c,
-	0x9d, 0xa8, 0x50, 0xcb, 0x4a, 0x71, 0x6c, 0x13, 0xbb, 0x2e, 0xb1, 0xa5, 0x9b, 0xc4, 0x03, 0xf0,
-	0x15, 0x72, 0x85, 0x89, 0x41, 0x26, 0x8a, 0x14, 0xef, 0xe9, 0xda, 0xb8, 0x33, 0xf5, 0xa2, 0x51,
-	0xcb, 0x86, 0x35, 0x49, 0x8e, 0x81, 0xa6, 0x42, 0x27, 0x37, 0x19, 0xb2, 0x54, 0x68, 0xa3, 0xc4,
-	0x4d, 0x65, 0x30, 0x65, 0x99, 0xe4, 0xb7, 0xb4, 0x67, 0x7f, 0xd8, 0x69, 0xf4, 0x8f, 0x8f, 0xf2,
-	0x85, 0xe4, 0xb7, 0xf5, 0xb0, 0x46, 0xe4, 0x28, 0x2b, 0x43, 0xfb, 0x6e, 0xd8, 0x06, 0x92, 0x7d,
-	0xd8, 0xe0, 0x09, 0x5f, 0x21, 0x33, 0x26, 0xa3, 0xeb, 0x56, 0xf3, 0x2c, 0x11, 0x9b, 0x8c, 0xbc,
-	0x86, 0x9e, 0x79, 0x28, 0x91, 0x0e, 0xc6, 0x9d, 0xa9, 0x3f, 0x27, 0x81, 0x35, 0xb9, 0xb1, 0x21,
-	0x88, 0x1f, 0x4a, 0x8c, 0xac, 0x5e, 0x17, 0x49, 0x38, 0x47, 0xad, 0x99, 0x48, 0xa9, 0xe7, 0x8a,
-	0x38, 0x22, 0x4c, 0xc9, 0x1e, 0x78, 0x2b, 0xa9, 0x4d, 0x91, 0xe4, 0x48, 0x37, 0x9c, 0xd6, 0xe2,
-	0xda, 0xea, 0x52, 0x2a, 0x43, 0xc1, 0xf2, 0x36, 0x9e, 0x84, 0xd0, 0xab, 0x4b, 0x93, 0x4d, 0xf0,
-	0x2e, 0xaf, 0xc2, 0x98, 0x7d, 0x59, 0xc4, 0xdb, 0xcf, 0xc8, 0x0e, 0x90, 0xf3, 0x45, 0xcc, 0xe2,
-	0xc5, 0xd9, 0xe7, 0xcb, 0xf0, 0xec, 0xf4, 0x82, 0x85, 0x97, 0x9f, 0xae, 0xb6, 0x3b, 0x64, 0x1f,
-	0x76, 0xff, 0xe5, 0xd9, 0xf5, 0x55, 0x14, 0x6f, 0x77, 0x27, 0x3f, 0xbb, 0xe0, 0x45, 0xa8, 0x4b,
-	0x59, 0x68, 0x24, 0x87, 0x30, 0x50, 0xae, 0x75, 0xbb, 0xae, 0xe1, 0x7c, 0xf4, 0x64, 0x9e, 0xa8,
-	0x55, 0xc9, 0x09, 0x6c, 0xfd, 0x75, 0x3b, 0x76, 0x6d, 0xc3, 0xf9, 0x6e, 0xd0, 0xf0, 0xed, 0x49,
-	0x2d, 0xdc, 0x37, 0xf2, 0x1b, 0xbe, 0xc1, 0xe4, 0x15, 0x8c, 0xca, 0xd5, 0x83, 0x16, 0x3c, 0xc9,
-	0x98, 0x9d, 0x6f, 0xcd, 0xce, 0xb7, 0xd9, 0x92, 0xd7, 0x52, 0x19, 0xf2, 0x12, 0xfa, 0x58, 0x5f,
-	0xa2, 0x5d, 0xdd, 0x70, 0x3e, 0x74, 0xdd, 0xd8, 0xe3, 0x8c, 0x9c, 0x42, 0xde, 0xc0, 0xf3, 0xa6,
-	0x29, 0xf6, 0xe8, 0xaf, 0x5b, 0xe0, 0x56, 0x23, 0x9c, 0xb6, 0x36, 0x1f, 0x80, 0x8f, 0xf7, 0xc8,
-	0x2b, 0x23, 0x64, 0xc1, 0xea, 0xed, 0x36, 0xdb, 0x1c, 0xfd, 0x61, 0x63, 0x91, 0xe3, 0xfc, 0x04,
-	0x7a, 0x67, 0x52, 0x21, 0x39, 0x86, 0xdd, 0x73, 0x34, 0x31, 0xf2, 0x55, 0x51, 0x77, 0x14, 0x16,
-	0xdf, 0xa4, 0xca, 0x93, 0x3a, 0x8d, 0x3c, 0xf5, 0x65, 0xcf, 0x6f, 0xa1, 0xf3, 0xf1, 0x43, 0xf0,
-	0xf5, 0xed, 0x7f, 0xbd, 0xca, 0xa5, 0xb4, 0x8f, 0xf2, 0x66, 0xdd, 0xc2, 0xa3, 0xdf, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x6e, 0x09, 0x3d, 0x50, 0xcc, 0x03, 0x00, 0x00,
+	// 720 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xcd, 0x4e, 0xdb, 0x58,
+	0x14, 0xc7, 0xc7, 0xf9, 0x20, 0xe1, 0x64, 0xf2, 0xc1, 0x85, 0x24, 0x1e, 0x67, 0x93, 0xc9, 0x88,
+	0x21, 0x1a, 0xcd, 0x38, 0x52, 0xd0, 0x54, 0x2c, 0xa1, 0xa9, 0x5b, 0x22, 0x21, 0x88, 0x5c, 0xaf,
+	0xba, 0xb1, 0x1c, 0xfb, 0x10, 0x2c, 0x6c, 0x5f, 0xf7, 0xfa, 0xa6, 0x90, 0x17, 0xe8, 0xba, 0x6f,
+	0xd1, 0x7d, 0x9f, 0xb0, 0xf2, 0xbd, 0xd7, 0x40, 0x80, 0x45, 0x57, 0xf6, 0xf9, 0xfd, 0xcf, 0xb9,
+	0x3a, 0x5f, 0x3a, 0x70, 0xbc, 0x0a, 0xb9, 0x19, 0x85, 0xc8, 0xa8, 0x99, 0xe1, 0x84, 0xa6, 0x98,
+	0x70, 0x8c, 0x7c, 0x3a, 0x59, 0xd1, 0xff, 0xb2, 0xbb, 0xf4, 0x7e, 0x92, 0x32, 0xca, 0xe9, 0x24,
+	0x63, 0xfe, 0xc4, 0xa7, 0x0c, 0x4d, 0x61, 0x92, 0x4a, 0xfe, 0x6f, 0x74, 0x13, 0xe4, 0x77, 0x94,
+	0xdd, 0xba, 0x18, 0x61, 0x8c, 0x09, 0x97, 0xa2, 0x31, 0x58, 0x51, 0xba, 0x8a, 0x50, 0x46, 0x2e,
+	0xd7, 0xd7, 0x13, 0x8c, 0x53, 0xbe, 0x91, 0xe2, 0xe8, 0x7f, 0xa8, 0x5a, 0x8c, 0x51, 0x46, 0x74,
+	0xa8, 0xc5, 0x98, 0x65, 0xde, 0x0a, 0x75, 0x6d, 0xa8, 0x8d, 0x77, 0xed, 0xc2, 0x24, 0x04, 0x2a,
+	0x3e, 0x0d, 0x50, 0x2f, 0x0d, 0xb5, 0x71, 0xd5, 0x16, 0xff, 0xa3, 0x1f, 0x65, 0xa8, 0xd9, 0xf8,
+	0x79, 0x8d, 0x19, 0x27, 0x47, 0xd0, 0x4e, 0x19, 0xfd, 0x12, 0x06, 0xc8, 0xdc, 0x34, 0x5a, 0xaf,
+	0xc2, 0x44, 0xbd, 0xd0, 0x2a, 0xf0, 0x42, 0xd0, 0xdc, 0x91, 0x61, 0x46, 0xd7, 0xcc, 0xc7, 0xc2,
+	0xb1, 0x24, 0x1d, 0x0b, 0xac, 0x1c, 0x0f, 0xa1, 0xc5, 0xd0, 0x67, 0xe8, 0x71, 0x74, 0xc3, 0x24,
+	0xc0, 0x7b, 0xbd, 0x3c, 0xd4, 0xc6, 0x75, 0xbb, 0x59, 0xd0, 0x79, 0x0e, 0xc9, 0x09, 0xe8, 0x41,
+	0x98, 0x79, 0xcb, 0x08, 0xdd, 0x20, 0xcc, 0x38, 0x0b, 0x97, 0x6b, 0x8e, 0x81, 0x1b, 0x51, 0xff,
+	0x56, 0xaf, 0x88, 0x80, 0x9e, 0xd2, 0xdf, 0x3d, 0xca, 0x17, 0xd4, 0xbf, 0xcd, 0x8b, 0xe5, 0x61,
+	0x8c, 0x74, 0xcd, 0xf5, 0xaa, 0x2c, 0x56, 0x99, 0x64, 0x00, 0xbb, 0xbe, 0xe7, 0xdf, 0xa0, 0xcb,
+	0x79, 0xa4, 0xef, 0x08, 0xad, 0x2e, 0x80, 0xc3, 0x23, 0xf2, 0x37, 0x54, 0xf8, 0x26, 0x45, 0xbd,
+	0x36, 0xd4, 0xc6, 0xad, 0x29, 0x31, 0xc5, 0x04, 0x54, 0x1b, 0x4c, 0x67, 0x93, 0xa2, 0x2d, 0xf4,
+	0xfc, 0x11, 0xcf, 0xf7, 0x31, 0xcb, 0xdc, 0x30, 0xd0, 0xeb, 0xf2, 0x11, 0x09, 0xe6, 0x01, 0x31,
+	0xa0, 0x7e, 0x43, 0x33, 0x9e, 0x78, 0x31, 0xea, 0xbb, 0x52, 0x2b, 0xec, 0xbc, 0xd5, 0x29, 0x65,
+	0x5c, 0x07, 0xc1, 0xc5, 0xff, 0xe8, 0x1c, 0x2a, 0xf9, 0xd3, 0xa4, 0x01, 0xb5, 0xcb, 0x2b, 0xc7,
+	0xfd, 0x68, 0x39, 0x9d, 0xdf, 0x48, 0x0f, 0xc8, 0x07, 0xcb, 0x71, 0x1d, 0x6b, 0x76, 0x7e, 0x39,
+	0x9f, 0x9d, 0x5d, 0xb8, 0xf3, 0xcb, 0xf7, 0x57, 0x1d, 0x8d, 0x0c, 0xa0, 0xff, 0x92, 0xbb, 0x8b,
+	0x2b, 0xdb, 0xe9, 0x94, 0x46, 0xdf, 0x4a, 0x50, 0xb7, 0x31, 0x4b, 0x69, 0x92, 0x21, 0x39, 0x82,
+	0x1a, 0x93, 0x99, 0x8b, 0x69, 0x35, 0xa6, 0xcd, 0xad, 0x72, 0xec, 0x42, 0x25, 0xa7, 0xd0, 0x7e,
+	0xb6, 0x57, 0x62, 0x6a, 0x8d, 0x69, 0xdf, 0x54, 0xbc, 0x58, 0x37, 0x4b, 0x7e, 0xed, 0x96, 0xe2,
+	0xca, 0x26, 0x7f, 0x41, 0x33, 0xbd, 0xd9, 0x64, 0xa1, 0xef, 0x45, 0xae, 0x28, 0xaf, 0x2c, 0xca,
+	0xfb, 0xbd, 0x80, 0x0b, 0xca, 0x38, 0xf9, 0x13, 0xaa, 0x98, 0x2f, 0xa2, 0x98, 0x5c, 0x63, 0xda,
+	0x90, 0xd9, 0x88, 0xdd, 0xb4, 0xa5, 0x42, 0xfe, 0x81, 0x3d, 0x95, 0x94, 0xfb, 0xd8, 0x5e, 0x39,
+	0xbf, 0xb6, 0x12, 0xce, 0x8a, 0x2e, 0x1f, 0x42, 0x0b, 0xef, 0xd1, 0x5f, 0xf3, 0x90, 0x26, 0x6e,
+	0x3e, 0x5c, 0x35, 0xcc, 0xe6, 0x03, 0x75, 0xc2, 0x18, 0x47, 0x1d, 0x68, 0xcd, 0x68, 0x1c, 0x7b,
+	0x49, 0xa0, 0xea, 0x1e, 0xed, 0x41, 0xfb, 0x81, 0xc8, 0x56, 0x8d, 0xba, 0xb0, 0x3f, 0x4f, 0xae,
+	0x29, 0x8b, 0xbd, 0x3c, 0xee, 0x01, 0xef, 0xc3, 0xde, 0x42, 0x2e, 0xf8, 0x6c, 0x61, 0x15, 0xe1,
+	0x07, 0x40, 0x9e, 0x42, 0xe5, 0xda, 0x83, 0x03, 0x45, 0x65, 0x82, 0x85, 0x77, 0x1f, 0xba, 0xcf,
+	0xb8, 0x0c, 0x98, 0x7e, 0xd7, 0xa0, 0x32, 0xa3, 0x0c, 0xc9, 0x21, 0x54, 0x16, 0x34, 0x8a, 0xc8,
+	0xf6, 0x74, 0x8c, 0x56, 0x61, 0xaa, 0x69, 0xbe, 0x81, 0x9a, 0xca, 0x9a, 0x1c, 0x48, 0x69, 0xbb,
+	0x2c, 0xa3, 0xfb, 0x8c, 0xaa, 0xb8, 0x53, 0x68, 0x3c, 0x29, 0x8d, 0xf4, 0x4c, 0x79, 0x2b, 0xcc,
+	0xe2, 0x56, 0x98, 0x56, 0x7e, 0x2b, 0x8c, 0x3f, 0x64, 0xf4, 0x2b, 0x5d, 0x98, 0x7e, 0xd5, 0xa0,
+	0xa6, 0x6a, 0x20, 0x27, 0x50, 0x9e, 0x2d, 0x2c, 0xd2, 0x97, 0xde, 0x2f, 0x9a, 0x63, 0xe8, 0x2f,
+	0x05, 0x95, 0xc7, 0x19, 0xec, 0xc8, 0x0e, 0x10, 0x63, 0xcb, 0x67, 0xab, 0x5d, 0xc6, 0xe0, 0x55,
+	0x4d, 0x3e, 0xf1, 0xd6, 0xfc, 0xf4, 0xef, 0x2f, 0x9d, 0xce, 0x15, 0x15, 0x97, 0x73, 0xb9, 0x23,
+	0xcc, 0xe3, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc7, 0xc0, 0xd6, 0x51, 0x71, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -355,7 +589,12 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CoreClient interface {
-	GetTechnicalInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	// SWP Polling call to get technical Information
+	Poll(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	// Send a command to a network device through the Poller
+	Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
+	Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error)
 }
 
 type coreClient struct {
@@ -366,9 +605,27 @@ func NewCoreClient(cc grpc.ClientConnInterface) CoreClient {
 	return &coreClient{cc}
 }
 
-func (c *coreClient) GetTechnicalInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (c *coreClient) Poll(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/core.Core/GetTechnicalInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Core/Poll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coreClient) Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+	out := new(CommandResponse)
+	err := c.cc.Invoke(ctx, "/core.Core/Command", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coreClient) Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error) {
+	out := new(InformationResponse)
+	err := c.cc.Invoke(ctx, "/core.Core/Information", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -377,35 +634,82 @@ func (c *coreClient) GetTechnicalInformation(ctx context.Context, in *Request, o
 
 // CoreServer is the server API for Core service.
 type CoreServer interface {
-	GetTechnicalInformation(context.Context, *Request) (*Response, error)
+	// SWP Polling call to get technical Information
+	Poll(context.Context, *Request) (*Response, error)
+	// Send a command to a network device through the Poller
+	Command(context.Context, *CommandRequest) (*CommandResponse, error)
+	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
+	Information(context.Context, *emptypb.Empty) (*InformationResponse, error)
 }
 
 // UnimplementedCoreServer can be embedded to have forward compatible implementations.
 type UnimplementedCoreServer struct {
 }
 
-func (*UnimplementedCoreServer) GetTechnicalInformation(ctx context.Context, req *Request) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTechnicalInformation not implemented")
+func (*UnimplementedCoreServer) Poll(ctx context.Context, req *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
+}
+func (*UnimplementedCoreServer) Command(ctx context.Context, req *CommandRequest) (*CommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Command not implemented")
+}
+func (*UnimplementedCoreServer) Information(ctx context.Context, req *emptypb.Empty) (*InformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Information not implemented")
 }
 
 func RegisterCoreServer(s *grpc.Server, srv CoreServer) {
 	s.RegisterService(&_Core_serviceDesc, srv)
 }
 
-func _Core_GetTechnicalInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Core_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).GetTechnicalInformation(ctx, in)
+		return srv.(CoreServer).Poll(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/GetTechnicalInformation",
+		FullMethod: "/core.Core/Poll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).GetTechnicalInformation(ctx, req.(*Request))
+		return srv.(CoreServer).Poll(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Core_Command_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServer).Command(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Core/Command",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServer).Command(ctx, req.(*CommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Core_Information_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServer).Information(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Core/Information",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServer).Information(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -415,8 +719,128 @@ var _Core_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*CoreServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetTechnicalInformation",
-			Handler:    _Core_GetTechnicalInformation_Handler,
+			MethodName: "Poll",
+			Handler:    _Core_Poll_Handler,
+		},
+		{
+			MethodName: "Command",
+			Handler:    _Core_Command_Handler,
+		},
+		{
+			MethodName: "Information",
+			Handler:    _Core_Information_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "git.liero.se/opentelco/go-swpx/proto/src/core.proto",
+}
+
+// ProvideClient is the client API for Provide service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type ProvideClient interface {
+	// Ask provider to return a valid CPE for a access
+	CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error)
+	// Ask a provider to return information about a selected access
+	Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error)
+}
+
+type provideClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewProvideClient(cc grpc.ClientConnInterface) ProvideClient {
+	return &provideClient{cc}
+}
+
+func (c *provideClient) CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error) {
+	out := new(ProvideCPEResponse)
+	err := c.cc.Invoke(ctx, "/core.Provide/CPE", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *provideClient) Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error) {
+	out := new(ProvideAccessResponse)
+	err := c.cc.Invoke(ctx, "/core.Provide/Access", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ProvideServer is the server API for Provide service.
+type ProvideServer interface {
+	// Ask provider to return a valid CPE for a access
+	CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error)
+	// Ask a provider to return information about a selected access
+	Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error)
+}
+
+// UnimplementedProvideServer can be embedded to have forward compatible implementations.
+type UnimplementedProvideServer struct {
+}
+
+func (*UnimplementedProvideServer) CPE(ctx context.Context, req *ProvideCPERequest) (*ProvideCPEResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CPE not implemented")
+}
+func (*UnimplementedProvideServer) Access(ctx context.Context, req *ProvideAccessRequest) (*ProvideAccessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Access not implemented")
+}
+
+func RegisterProvideServer(s *grpc.Server, srv ProvideServer) {
+	s.RegisterService(&_Provide_serviceDesc, srv)
+}
+
+func _Provide_CPE_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProvideCPERequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProvideServer).CPE(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Provide/CPE",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProvideServer).CPE(ctx, req.(*ProvideCPERequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Provide_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProvideAccessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProvideServer).Access(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Provide/Access",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProvideServer).Access(ctx, req.(*ProvideAccessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Provide_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "core.Provide",
+	HandlerType: (*ProvideServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CPE",
+			Handler:    _Provide_CPE_Handler,
+		},
+		{
+			MethodName: "Access",
+			Handler:    _Provide_Access_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

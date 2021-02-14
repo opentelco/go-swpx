@@ -84,6 +84,7 @@ message Configuration{
 message SetupConfiguration {}
 message SetupResponse {}
 
+
 service Provider {
   rpc Setup(SetupConfiguration) returns (SetupResponse);
   rpc Name(google.protobuf.Empty) returns (NameResponse);

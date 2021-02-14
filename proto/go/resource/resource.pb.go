@@ -9,10 +9,10 @@ import (
 	networkelement "git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	provider "git.liero.se/opentelco/go-swpx/proto/go/provider"
 	proto "github.com/golang/protobuf/proto"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	math "math"
 )
 
@@ -517,12 +517,19 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ResourceClient interface {
-	Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	// Get the version of the network element
+	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	// Get technical information about a port
 	TechnicalPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
+	// Get technical information about all ports TODO: rename
 	AllPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
+	// Map the interfaces with ifIndex and description
 	MapInterface(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error)
+	// Map the interace description and the environemnt index
 	MapEntityPhysical(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error)
+	// Get transceiver information about a interface
 	GetTransceiverInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Transceiver, error)
+	// Get transceiver information about all interfaces
 	GetAllTransceiverInformation(ctx context.Context, in *NetworkElementWrapper, opts ...grpc.CallOption) (*networkelement.Element, error)
 }
 
@@ -534,7 +541,7 @@ func NewResourceClient(cc grpc.ClientConnInterface) ResourceClient {
 	return &resourceClient{cc}
 }
 
-func (c *resourceClient) Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
+func (c *resourceClient) Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/resource.Resource/Version", in, out, opts...)
 	if err != nil {
@@ -599,12 +606,19 @@ func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *N
 
 // ResourceServer is the server API for Resource service.
 type ResourceServer interface {
-	Version(context.Context, *empty.Empty) (*VersionResponse, error)
+	// Get the version of the network element
+	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
+	// Get technical information about a port
 	TechnicalPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
+	// Get technical information about all ports TODO: rename
 	AllPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
+	// Map the interfaces with ifIndex and description
 	MapInterface(context.Context, *NetworkElement) (*NetworkElementInterfaces, error)
+	// Map the interace description and the environemnt index
 	MapEntityPhysical(context.Context, *NetworkElement) (*NetworkElementInterfaces, error)
+	// Get transceiver information about a interface
 	GetTransceiverInformation(context.Context, *NetworkElement) (*networkelement.Transceiver, error)
+	// Get transceiver information about all interfaces
 	GetAllTransceiverInformation(context.Context, *NetworkElementWrapper) (*networkelement.Element, error)
 }
 
@@ -612,7 +626,7 @@ type ResourceServer interface {
 type UnimplementedResourceServer struct {
 }
 
-func (*UnimplementedResourceServer) Version(ctx context.Context, req *empty.Empty) (*VersionResponse, error) {
+func (*UnimplementedResourceServer) Version(ctx context.Context, req *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
 func (*UnimplementedResourceServer) TechnicalPortInformation(ctx context.Context, req *NetworkElement) (*networkelement.Element, error) {
@@ -639,7 +653,7 @@ func RegisterResourceServer(s *grpc.Server, srv ResourceServer) {
 }
 
 func _Resource_Version_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -651,7 +665,7 @@ func _Resource_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/resource.Resource/Version",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).Version(ctx, req.(*empty.Empty))
+		return srv.(ResourceServer).Version(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

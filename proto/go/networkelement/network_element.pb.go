@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	traffic_policy "git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 	proto "github.com/golang/protobuf/proto"
-	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	math "math"
 )
 
@@ -1609,7 +1609,7 @@ type Interface struct {
 	Type                    InterfaceType                           `protobuf:"varint,6,opt,name=type,proto3,enum=networkelement.InterfaceType" json:"type,omitempty"`
 	AdminStatus             InterfaceStatus                         `protobuf:"varint,7,opt,name=admin_status,json=adminStatus,proto3,enum=networkelement.InterfaceStatus" json:"admin_status,omitempty"`
 	OperationalStatus       InterfaceStatus                         `protobuf:"varint,8,opt,name=operational_status,json=operationalStatus,proto3,enum=networkelement.InterfaceStatus" json:"operational_status,omitempty"`
-	LastChanged             *timestamp.Timestamp                    `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty"`
+	LastChanged             *timestamppb.Timestamp                  `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty"`
 	Speed                   int64                                   `protobuf:"varint,11,opt,name=speed,proto3" json:"speed,omitempty"`
 	Duplex                  string                                  `protobuf:"bytes,12,opt,name=duplex,proto3" json:"duplex,omitempty"`
 	Mtu                     int64                                   `protobuf:"varint,13,opt,name=mtu,proto3" json:"mtu,omitempty"`
@@ -1708,7 +1708,7 @@ func (m *Interface) GetOperationalStatus() InterfaceStatus {
 	return InterfaceStatus_unset
 }
 
-func (m *Interface) GetLastChanged() *timestamp.Timestamp {
+func (m *Interface) GetLastChanged() *timestamppb.Timestamp {
 	if m != nil {
 		return m.LastChanged
 	}

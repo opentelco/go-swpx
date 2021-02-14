@@ -3,6 +3,7 @@ package main
 type Access struct {
 	NetworkElement string
 	Interface      string
+	ResourcePlugin string
 	SNMPCommunity  string
 	Username       string
 	Password       string
@@ -12,6 +13,7 @@ var translationMap = map[string]Access{
 	"5f024967cf1c": Access{
 		NetworkElement: "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/1",
+		ResourcePlugin: "vrp_plugin",
 		SNMPCommunity:  "xWTyZ9nA158ktJF2",
 		Username:       "root",
 		Password:       "qwerty1234",
