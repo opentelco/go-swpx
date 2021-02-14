@@ -318,7 +318,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 					resources.GetHuaweiInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
-					resources.GetIfEntryInformation(m, elementInterface)
+					d.getIfEntryInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
 					resources.GetIfXEntryInformation(m, elementInterface)
