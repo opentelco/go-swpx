@@ -149,6 +149,9 @@ message Interface {
   traffic_policy.ConfiguredTrafficPolicy configuredTrafficPolicy = 21;
   traffic_policy.QOS qos = 22;
 
+  // provider can fill this in based on collected data
+  Element connected_sdd = 23; // connected service demarcation device
+
 }
 
 

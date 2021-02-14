@@ -41,8 +41,8 @@ var (
 	ErrInvalidRequest = fmt.Errorf("invalid request body")
 )
 
-// TechnicalInformationRequest is the request that holdes the TI request.
-type TechnicalInformationRequest struct {
+// Poll is the request that holdes the TI request.
+type Poll struct {
 	AccessId      string          `json:"access_id"`
 	Hostname      string          `json:"hostname"`
 	Port          string          `json:"port"`
@@ -57,15 +57,15 @@ type TechnicalInformationRequest struct {
 	logger hclog.Logger
 }
 
-func (req *TechnicalInformationRequest) Bind(r *http.Request) error {
+func (req *Poll) Bind(r *http.Request) error {
 	return nil
 }
 
-func (r *TechnicalInformationRequest) parseDriver() error {
+func (r *Poll) parseDriver() error {
 	return nil
 }
 
-func (r *TechnicalInformationRequest) parseAddr() error {
+func (r *Poll) parseAddr() error {
 	// Parse hostname/ip for host
 
 	addrs, err := net.LookupHost(r.Hostname)
@@ -87,7 +87,7 @@ func (r *TechnicalInformationRequest) parseAddr() error {
 }
 
 // Parse the incoming request
-func (r *TechnicalInformationRequest) Parse() error {
+func (r *Poll) Parse() error {
 
 	if r.AccessId == "" && r.Hostname == "" {
 		return fmt.Errorf("access_id and hostname cannot both be empty: %w", ErrInvalidRequest)
@@ -121,7 +121,7 @@ func NewServiceTechnicalInformation(core *core.Core, logger hclog.Logger) *Servi
 
 // GetTI is the ti
 func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Request) {
-	data := &TechnicalInformationRequest{
+	data := &Poll{
 		logger: s.logger,
 	}
 
@@ -167,10 +167,13 @@ func (s *ServiceTechnicalInformation) GetTI(w http.ResponseWriter, r *http.Reque
 
 	resp, err := s.core.SendRequest(ctx, req)
 	if err != nil {
-		render.JSON(w, r, NewResponse(ResponseStatusNotFound, resp.Error))
+		render.JSON(w, r, NewResponse(ResponseStatusNotFound, err))
+		return
 	}
+
 	wrappedResponse := NewResponse(ResponseStatusOK, resp)
 	render.JSON(w, r, wrappedResponse)
+	return
 
 	// handle it
 

@@ -19,6 +19,7 @@ type GRPCServer struct {
 	grpc     *grpc.Server
 }
 
+//  Request to SWP-core
 func (s *GRPCServer) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 	panic("implement me")
 }

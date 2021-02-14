@@ -7,7 +7,7 @@ snmp:
   dynamic_repetitions: true
 
 interface_cache:
-  server: mongodb://localhost:27017
+  server: mongodb://localhost:27027
   database: test
   collection: interface_cache
   timeout_seconds: 30
@@ -34,7 +34,7 @@ ssh:
   write_dead_line: "8s"
 #  ssh_key_path: "/home/ardi/.ssh/id_rsa"
 telnet:
-  username: "admin"
+  username: "root"
   password: "qwerty1234"
   port: 23
   screen_length: "0"

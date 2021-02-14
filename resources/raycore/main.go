@@ -29,7 +29,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	
+
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
@@ -38,7 +38,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/pkg/errors"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
@@ -65,7 +65,7 @@ type RaycoreDriver struct {
 }
 
 func (d *RaycoreDriver) Version() (string, error) {
-	return VERSION_BASE,nil
+	return VERSION_BASE, nil
 }
 
 // handshakeConfigs are used to just do a basic handshake between
@@ -80,9 +80,9 @@ var handshakeConfig = plugin.HandshakeConfig{
 
 func main() {
 	logger := hclog.New(&hclog.LoggerOptions{
-		Name:       fmt.Sprintf("raycore@%s", VERSION.String()),
-		Level:      hclog.Trace,
-		Color: hclog.AutoColor,
+		Name:            fmt.Sprintf("raycore@%s", VERSION.String()),
+		Level:           hclog.Trace,
+		Color:           hclog.AutoColor,
 		IncludeLocation: true,
 	})
 	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
@@ -186,15 +186,15 @@ func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.Networ
 
 // Gets all the technical information for a Port
 func (d *RaycoreDriver) TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
-	return nil, nil
+	return nil, fmt.Errorf("TechnicalPortInformation is not implemented")
 }
 
 func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return nil, nil
+	return nil, fmt.Errorf("MapInterface is not implemented")
 }
 
 func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return nil, nil
+	return nil, fmt.Errorf("GetTransceiverInformation is not implemented")
 }
 
 func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
