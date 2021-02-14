@@ -2,26 +2,35 @@ package api
 
 import (
 	"context"
-	"log"
-	"net"
-	"os"
-
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"log"
+	"net"
 
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
 type GRPCServer struct {
-	requests chan *core.Request
-	grpc     *grpc.Server
+	core   *core.Core
+	grpc   *grpc.Server
+	logger hclog.Logger
 }
 
 //  Request to SWP-core
 func (s *GRPCServer) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
-	panic("implement me")
+	req := &core.Request{
+		Request: request,
+		// Metadata
+		Response: make(chan *pb_core.Response, 1),
+		Context:  ctx,
+	}
+	resp, err := s.core.SendRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (s *GRPCServer) Command(ctx context.Context, request *pb_core.CommandRequest) (*pb_core.CommandResponse, error) {
@@ -88,19 +97,10 @@ func (s *GRPCServer) Information(ctx context.Context, request *empty.Empty) (*pb
 // }
 // }
 
-func NewGRPCServer(requests chan *core.Request) *GRPCServer {
-	if requests == nil {
-		log.Fatal("channel is nil, requests needs to be handled..")
-	}
-
-	logger = hclog.New(&hclog.LoggerOptions{
-		Name:   APP_NAME,
-		Output: os.Stdout,
-		Level:  hclog.Debug,
-	})
+func NewGRPCServer(core *core.Core, logger hclog.Logger) *GRPCServer {
 
 	grpcServer := grpc.NewServer()
-	instance := &GRPCServer{requests, grpcServer}
+	instance := &GRPCServer{core, grpcServer, logger}
 
 	pb_core.RegisterCoreServer(grpcServer, instance)
 
