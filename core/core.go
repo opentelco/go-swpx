@@ -29,11 +29,11 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-	
+
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -54,8 +54,6 @@ var (
 
 	// Global request queue
 	RequestQueue = make(chan *Request, RequestBufferSize)
-
-	
 )
 
 func init() {
@@ -74,7 +72,7 @@ func LoadPlugins(pluginPath string) (map[string]*plugin.Client, error) {
 	}
 	for _, p := range plugs {
 		if !p.IsDir() {
-			logger.Debug("found plugin", "plugin",p.Name())
+			logger.Debug("found plugin", "plugin", p.Name())
 			loadedPlugins[p.Name()] = plugin.NewClient(&plugin.ClientConfig{
 				HandshakeConfig:  shared.Handshake,
 				Plugins:          shared.PluginMap,
@@ -104,37 +102,37 @@ type Core struct {
 	swarm *workerPool
 
 	transport Transport
-	logger hclog.Logger
+	logger    hclog.Logger
 }
 
 // start the core app
-func (c *Core) Start() error{
+func (c *Core) Start() error {
 	c.swarm.start(RequestQueue)
 
 	go func() {
-	// catch interrupt and kill all plugins
-	csig := make(chan os.Signal, 1)
-	signal.Notify(csig, os.Interrupt)
-	for range csig {
-		plugin.CleanupClients()
-		// TODO need to close swarm c.swarm.Close() ?
-	}
+		// catch interrupt and kill all plugins
+		csig := make(chan os.Signal, 1)
+		signal.Notify(csig, os.Interrupt)
+		for range csig {
+			plugin.CleanupClients()
+			// TODO need to close swarm c.swarm.Close() ?
+		}
 	}()
-	
+
 	return nil
 }
 
 //
-func New(log hclog.Logger) (*Core,error) {
+func New(log hclog.Logger) (*Core, error) {
 	var err error
 
 	if log != nil {
 		logger = log
 	}
-	
+
 	// create core
 	core := &Core{
-		swarm: newWorkerPool(WORKERS, MaxRequests),
+		swarm:  newWorkerPool(WORKERS, MaxRequests),
 		logger: log,
 		//transport: Transport(t),
 	}
@@ -155,16 +153,16 @@ func New(log hclog.Logger) (*Core,error) {
 	// setup mongodb cache
 	mongoClient, err := initMongoDb(conf.InterfaceCache, logger.Named("mongodb"))
 	if err != nil {
-		logger.Warn("could not establish mongodb connection","error", err)
-		logger.Info("no mongo connection established","cache_enabled", false)
+		logger.Warn("could not establish mongodb connection", "error", err)
+		logger.Info("no mongo connection established", "cache_enabled", false)
 		useCache = false
 		return core, nil
 	}
 	if CacheInterface, err = newInterfaceCache(mongoClient, logger, conf.InterfaceCache); err != nil {
 		logger.Error("error creating cache", "error", err)
-		logger.Info("no mongo connection established","cache_enabled", false)
+		logger.Info("no mongo connection established", "cache_enabled", false)
 		useCache = false
-		return core,nil
+		return core, nil
 	}
 
 	if CacheResponse, err = newResponseCache(mongoClient, logger, conf.ResponseCache); err != nil {
@@ -174,7 +172,7 @@ func New(log hclog.Logger) (*Core,error) {
 
 	useCache = true
 
-	return core,nil
+	return core, nil
 }
 
 // iterate the resources and connect to the plugin
@@ -191,13 +189,13 @@ func loadResources() {
 		}
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-			logger.Info("succesfully dispensed resource plugin","plugin", name)
+			logger.Info("succesfully dispensed resource plugin", "plugin", name)
 			if resource, ok := raw.(shared.Resource); ok {
 				_, err := resource.Version()
 				resources[name] = resource
 				if err != nil {
 					logger.Error("could not get version for plugin", "plugin", name, "error", err.Error())
-					}
+				}
 			} else {
 				logger.Error("type assertions failed for plugin", "plugin", name)
 				os.Exit(1)
@@ -215,8 +213,8 @@ func loadProviders() {
 		var raw interface{}
 		var err error
 
-		logger.Debug("connecting to plugin","plugin", name, "version", p.NegotiatedVersion(), "protocol", p.Protocol())
-		
+		logger.Debug("connecting to plugin", "plugin", name, "version", p.NegotiatedVersion(), "protocol", p.Protocol())
+
 		rpc, err := p.Client()
 		if err != nil {
 			logger.Error(err.Error())
@@ -226,7 +224,6 @@ func loadProviders() {
 		if err != nil {
 			logger.Error("could nog ping", "error", err)
 		}
-		
 
 		raw, err = rpc.Dispense("provider")
 		if err == nil {
@@ -235,8 +232,7 @@ func loadProviders() {
 				logger.Error("failed to load provider_plugin", "plugin", name, "provider", provider, "ok", ok)
 				continue
 			}
-			
-			
+
 			// get information about the provider to use on request
 			var (
 				err error

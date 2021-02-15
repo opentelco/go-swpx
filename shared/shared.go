@@ -24,8 +24,9 @@ package shared
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
@@ -125,10 +126,11 @@ type Configuration struct {
 
 func GetConfig() *Configuration {
 	conf := &Configuration{}
-
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath("./config")
+	viper.AddConfigPath("/swpx/")
+	viper.AddConfigPath("/etc/swpx/")
 
 	err := viper.ReadInConfig()
 	if err != nil {

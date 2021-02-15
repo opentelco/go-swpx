@@ -25,11 +25,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-hclog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/hashicorp/go-hclog"
 
 	"git.liero.se/opentelco/go-swpx/api"
 	"git.liero.se/opentelco/go-swpx/core"
@@ -40,6 +41,7 @@ import (
 
 var httpPort string
 var grpcPort string
+var configFile string
 var logger hclog.Logger
 
 func init() {
@@ -62,13 +64,13 @@ var Start = &cobra.Command{
 	Long:  `switchpoller x. the long description of the application`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger = hclog.New(&hclog.LoggerOptions{
-			Name:   APP_NAME,
-			Level:  hclog.Debug,
-			Color: hclog.AutoColor,
+			Name:            APP_NAME,
+			Level:           hclog.Debug,
+			Color:           hclog.AutoColor,
 			IncludeLocation: true,
 		})
-		
-		c,err := core.New(logger)
+
+		c, err := core.New(logger)
 		if err != nil {
 			panic(err)
 		}
@@ -78,7 +80,6 @@ var Start = &cobra.Command{
 
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it.
-		
 
 		// HTTP
 		server := api.NewServer(c, logger)
@@ -98,25 +99,25 @@ var Start = &cobra.Command{
 		}()
 
 		signalChan := make(chan os.Signal, 1)
-		
+
 		signal.Notify(
 			signalChan,
 			syscall.SIGHUP,  // kill -SIGHUP XXXX
 			syscall.SIGINT,  // kill -SIGINT XXXX or Ctrl+c
 			syscall.SIGQUIT, // kill -SIGQUIT XXXX
 		)
-		
+
 		<-signalChan
 		cmd.Println("os.Interrupt - shutting down...\n")
-		
+
 		go func() {
 			<-signalChan
 			cmd.Println("os.Kill - terminating...\n")
 			os.Exit(1)
 		}()
-		
+
 		// manually cancel context if not using httpServer.RegisterOnShutdown(cancel)
-		
+
 		defer os.Exit(0)
 		return
 	},

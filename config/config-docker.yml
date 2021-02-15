@@ -1,0 +1,46 @@
+snmp:
+  community: xWTyZ9nA158ktJF2
+  timeout: 20s
+  version: 2
+  retries: 3
+  dynamic_repetitions: true
+
+interface_cache:
+  server: mongodb://mongodb:27017
+  database: test
+  collection: interface_cache
+  timeout_seconds: 30
+
+response_cache:
+  server: mongodb://mongodb:27017
+  database: test
+  collection: response_cache
+  timeout_seconds: 30
+
+nats:
+  event_servers: ['nats://nats-1:4222', 'nats://nats-2:4222', 'nats://nats-3:4222']
+
+ssh:
+  username: "root-ssh"
+  password: "qwerty1234"
+  port: 22
+  screen_length: "0"
+  screen_length_command: "screen-length %s temporary"
+  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+  default_errors: "error|failed|unrecognized"
+  ttl: "30s"
+  read_dead_line: "8s"
+  write_dead_line: "8s"
+#  ssh_key_path: "/home/ardi/.ssh/id_rsa"
+telnet:
+  username: "root"
+  password: "qwerty1234"
+  port: 23
+  screen_length: "0"
+  screen_length_command: "screen-length %s temporary"
+  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+  default_errors: "error|failed|unrecognized"
+  ttl: "30s"
+  read_dead_line: "180s"
+  write_dead_line: "180s"
+

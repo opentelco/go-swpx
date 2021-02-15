@@ -52,7 +52,6 @@ test:
 
 
 linux:
-
 	rm -rf build/linux
 	mkdir -p build/linux/plugins/resources;mkdir -p build/linux/plugins/providers;mkdir -p build/linux/config
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/vrp_plug ./resources/vrp/
@@ -68,4 +67,6 @@ hash:
 	@echo current hash is: $(hash)
 
 
-
+docker:
+	docker build -t registry.opentelco.io/go-swpx:latest .
+	docker push registry.opentelco.io/go-swpx:latest
