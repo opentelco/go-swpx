@@ -192,7 +192,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 }
 
 func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	d.logger.Info("got a task to determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+	d.logger.Info("determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*resources.DiscoveryItem)
 	var interfaces = make(map[string]*proto.NetworkElementInterface)

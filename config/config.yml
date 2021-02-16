@@ -7,7 +7,7 @@ snmp:
   dynamic_repetitions: true
 
 interface_cache:
-  server: mongodb://localhost:27027
+  server: mongodb://localhost:27017
   database: test
   collection: interface_cache
   timeout_seconds: 30

@@ -68,7 +68,7 @@ services:
       mongodb:
 
   swpx:
-    image: registry.opentelco.io/go-swpx:latest
+    image: internal.registry.opentelco.io/go-swpx:latest
     ports: 
       - 1337:1337
     networks:
@@ -76,8 +76,7 @@ services:
       mongodb:
       
   dnc-dispatcher-1:
-    image: registry.opentelco.io/go-dnc:latest
-    build: .
+    image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
     command:
@@ -88,8 +87,7 @@ services:
       mongodb:
   
   dnc-dispatcher-2:
-    image: registry.opentelco.io/go-dnc:latest
-    build: .
+    image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
     command:
@@ -101,7 +99,7 @@ services:
       
 
   dnc-poller-1:
-    image: registry.opentelco.io/go-dnc:latest
+    image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
     command:
@@ -112,7 +110,7 @@ services:
       mongodb:
 
   dnc-poller-2:
-    image: registry.opentelco.io/go-dnc:latest
+    image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
     command:
@@ -123,7 +121,7 @@ services:
       mongodb:
 
   dnc-poller-3:
-    image: registry.opentelco.io/go-dnc:latest
+    image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
     command:

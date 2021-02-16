@@ -44,6 +44,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 	task := &snmpc.Task{
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
+			MaxRepetitions:     72,
 			DynamicRepititions: true,
 			MaxIterations:      1,
 			NonRepeaters:       0,
@@ -51,7 +52,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_BULKGET,
+		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.IfIndex, Name: "ifIndex", Type: metric.MetricType_INT},
 			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
@@ -200,7 +201,7 @@ func CreateMsg(conf *shared.Configuration) *transport.Message {
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_BULKGET,
+		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
 
 			{Oid: oids.IfIndex, Name: "ifIndex", Type: metric.MetricType_INT},
@@ -242,7 +243,7 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configurati
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_WALK,
+		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metric.MetricType_STRING},
 		},
@@ -409,7 +410,7 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configura
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_BULKGET,
+		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.HuaIfVRPOpticalVendorSN, Name: "hwEntityOpticalVendorSn", Type: metric.MetricType_STRING},
 			{Oid: oids.HuaIfVRPOpticalTemperature, Name: "hwEntityOpticalTemperature", Type: metric.MetricType_INT},
