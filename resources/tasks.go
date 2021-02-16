@@ -371,7 +371,7 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *tr
 			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
-		Type: snmpc.Type_BULKGET,
+		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
 			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
 			{Oid: oids.IfAlias, Name: "ifAlias", Type: metric.MetricType_STRING},
