@@ -22,6 +22,8 @@ type GRPCServer struct {
 //  Request to SWP-core
 func (s *GRPCServer) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
+	request.Type = pb_core.Request_GET_TECHNICAL_INFO
+
 	req := &core.Request{
 		Request: request,
 		// Metadata
