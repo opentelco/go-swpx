@@ -125,7 +125,7 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := render.Bind(r, data); err != nil {
-		logger.Error(err.Error())
+		s.logger.Error(err.Error())
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
 	}
