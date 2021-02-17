@@ -85,6 +85,10 @@ func (p *Provider) Name() (string, error) {
 
 func (p *Provider) PostHandler(ctx context.Context, r *core.Response) (*core.Response, error) {
 	changes := 0
+	if r.NetworkElement == nil {
+		p.logger.Warn("network element is empt ")
+		return r, nil
+	}
 	for ri, i := range r.NetworkElement.Interfaces {
 		for _, d := range i.DhcpTable {
 			if d.Vlan == SDD_VLAN {
