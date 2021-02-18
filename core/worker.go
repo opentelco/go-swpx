@@ -76,6 +76,7 @@ func (w *worker) start(done chan *worker) {
 			// response is not nandled this way right now. May never be.
 
 			logger.Debug("response back in queue.")
+
 			done <- w
 		}
 	}

@@ -102,11 +102,19 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 	for {
 		select {
 		case resp := <-request.Response:
+			if resp == nil {
+				return nil, fmt.Errorf("received emptry response for: %s", request.Type.String())
+			}
+			if resp.Error != nil && resp.Error.Message != "" {
+				return nil, fmt.Errorf("received error in response, (%d): %s", resp.Error.Code, resp.Error.Message)
+			}
+
 			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
 				logger.Error("error saving response to cache: ", err.Error())
 			}
 
 			return resp, nil
+
 		case <-request.Context.Done():
 			c.logger.Error("timeout for request was hit")
 			return nil, fmt.Errorf("timeout for request reached")
