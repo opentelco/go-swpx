@@ -25,12 +25,12 @@ package resources
 import (
 	"fmt"
 
-	"git.liero.se/opentelco/go-dnc/models/protobuf/metric"
-	shared2 "git.liero.se/opentelco/go-dnc/models/protobuf/shared"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/snmpc"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/ssh"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/telnet"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/metric"
+	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
+	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
+	"git.liero.se/opentelco/go-dnc/models/pb/ssh"
+	"git.liero.se/opentelco/go-dnc/models/pb/telnet"
+	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"

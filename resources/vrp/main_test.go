@@ -26,8 +26,8 @@ import (
 	"context"
 	"testing"
 
-	"git.liero.se/opentelco/go-dnc/models/protobuf/dispatcher"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/dispatcher"
+	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
 

@@ -29,14 +29,14 @@ import (
 	"git.liero.se/opentelco/go-swpx/cmd"
 )
 
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/healtcheck.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/resource.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/provider.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/dnc.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/core.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/network_element.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/traffic_policy.proto
-//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src --go_out=plugins=grpc:$GOPATH/src/ $GOPATH/src/git.liero.se/opentelco/go-swpx/proto/src/analysis.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/healtcheck.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/resource.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/provider.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/dnc.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/core.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/network_element.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/traffic_policy.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/analysis.proto
 
 func main() {
 	if err := cmd.Root.Execute(); err != nil {

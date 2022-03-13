@@ -90,6 +90,7 @@ func (rpc *ProviderGRPCClient) Setup(ctx context.Context, r *proto.SetupConfigur
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {
+	proto.UnimplementedProviderServer
 	Impl Provider
 }
 

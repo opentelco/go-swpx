@@ -111,6 +111,7 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 
 // ResourceGRPCServer is the server struct
 type ResourceGRPCServer struct {
+	proto.UnimplementedResourceServer
 	// *plugin.MuxBroker
 	Impl Resource
 	conf *Configuration

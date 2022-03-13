@@ -14,6 +14,7 @@ import (
 )
 
 type GRPCServer struct {
+	pb_core.UnimplementedCoreServer
 	core   *core.Core
 	grpc   *grpc.Server
 	logger hclog.Logger
@@ -104,7 +105,11 @@ func (s *GRPCServer) Information(ctx context.Context, request *empty.Empty) (*pb
 func NewGRPCServer(core *core.Core, logger hclog.Logger) *GRPCServer {
 
 	grpcServer := grpc.NewServer()
-	instance := &GRPCServer{core, grpcServer, logger}
+	instance := &GRPCServer{
+		core:   core,
+		grpc:   grpcServer,
+		logger: logger,
+	}
 
 	pb_core.RegisterCoreServer(grpcServer, instance)
 

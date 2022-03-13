@@ -28,7 +28,7 @@ import (
 	"log"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	provider "git.liero.se/opentelco/go-swpx/proto/go/provider"
+	 "git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
@@ -69,6 +69,7 @@ func (p *Provider) Name() (string, error) {
 
 func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
 	p.logger.Info("Called SETUP on default provider")
+	
 	return &provider.SetupResponse{}, nil
 }
 

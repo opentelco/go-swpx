@@ -32,7 +32,7 @@ import (
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/protobuf/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"github.com/pkg/errors"
 
 	"git.liero.se/opentelco/go-swpx/resources"
