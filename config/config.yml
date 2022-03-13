@@ -44,4 +44,3 @@ telnet:
   ttl: "30s"
   read_dead_line: "180s"
   write_dead_line: "180s"
-

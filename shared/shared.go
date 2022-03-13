@@ -101,12 +101,14 @@ type ConfigSNMP struct {
 	Port               uint16        `json:"port" toml:"port" yaml:"port"`
 	Timeout            time.Duration `json:"timeout" toml:"timeout" yaml:"timeout"`
 	Retries            int32         `json:"retries" toml:"retries" yaml:"retries"`
-	DynamicRepetitions bool          `json:"dynamic_repetitions" yaml:"dynamic_repetitions" toml:"dynamic_repetitions" yaml:"dynamic_repetitions"`
+	DynamicRepetitions bool          `json:"dynamic_repetitions" toml:"dynamic_repetitions" yaml:"dynamic_repetitions"`
 }
 
 type ConfigMongo struct {
 	Server         string `json:"server" toml:"server" yaml:"server"`
 	Database       string `json:"database" toml:"database" yaml:"database"`
+	Username       string `json:"username" toml:"username" yaml:"username"`
+	Password       string `json:"password" toml:"password" yaml:"password"`
 	Collection     string `json:"collection" toml:"collection" yaml:"collection"`
 	TimeoutSeconds int    `json:"timeout_seconds" toml:"timeout_seconds" yaml:"timeout_seconds"`
 }
