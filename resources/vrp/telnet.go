@@ -25,11 +25,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 )
 
 const (
@@ -40,6 +41,10 @@ const (
 	StatisticsHeaderLength = 7
 	// The number of lines for each traffic policy statistics metric.
 	StatisticsMetricLength = 25
+)
+
+var (
+	reDhcpTableEntry = regexp.MustCompile(`(?P<ipAddress>(^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))\s+(?P<macAddress>([0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}))\s+(?P<outerVlan>[0-9]{1,4})\s+/(?P<innerVlan>[0-9-]{1,4})\s+/(?P<mappedVlan>[0-9-]{1,4})\s+(?P<ifAlias>\w+[0-9]/[0-9]/[0-9]{1,2})\s+(?P<timestamp>.+)$`)
 )
 
 func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
@@ -94,58 +99,27 @@ func parseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
 	rows := make([]*networkelement.DHCPEntry, 0)
 
 	for _, row := range dataRows {
-		fields := strings.Fields(row)
 
-		// skip rows without IP data
-		if !isIPAddressRow(fields) {
-			continue
+		matches := reDhcpTableEntry.FindStringSubmatch(row)
+		if len(matches) > 1 {
+			ip := matches[reDhcpTableEntry.SubexpIndex("ipAddress")]
+			mac := matches[reDhcpTableEntry.SubexpIndex("macAddress")]
+			vlanStr := matches[reDhcpTableEntry.SubexpIndex("outerVlan")]
+			timestamp := matches[reDhcpTableEntry.SubexpIndex("timestamp")]
+			vlan, _ := strconv.Atoi(vlanStr)
+
+			rows = append(rows, &networkelement.DHCPEntry{
+				IpAddress:       ip,
+				HardwareAddress: mac,
+				Vlan:            int64(vlan),
+				Timestamp:       timestamp,
+			})
+
 		}
 
-		vlan, err := getVLAN(fields)
-		if err != nil || vlan == 0 {
-			return nil, fmt.Errorf("can't convert vlan string to int: %v", err)
-		}
-
-		rows = append(rows, &networkelement.DHCPEntry{
-			IpAddress:       fields[0],
-			HardwareAddress: fields[1],
-			Vlan:            int64(vlan),
-			Timestamp:       fields[6],
-		})
 	}
 
 	return rows, nil
-}
-
-// looks for populated VLAN field
-func getVLAN(fields []string) (int, error) {
-	var err error
-
-	for i := 2; i < 5; i++ {
-		if fields[i] == "/--" {
-			continue
-		}
-		val, err := strconv.Atoi(fields[i])
-
-		if err == nil && val != 0 {
-			return val, nil
-		}
-	}
-
-	return 0, err
-}
-
-func isIPAddressRow(fields []string) bool {
-	if len(fields) != 7 {
-		return false
-	}
-
-	match, parseErr := regexp.Match(IPRegex, []byte(strings.Join(fields, " ")))
-	if parseErr != nil {
-		return false
-	}
-
-	return match
 }
 
 func parseCurrentConfig(config string) string {

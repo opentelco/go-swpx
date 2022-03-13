@@ -23,8 +23,9 @@
 package main
 
 import (
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"testing"
+
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 )
 
 func Test_ParseFullMacTable(t *testing.T) {
@@ -130,6 +131,32 @@ Print count:           1          Total count:           1
 	got, err := parseIPTable(table)
 	want := []*networkelement.DHCPEntry{
 		{IpAddress: "192.168.112.19", HardwareAddress: "0848-2c20-1599", Vlan: 296, Timestamp: "2020.08.10-12:27"},
+	}
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+	if !compareDHCP(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
+func Test_ParseSingleValueIPTable2(t *testing.T) {
+	table := `display dhcp snooping user-bind interface GigabitEthernet0/0/10
+DHCP Dynamic Bind-table:
+Flags:O - outer vlan ,I - inner vlan ,P - Vlan-mapping
+IP Address       MAC Address     VSI/VLAN(O/I/P) Interface      Lease
+-------------------------------------------------------------------------------------------
+172.23.0.25      0016-3e65-7ec6  999 /--  /--    GE0/0/10       2021.04.04-23:12 DST
+172.23.0.30      0002-abc4-fc27  999 /--  /--    GE0/0/10       2021.04.04-23:12 DST
+-------------------------------------------------------------------------------------------
+Print count:           2          Total count:           2
+<ostra-radhusg6-a2>`
+
+	got, err := parseIPTable(table)
+	want := []*networkelement.DHCPEntry{
+		{IpAddress: "172.23.0.25", HardwareAddress: "0016-3e65-7ec6", Vlan: 999, Timestamp: "2021.04.04-23:12 DST"},
+		{IpAddress: "172.23.0.30", HardwareAddress: "0002-abc4-fc27", Vlan: 999, Timestamp: "2021.04.04-23:12 DST"},
 	}
 
 	if err != nil {
