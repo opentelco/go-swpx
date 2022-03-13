@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"time"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -30,19 +31,26 @@ type CachedInterface struct {
 
 func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (InterfaceCache, error) {
 	col := client.Database(conf.Database).Collection(collectionInterfaceCache)
-	// Create the model
-	model := mongo.IndexModel{
-		Keys:    bson.M{"hostname": -1, "port": -1},
-		Options: options.Index().SetUnique(true),
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
+	defer cancel()
+
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "hostname", Value: -1}, // prop1 asc
+				{Key: "port", Value: -1},     // prop2 asc
+			},
+			Options: options.Index().SetUnique(true).SetName("hostname@port").SetSparse(true),
+		},
+	})
+	if err != nil {
+		logger.Error("could not create index", "reason", err)
 	}
+
 	c := &ifCacheImpl{
 		client: client,
 		col:    col,
 		logger: logger,
-	}
-	err := createIndex(col, model, logger)
-	if err != nil {
-		return nil, err
 	}
 
 	return c, nil

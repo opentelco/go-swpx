@@ -31,19 +31,24 @@ type CachedResponse struct {
 
 func newResponseCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (ResponseCache, error) {
 	col := client.Database(conf.Database).Collection(collectionResponseCache)
-	// Create the model
-	model := mongo.IndexModel{
-		Keys:    bson.M{"hostname": -1},
-		Options: options.Index().SetUnique(false),
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
+	defer cancel()
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "hostname", Value: -1}, // prop1 asc
+			},
+			Options: options.Index().SetUnique(false).SetName("hostname").SetSparse(true),
+		},
+	})
+	if err != nil {
+		logger.Error("could not create index", "reason", err)
 	}
+
 	c := &respCacheImpl{
 		client: client,
 		col:    col,
 		logger: logger,
-	}
-	err := createIndex(col, model, logger)
-	if err != nil {
-		return nil, err
 	}
 
 	return c, nil

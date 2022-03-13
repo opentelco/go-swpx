@@ -24,26 +24,25 @@ package core
 
 import (
 	"context"
-	
+
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
 const (
 	collectionInterfaceCache = "cache_interface"
-	collectionResponseCache = "cache_response"
+	collectionResponseCache  = "cache_response"
 )
-var(
+
+var (
 	// exported to be reacable from API etc
 	CacheInterface InterfaceCache
 	CacheResponse  ResponseCache
-	
-	useCache       bool
-)
 
+	useCache bool
+)
 
 // create index for cache
 func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Logger) error {
@@ -51,6 +50,7 @@ func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Log
 	if err != nil {
 		return err
 	}
+
 	var indexes []bson.M
 	if err = cursor.All(context.TODO(), &indexes); err != nil {
 		return err
@@ -63,4 +63,3 @@ func createIndex(col *mongo.Collection, model mongo.IndexModel, logger hclog.Log
 	}
 	return nil
 }
-
