@@ -271,18 +271,18 @@ func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 			{
 				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
 			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
-			},
+			// {
+			// 	Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			// },
 		},
 		Config: &telnet.Config{
 			User:                conf.Telnet.Username,

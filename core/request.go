@@ -79,6 +79,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		request.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
 		// check response cache before sending request
 	}
+
 	// TODO: move to handler, provider calls should not care about this?
 	// if recreate is set no use to get the cache
 	if !request.RecreateIndex && request.GetCacheTTL() != 0 {

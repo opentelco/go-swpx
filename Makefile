@@ -68,5 +68,5 @@ hash:
 
 
 docker:
-	docker build -t registry.opentelco.io/go-swpx:latest .
-	docker push registry.opentelco.io/go-swpx:latest
+	docker build -t registry.opentelco.io/go-swpx:$(hash) .
+	docker push registry.opentelco.io/go-swpx:$(hash)

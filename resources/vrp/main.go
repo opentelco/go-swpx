@@ -330,6 +330,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			}
 		case *transport.Message_Telnet:
 			if reply.Error != "" {
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Telnet.Payload[0].Command)
 				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
 				continue
 			}
@@ -392,7 +393,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 }
 
 func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
-	d.logger.Error(err.Error())
+	d.logger.Error("log and append error from dnc", "error", err.Error())
 	errs = append(errs, &networkelement.TransientError{
 		Message: err.Error(),
 		Level:   networkelement.TransientError_WARN,
