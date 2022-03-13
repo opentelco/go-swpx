@@ -320,18 +320,18 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 			{
 				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
 			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
-			},
+			// {
+			// 	Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
+			// },
+			// {
+			// 	Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			// },
 		},
 		Config: &ssh.Config{
 			User:                conf.Ssh.Username,

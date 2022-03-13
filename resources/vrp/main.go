@@ -342,19 +342,21 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[1].Command)
 			}
-			elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
 
-			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Payload[3].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[3].Command)
-			}
+			// elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
 
-			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[4].Command)
-			}
+			// if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Payload[3].Lookfor); err != nil {
+			// 	errs = d.logAndAppend(err, errs, task.Telnet.Payload[3].Command)
+			// }
+			//
+			// if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
+			// 	errs = d.logAndAppend(err, errs, task.Telnet.Payload[4].Command)
+			// }
+			//
+			// if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
+			// 	errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
+			// }
 
-			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
-			}
 		case *transport.Message_Ssh:
 			if reply.Error != "" {
 				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
