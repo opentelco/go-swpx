@@ -29,9 +29,6 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
 
 package resource;
 
-message Empty {}
-
-
 
 message PollNetworkElementRequest {
   string version = 1;
@@ -41,4 +38,3 @@ message PollNetworkElementRequest {
 message PollNetworkElement {
   string version = 1;
 }
-

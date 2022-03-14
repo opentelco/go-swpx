@@ -30,8 +30,6 @@ import "provider.proto";
 
 package resource;
 
-message Empty {}
-
 
 message VersionResponse {
   string version = 1;
@@ -101,4 +99,3 @@ service Resource {
   // Get transceiver information about all interfaces
   rpc GetAllTransceiverInformation(NetworkElementWrapper) returns (networkelement.Element);
 }
-
