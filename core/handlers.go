@@ -52,6 +52,8 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 
 			selectedProviders = append(selectedProviders, c.DefaultProvider)
 		}
+
+		providerConf = defaultConf
 	}
 
 	// select resource-plugin to send the requests to
