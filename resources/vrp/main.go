@@ -114,6 +114,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 		d.logger.Error(err.Error())
 		return nil, err
 	}
+
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		interfaces := make(map[string]*proto.NetworkElementInterface)
@@ -137,8 +138,10 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 		}
 
 		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+	case nil:
+		return nil, errors.Errorf("message is nil")
 	default:
-		return nil, errors.Errorf("unsupported message type", "type", reflect.TypeOf(msg.Task).Name())
+		return nil, errors.Errorf("unsupported message type: %s", reflect.TypeOf(msg.Task).String())
 
 	}
 
