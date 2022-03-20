@@ -1,3 +1,4 @@
+default_provider: "vx"
 
 snmp:
   community: xWTyZ9nA158ktJF2

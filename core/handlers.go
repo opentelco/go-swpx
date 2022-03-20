@@ -42,6 +42,18 @@ func (c *Core) requestHandler(ctx context.Context, request *Request, response *p
 			selectedProviders = append(selectedProviders, selectedProvider)
 			providerConf = defaultConf
 		}
+	} else {
+
+		if c.DefaultProvider != nil {
+			c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.DefaultProvider)
+
+			request.Request, err = c.DefaultProvider.PreHandler(ctx, request.Request)
+			if err != nil {
+				return err
+			}
+
+			selectedProviders = append(selectedProviders, c.DefaultProvider)
+		}
 	}
 
 	// select resource-plugin to send the requests to

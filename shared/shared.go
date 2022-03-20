@@ -118,12 +118,13 @@ type ConfigNATS struct {
 }
 
 type Configuration struct {
-	SNMP           ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
-	InterfaceCache ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
-	ResponseCache  ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
-	NATS           ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
-	Telnet         ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
-	Ssh            ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
+	SNMP            ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
+	InterfaceCache  ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache   ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	NATS            ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
+	Telnet          ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
+	Ssh             ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
+	DefaultProvider string       `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
 }
 
 func GetConfig() *Configuration {
