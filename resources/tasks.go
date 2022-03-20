@@ -34,10 +34,9 @@ import (
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/segmentio/ksuid"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
@@ -49,7 +48,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 			MaxIterations:      1,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKWALK,
@@ -67,7 +66,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -82,7 +81,7 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -106,7 +105,7 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -119,7 +118,7 @@ func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) 
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -143,7 +142,7 @@ func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) 
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -156,7 +155,7 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -185,7 +184,7 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -198,7 +197,7 @@ func CreateMsg(conf *shared.Configuration) *transport.Message {
 			DynamicRepititions: true,
 			MaxIterations:      200,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKWALK,
@@ -227,7 +226,7 @@ func CreateMsg(conf *shared.Configuration) *transport.Message {
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -240,7 +239,7 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configurati
 			MaxIterations:      1,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKWALK,
@@ -256,7 +255,7 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configurati
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -291,9 +290,9 @@ func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 			ScreenLength:        conf.Telnet.ScreenLength,
 			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
 			RegexPrompt:         conf.Telnet.RegexPrompt,
-			Ttl:                 &duration.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
+			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
 		},
 		Host: el.Hostname,
 	}
@@ -304,7 +303,7 @@ func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 		Type:    transport.Type_TELNET,
 		Task:    &transport.Message_Telnet{Telnet: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 
@@ -340,9 +339,9 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 			ScreenLength:        conf.Ssh.ScreenLength,
 			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
 			RegexPrompt:         conf.Ssh.RegexPrompt,
-			Ttl:                 &duration.Duration{Seconds: int64(conf.Ssh.TTL.Seconds())},
-			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Ssh.TTL.Seconds())},
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
 			SshKeyPath:          conf.Ssh.SSHKeyPath,
 		},
 		Host: el.Hostname,
@@ -354,7 +353,7 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 		Type:    transport.Type_SSH,
 		Task:    &transport.Message_Ssh{Ssh: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 
@@ -368,7 +367,7 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *tr
 			MaxIterations:      1,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKWALK,
@@ -392,7 +391,7 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *tr
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -407,7 +406,7 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configura
 			MaxRepetitions:     maxRepetitions, // set this to the number of interfaces ( db.getCollection('interface_cache').find({"hostname": "172.16.56.21"}).count(); )
 			NonRepeaters:       0,              // all oids should be repeated
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_BULKWALK,
@@ -429,7 +428,7 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configura
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -449,9 +448,9 @@ func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.C
 			ScreenLength:        conf.Telnet.ScreenLength,
 			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
 			RegexPrompt:         "CP7:\\/>",
-			Ttl:                 &duration.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &duration.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &duration.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
+			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
 		},
 		Host: el.Hostname,
 	}
@@ -462,7 +461,7 @@ func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.C
 		Type:    transport.Type_TELNET,
 		Task:    &transport.Message_Telnet{Telnet: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: timestamppb.Now(),
 	}
 	return message
 

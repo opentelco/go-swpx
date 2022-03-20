@@ -12,9 +12,9 @@ import (
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/segmentio/ksuid"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
@@ -25,7 +25,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 			NonRepeaters:       12,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            ptypes.DurationProto(conf.SNMP.Timeout),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
 			Retries:            conf.SNMP.Retries,
 		},
 		Type: snmpc.Type_GET,
@@ -59,7 +59,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 		Type:    transport.Type_SNMP,
 		Task:    &transport.Message_Snmpc{Snmpc: task},
 		Status:  shared2.Status_NEW,
-		Created: &timestamp.Timestamp{},
+		Created: &timestamppb.Timestamp{},
 	}
 	return message
 }

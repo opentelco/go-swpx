@@ -27,9 +27,9 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // NetworkElementPlugin is the interface that we're exposing as a plugin.
@@ -101,7 +101,7 @@ func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context,
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
-	resp, err := rpc.client.Version(context.Background(), &empty.Empty{})
+	resp, err := rpc.client.Version(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +118,7 @@ type ResourceGRPCServer struct {
 }
 
 // Version returns the current version
-func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *empty.Empty) (*proto.VersionResponse, error) {
+func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
 }

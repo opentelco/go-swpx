@@ -5,9 +5,9 @@ import (
 	"log"
 	"net"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -38,7 +38,7 @@ func (s *coreGrpcImpl) Command(ctx context.Context, request *pb_core.CommandRequ
 	panic("implement me")
 }
 
-func (s *coreGrpcImpl) Information(ctx context.Context, request *empty.Empty) (*pb_core.InformationResponse, error) {
+func (s *coreGrpcImpl) Information(ctx context.Context, request *emptypb.Empty) (*pb_core.InformationResponse, error) {
 	panic("implement me")
 }
 

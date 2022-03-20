@@ -25,9 +25,9 @@ package shared
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -55,12 +55,12 @@ type ProviderGRPCClient struct {
 }
 
 func (p *ProviderGRPCClient) Name() (string, error) {
-	resp, err := p.client.Name(context.Background(), &empty.Empty{})
+	resp, err := p.client.Name(context.Background(), &emptypb.Empty{})
 	return resp.Name, err
 }
 
 func (p *ProviderGRPCClient) Version() (string, error) {
-	resp, err := p.client.Version(context.Background(), &empty.Empty{})
+	resp, err := p.client.Version(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return resp.Version, err
 	}
@@ -85,12 +85,12 @@ type ProviderGRPCServer struct {
 	Impl Provider
 }
 
-func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *empty.Empty) (*proto.NameResponse, error) {
+func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *emptypb.Empty) (*proto.NameResponse, error) {
 	res, err := rpc.Impl.Name()
 	return &proto.NameResponse{Name: res}, err
 }
 
-func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *empty.Empty) (*proto.VersionResponse, error) {
+func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
 }

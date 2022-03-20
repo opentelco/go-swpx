@@ -7,7 +7,6 @@ require (
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/render v1.0.1
-	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/context v1.1.1
 	github.com/hashicorp/go-hclog v1.2.0
@@ -33,6 +32,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
