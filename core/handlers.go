@@ -57,6 +57,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	}
 
 	// select resource-plugin to send the requests to
+	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)
 	plugin := resources[request.Settings.ResourcePlugin]
 	if plugin == nil {
 		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)
@@ -176,7 +177,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 		var physPortResponse *resource.NetworkElementInterfaces
 		c.logger.Info("run mapEntity to get physical entity index on device")
 		if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
-			c.logger.Error("error running getphysport", "err", err.Error())
+			c.logger.Error("error running MapEntityPhysical", "err", err.Error())
 			resp.Error = &pb_core.Error{
 				Message: err.Error(),
 				Code:    ErrInvalidPort,
