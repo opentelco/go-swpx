@@ -18,8 +18,8 @@ services:
     labels:
      - "traefik.frontend.rule=Host:nats.docker.localhost"
     
-  nats-2: 
-    command: 
+  nats-2:
+    command:
       - "-DV"
       - "-p"
       - "4222"
@@ -30,16 +30,16 @@ services:
     image: "nats:latest"
     expose:
       - "6222"
-    networks: 
-      nats: 
+    networks:
+      nats:
         ipv4_address: "172.25.255.20"
     ports:
       - "24222:4222"
     labels:
      - "traefik.frontend.rule=Host:nats.docker.localhost"
 
-  nats-3: 
-    command: 
+  nats-3:
+    command:
       - "-DV"
       - "-p"
       - "4222"
@@ -50,14 +50,14 @@ services:
     image: "nats:latest"
     expose:
       - "6222"
-    networks: 
-      nats: 
+    networks:
+      nats:
         ipv4_address: "172.25.255.30"
     ports:
       - "34222:4222"
     labels:
-     - "traefik.frontend.rule=Host:nats.docker.localhost"      
-  
+     - "traefik.frontend.rule=Host:nats.docker.localhost"
+
   mongodb:
     image: mongo:latest
     ports:
@@ -86,4 +86,3 @@ networks:
 
 volumes:
   mongodb_data_container:
-

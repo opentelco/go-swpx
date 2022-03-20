@@ -42,11 +42,6 @@ import (
 
 const APP_NAME = "go-swpx"
 
-var (
-	logger hclog.Logger
-	router *chi.Mux
-)
-
 type TimeoutDuration struct {
 	time.Duration
 }

@@ -43,7 +43,7 @@ var logger hclog.Logger
 
 const (
 	VERSION_BASE string = "1.0-beta"
-	SDD_VLAN            = 296
+	SDD_VLAN     int64  = 296
 )
 
 var SDDNetwork *net.IPNet
@@ -114,10 +114,8 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			p.logger.Named("pre-handler").Info("found access ID on provider", "access_id", request.AccessId, "network_element", access.NetworkElement, "port", access.Interface)
 			request.Hostname = access.NetworkElement
 			request.Port = access.Interface
-			request.ResourcePlugin = access.ResourcePlugin
-			if request.Port != "" {
-				request.Type = core.Request_GET_TECHNICAL_INFO_PORT
-			}
+			request.Settings.ResourcePlugin = access.ResourcePlugin
+
 		} else {
 			p.logger.Named("pre-handler").Warn("could not find access id on provider", "access_id", request.AccessId)
 			return request, fmt.Errorf("access id was not found with selected provider")
@@ -135,7 +133,7 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 		}
 
 		if SDDNetwork.Contains(ip) {
-			request.ResourcePlugin = "raycore"
+			request.Settings.ResourcePlugin = "raycore"
 		}
 
 		p.logger.Named("pre-handler").Debug("access id is empty")

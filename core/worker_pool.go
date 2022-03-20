@@ -24,11 +24,16 @@ package core
 
 import (
 	"container/heap"
-	"fmt" // "github.com/davecgh/go-spew/spew"
+	"context"
+	"fmt"
+
+	// "github.com/davecgh/go-spew/spew"
 	"time"
-	
+
+	"github.com/hashicorp/go-hclog"
 	"github.com/segmentio/ksuid"
-	
+
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
@@ -38,8 +43,6 @@ func init() {
 	start = time.Now()
 }
 
-
-
 // implementation
 type workerPool struct {
 	pool     workers
@@ -47,10 +50,14 @@ type workerPool struct {
 	response chan *pb_core.Response
 	index    int
 	ops      int
+	handler  RequestHandler
+	logger   hclog.Logger
 }
 
 // create a new workerPool of workers
-func newWorkerPool(nWorker int, nRequester int) *workerPool {
+func newWorkerPool(nWorker int, nRequester int, logger hclog.Logger) *workerPool {
+	logger = logger.Named("workerPool")
+
 	logger.Debug("create new workerPool", "workers", nWorker, "buffer", nRequester)
 	done := make(chan *worker, nWorker)
 	// create balancer
@@ -60,17 +67,21 @@ func newWorkerPool(nWorker int, nRequester int) *workerPool {
 		response: make(chan *pb_core.Response, nRequester),
 		index:    0,
 		ops:      0,
+		logger:   logger,
 	}
+	b.SetHandler(b._defaultRequestHandler) // set default handler
 	// Start the workers
 	for i := 0; i < nWorker; i++ {
-		logger.Debug("staring worker:", "wid", i+1)
+
 		w := &worker{
-			Id:       i + 1,
-			Name:     ksuid.New().String(),
-			Pending:  0,
-			Executed: 0,
-			TimedOut: 0,
-			messages: make(chan *Request, nRequester),
+			Id:             i + 1,
+			Name:           ksuid.New().String(),
+			Pending:        0,
+			Executed:       0,
+			TimedOut:       0,
+			requests:       make(chan *Request, nRequester),
+			requestHandler: b.handler,
+			logger:         logger.Named(fmt.Sprintf("worker-%d", i+1)),
 		}
 
 		// push the worker to the heap pool
@@ -107,76 +118,64 @@ func (b *workerPool) start(requestChan chan *Request) {
 }
 
 // prints stats to the console (dev)
-func (b *workerPool) print() {
+func (p *workerPool) print() {
 	sum := 0
 	sumsq := 0
-	for _, w := range b.pool {
+	for _, w := range p.pool {
 		// fmt.Printf("%3d ", w.Pending)
 		sum += w.Pending
 		sumsq += w.Pending * w.Pending
 	}
-	avg := float64(sum) / float64(len(b.pool))
-	variance := float64(sumsq)/float64(len(b.pool)) - avg*avg
-	logger.Info("statistics", "avg", avg, "variance", variance, "ops", b.ops, "elapsed",time.Since(start).Seconds(),  "avgs", float64(b.ops)/float64(time.Since(start).Seconds()))
-}
-
-// format stats from the workerPool of workers
-func (b *workerPool) printer() string {
-	sum := 0
-	sumsq := 0
-
-	r := new(wresp)
-	for _, w := range b.pool {
-		r.Workers = append(r.Workers, *w)
-		sum += w.Pending
-		sumsq += w.Pending * w.Pending
-	}
-
-	avg := float64(sum) / float64(len(b.pool))
-	vari := float64(sumsq)/float64(len(b.pool)) - avg*avg
-	r.Average = avg
-	r.Variance = vari
-	r.Elapsed = time.Since(start).Seconds()
-	r.OpsSecond = float64(b.ops) / float64(time.Since(start).Seconds())
-
-	return fmt.Sprintf("%v", r)
+	avg := float64(sum) / float64(len(p.pool))
+	variance := float64(sumsq)/float64(len(p.pool)) - avg*avg
+	p.logger.Info("statistics", "avg", avg, "variance", variance, "ops", p.ops, "elapsed", time.Since(start).Seconds(), "avgs", float64(p.ops)/float64(time.Since(start).Seconds()))
 }
 
 // dispatches a request to a worker and takes a request as argument.
-func (b *workerPool) dispatch(request *Request) {
+func (p *workerPool) dispatch(request *Request) {
 	if false {
-		logger.Error("dispatch: if false?")
-		w := b.pool[b.index]
-		w.messages <- request
+		p.logger.Error("dispatch: if false?")
+		w := p.pool[p.index]
+		w.requests <- request
 		w.Pending++
-		b.index++
-		if b.index >= len(b.pool) {
-			b.index = 0
+		p.index++
+		if p.index >= len(p.pool) {
+			p.index = 0
 		}
 		return
 	}
 	// take a woprker form the pool
-	w := heap.Pop(&b.pool).(*worker)
+	w := heap.Pop(&p.pool).(*worker)
 	// give it a paylod
-	w.messages <- request
+	w.requests <- request
 	// add to pending
 	w.Pending++
 	// push it back to the pool
-	heap.Push(&b.pool, w)
+	heap.Push(&p.pool, w)
 }
 
-func (b *workerPool) completed(w *worker) {
+func (p *workerPool) completed(w *worker) {
 	if false {
-		logger.Error("completed: if false?")
+		w.logger.Error("completed: if false?")
 		w.Pending--
-		b.ops++
+		p.ops++
 		return
 	}
 	w.Pending--
-	b.ops++
-	heap.Remove(&b.pool, w.Id)
-	heap.Push(&b.pool, w)
+	p.ops++
+	heap.Remove(&p.pool, w.Id)
+	heap.Push(&p.pool, w)
 }
 
+// _defaultRequestHandler is set when the pool is created as a default handler
+// a method to use logging in the handler
+func (p *workerPool) _defaultRequestHandler(ctx context.Context, msg *Request, resp *core.Response) error {
+	p.logger.Warn("default request handler for pool in use", "request_hostname", msg.Hostname)
+	return nil
+}
 
-
+// SetHandler sets the Request Handler for the worker pool
+// enables the core to inject a handler after initiated the Pool
+func (p *workerPool) SetHandler(handler RequestHandler) {
+	p.handler = handler
+}

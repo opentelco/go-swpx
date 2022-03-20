@@ -79,7 +79,7 @@ func (c *respCacheImpl) Pop(ctx context.Context, hostname, port, accessId string
 	opts := &options.FindOneOptions{
 		Sort: bson.M{"_id": -1},
 	}
-	res := c.col.FindOne(context.Background(), &filter, opts)
+	res := c.col.FindOne(ctx, &filter, opts)
 	obj := &CachedResponse{}
 
 	if err := res.Decode(obj); err != nil {
@@ -98,7 +98,7 @@ func (c *respCacheImpl) Pop(ctx context.Context, hostname, port, accessId string
 func (c *respCacheImpl) Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type, response *pb_core.Response) error {
 
 	c.logger.Debug("insert into cache", "hostname", hostname, "port", port, "type", rt.String(), "access_id", accessId)
-	_, err := c.col.InsertOne(context.Background(), &CachedResponse{
+	_, err := c.col.InsertOne(ctx, &CachedResponse{
 		Hostname:    hostname,
 		Port:        port,
 		AccessId:    accessId,
@@ -116,6 +116,6 @@ func (c *respCacheImpl) Upsert(ctx context.Context, hostname, port, accessId str
 }
 
 func (c *respCacheImpl) Clear(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) error {
-	_, err := c.col.DeleteMany(context.Background(), bson.M{"hostname": hostname, "port": port, "request_type": rt.String(), "access_id": accessId})
+	_, err := c.col.DeleteMany(ctx, bson.M{"hostname": hostname, "port": port, "request_type": rt.String(), "access_id": accessId})
 	return err
 }

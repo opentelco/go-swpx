@@ -25,7 +25,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -81,9 +83,21 @@ func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*co
 	return request, nil
 }
 
-func (p *Provider) PreHandler(ctx context.Context, response *core.Request) (*core.Request, error) {
+func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
+
+	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
+	isIp := net.ParseIP(request.Hostname)
+	if isIp == nil {
+		domain := parseDomain()
+		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
+
+		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
+	}
+
+	// resolve the
+
 	p.logger.Named("pre-handler").Debug("processing request in", "changes", 0)
-	return response, nil
+	return request, nil
 }
 
 func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
@@ -102,5 +116,23 @@ func main() {
 		GRPCServer: plugin.DefaultGRPCServer,
 		Logger:     logger,
 	})
+
+}
+
+func parseDomain() string {
+
+	switch strings.ToUpper(os.Getenv("REGION")) {
+	case "VX_SA1", "SA1":
+		return ".joburg.net.venturanext.se"
+
+	case "VX_SE2", "SE2":
+		return ".se2.net.vx.se"
+
+	case "VX_SE1", "SE1":
+		return ".se1.net.vx.se"
+
+	default:
+		return ""
+	}
 
 }

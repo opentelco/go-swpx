@@ -30,41 +30,28 @@ import (
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
-type _Metadata struct{}
-
-// TODO: Change Request to interface so we can handl different types of requests?
-// - ProvideRequest
-//    Provide.CPE()
-//    Provide.XXX_()
-// - Core.Poll?
-//    - PollRequest with different Types?
-//       - GET_TECHNICAL_INFO
-//       - GET_TECHNICAL_INFO_PORT
-//       - GET_MAC_TABLE...
-type _Request interface {
-	// Get how long the requset has left to live
-	TTL() time.Time
-
-	// Get the value of Timeout
-	Timeout() time.Duration
-
-	// Get the raw underlaying request
-	Raw() interface{}
-}
-
-// Request is the internal representation of a incoming request
+// Request is the internal representation of an incoming request
 // it is passed between the api and the core
 type Request struct {
 	*pb_core.Request
-	// metadata to handle the request
 
 	Response chan *pb_core.Response
-	Context  context.Context
+
+	ctx context.Context
+}
+
+func NewRequest(ctx context.Context, request *pb_core.Request) *Request {
+	return &Request{
+		Request: request,
+		// Metadata
+		Response: make(chan *pb_core.Response, 1),
+		ctx:      ctx,
+	}
 }
 
 // GetCacheTTL is a helper function
 func (r *Request) GetCacheTTL() time.Duration {
-	ttl, err := time.ParseDuration(r.CacheTtl)
+	ttl, err := time.ParseDuration(r.Settings.CacheTtl)
 	if err != nil {
 		return 0
 	}
@@ -74,16 +61,8 @@ func (r *Request) GetCacheTTL() time.Duration {
 // SendRequest to CORE
 func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error) {
 
-	// TODO: fix the request type so it matches the expected output
-	if request.Type == pb_core.Request_GET_TECHNICAL_INFO && (request.Port != "" || request.AccessId != "") {
-		request.Type = pb_core.Request_GET_TECHNICAL_INFO_PORT
-		// check response cache before sending request
-	}
-
-	// TODO: move to handler, provider calls should not care about this?
-	// if recreate is set no use to get the cache
-	if !request.RecreateIndex && request.GetCacheTTL() != 0 {
-		cr, err := CacheResponse.Pop(ctx, request.Hostname, request.Port, request.AccessId, request.Type)
+	if !request.Settings.RecreateIndex && request.GetCacheTTL() != 0 {
+		cr, err := c.responseCache.Pop(ctx, request.Hostname, request.Port, request.AccessId, request.Type)
 		if err != nil {
 			c.logger.Warn("could not pop from cache", "error", err)
 		}
@@ -110,13 +89,13 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 				return nil, fmt.Errorf("received error in response, (%d): %s", resp.Error.Code, resp.Error.Message)
 			}
 
-			if err := CacheResponse.Upsert(context.TODO(), request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
-				logger.Error("error saving response to cache: ", err.Error())
+			if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
+				c.logger.Error("error saving response to cache", "error", err.Error())
 			}
 
 			return resp, nil
 
-		case <-request.Context.Done():
+		case <-request.ctx.Done():
 			c.logger.Error("timeout for request was hit")
 			return nil, fmt.Errorf("timeout for request reached")
 

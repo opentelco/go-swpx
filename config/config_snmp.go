@@ -1,6 +1,6 @@
 package config
 
-type ConfigSnmp struct {
+type Snmp struct {
 	StringVersion      string `json:"stringVersion" hcl:",label"`
 	Community          string `json:"community" hcl:"community"`
 	Version            uint8  `json:"version" hcl:"version,optional"`

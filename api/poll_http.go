@@ -40,27 +40,26 @@ var (
 	ErrInvalidRequest = fmt.Errorf("invalid request body")
 )
 
-// Poll is the request that holdes the TI request.
+// Poll is the request that holds the TI request.
 type Poll struct {
-	AccessId      string          `json:"access_id"`
-	Hostname      string          `json:"hostname"`
-	Port          string          `json:"port"`
-	Provider      string          `json:"provider"`
-	Driver        string          `json:"driver"` // optional, need to be able to set with provider
-	Region        string          `json:"region"`
-	RecreateIndex bool            `json:"recreate_index"`
-	Timeout       TimeoutDuration `json:"timeout"`
-	CacheTTL      TimeoutDuration `json:"cache_ttl"`
+	AccessId string `json:"access_id"`
+	Hostname string `json:"hostname"`
+	Port     string `json:"port"`
+
+	Provider []string `json:"provider"`
+	Driver   string   `json:"driver"` // optional, need to be able to set with provider
+
+	Region        string               `json:"region"`
+	RecreateIndex bool                 `json:"recreate_index"`
+	Type          pb_core.Request_Type `json:"type"`
+	Timeout       TimeoutDuration      `json:"timeout"`
+	CacheTTL      TimeoutDuration      `json:"cache_ttl"`
 	ipAddr        []net.IP
 
 	logger hclog.Logger
 }
 
 func (req *Poll) Bind(r *http.Request) error {
-	return nil
-}
-
-func (r *Poll) parseDriver() error {
 	return nil
 }
 
@@ -78,7 +77,6 @@ func (r *Poll) parseAddr() error {
 		r.logger.Info("addr:", addr.String())
 		if addr == nil {
 			r.ipAddr = append(r.ipAddr, addr)
-		} else {
 		}
 	}
 
@@ -102,9 +100,8 @@ func (r *Poll) Parse() error {
 
 type PollService struct {
 	*chi.Mux
-	core    *core.Core
-	logger  hclog.Logger
-	storage interface{}
+	core   *core.Core
+	logger hclog.Logger
 }
 
 func NewPollService(core *core.Core, logger hclog.Logger) *PollService {
@@ -133,30 +130,32 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
 	}
+	// set the Type
+	if data.Type == pb_core.Request_NOT_SET {
+		data.Type = pb_core.Request_GET_TECHNICAL_INFO
+	}
 
-	ctx, _ := context.WithTimeout(r.Context(), data.Timeout.Duration)
-	req := &core.Request{
-		Request: &pb_core.Request{
+	ctx, cancel := context.WithTimeout(r.Context(), data.Timeout.Duration)
+	defer cancel()
+
+	pbRequest := &pb_core.Request{
+		Settings: &pb_core.Request_Settings{
 			ProviderPlugin:         data.Provider,
 			ResourcePlugin:         data.Driver,
 			RecreateIndex:          data.RecreateIndex,
 			DisableDistributedLock: false,
-
-			Timeout:  data.Timeout.String(),
-			CacheTtl: data.CacheTTL.String(),
-			AccessId: data.AccessId, // if set Hostname and port should be overriden
-			Hostname: data.Hostname,
-			Port:     data.Port,
-			Type:     pb_core.Request_GET_TECHNICAL_INFO,
+			Timeout:                data.Timeout.String(),
+			CacheTtl:               data.CacheTTL.String(),
 		},
-
-		// Metadata
-		Response: make(chan *pb_core.Response, 1),
-		Context:  ctx,
+		AccessId: data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
+		Hostname: data.Hostname,
+		Port:     data.Port,
+		Type:     data.Type,
 	}
 
-	// send the request
+	req := core.NewRequest(ctx, pbRequest)
 
+	// send the request
 	resp, err := s.core.SendRequest(ctx, req)
 	if err != nil {
 		render.JSON(w, r, NewResponse(ResponseStatusNotFound, err))
@@ -165,8 +164,5 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 
 	wrappedResponse := NewResponse(ResponseStatusOK, resp)
 	render.JSON(w, r, wrappedResponse)
-	return
-
-	// handle it
 
 }

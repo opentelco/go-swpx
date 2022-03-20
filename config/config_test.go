@@ -1,11 +1,8 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
-
-	"github.com/hashicorp/hcl/v2/gohcl"
 )
 
 func Test_Parse(t *testing.T) {
@@ -25,12 +22,32 @@ func Test_Parse(t *testing.T) {
 		t.Error("no config?")
 	}
 
-	pv, err := cfg.GetProviderConfig("vx")
+	fmt.Println(cfg.Poller.Transports)
+
+	type ArrayItem struct {
+		Field  string `hcl:"field-a"`
+		Field2 string `hcl:"field-b"`
+	}
+	type InnerConfig struct {
+		Field string      `hcl:"field"`
+		Items []ArrayItem `hcl:"item,block"`
+	}
+	v := InnerConfig{}
+	pv, err := cfg.GetProviderConfig("vx", &v)
 	if err != nil {
 		t.Error(err)
 	}
 
-	fmt.Println(pv)
+	fmt.Println(pv, v)
+
+	y := InnerConfig{}
+	pv, err = cfg.GetProviderConfig("sait", &y)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(pv, y.Items)
+
+	fmt.Println("field value: ", v.Field)
 
 }
 func Test_VRP(t *testing.T) {
@@ -50,19 +67,11 @@ func Test_VRP(t *testing.T) {
 		t.Error("no config?")
 	}
 
-	pv, err := cfg.GetResourceConfig("vrp")
+	pv, err := cfg.GetResourceConfig("vrp", nil)
 	if err != nil {
 		t.Error(err)
 	}
-
-	n := &TestVRP{}
-	diags := gohcl.DecodeBody(pv.Body, nil, n)
-	if diags.HasErrors() {
-		t.Error(err)
-	}
-
-	js, _ := json.MarshalIndent(n, "", "  ")
-	fmt.Println(string(js))
+	fmt.Println(pv)
 
 }
 
@@ -83,6 +92,6 @@ func Test_Nats(t *testing.T) {
 		t.Error("no config?")
 	}
 
-	fmt.Println(cfg.NATS.GetServers())
+	fmt.Println(cfg.Poller.NATS.GetServers())
 
 }

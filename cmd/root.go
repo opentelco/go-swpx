@@ -41,7 +41,6 @@ import (
 
 var httpPort string
 var grpcPort string
-var configFile string
 var logger hclog.Logger
 
 func init() {
@@ -90,7 +89,7 @@ var Start = &cobra.Command{
 			}
 		}()
 		// GRPC
-		grpcServer := api.NewGRPCServer(c, logger)
+		grpcServer := api.NewCoreGrpcServer(c, logger)
 		go func() {
 			err = grpcServer.ListenAndServe(":" + grpcPort)
 			if err != nil {
@@ -108,18 +107,17 @@ var Start = &cobra.Command{
 		)
 
 		<-signalChan
-		cmd.Println("os.Interrupt - shutting down...\n")
+		cmd.Println("os.Interrupt - shutting down...")
 
 		go func() {
 			<-signalChan
-			cmd.Println("os.Kill - terminating...\n")
+			cmd.Println("os.Kill - terminating...")
 			os.Exit(1)
 		}()
 
 		// manually cancel context if not using httpServer.RegisterOnShutdown(cancel)
 
 		defer os.Exit(0)
-		return
 	},
 }
 
@@ -186,7 +184,9 @@ var Test = &cobra.Command{
 					return
 				case <-ctx.Done():
 					println("time out waiting for response")
-					orchester.Delete(id)
+					if err := orchester.Delete(id); err != nil {
+						logger.Error("could not delete", "error", err)
+					}
 					logger.Info("Size of cache:", orchester.GetSize())
 				}
 			}

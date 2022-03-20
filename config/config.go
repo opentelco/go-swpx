@@ -25,14 +25,13 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
-	"strconv"
 	"time"
-	
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
+
 const (
 	DefaultMongoTimeout = time.Second * 5
 )
@@ -43,76 +42,40 @@ var (
 )
 
 type Configuration struct {
-	Logger      LoggerConf   `hcl:"logger,block"`
-	MongoConfig *MongoConfig `hcl:"mongo,block"`
-
-	NATS *NATSConfig `hcl:"nats,block"`
-	// Drivers and Resources
+	Poller    Poller      `hcl:"switchpoller,block"`
 	Resources []*Resource `hcl:"resource,block"`
 	Providers []*Provider `hcl:"provider,block"`
 }
 
-func (c *Configuration) GetProviderConfig(plug string) (*Provider, error) {
+func (c *Configuration) GetProviderConfig(plug string, config interface{}) (*Provider, error) {
 	if c.Providers == nil || len(c.Providers) == 0 {
 		return nil, ErrProviderConfigurationMissing
 	}
 
 	for _, p := range c.Providers {
 		if p.Plugin == plug {
+			diag := gohcl.DecodeBody(p.Config, nil, config)
+			if diag.HasErrors() {
+				return p, fmt.Errorf(diag.Error())
+			}
 			return p, nil
 		}
 	}
+
 	return nil, ErrProviderConfigurationMissing
 }
 
-func (c *Configuration) GetResourceConfig(plug string) (*Resource, error) {
+func (c *Configuration) GetResourceConfig(plug string, config interface{}) (*Resource, error) {
 	for _, r := range c.Resources {
 		if r.Plugin == plug {
+			diag := gohcl.DecodeBody(r.Config, nil, config)
+			if diag.HasErrors() {
+				return r, fmt.Errorf(diag.Error())
+			}
 			return r, nil
 		}
 	}
 	return nil, ErrResourceConfigurationMissing
-}
-
-type MongoConfig struct {
-	Database   string `hcl:"database"`
-	User       string `hcl:"user,optional"`
-	Password   string `hcl:"password,optional`
-	// Parse timeout as Duration (from string)
-	Timeout string `hcl:"timeout" json:"timeout"`
-	
-	Servers    []*MongoServerEntry `hcl:"server,block"`
-}
-
-type MongoServerEntry struct {
-	Addr    string `hcl:"addr"`
-	Port    int    `hcl:"port"`
-	Replica string `hcl:"replica,optional"`
-}
-
-func (c MongoConfig) GetServers() ([]string, error) {
-	servers := make([]string,len(c.Servers))
-	
-	for _, s := range c.Servers {
-		servers = append(servers, net.JoinHostPort(s.Addr, strconv.Itoa(s.Port)))
-	}
-	if len(servers) == 0 {
-		return nil, fmt.Errorf("no mongo servers configured")
-	}
-	
-	return servers,nil
-}
-func (c MongoConfig) GetTimeout() (time.Duration) {
-	d, err := time.ParseDuration(c.Timeout)
-	if err != nil {
-		return DefaultMongoTimeout
-	}
-	return d
-}
-
-type LoggerConf struct {
-	Level  string `hcl:"level,optional"`
-	AsJson bool   `hcl:"as_json,optional"`
 }
 
 func LoadFile(fname string) ([]byte, error) {
@@ -125,7 +88,7 @@ func LoadFile(fname string) ([]byte, error) {
 
 func ParseConfig(src []byte, filename string, cfg interface{}) error {
 	var diags hcl.Diagnostics
-	if src == nil || len(src) == 0 {
+	if len(src) == 0 {
 		return fmt.Errorf("no byte array supplied")
 	}
 

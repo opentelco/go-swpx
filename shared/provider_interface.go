@@ -34,7 +34,7 @@ import (
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
 
-// NetworkElementPlugin is the interface that we're exposing as a plugin.
+// Provider is the interface that we're exposing as a Provider plugin.
 type Provider interface {
 	Name() (string, error)
 	Version() (string, error)
@@ -78,15 +78,6 @@ func (p *ProviderGRPCClient) PostHandler(ctx context.Context, resp *pb_core.Resp
 func (rpc *ProviderGRPCClient) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
 	return rpc.client.Setup(ctx, r)
 }
-
-// func (p *ProviderGRPCClient)  PreHandler(request *core.Request) (*core.Request, error) {
-// 	return p.client.PreHandler(context.Background(), request)
-// }
-//
-// // Process the network element after data has been collected
-// func (p *ProviderGRPCClient)  PostHandler(resp *pb_core.Response) (*pb_core.Response,error) {
-// 	return p.client.PostHandler(context.Background(), resp)
-// }
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {

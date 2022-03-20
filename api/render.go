@@ -23,6 +23,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -32,5 +33,8 @@ import (
 // it always looks for a status code and sets it before calling render
 func Render(w http.ResponseWriter, r *http.Request, v *Response) {
 	w.WriteHeader(v.Status.Code)
-	render.Render(w, r, v)
+	if err := render.Render(w, r, v); err != nil {
+		fmt.Println("could not write header: ", err)
+	}
+
 }

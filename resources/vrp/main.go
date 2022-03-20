@@ -428,7 +428,10 @@ func main() {
 		logger.Error("failed to create dnc connection", "error", err)
 		os.Exit(1)
 	}
-	enc.BindSendChan("vrp-driver", dncChan)
+	err = enc.BindSendChan("vrp-driver", dncChan)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
 	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)

@@ -45,9 +45,8 @@ var (
 	availableResources = make(map[string]*plugin.Client)
 	availableProviders = make(map[string]*plugin.Client)
 
-	resources       resourceMap = make(map[string]shared.Resource)
-	providers       providerMap = make(map[string]shared.Provider)
-	sortedProviders []shared.Provider
+	resources resourceMap = make(map[string]shared.Resource)
+	providers providerMap = make(map[string]shared.Provider)
 )
 
 // ResourcePlugins is the container for resource plugins

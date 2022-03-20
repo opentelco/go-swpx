@@ -1,17 +1,22 @@
 package core
 
 import (
+	"context"
+
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"github.com/hashicorp/go-hclog"
 )
 
 // worker that does the work
 type worker struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Pending  int    `json:"pending"`
-	Executed int    `json:"executed"`
-	TimedOut int    `json:"timed_out"`
-	messages chan *Request
+	Id             int    `json:"id"`
+	Name           string `json:"name"`
+	Pending        int    `json:"pending"`
+	Executed       int    `json:"executed"`
+	TimedOut       int    `json:"timed_out"`
+	requests       chan *Request
+	requestHandler RequestHandler
+	logger         hclog.Logger
 }
 
 type workers []*worker
@@ -45,39 +50,48 @@ func (p *workers) Pop() interface{} {
 	return w
 }
 
-// worker stats
-type wresp struct {
-	Workers    []worker `json:"workers"`
-	Variance   float64  `json:"variance"`
-	Average    float64  `json:"average"`
-	Operations int      `json:"total_operations"`
-	Failed     int      `json:"failed_operations"`
-	Elapsed    float64  `json:"elapsed"`
-	OpsSecond  float64  `json:"operations_second"`
-}
-
 // start the worker and ready it to accept payloads
 func (w *worker) start(done chan *worker) {
-	for {
-		select {
-		case msg := <-w.messages:
-			resp := &pb_core.Response{RequestAccessId: msg.AccessId}
-
-			// do work with payload
-			err := handle(msg.Context, msg, resp, handleMsg)
-
-			if err != nil {
-				resp.Error = &pb_core.Error{Message: err.Error()}
-				w.TimedOut++
-			}
-
-			msg.Response <- resp
-			w.Executed++
-			// response is not nandled this way right now. May never be.
-
-			logger.Debug("response back in queue.")
-
-			done <- w
+	w.logger.Debug("staring worker", "wid", w.Id)
+	for req := range w.requests {
+		resp := &pb_core.Response{
+			// RequestAccessId: req.AccessId,
 		}
+
+		// do work with payload and return err if timeout or any other error
+		err := w.handle(req.ctx, req, resp)
+
+		if err != nil {
+			resp.Error = &pb_core.Error{Message: err.Error()}
+			w.TimedOut++
+		}
+
+		req.Response <- resp
+		w.Executed++
+
+		w.logger.Debug("put the response back in queue.")
+
+		done <- w
+	}
+}
+
+// handle is the worker handler that wraps the actual handler, aborts if timeout is reached
+func (w *worker) handle(ctx context.Context, msg *Request, resp *pb_core.Response) error {
+
+	// execute the passed fnc function
+	c := make(chan error, 1)
+	go func() {
+		c <- w.requestHandler(ctx, msg, resp)
+	}()
+
+	select {
+	case <-ctx.Done():
+		w.logger.Error("timeout reached or context cancelled", "error", ctx.Err())
+		return ctx.Err()
+	case err := <-c:
+		if err != nil {
+			w.logger.Error("error in response", "error", err.Error())
+		}
+		return err
 	}
 }

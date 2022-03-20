@@ -179,6 +179,128 @@ var Core_ServiceDesc = grpc.ServiceDesc{
 	Metadata: "core.proto",
 }
 
+// CommanderClient is the client API for Commander service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type CommanderClient interface {
+	TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+	EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
+}
+
+type commanderClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCommanderClient(cc grpc.ClientConnInterface) CommanderClient {
+	return &commanderClient{cc}
+}
+
+func (c *commanderClient) TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+	out := new(CommandResponse)
+	err := c.cc.Invoke(ctx, "/core.Commander/TogglePort", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *commanderClient) EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+	out := new(CommandResponse)
+	err := c.cc.Invoke(ctx, "/core.Commander/EnablePortFlapDetection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CommanderServer is the server API for Commander service.
+// All implementations must embed UnimplementedCommanderServer
+// for forward compatibility
+type CommanderServer interface {
+	TogglePort(context.Context, *CommandRequest) (*CommandResponse, error)
+	EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error)
+	mustEmbedUnimplementedCommanderServer()
+}
+
+// UnimplementedCommanderServer must be embedded to have forward compatible implementations.
+type UnimplementedCommanderServer struct {
+}
+
+func (UnimplementedCommanderServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TogglePort not implemented")
+}
+func (UnimplementedCommanderServer) EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnablePortFlapDetection not implemented")
+}
+func (UnimplementedCommanderServer) mustEmbedUnimplementedCommanderServer() {}
+
+// UnsafeCommanderServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CommanderServer will
+// result in compilation errors.
+type UnsafeCommanderServer interface {
+	mustEmbedUnimplementedCommanderServer()
+}
+
+func RegisterCommanderServer(s grpc.ServiceRegistrar, srv CommanderServer) {
+	s.RegisterService(&Commander_ServiceDesc, srv)
+}
+
+func _Commander_TogglePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommanderServer).TogglePort(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Commander/TogglePort",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommanderServer).TogglePort(ctx, req.(*CommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Commander_EnablePortFlapDetection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommanderServer).EnablePortFlapDetection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Commander/EnablePortFlapDetection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommanderServer).EnablePortFlapDetection(ctx, req.(*CommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Commander_ServiceDesc is the grpc.ServiceDesc for Commander service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Commander_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.Commander",
+	HandlerType: (*CommanderServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "TogglePort",
+			Handler:    _Commander_TogglePort_Handler,
+		},
+		{
+			MethodName: "EnablePortFlapDetection",
+			Handler:    _Commander_EnablePortFlapDetection_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "core.proto",
+}
+
 // ProvideClient is the client API for Provide service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.

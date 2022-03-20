@@ -33,19 +33,50 @@ message Error {
 }
 
 
+
+// Request is the Package that travels through the SwitchPoller and its Plugins.
+// The idea is that a Request enters the Core and is then, if a Provider Plugin is
+// selected, it will process the Request with provider.PreHandler(Request) this
+// process might alter the Request depending on the plugin. At the end of the call
+// a provider.PostHandler(Response) is executed to alter the output of the Request.
+//
+// This means that the Request needs to be a generic one and the
 message Request {
-    // settings for the request
-    string provider_plugin = 1;
-    string resource_plugin = 2;
-    bool recreate_index = 3;
-    bool disable_distributed_lock = 4;
-    string timeout = 5;
-    string cache_ttl = 6;
+
+    // Settings for the request
+    message Settings {
+        repeated string provider_plugin = 1;
+        string resource_plugin = 2;
+        bool recreate_index = 3;
+        bool disable_distributed_lock = 4;
+        string timeout = 5;
+        string cache_ttl = 6;
+    }
+    Settings settings = 1;
 
     enum Type {
         NOT_SET = 0;
+        // GET_TECHNICAL_INFO returns a full picture of the network element or
+        // on a specific port
         GET_TECHNICAL_INFO = 1;
-        GET_TECHNICAL_INFO_PORT = 2;
+
+        // GET_BASIC_INFO fetches the basic information on a network element
+        // or a specific port.
+        GET_BASIC_INFO     = 2;
+
+        // GET_MAC_TABLE fetches the mac table on the network element or the
+        // specified port
+        // note: if MAC learning is disabled this will be the same as the GET_IP_TABLE
+        GET_MAC_TABLE      = 3;
+
+        // GET_IP_TABLE fetches the dhcp snooping table on the network element
+        GET_IP_TABLE       = 4;
+
+        // GET_CONFIG on the whole network element or on a specific port
+        GET_CONFIG         = 5;
+
+        // GET_TRANSCEIVER on all ports on a device or on a specific prot
+        GET_TRANSCEIVER    = 6;
     }
 
     Type type = 7;
@@ -56,10 +87,10 @@ message Request {
     string port = 10;
 }
 
-message Response{
-    Request request = 1;
-    networkelement.Element network_element = 2;
 
+
+message Response{
+    networkelement.Element network_element = 2;
     string physical_port = 3;
     Error error = 4;
     string request_access_id = 5;
@@ -71,6 +102,8 @@ message CommandRequest {}
 message CommandResponse {}
 message InformationResponse {}
 
+
+
 service Core {
     // SWP Polling call to get technical Information
     rpc Poll(Request) returns (Response);
@@ -80,6 +113,13 @@ service Core {
     
     // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
     rpc Information(google.protobuf.Empty) returns (InformationResponse);
+}
+
+
+
+service Commander {
+    rpc TogglePort(CommandRequest) returns (CommandResponse);
+    rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
 
 
@@ -98,10 +138,3 @@ service Provide {
     rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
 
 }
-
-
-
-
-// gRPC.Provide.CPE()
-// gRPC.Provide.Access()
-// gRPC.Core.Poll()
