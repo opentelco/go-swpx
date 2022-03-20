@@ -89,12 +89,12 @@ func (r *Poll) Parse() error {
 	if r.AccessId == "" && r.Hostname == "" {
 		return fmt.Errorf("access_id and hostname cannot both be empty: %w", ErrInvalidRequest)
 	}
-	if r.AccessId == "" && r.Hostname != "" {
-		if err := r.parseAddr(); err != nil {
-			r.logger.Error(err.Error())
-			return core.NewError(err.Error(), core.ErrInvalidAddr)
-		}
-	}
+	// if r.AccessId == "" && r.Hostname != "" {
+	// 	if err := r.parseAddr(); err != nil {
+	// 		r.logger.Error(err.Error())
+	// 		return core.NewError(err.Error(), core.ErrInvalidAddr)
+	// 	}
+	// }
 	return nil
 }
 
