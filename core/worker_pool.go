@@ -43,6 +43,8 @@ func init() {
 	start = time.Now()
 }
 
+type RequestHandler func(ctx context.Context, request *Request, response *pb_core.Response) error
+
 // implementation
 type workerPool struct {
 	pool     workers
@@ -170,7 +172,7 @@ func (p *workerPool) completed(w *worker) {
 // _defaultRequestHandler is set when the pool is created as a default handler
 // a method to use logging in the handler
 func (p *workerPool) _defaultRequestHandler(ctx context.Context, msg *Request, resp *core.Response) error {
-	p.logger.Warn("default request handler for pool in use", "request_hostname", msg.Hostname)
+	p.logger.Warn("default requestHandler for pool in use", "request_hostname", msg.Hostname)
 	return nil
 }
 

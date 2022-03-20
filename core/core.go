@@ -103,11 +103,15 @@ func New(logger hclog.Logger) (*Core, error) {
 
 	// create core
 
+	swarm := newWorkerPool(WORKERS, MaxRequests, logger)
+
 	core := &Core{
-		swarm:  newWorkerPool(WORKERS, MaxRequests, logger),
+		swarm:  swarm,
 		logger: logger,
 	}
-	core.swarm.SetHandler(core.requestHandler)
+
+	swarm.SetHandler(core.RequestHandler)
+
 	conf := shared.GetConfig()
 	core.config = conf
 

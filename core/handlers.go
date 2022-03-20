@@ -9,9 +9,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
-type RequestHandler func(ctx context.Context, request *Request, response *pb_core.Response) error
-
-func (c *Core) requestHandler(ctx context.Context, request *Request, response *pb_core.Response) error {
+func (c *Core) RequestHandler(ctx context.Context, request *Request, response *pb_core.Response) error {
 
 	var err error
 
