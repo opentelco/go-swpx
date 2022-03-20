@@ -42,15 +42,15 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 		}
 	} else {
 
-		if c.DefaultProvider != nil {
-			c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.DefaultProvider)
+		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.DefaultProvider)
+		if provider, ok := providers[c.config.DefaultProvider]; ok {
 
-			request.Request, err = c.DefaultProvider.PreHandler(ctx, request.Request)
+			request.Request, err = provider.PreHandler(ctx, request.Request)
 			if err != nil {
 				return err
 			}
 
-			selectedProviders = append(selectedProviders, c.DefaultProvider)
+			selectedProviders = append(selectedProviders, provider)
 		}
 
 		providerConf = defaultConf

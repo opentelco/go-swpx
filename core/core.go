@@ -74,8 +74,6 @@ type Core struct {
 	responseCache  ResponseCache
 	interfaceCache InterfaceCache
 
-	DefaultProvider shared.Provider
-
 	config *shared.Configuration
 	logger hclog.Logger
 }
@@ -129,7 +127,6 @@ func New(logger hclog.Logger) (*Core, error) {
 		if _, ok := availableProviders[core.config.DefaultProvider]; !ok {
 			logger.Warn("the selected provider was not found, falling back on no provider", "default_provider", core.config.DefaultProvider)
 		} else {
-			core.DefaultProvider = providers[core.config.DefaultProvider]
 			logger.Info("selected default_provider found and loaded", "default_provider", core.config.DefaultProvider)
 		}
 	}
