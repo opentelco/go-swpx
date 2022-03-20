@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -136,8 +137,11 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 		}
 
 		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+	default:
+		return nil, errors.Errorf("unsupported message type", "type", reflect.TypeOf(msg.Task).Name())
+
 	}
-	return nil, errors.Errorf("Unsupported message type")
+
 }
 
 func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*networkelement.Element, error) {
