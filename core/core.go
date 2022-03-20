@@ -110,6 +110,7 @@ func New(logger hclog.Logger) (*Core, error) {
 		logger: logger,
 	}
 
+	b.logger.Info("setting core requestHandler for pool")
 	swarm.SetHandler(core.RequestHandler)
 
 	conf := shared.GetConfig()

@@ -43,8 +43,6 @@ func init() {
 	start = time.Now()
 }
 
-type RequestHandler func(ctx context.Context, request *Request, response *pb_core.Response) error
-
 // implementation
 type workerPool struct {
 	pool     workers
@@ -52,7 +50,7 @@ type workerPool struct {
 	response chan *pb_core.Response
 	index    int
 	ops      int
-	handler  RequestHandler
+	handler  func(ctx context.Context, request *Request, response *pb_core.Response) error
 	logger   hclog.Logger
 }
 
@@ -71,6 +69,7 @@ func newWorkerPool(nWorker int, nRequester int, logger hclog.Logger) *workerPool
 		ops:      0,
 		logger:   logger,
 	}
+	b.logger.Info("setting default requestHandler")
 	b.SetHandler(b._defaultRequestHandler) // set default handler
 	// Start the workers
 	for i := 0; i < nWorker; i++ {
@@ -178,6 +177,7 @@ func (p *workerPool) _defaultRequestHandler(ctx context.Context, msg *Request, r
 
 // SetHandler sets the Request Handler for the worker pool
 // enables the core to inject a handler after initiated the Pool
-func (p *workerPool) SetHandler(handler RequestHandler) {
+func (p *workerPool) SetHandler(handler func(ctx context.Context, request *Request, response *pb_core.Response) error) {
+	p.logger.Debug("SetHandler called to set RequestHandler")
 	p.handler = handler
 }
