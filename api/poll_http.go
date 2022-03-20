@@ -25,7 +25,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -54,32 +53,11 @@ type Poll struct {
 	Type          pb_core.Request_Type `json:"type"`
 	Timeout       TimeoutDuration      `json:"timeout"`
 	CacheTTL      TimeoutDuration      `json:"cache_ttl"`
-	ipAddr        []net.IP
 
 	logger hclog.Logger
 }
 
 func (req *Poll) Bind(r *http.Request) error {
-	return nil
-}
-
-func (r *Poll) parseAddr() error {
-	// Parse hostname/ip for host
-
-	addrs, err := net.LookupHost(r.Hostname)
-	if err != nil {
-		r.logger.Error(err.Error())
-		return err
-	}
-
-	for _, addr := range addrs {
-		addr := net.ParseIP(addr)
-		r.logger.Info("addr:", addr.String())
-		if addr == nil {
-			r.ipAddr = append(r.ipAddr, addr)
-		}
-	}
-
 	return nil
 }
 
@@ -130,6 +108,7 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, NewResponse(ErrorStatusInvalidAddr, err))
 		return
 	}
+
 	// set the Type
 	if data.Type == pb_core.Request_NOT_SET {
 		data.Type = pb_core.Request_GET_TECHNICAL_INFO

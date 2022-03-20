@@ -193,7 +193,7 @@ func Proto2conf(protoConf *proto.Configuration) *Configuration {
 			Version:            uint8(protoConf.SNMP.Version),
 			Port:               uint16(protoConf.SNMP.Port),
 			Timeout:            time.Duration(protoConf.SNMP.Timeout),
-			Retries:            int32(protoConf.SNMP.Retries),
+			Retries:            protoConf.SNMP.Retries,
 			DynamicRepetitions: protoConf.SNMP.DynamicRepetitions,
 		},
 		Telnet: ConfigTelnet{

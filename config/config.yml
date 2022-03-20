@@ -20,7 +20,7 @@ response_cache:
   timeout_seconds: 30
 
 nats:
-  event_servers: ['nats://localhost:14222', 'nats://localhost:24222', 'nats://localhost:34222']
+  event_servers: ['nats://localhost:4222']
 
 ssh:
   username: "root-ssh"
