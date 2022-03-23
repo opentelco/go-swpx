@@ -43,7 +43,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-	"github.com/nats-io/nats.go"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
@@ -111,8 +110,8 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 	portMsg := resources.CreatePortInformationMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, portMsg)
 	if err != nil {
-		d.logger.Error(err.Error())
-		return nil, err
+		d.logger.Error("got error back from the dnc", "error", err.Error())
+		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", err)
 	}
 
 	switch task := msg.Task.(type) {
@@ -139,9 +138,9 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 
 		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 	case nil:
-		return nil, errors.Errorf("message is nil")
+		return nil, errors.Errorf("msg task back from DNC is nil")
 	default:
-		return nil, errors.Errorf("unsupported message type: %s", reflect.TypeOf(msg.Task).String())
+		return nil, errors.Errorf("unsupported message task back from dnc: %s", reflect.TypeOf(msg.Task).String())
 
 	}
 
@@ -155,7 +154,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 	vrpMsg := resources.CreateAllVRPTransceiverMsg(el, conf, wrapper.NumInterfaces)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
-		d.logger.Error("transceiver put error", err.Error())
+		d.logger.Error("could not complete GetAllTransceiverInformation", "error", err.Error())
 		return wrapper.FullElement, err
 	}
 
@@ -185,7 +184,7 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 	vrpMsg := createVRPTransceiverMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
-		d.logger.Error("transceiver put error", err.Error())
+		d.logger.Error("could not complete GetTransceiverInformation", "error", err)
 		return nil, err
 	}
 
@@ -209,7 +208,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	msg = resources.CreateDiscoveryMsg(el, conf)
 	msg, err := d.dnc.Put(ctx, msg)
 	if err != nil {
-		d.logger.Error(err.Error())
+		d.logger.Error("could not complete MapInterface", "error", err)
 		return nil, err
 	}
 
@@ -240,7 +239,7 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 	sysInfoMsg := resources.CreateTaskSystemInfo(el, conf)
 	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
 	if err != nil {
-		d.logger.Error(err.Error())
+		d.logger.Error("could not complete AllPortInformation", "error", err)
 		return nil, err
 	}
 
@@ -306,7 +305,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 	for _, msg := range msgs {
 		reply, err := d.dnc.Put(ctx, msg)
 		if err != nil {
-			d.logger.Error(err.Error())
+			d.logger.Error("could not complete TechnicalPortInformation", "error", err.Error())
 			return nil, err
 		}
 
@@ -426,21 +425,9 @@ func main() {
 	})
 
 	sharedConf := shared.GetConfig()
-
 	natsConf := sharedConf.NATS
-	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
-	dncChan = make(chan string)
-	enc, err := nats.NewEncodedConn(nc, "json")
-	if err != nil {
-		logger.Error("failed to create dnc connection", "error", err)
-		os.Exit(1)
-	}
-	err = enc.BindSendChan("vrp-driver", dncChan)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	logger.Debug("message", "message from resource-driver", "version", VERSION.String())
+	logger.Debug("message", "version", VERSION.String())
 	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
 	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
