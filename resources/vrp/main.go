@@ -34,6 +34,7 @@ import (
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 
 	"git.liero.se/opentelco/go-swpx/resources"
@@ -426,6 +427,17 @@ func main() {
 
 	sharedConf := shared.GetConfig()
 	natsConf := sharedConf.NATS
+	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
+	dncChan = make(chan string)
+	enc, err := nats.NewEncodedConn(nc, "json")
+	if err != nil {
+		logger.Error("failed to create dnc connection", "error", err)
+		os.Exit(1)
+	}
+	err = enc.BindSendChan("vrp-driver", dncChan)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	logger.Debug("message", "version", VERSION.String())
 	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
