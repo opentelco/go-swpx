@@ -170,7 +170,7 @@ func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.Networ
 
 	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
 		discoveryMap := make(map[int]*resources.DiscoveryItem)
-		resources.PopulateDiscoveryMap(task, discoveryMap)
+		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
 		for _, discoveryItem := range discoveryMap {
 			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))

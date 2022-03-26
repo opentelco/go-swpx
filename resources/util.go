@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -29,9 +29,12 @@ type DiscoveryItem struct {
 	highSpeed   int
 }
 
-func PopulateDiscoveryMap(task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
+func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
 	for _, m := range task.Snmpc.Metrics {
-		fmt.Println(m.Name, m.Oid, m.Value)
+		logger.Warn("parse snmp metrics",
+			"name", m.Name,
+			"oid", m.Oid,
+			"value", m.Value)
 		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
 		case "ifIndex":

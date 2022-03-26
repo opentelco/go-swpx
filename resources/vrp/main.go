@@ -216,7 +216,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		resources.PopulateDiscoveryMap(task, discoveryMap)
+		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
 		for _, v := range discoveryMap {
 			interfaces[v.Descr] = &proto.NetworkElementInterface{
@@ -261,7 +261,7 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 
 	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
 		discoveryMap := make(map[int]*resources.DiscoveryItem)
-		resources.PopulateDiscoveryMap(task, discoveryMap)
+		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
 		for _, discoveryItem := range discoveryMap {
 			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
