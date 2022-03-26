@@ -296,6 +296,10 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 		c.logger.Debug("got physPortResponse response", "physInterfaces", fmt.Sprintf("%+v", physPortResponse.Interfaces))
 
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+			c.logger.Debug("setting phys values on resp/req",
+				"resp.physicalPort", val.Description,
+				"req.physicalIndex", req.PhysicalIndex,
+			)
 			resp.PhysicalPort = val.Description
 			req.PhysicalIndex = val.Index
 		}

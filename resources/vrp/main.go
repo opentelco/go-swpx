@@ -119,7 +119,6 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 	case *transport.Message_Snmpc:
 		interfaces := make(map[string]*proto.NetworkElementInterface)
 		for _, m := range task.Snmpc.Metrics {
-			d.logger.Debug("metric", "value", fmt.Sprintf("%+v", m))
 			fields := strings.Split(m.Oid, ".")
 			index, err := strconv.Atoi(fields[len(fields)-1])
 			if err != nil {
