@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -301,6 +302,8 @@ func (c *Core) handleGetPasicInformationPort(msg *Request, resp *pb_core.Respons
 			}
 			return err
 		}
+
+		c.logger.Debug("got mapInterface response", "interfaces", fmt.Sprintf("%+v", mapInterfaceResponse.Interfaces))
 		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
 			req.InterfaceIndex = val.Index
 		}
