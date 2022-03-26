@@ -45,7 +45,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 			Community:          conf.SNMP.Community,
 			MaxRepetitions:     72,
 			DynamicRepititions: true,
-			MaxIterations:      1,
+			MaxIterations:      2,
 			NonRepeaters:       0,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
 			Timeout:            durationpb.New(conf.SNMP.Timeout),

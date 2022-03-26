@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -30,6 +31,7 @@ type DiscoveryItem struct {
 
 func PopulateDiscoveryMap(task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
 	for _, m := range task.Snmpc.Metrics {
+		fmt.Println(m.Name, m.Oid, m.Value)
 		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
 		case "ifIndex":
