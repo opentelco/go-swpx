@@ -48,11 +48,11 @@ type Poll struct {
 	Provider []string `json:"provider"`
 	Driver   string   `json:"driver"` // optional, need to be able to set with provider
 
-	Region        string               `json:"region"`
-	RecreateIndex bool                 `json:"recreate_index"`
-	Type          pb_core.Request_Type `json:"type"`
-	Timeout       TimeoutDuration      `json:"timeout"`
-	CacheTTL      TimeoutDuration      `json:"cache_ttl"`
+	Region        string          `json:"region"`
+	RecreateIndex bool            `json:"recreate_index"`
+	Type          string          `json:"type"`
+	Timeout       TimeoutDuration `json:"timeout"`
+	CacheTTL      TimeoutDuration `json:"cache_ttl"`
 
 	logger hclog.Logger
 }
@@ -110,8 +110,11 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set the Type
-	if data.Type == pb_core.Request_NOT_SET {
-		data.Type = pb_core.Request_GET_TECHNICAL_INFO
+	t := pb_core.Request_Type_value[data.Type]
+	pbType := pb_core.Request_Type(t)
+
+	if pbType == pb_core.Request_NOT_SET {
+		pbType = pb_core.Request_GET_TECHNICAL_INFO
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), data.Timeout.Duration)
