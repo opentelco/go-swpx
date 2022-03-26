@@ -75,6 +75,22 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 
 	// implementation of different requests that SWP-X can handle right now
 	switch request.Type {
+	case pb_core.Request_GET_BASIC_INFO:
+
+		if request.Port != "" {
+			err := c.handleGetPasicInformationPort(request, response, plugin, providerConf)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			err := c.handleGetPasicInformationElement(request, response, plugin, providerConf)
+			if err != nil {
+				return err
+			}
+
+		}
+
 	case pb_core.Request_GET_TECHNICAL_INFO:
 
 		if request.Port != "" {
@@ -232,6 +248,136 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 		return err
 	}
 	resp.NetworkElement = ti
+
+	return nil
+}
+
+// handleGetPasicInformationPort gets information related to the selected interface
+func (c *Core) handleGetPasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
+	protConf := shared.Conf2proto(conf)
+	req := &resource.NetworkElement{
+		Hostname:  msg.Hostname,
+		Interface: msg.Port,
+		Conf:      protConf,
+	}
+
+	var mapInterfaceResponse *resource.NetworkElementInterfaces
+	var cachedInterface *CachedInterface
+	var err error
+
+	if c.cacheEnabled && !msg.Settings.RecreateIndex {
+		c.logger.Info("cache is enabled, pop index from cache")
+		cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Interface)
+		if cachedInterface != nil {
+			resp.PhysicalPort = cachedInterface.Port
+			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
+			req.InterfaceIndex = cachedInterface.InterfaceIndex
+		}
+	}
+
+	// did not find cached item or cached is disabled
+	if cachedInterface == nil || !c.cacheEnabled {
+		var physPortResponse *resource.NetworkElementInterfaces
+		c.logger.Info("run mapEntity to get physical entity index on device")
+		if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
+			c.logger.Error("error running MapEntityPhysical", "err", err.Error())
+			resp.Error = &pb_core.Error{
+				Message: err.Error(),
+				Code:    ErrInvalidPort,
+			}
+			return err
+		}
+
+		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+			resp.PhysicalPort = val.Description
+			req.PhysicalIndex = val.Index
+		}
+
+		if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
+			c.logger.Error("error running map interface", "err", err.Error())
+			resp.Error = &pb_core.Error{
+				Message: err.Error(),
+				Code:    ErrInvalidPort,
+			}
+			return err
+		}
+		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
+			req.InterfaceIndex = val.Index
+		}
+
+		// save in cache upon success (if enabled)
+		if c.cacheEnabled {
+			if err = c.interfaceCache.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
+				return err
+			}
+		}
+
+	} else if err != nil {
+		c.logger.Error("error fetching from cache:", err.Error())
+		return err
+	}
+
+	//if the return is 0 something went wrong
+	if req.InterfaceIndex == 0 {
+		c.logger.Error("error running map interface", "err", "index is zero")
+		resp.Error = &pb_core.Error{
+			Message: "interface index returned zero",
+			Code:    ErrInvalidPort,
+		}
+		return err
+	}
+
+	c.logger.Info("found index for selected interface", "index", req.InterfaceIndex)
+
+	ti, err := plugin.TechnicalPortInformation(msg.ctx, req)
+	if err != nil {
+		c.logger.Error(err.Error())
+		return err
+	}
+	resp.NetworkElement = ti
+
+	return nil
+}
+
+// handleGetTechnicalInformationElement gets full information of an Element
+func (c *Core) handleGetPasicInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
+	protoConf := shared.Conf2proto(conf)
+
+	req := &resource.NetworkElement{
+		Interface: "",
+		Hostname:  msg.Hostname,
+		Conf:      protoConf,
+	}
+
+	physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
+	if err != nil {
+		c.logger.Error("error fetching physical entities:", err.Error())
+		return err
+	}
+
+	allPortInformation, err := plugin.AllPortInformation(msg.ctx, req)
+	if err != nil {
+		c.logger.Error("error fetching port information for all interfaces:", err.Error())
+		return err
+	}
+
+	var matchingInterfaces int32 = 0
+	for _, iface := range allPortInformation.Interfaces {
+		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
+			matchingInterfaces++
+		}
+	}
+	allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
+		Element:        req,
+		NumInterfaces:  matchingInterfaces,
+		FullElement:    allPortInformation,
+		PhysInterfaces: physPortResponse,
+	})
+	if err != nil {
+		c.logger.Error("error fetching transceiver information: ", err)
+	}
+
+	resp.NetworkElement = allPortInformation
 
 	return nil
 }

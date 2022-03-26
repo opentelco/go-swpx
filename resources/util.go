@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var ReFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
+var ReFindIndexinOID = regexp.MustCompile(`(\\d+)$`) // used to get the last number of the oid
 
 type DiscoveryItem struct {
 	Index       int

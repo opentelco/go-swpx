@@ -80,7 +80,9 @@ message NetworkElementWrapper {
 service Resource {
   // Get the version of the network element
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
-  
+
+  rpc BasicPortInformation(NetworkElement) returns (networkelement.Element);
+
   // Get technical information about a port
   rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
   

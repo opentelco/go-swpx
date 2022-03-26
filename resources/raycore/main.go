@@ -184,6 +184,10 @@ func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.Networ
 	return ne, nil
 }
 
+func (d *RaycoreDriver) BasicPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
+	return nil, fmt.Errorf("BasicPortInformation is not implemented")
+}
+
 // Gets all the technical information for a Port
 func (d *RaycoreDriver) TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
 	return nil, fmt.Errorf("TechnicalPortInformation is not implemented")

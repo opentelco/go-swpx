@@ -412,6 +412,92 @@ func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientErro
 	return errs
 }
 
+func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+	d.logger.Info("running basic port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+	errs := make([]*networkelement.TransientError, 0)
+
+	conf := shared.Proto2conf(el.Conf)
+
+	var msgs []*transport.Message
+	if el.InterfaceIndex != 0 {
+		msgs = append(msgs, resources.CreateSinglePortMsg(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
+	} else {
+		msgs = append(msgs, resources.CreateMsg(conf))
+	}
+
+	msgs = append(msgs, resources.CreateBasicTelnetInterfaceTask(el, conf))
+
+	ne := &networkelement.Element{}
+	ne.Hostname = el.Hostname
+
+	// Create the model
+	elementInterface := &networkelement.Interface{
+		Stats: &networkelement.InterfaceStatistics{
+			Input:  &networkelement.InterfaceStatisticsInput{},
+			Output: &networkelement.InterfaceStatisticsOutput{},
+		},
+	}
+	var err error
+
+	for _, msg := range msgs {
+		reply, err := d.dnc.Put(ctx, msg)
+		if err != nil {
+			d.logger.Error("could not complete BasicTechnicalPortInformation", "error", err.Error())
+			return nil, err
+		}
+
+		switch task := reply.Task.(type) {
+		case *transport.Message_Snmpc:
+			d.logger.Debug("the reply returns from dnc",
+				"status", reply.Status.String(),
+				"completed", reply.Completed.String(),
+				"execution_time", reply.ExecutionTime.String(),
+				"size", len(task.Snmpc.Metrics))
+
+			elementInterface.Index = el.InterfaceIndex
+
+			for _, m := range task.Snmpc.Metrics {
+				switch {
+				case strings.HasPrefix(m.Oid, oids.SysPrefix):
+					resources.GetSystemInformation(m, ne)
+
+				case strings.HasPrefix(m.Oid, oids.HuaPrefix):
+					d.getHuaweiInterfaceStats(m, elementInterface)
+
+				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
+					d.getIfEntryInformation(m, elementInterface)
+
+				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
+					resources.GetIfXEntryInformation(m, elementInterface)
+				}
+			}
+		case *transport.Message_Telnet:
+			if reply.Error != "" {
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Telnet.Payload[0].Command)
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
+				continue
+			}
+
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
+			}
+
+			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Telnet.Payload[1].Command)
+			}
+
+		}
+	}
+	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
+		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
+	}
+
+	ne.Interfaces = append(ne.Interfaces, elementInterface)
+	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
+	return ne, nil
+}
+
 // handshakeConfigs are used to just do a basic handshake between
 // a plugin and host. If the handshake fails, a user friendly error is shown.
 // This prevents users from executing bad plugins or executing a plugin
@@ -444,7 +530,6 @@ func main() {
 	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 	driver := &VRPDriver{
 		logger: logger,

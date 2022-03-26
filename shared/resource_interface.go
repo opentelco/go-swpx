@@ -36,25 +36,33 @@ import (
 
 type Resource interface {
 	Version() (string, error)
-	// Gets all the technical information for a Port
-	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) // From interface name/descr a SNMP index must be found. This functions helps to solve this problem
 
+	// TechnicalPortInformation Gets all the technical information for a Port
+	// from interface name/descr a SNMP index must be found. This functions helps to solve this problem
+	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+
+	// BasicPortInformation
+	BasicPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+
+	// AllPortInformation
 	AllPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
 
-	// Map interfaces (IF-MIB) from device with the swpx model
+	// MapInterface Map interfaces (IF-MIB) from device with the swpx model
 	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 
-	// Map interfcaes from Envirnment MIB to the swpx model
+	// MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
 	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
 
-	// Get SFP (transceiver) information
+	// GetTransceiverInformation Get SFP (transceiver) information
 	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
 
-	// Maps transceivers to corresponding interfaces using physical port information in the wrapper
+	// GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
 	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
 
-	// Set/Get configuraiton from provider
+	// SetConfiguration sets config in the resource plugin
 	SetConfiguration(ctx context.Context, conf *Configuration) error
+
+	// GetConfiguration configuration from provider
 	GetConfiguration(ctx context.Context) (*Configuration, error)
 }
 
@@ -76,6 +84,10 @@ func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, proto *pr
 // TechnicalPortInformation is the client implementation
 func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.client.TechnicalPortInformation(ctx, proto)
+}
+
+func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
+	return rpc.client.BasicPortInformation(ctx, proto)
 }
 
 func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
@@ -126,6 +138,11 @@ func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
 func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
 	return rpc.Impl.TechnicalPortInformation(ctx, ne)
+}
+
+// BasicPortInformation is a lazy interface to get all information needed for a technical info call.
+func (rpc *ResourceGRPCServer) BasicPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
+	return rpc.Impl.BasicPortInformation(ctx, ne)
 }
 
 // AllPortInformation is a lazy interface to get all information needed for a technical info call.

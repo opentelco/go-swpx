@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ResourceClient interface {
 	// Get the version of the network element
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	BasicPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
 	// Get technical information about a port
 	TechnicalPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
 	// Get technical information about all ports TODO: rename
@@ -47,6 +48,15 @@ func NewResourceClient(cc grpc.ClientConnInterface) ResourceClient {
 func (c *resourceClient) Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/resource.Resource/Version", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceClient) BasicPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error) {
+	out := new(networkelement.Element)
+	err := c.cc.Invoke(ctx, "/resource.Resource/BasicPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +123,7 @@ func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *N
 type ResourceServer interface {
 	// Get the version of the network element
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
+	BasicPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
 	// Get technical information about a port
 	TechnicalPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
 	// Get technical information about all ports TODO: rename
@@ -134,6 +145,9 @@ type UnimplementedResourceServer struct {
 
 func (UnimplementedResourceServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
+}
+func (UnimplementedResourceServer) BasicPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
 }
 func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TechnicalPortInformation not implemented")
@@ -180,6 +194,24 @@ func _Resource_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ResourceServer).Version(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Resource_BasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkElement)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).BasicPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/BasicPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).BasicPortInformation(ctx, req.(*NetworkElement))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -302,6 +334,10 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Version",
 			Handler:    _Resource_Version_Handler,
+		},
+		{
+			MethodName: "BasicPortInformation",
+			Handler:    _Resource_BasicPortInformation_Handler,
 		},
 		{
 			MethodName: "TechnicalPortInformation",
