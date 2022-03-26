@@ -79,7 +79,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	case pb_core.Request_GET_BASIC_INFO:
 
 		if request.Port != "" {
-			err := c.handleGetPasicInformationPort(request, response, plugin, providerConf)
+			err := c.handleGetBasicInformationPort(request, response, plugin, providerConf)
 			if err != nil {
 				return err
 			}
@@ -253,8 +253,8 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 	return nil
 }
 
-// handleGetPasicInformationPort gets information related to the selected interface
-func (c *Core) handleGetPasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
+// handleGetBasicInformationPort gets information related to the selected interface
+func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
@@ -270,6 +270,11 @@ func (c *Core) handleGetPasicInformationPort(msg *Request, resp *pb_core.Respons
 		c.logger.Info("cache is enabled, pop index from cache")
 		cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Interface)
 		if cachedInterface != nil {
+			c.logger.Info("cached interface indexs",
+				"physicalPort", resp.PhysicalPort,
+				"physicalIndex", req.PhysicalIndex,
+				"interfaceIndex", req.InterfaceIndex,
+			)
 			resp.PhysicalPort = cachedInterface.Port
 			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
 			req.InterfaceIndex = cachedInterface.InterfaceIndex
@@ -288,6 +293,7 @@ func (c *Core) handleGetPasicInformationPort(msg *Request, resp *pb_core.Respons
 			}
 			return err
 		}
+		c.logger.Debug("got physPortResponse response", "physInterfaces", fmt.Sprintf("%+v", physPortResponse.Interfaces))
 
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
 			resp.PhysicalPort = val.Description
