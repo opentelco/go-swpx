@@ -343,7 +343,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 
 	c.logger.Info("found index for selected interface", "index", req.InterfaceIndex)
 
-	ti, err := plugin.TechnicalPortInformation(msg.ctx, req)
+	ti, err := plugin.BasicPortInformation(msg.ctx, req)
 	if err != nil {
 		c.logger.Error(err.Error())
 		return err
