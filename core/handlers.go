@@ -296,7 +296,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 		c.logger.Debug("got physPortResponse response", "physInterfaces", fmt.Sprintf("%+v", physPortResponse.Interfaces))
 
 		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
-			c.logger.Debug("setting phys values on resp/req",
+			c.logger.Debug("found physInterface",
 				"port", req.Interface,
 				"resp.physicalPort", val.Description,
 				"req.physicalIndex", req.PhysicalIndex,
@@ -314,9 +314,9 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 			return err
 		}
 
-		c.logger.Debug("got mapInterface response", "interfaces", fmt.Sprintf("%+v", mapInterfaceResponse.Interfaces))
 		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
 			req.InterfaceIndex = val.Index
+			c.logger.Info("found ifMIB interface index", "index", val.Index)
 		}
 
 		// save in cache upon success (if enabled)

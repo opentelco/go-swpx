@@ -31,13 +31,7 @@ type DiscoveryItem struct {
 
 func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
 	for _, m := range task.Snmpc.Metrics {
-
 		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
-		logger.Warn("parse snmp metrics",
-			"name", m.Name,
-			"oid", m.Oid,
-			"value", m.Value,
-			"snmpIndex", index)
 		switch m.GetName() {
 		case "ifIndex":
 			if val, ok := discoveryMap[index]; ok {
