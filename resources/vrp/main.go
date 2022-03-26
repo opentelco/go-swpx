@@ -224,6 +224,7 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 				Description: v.Descr,
 				Alias:       v.Alias,
 			}
+			d.logger.Debug("mapInterface", v.Descr, fmt.Sprintf("%+v", interfaces[v.Descr]))
 		}
 	}
 
