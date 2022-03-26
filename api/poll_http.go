@@ -132,7 +132,7 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		AccessId: data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
 		Hostname: data.Hostname,
 		Port:     data.Port,
-		Type:     data.Type,
+		Type:     pbType,
 	}
 
 	req := core.NewRequest(ctx, pbRequest)
