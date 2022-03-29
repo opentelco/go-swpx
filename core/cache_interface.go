@@ -86,14 +86,18 @@ func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedI
 func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
 	for k, v := range interfaces.Interfaces {
 		if physInterface, ok := phys.Interfaces[k]; ok {
-			var upsert = true
-			opts := &options.UpdateOptions{Upsert: &upsert}
-			_, err := c.col.UpdateOne(ctx, bson.M{
-				"hostname":              ne.Hostname,
-				"port":                  v.Description,
-				"if_index":              v.Index,
-				"physical_entity_index": physInterface.Index,
-			}, opts)
+			opts := options.Update().SetUpsert(true)
+			filter := bson.M{
+				"hostname": ne.Hostname,
+				"port":     v.Description,
+			}
+			_, err := c.col.UpdateOne(ctx, filter,
+				bson.M{"$set": bson.M{
+					"hostname":              ne.Hostname,
+					"port":                  v.Description,
+					"if_index":              v.Index,
+					"physical_entity_index": physInterface.Index,
+				}}, opts)
 
 			if err != nil {
 				c.logger.Error("error saving interface in cache", "error", err, "hostname", ne.Hostname, "port", v.Description)
