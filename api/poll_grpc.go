@@ -23,7 +23,9 @@ type coreGrpcImpl struct {
 //  Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
-	request.Type = pb_core.Request_GET_TECHNICAL_INFO
+	if request.Type == pb_core.Request_NOT_SET {
+		request.Type = pb_core.Request_GET_TECHNICAL_INFO
+	}
 
 	req := core.NewRequest(ctx, request)
 
