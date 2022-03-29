@@ -474,9 +474,6 @@ func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Confi
 			{
 				Command: fmt.Sprintf("display mac-address %s", el.Interface),
 			},
-			{
-				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
-			},
 		},
 		Config: &telnet.Config{
 			User:                conf.Telnet.Username,

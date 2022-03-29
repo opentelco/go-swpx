@@ -483,10 +483,6 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
 			}
 
-			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[1].Command)
-			}
-
 		}
 	}
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {

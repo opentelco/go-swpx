@@ -31,8 +31,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Cache is a Cache for requests between SWPX
-// and the DNC dispatcher
+// Cache is a Cache for requests between SWPX  nd the DNC dispatcher
 type Cache interface {
 	Put(ctx context.Context, id uuid.UUID) chan interface{}
 	Pop(id uuid.UUID) (chan interface{}, error)
