@@ -18,7 +18,7 @@ RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/ra
 
 
 
-FROM alpine:latest
+FROM alpine
 RUN mkdir -p /swpx/config/ /swpx/plugins/providers /swpx/plugins/resources
 WORKDIR /swpx/
 COPY --from=builder /swpx/ /swpx/

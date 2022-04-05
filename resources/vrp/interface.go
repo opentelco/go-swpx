@@ -96,10 +96,10 @@ func (v *VRPDriver) getIfEntryInformation(m *metric.Metric, elementInterface *ne
 	case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
 		elementInterface.Hwaddress = m.GetStringValue()
 
-	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
+	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
 		elementInterface.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
 
-	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
+	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
 		elementInterface.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
 
 	}

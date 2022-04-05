@@ -1,4 +1,5 @@
 hash := $(shell git log --pretty=format:'%h' -n 1)
+gittag := $(shell git describe --tags --abbrev=0)
 goarch := $(shell echo amd64)
 goos :=  $(shell echo linux)
 app_name := swpx
@@ -12,7 +13,7 @@ providers_dir := $(curpath)/providers
 resources_plugin_dir := $(curpath)/plugins/resources
 providers_plugin_dir := $(curpath)/plugins/providers
 
-.PHONY: build pb providers resources core clean linux hash
+.PHONY: build pb providers resources core clean linux hash release docker
 
 build: clean_all pb providers resources core
 
@@ -66,7 +67,13 @@ linux:
 hash:
 	@echo current hash is: $(hash)
 
+t:
+	@echo current tag is: $(gittag)
 
 docker:
+        docker build -t registry.opentelco.io/go-swpx:$(gittag) .
+        docker push registry.opentelco.io/go-swpx:$(gittag)
+
+dockerhash:
 	docker build -t registry.opentelco.io/go-swpx:$(hash) .
 	docker push registry.opentelco.io/go-swpx:$(hash)
