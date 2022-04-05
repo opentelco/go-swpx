@@ -1,5 +1,5 @@
 hash := $(shell git log --pretty=format:'%h' -n 1)
-gittag := $(shell git describe --tags --abbrev=0)
+GITTAG := $(shell git describe --tags --abbrev=0)
 goarch := $(shell echo amd64)
 goos :=  $(shell echo linux)
 app_name := swpx
@@ -65,15 +65,15 @@ linux:
 
 
 hash:
-	@echo current hash is: $(hash)
+	@echo current hash is: ${hash}
 
 t:
-	@echo current tag is: $(gittag)
+	@echo current tag is: ${GITTAG}
 
 docker:
-        docker build -t registry.opentelco.io/go-swpx:$(gittag) .
-        docker push registry.opentelco.io/go-swpx:$(gittag)
+	docker build -t registry.opentelco.io/go-swpx:${GITTAG} .
+	docker push registry.opentelco.io/go-swpx:${GITTAG}
 
 dockerhash:
-	docker build -t registry.opentelco.io/go-swpx:$(hash) .
-	docker push registry.opentelco.io/go-swpx:$(hash)
+	docker build -t registry.opentelco.io/go-swpx:${hash} .
+	docker push registry.opentelco.io/go-swpx:${hash}

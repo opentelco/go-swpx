@@ -125,6 +125,18 @@ func parseDomain() string {
 	case "VX_SA1", "SA1":
 		return ".joburg.net.venturanext.se"
 
+	case "VX_UK1", "UK1":
+		return ".net.uk1.vx.se"
+
+	case "VX_DE1", "DE1":
+		return ".net.de1.vx.se"
+
+	case "VX_BE1", "BE1":
+		return ".net.be1.vx.se"
+
+	case "VX_AT1", "AT1":
+		return ".net.at1.vx.se"
+
 	case "VX_SE2", "SE2":
 		return ".net.se2.vx.se"
 
