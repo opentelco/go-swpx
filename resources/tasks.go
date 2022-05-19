@@ -500,3 +500,37 @@ func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Confi
 	return message
 
 }
+
+func CreateCTCTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &telnet.Task{
+		Type: telnet.Type_GET,
+		Payload: []*telnet.Payload{
+			{
+				Command: fmt.Sprintf("show mac address-table dynamic interface  %s", el.Interface),
+			},
+		},
+		Config: &telnet.Config{
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			Port:                conf.Telnet.Port,
+			ScreenLength:        conf.Telnet.ScreenLength,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
+		},
+		Host: el.Hostname,
+	}
+
+	message := &transport.Message{
+		Id:      ksuid.New().String(),
+		Target:  el.Hostname,
+		Type:    transport.Type_TELNET,
+		Task:    &transport.Message_Telnet{Telnet: task},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+	}
+	return message
+
+}
