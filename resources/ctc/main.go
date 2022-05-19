@@ -203,7 +203,7 @@ func main() {
 		logger.Error("failed to create dnc connection", "error", err)
 		os.Exit(1)
 	}
-	err = enc.BindSendChan("vrp-driver", dncChan)
+	err = enc.BindSendChan("ctc-driver", dncChan)
 	if err != nil {
 		log.Fatal(err)
 	}

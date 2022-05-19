@@ -121,6 +121,46 @@ resource "vrp" {
 
 }
 
+// resource plugins/drivers
+// ctc pins the config to a resource plugin named ctc
+resource "ctc" {
+  version = "v1.0.0"
+  description = "switches from CTC union"
+
+    dnc {
+      snmp {
+
+      }
+        connection "ssh" {
+
+        }
+        connection "telnet" {
+
+        }
+
+    nats {
+      username = "test"
+      password = "testPassword"
+      server {
+        addr = "localhost"
+        port = "14222"
+      }
+
+      server {
+        addr = "localhost"
+        port = "24222"
+      }
+
+      server {
+        addr = "localhost"
+        port = "34222"
+      }
+    }
+  }
+
+
+}
+
 
 resource "raycore" {
   version = "v1.0.0"
