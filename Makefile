@@ -74,6 +74,10 @@ docker:
 	docker build -t registry.opentelco.io/go-swpx:${GITTAG} .
 	docker push registry.opentelco.io/go-swpx:${GITTAG}
 
+vxdocker:
+	docker build -t 441617468760.dkr.ecr.eu-west-1.amazonaws.com/opentelco/swpx:${GITTAG} .
+	docker push 441617468760.dkr.ecr.eu-west-1.amazonaws.com/opentelco/swpx:${GITTAG}
+
 dockerhash:
 	docker build -t registry.opentelco.io/go-swpx:${hash} .
 	docker push registry.opentelco.io/go-swpx:${hash}
