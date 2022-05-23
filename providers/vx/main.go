@@ -103,7 +103,7 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 
 	d, err := p.devClient.Get(ctx, &device.GetParameters{Hostname: request.Hostname})
 	if err != nil || len(d.Devices) == 0 {
-		p.logger.Warn("could not get OSS device", "hostname", request.Hostname)
+		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
 		return request, nil
 	}
 	host := d.Devices[0]
