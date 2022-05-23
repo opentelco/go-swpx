@@ -92,16 +92,17 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 	isIp := net.ParseIP(request.Hostname)
 	params := &device.GetParameters{}
 	if isIp == nil {
+		params.Hostname = request.Hostname
+
 		domain := parseDomain()
 		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
-		params.Hostname = request.Hostname
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
 
 	} else {
 		params.Ip = isIp.String()
 	}
 
-	d, err := p.devClient.Get(ctx, &device.GetParameters{Hostname: request.Hostname})
+	d, err := p.devClient.Get(ctx, params)
 	if err != nil || len(d.Devices) == 0 {
 		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
 		return request, nil
