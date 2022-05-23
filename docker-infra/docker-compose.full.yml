@@ -79,8 +79,7 @@ services:
     image: internal.registry.opentelco.io/go-dnc:latest
     volumes:
       - ./config-docker-sait.hcl:/dnc/config.hcl:z
-    command:
-      /dnc/go-dnc dispatcher start -c /dnc/config.hcl
+    command: ["dispatcher", "start", "-c", "/dnc/config.hcl"]
     networks:
       dnc:
       nats:
@@ -145,4 +144,3 @@ networks:
     
 volumes:
   mongodb_data_container:
-

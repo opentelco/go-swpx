@@ -33,6 +33,7 @@ resources:
 	# Building RESOURCES
 	@rm -f $(resources_bin)/*
 	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .
+	@cd $(resources_dir)/ctc/; go build -o $(resources_plugin_dir)/ctc .
 	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
 
 
@@ -56,6 +57,7 @@ linux:
 	rm -rf build/linux
 	mkdir -p build/linux/plugins/resources;mkdir -p build/linux/plugins/providers;mkdir -p build/linux/config
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/vrp_plug ./resources/vrp/
+	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/resources/ctc_plug ./resources/ctc/
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/plugins/providers/provider_vx ./providers/vx/main.go
 	env GOOS=$(goos) GOARCH=$(goarch) go build -o ./build/linux/swpx main.go
 	cp config/config.yml build/linux/config/

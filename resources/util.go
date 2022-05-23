@@ -14,10 +14,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var ReFindIndexinOID = regexp.MustCompile("(\\d+)$") // used to get the last number of the oid
+var ReFindIndexinOID = regexp.MustCompile(`(\d+)$`) // used to get the last number of the oid
 
 type DiscoveryItem struct {
-	Index       int
+	Index       int64
 	Descr       string
 	Alias       string
 	ifType      int
@@ -35,21 +35,23 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 		switch m.GetName() {
 		case "ifIndex":
 			if val, ok := discoveryMap[index]; ok {
-				val.Index = int(m.GetIntValue())
+				val.Index = m.GetIntValue()
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					Index: int(m.GetIntValue()),
+					Index: m.GetIntValue(),
 				}
 			}
 		case "ifAlias":
 			if val, ok := discoveryMap[index]; ok {
-			} else {
 				val.Alias = m.GetStringValue()
+			} else {
 				discoveryMap[index] = &DiscoveryItem{
 					Alias: m.GetStringValue(),
 				}
 			}
-		case "ifDescr":
+
+		case "ifXEntry":
+
 			if val, ok := discoveryMap[index]; ok {
 				val.Descr = m.GetStringValue()
 			} else {
@@ -57,6 +59,17 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					Descr: m.GetStringValue(),
 				}
 			}
+
+		case "ifDescr":
+
+			if val, ok := discoveryMap[index]; ok {
+				val.Descr = m.GetStringValue()
+			} else {
+				discoveryMap[index] = &DiscoveryItem{
+					Descr: m.GetStringValue(),
+				}
+			}
+
 		case "ifType":
 			if val, ok := discoveryMap[index]; ok {
 				val.ifType = int(m.GetIntValue())
@@ -65,6 +78,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					ifType: int(m.GetIntValue()),
 				}
 			}
+
 		case "ifMtu":
 			if val, ok := discoveryMap[index]; ok {
 				val.mtu = int(m.GetIntValue())
@@ -73,6 +87,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					mtu: int(m.GetIntValue()),
 				}
 			}
+
 		case "ifPhysAddress":
 			if val, ok := discoveryMap[index]; ok {
 				val.physAddress = m.GetHwaddrValue()
@@ -81,6 +96,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					physAddress: m.GetHwaddrValue(),
 				}
 			}
+
 		case "ifAdminStatus":
 			if val, ok := discoveryMap[index]; ok {
 				val.adminStatus = int(m.GetIntValue())
@@ -89,6 +105,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					adminStatus: int(m.GetIntValue()),
 				}
 			}
+
 		case "ifOperStatus":
 			if val, ok := discoveryMap[index]; ok {
 				val.operStatus = int(m.GetIntValue())
@@ -97,6 +114,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 					operStatus: int(m.GetIntValue()),
 				}
 			}
+
 		case "ifLastChange":
 			if val, ok := discoveryMap[index]; ok {
 				val.lastChange = m.GetTimestampValue()

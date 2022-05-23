@@ -1,7 +1,7 @@
 version: "3"
 services: 
-  nats-1: 
-    command: 
+  nats-1:
+    command:
       - "-DV"
       - "-p"
       - "4222"
@@ -18,6 +18,31 @@ services:
     volumes:
       - mongodb_data_container:/data/db
 
+  dnc-dispatcher:
+    image: registry.opentelco.io/go-dnc:latest
+    volumes:
+      - ./dnc-config-docker.hcl:/dnc/config.hcl:z
+    command: ["dispatcher", "start", "-c", "/dnc/config.hcl"]
+    networks:
+      dnc:
+      nats:
+      mongodb:
+
+  dnc-poller:
+    image: registry.opentelco.io/go-dnc:latest
+    volumes:
+      - ./dnc-config-docker.hcl:/dnc/config.hcl:z
+    command: ["poller", "start", "-c", "/dnc/config.hcl"]
+    networks:
+      dnc:
+      nats:
+      mongodb:
+
+
+networks:
+  nats:
+  mongodb:
+  dnc:
 
 
 volumes:

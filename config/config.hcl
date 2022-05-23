@@ -46,7 +46,7 @@ switchpoller {
   }
 
   snmp {
-    community = "xWTyZ9nA158ktJF2"
+    community = "semipublic"
     timeout = "20s"
     version = 2
     retries = 3
@@ -86,6 +86,46 @@ switchpoller {
 resource "vrp" {
   version = "v1.0.0"
   description = "switches from huawei (VRP software)"
+
+    dnc {
+      snmp {
+
+      }
+        connection "ssh" {
+
+        }
+        connection "telnet" {
+
+        }
+
+    nats {
+      username = "test"
+      password = "testPassword"
+      server {
+        addr = "localhost"
+        port = "14222"
+      }
+
+      server {
+        addr = "localhost"
+        port = "24222"
+      }
+
+      server {
+        addr = "localhost"
+        port = "34222"
+      }
+    }
+  }
+
+
+}
+
+// resource plugins/drivers
+// ctc pins the config to a resource plugin named ctc
+resource "ctc" {
+  version = "v1.0.0"
+  description = "switches from CTC union"
 
     dnc {
       snmp {

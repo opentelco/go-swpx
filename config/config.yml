@@ -1,7 +1,7 @@
 default_provider: "vx"
 
 snmp:
-  community: xWTyZ9nA158ktJF2
+  community: semipublic
   timeout: 20s
   version: 2
   retries: 3
@@ -35,8 +35,8 @@ ssh:
   write_dead_line: "8s"
 #  ssh_key_path: "/home/ardi/.ssh/id_rsa"
 telnet:
-  username: "root"
-  password: "qwerty1234"
+  username: "vx1110"
+  password: "badingdong"
   port: 23
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"

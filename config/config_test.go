@@ -75,6 +75,31 @@ func Test_VRP(t *testing.T) {
 
 }
 
+func Test_CTC(t *testing.T) {
+
+	bs, err := LoadFile("config.hcl")
+	if err != nil {
+		t.Error(err)
+	}
+
+	cfg := &Configuration{}
+	err = ParseConfig(bs, "config.hcl", cfg)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if cfg == nil {
+		t.Error("no config?")
+	}
+
+	pv, err := cfg.GetResourceConfig("ctc", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(pv)
+
+}
+
 func Test_Nats(t *testing.T) {
 
 	bs, err := LoadFile("config.hcl")

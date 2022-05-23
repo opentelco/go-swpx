@@ -85,25 +85,31 @@ func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedI
 
 func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
 	for k, v := range interfaces.Interfaces {
-		if physInterface, ok := phys.Interfaces[k]; ok {
-			opts := options.Update().SetUpsert(true)
-			filter := bson.M{
-				"hostname": ne.Hostname,
-				"port":     v.Description,
-			}
-			_, err := c.col.UpdateOne(ctx, filter,
-				bson.M{"$set": bson.M{
-					"hostname":              ne.Hostname,
-					"port":                  v.Description,
-					"if_index":              v.Index,
-					"physical_entity_index": physInterface.Index,
-				}}, opts)
 
-			if err != nil {
-				c.logger.Error("error saving interface in cache", "error", err, "hostname", ne.Hostname, "port", v.Description)
-				return err
-			}
+		data := bson.M{
+			"hostname": ne.Hostname,
+			"port":     v.Description,
+			"if_index": v.Index,
+		}
 
+		// All vendors (CTC Union) does not have implemented/enabled the phys entity MIB
+		// This means that we cannot know for sure if the PHYS is set.
+		if phys != nil { // check if phys is set
+			if physInterface, ok := phys.Interfaces[k]; ok {
+				data["physical_entity_index"] = physInterface.Index
+			}
+		}
+
+		opts := options.Update().SetUpsert(true)
+		filter := bson.M{
+			"hostname": ne.Hostname,
+			"port":     v.Description,
+		}
+		_, err := c.col.UpdateOne(ctx, filter, bson.M{"$set": data}, opts)
+
+		if err != nil {
+			c.logger.Error("error saving interface in cache", "error", err, "hostname", ne.Hostname, "port", v.Description)
+			return err
 		}
 	}
 	return nil
