@@ -13,9 +13,11 @@ import (
 	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
-	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"github.com/nats-io/nats.go"
@@ -96,7 +98,7 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
 
-	msgs = append(msgs, resources.CreateCTCTelnetInterfaceTask(el, conf))
+	msgs = append(msgs, CreateCTCTelnetInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
@@ -168,22 +170,54 @@ func (d *CTCDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 
 // MapInterface Map interfaces (IF-MIB) from device with the swpx model
 func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
+	d.logger.Info("determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+	var msg *transport.Message
+	discoveryMap := make(map[int]*resources.DiscoveryItem)
+	var interfaces = make(map[string]*proto.NetworkElementInterface)
+
+	conf := shared.Proto2conf(el.Conf)
+
+	msg = CreateCTCDiscoveryMsg(el, conf)
+	msg, err := d.dnc.Put(ctx, msg)
+	if err != nil {
+		d.logger.Error("could not complete MapInterface", "error", err)
+		return nil, err
+	}
+
+	switch task := msg.Task.(type) {
+	case *transport.Message_Snmpc:
+		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+
+		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+
+		for _, v := range discoveryMap {
+			interfaces[v.Descr] = &proto.NetworkElementInterface{
+				Index:       v.Index,
+				Description: v.Descr,
+				Alias:       v.Alias,
+			}
+		}
+	}
+
+	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 }
 
 // MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
+// Find matching OID for port
 func (d *CTCDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
+
+	return nil, status.Error(codes.Unimplemented, "MapEntityPhysical is unimplemented")
+
 }
 
 // GetTransceiverInformation Get SFP (transceiver) information
 func (d *CTCDriver) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
+	return nil, status.Error(codes.Unimplemented, "GetTransceiverInformation is unimplemented")
 }
 
 // GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
 func (d *CTCDriver) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error) {
-	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
+	return nil, status.Error(codes.Unimplemented, "GetAllTransceiverInformation is unimplemented")
 }
 
 func main() {

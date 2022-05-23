@@ -46,7 +46,7 @@ switchpoller {
   }
 
   snmp {
-    community = "xWTyZ9nA158ktJF2"
+    community = "semipublic"
     timeout = "20s"
     version = 2
     retries = 3

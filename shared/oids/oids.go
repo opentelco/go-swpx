@@ -39,6 +39,7 @@ const (
 const (
 	// OIDS translations
 	IfXEntryPrefix            = ".1.3.6.1.2.1.31.1.1.1"
+	IfXEntry                  = ".1.3.6.1.2.1.31.1.1.1.1"
 	IfEntryPrefix             = ".1.3.6.1.2.1.2.2.1"
 	IfIndex            string = ".1.3.6.1.2.1.2.2.1.1"
 	IfDescr                   = ".1.3.6.1.2.1.2.2.1.2"

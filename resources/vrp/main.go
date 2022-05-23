@@ -130,11 +130,13 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 				d.logger.Error("problem with snmp collection", "error", m.Error)
 
 			}
+
 			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
 				Alias:       m.Name,
 				Index:       int64(index),
 				Description: m.GetStringValue(),
 			}
+
 		}
 
 		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
@@ -152,7 +154,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 	conf := shared.Proto2conf(el.Conf)
 	result := make(map[int32]*networkelement.Transceiver)
 
-	vrpMsg := resources.CreateAllVRPTransceiverMsg(el, conf, wrapper.NumInterfaces)
+	vrpMsg := CreateAllVRPTransceiverMsg(el, conf, wrapper.NumInterfaces)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
 		d.logger.Error("could not complete GetAllTransceiverInformation", "error", err.Error())

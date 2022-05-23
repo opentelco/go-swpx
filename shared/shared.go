@@ -24,6 +24,7 @@ package shared
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -137,12 +138,14 @@ func GetConfig() *Configuration {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	err = viper.Unmarshal(&conf)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	return conf

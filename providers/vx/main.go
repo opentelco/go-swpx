@@ -32,6 +32,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"go.vxfiber.dev/proto-go/inventory/device"
+	"google.golang.org/grpc"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/provider"
@@ -63,7 +65,8 @@ func init() {
 
 // Provider is the implementation of the GRPC
 type Provider struct {
-	logger hclog.Logger
+	devClient device.ServiceClient
+	logger    hclog.Logger
 }
 
 func (g *Provider) Version() (string, error) {
@@ -87,14 +90,31 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 	isIp := net.ParseIP(request.Hostname)
+	params := &device.GetParameters{}
 	if isIp == nil {
 		domain := parseDomain()
 		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
-
+		params.Hostname = request.Hostname
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
+
+	} else {
+		params.Ip = isIp.String()
 	}
 
-	// resolve the
+	d, err := p.devClient.Get(ctx, &device.GetParameters{Hostname: request.Hostname})
+	if err != nil || len(d.Devices) == 0 {
+		p.logger.Warn("could not get OSS device", "hostname", request.Hostname)
+		return request, nil
+	}
+	host := d.Devices[0]
+	switch strings.ToUpper(host.Vendor) {
+	case "HUAWEI":
+		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "vrp")
+		request.Settings.ResourcePlugin = "vrp"
+	case "CTC", "VXFIBER":
+		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "ctc")
+		request.Settings.ResourcePlugin = "ctc"
+	}
 
 	p.logger.Named("pre-handler").Debug("processing request in", "changes", 0)
 	return request, nil
@@ -105,7 +125,20 @@ func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration,
 }
 
 func main() {
-	prov := &Provider{logger: logger}
+	// when the config system in swpx is done this could be moved to that instead
+	// for now this will be good enough
+	grpcAddr := os.Getenv("OSS_INVENTORY_ADDR")
+	if grpcAddr == "" {
+		grpcAddr = "127.0.0.1:9001"
+	}
+	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
+	if err != nil {
+		logger.Error("could not connect to inventory GRPC")
+		os.Exit(1)
+	}
+	devClient := device.NewServiceClient(conn)
+	prov := &Provider{logger: logger, devClient: devClient}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		Plugins: map[string]plugin.Plugin{

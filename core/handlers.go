@@ -2,12 +2,14 @@ package core
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"strings"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (c *Core) RequestHandler(ctx context.Context, request *Request, response *pb_core.Response) error {
@@ -283,26 +285,36 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 
 	// did not find cached item or cached is disabled
 	if cachedInterface == nil || !c.cacheEnabled {
-		var physPortResponse *resource.NetworkElementInterfaces
 		c.logger.Info("run mapEntity to get physical entity index on device")
-		if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
-			c.logger.Error("error running MapEntityPhysical", "err", err.Error())
-			resp.Error = &pb_core.Error{
-				Message: err.Error(),
-				Code:    ErrInvalidPort,
-			}
-			return err
-		}
-		c.logger.Debug("got physPortResponse response", "physInterfaces", fmt.Sprintf("%+v", physPortResponse.Interfaces))
 
-		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
-			c.logger.Debug("found physInterface",
-				"port", req.Interface,
-				"resp.physicalPort", val.Description,
-				"req.physicalIndex", req.PhysicalIndex,
-			)
-			resp.PhysicalPort = val.Description
-			req.PhysicalIndex = val.Index
+		physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
+		if err != nil {
+			if status.Code(err) == codes.Unimplemented {
+				c.logger.Error("warn MapEntityPhysical is not implemented, skipping", "err", err.Error())
+			} else {
+				c.logger.Error("error running MapEntityPhysical", "err", err.Error())
+				resp.Error = &pb_core.Error{
+					Message: err.Error(),
+					Code:    ErrInvalidPort,
+				}
+				return err
+			}
+
+		} else {
+			js, _ := json.MarshalIndent(physPortResponse, "", "  ")
+			c.logger.Error("map", "data", string(js))
+
+			if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+				resp.PhysicalPort = val.Description
+				req.PhysicalIndex = val.Index
+
+				c.logger.Debug("found physInterface",
+					"port", req.Interface,
+					"resp.physicalPort", val.Description,
+					"req.physicalIndex", req.PhysicalIndex,
+				)
+
+			}
 		}
 
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
