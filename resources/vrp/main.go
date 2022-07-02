@@ -511,7 +511,15 @@ func main() {
 
 	sharedConf := shared.GetConfig()
 	natsConf := sharedConf.NATS
-	nc, _ := nats.Connect(strings.Join(natsConf.EventServers, ","))
+
+	opts := nats.GetDefaultOptions()
+	opts.ReconnectWait = 5
+	opts.MaxReconnect = 20
+	opts.RetryOnFailedConnect = true
+	nc, err := nats.Connect(strings.Join(natsConf.EventServers, ","))
+	if err != nil {
+		logger.Error("failed to connect to nats", "error", err)
+	}
 	dncChan = make(chan string)
 	enc, err := nats.NewEncodedConn(nc, "json")
 	if err != nil {
