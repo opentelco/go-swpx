@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -56,9 +57,18 @@ func initMongoDb(conf shared.ConfigMongo, logger hclog.Logger) (*mongo.Client, e
 }
 
 func hidePassword(input string) string {
-	if len(input) <= 1 {
+	chars := len(input)
+
+	if chars < 4 {
 		return input
 	}
 
-	return string(input[0]) + strings.ReplaceAll(input[1:], "", "*")
+	show := chars / 2
+	if show > 4 {
+		show = 4
+	}
+
+	o := strings.Repeat("*", chars-show) + string(input[chars-show:])
+	fmt.Println(o)
+	return o
 }
