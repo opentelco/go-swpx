@@ -39,8 +39,6 @@ import (
 
 const (
 	RequestBufferSize int = 2000000 // nolint
-	MaxRequests       int = 1000000 // nolint
-	WORKERS           int = 1
 
 	PluginProviderStr string = "provider"
 	PluginResourceStr string = "resource"
@@ -100,8 +98,9 @@ func New(logger hclog.Logger) (*Core, error) {
 	var err error
 
 	// create core
+	conf := shared.GetConfig()
 
-	swarm := newWorkerPool(WORKERS, MaxRequests, logger)
+	swarm := newWorkerPool(conf.PollerWorkers, conf.MaxPollerRequests, logger)
 
 	core := &Core{
 		swarm:  swarm,
@@ -111,7 +110,6 @@ func New(logger hclog.Logger) (*Core, error) {
 	logger.Info("setting core requestHandler for pool")
 	swarm.SetHandler(core.RequestHandler)
 
-	conf := shared.GetConfig()
 	core.config = conf
 
 	// load all provider and resource plugins (files)

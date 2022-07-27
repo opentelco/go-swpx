@@ -119,13 +119,15 @@ type ConfigNATS struct {
 }
 
 type Configuration struct {
-	SNMP            ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
-	InterfaceCache  ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
-	ResponseCache   ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
-	NATS            ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
-	Telnet          ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
-	Ssh             ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
-	DefaultProvider string       `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
+	PollerWorkers     int          `json:"poller_workers" toml:"poller_workers" yaml:"poller_workers" mapstructure:"poller_workers"`
+	MaxPollerRequests int          `json:"max_poller_requests" toml:"max_poller_requests" yaml:"max_poller_requests" mapstructure:"max_poller_requests"`
+	SNMP              ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
+	InterfaceCache    ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache     ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	NATS              ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
+	Telnet            ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
+	Ssh               ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
+	DefaultProvider   string       `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
 }
 
 func GetConfig() *Configuration {
@@ -146,6 +148,14 @@ func GetConfig() *Configuration {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	if conf.PollerWorkers == 0 {
+		conf.PollerWorkers = 1
+	}
+
+	if conf.MaxPollerRequests == 0 {
+		conf.MaxPollerRequests = 1000000 //nolint
 	}
 
 	return conf
