@@ -10,7 +10,9 @@ import (
 type Poller struct {
 	Logger LoggerConf `hcl:"logger,block"`
 
-	MongoCaches []*MongoConfig `hcl:"mongodb,block"`
+	PollerWorkers     int            `hcl:"workers"`
+	MaxPollerRequests int            `hcl:"max_requests"`
+	MongoCaches       []*MongoConfig `hcl:"mongodb,block"`
 
 	NATS       *NATSConfig `hcl:"nats,block"`
 	Snmp       Snmp        `hcl:"snmp,block"`

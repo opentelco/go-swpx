@@ -3,6 +3,9 @@
 /** SWPX Core config **/
 switchpoller {
 
+  workers = 10
+  max_requests = 100000
+
   mongodb "responseCache" {
     server {
       addr = "localhost"
