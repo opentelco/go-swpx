@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"git.liero.se/opentelco/go-swpx/core"
@@ -20,7 +22,7 @@ type coreGrpcImpl struct {
 	logger hclog.Logger
 }
 
-//  Request to SWP-core
+// Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
 	if request.Type == pb_core.Request_NOT_SET {
@@ -33,6 +35,10 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 	if err != nil {
 		return nil, err
 	}
+	if resp == nil {
+		return nil, status.Error(codes.NotFound, "no data from poller")
+	}
+
 	return resp, nil
 }
 

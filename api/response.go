@@ -38,7 +38,7 @@ type Response struct {
 type ResponseStatus struct {
 	// AppErrorCode is used for internal
 	AppErrorCode    core.ErrorCode `json:"-" bson:"-"`
-	AppErrorMessage string           `json:"-" bson:"-"`
+	AppErrorMessage string         `json:"-" bson:"-"`
 
 	// Sent to the client
 	Error   bool   `json:"error" bson:"error"`
@@ -62,9 +62,10 @@ func NewResponse(status *ResponseStatus, payload interface{}) *Response {
 			payload = nil
 			status.Message = err.Error()
 		}
+		return &Response{Status: status, Data: payload}
+	} else {
+		return &Response{Status: ResponseStatusNothingFound, Data: nil}
 	}
-
-	return &Response{Status: status, Data: payload}
 }
 
 var (
@@ -87,5 +88,12 @@ var (
 		Code:    http.StatusInternalServerError,
 		Type:    "failure",
 		Message: "internal server error",
+	}
+
+	ResponseStatusNothingFound = &ResponseStatus{
+		Error:   true,
+		Code:    http.StatusNoContent,
+		Type:    "error",
+		Message: "could not get any data from the poller",
 	}
 )
