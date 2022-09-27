@@ -237,6 +237,7 @@ func main() {
 	nc, err := nats.Connect(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
 		logger.Error("failed to connect to nats", "error", err)
+		os.Exit(1)
 	}
 
 	dncChan = make(chan string)
@@ -247,15 +248,17 @@ func main() {
 	}
 	err = enc.BindSendChan("ctc-driver", dncChan)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("failed to bind dnc channel", "error", err)
+		os.Exit(1)
 	}
 
-	logger.Debug("message", "version", VERSION.String())
 	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
 	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("failed to create dnc client", "error", err)
+		os.Exit(1)
 	}
+
 	driver := &CTCDriver{
 		logger: logger,
 		dnc:    dncClient,
