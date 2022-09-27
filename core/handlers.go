@@ -27,7 +27,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 
 		for _, provider := range request.Settings.ProviderPlugin {
 			var err error
-			selectedProvider := providers[provider]
+			selectedProvider := c.providers[provider]
 			if selectedProvider == nil {
 				response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
 				return NewError(response.Error.Message, ErrorCode(response.Error.Code))
@@ -46,7 +46,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	} else {
 
 		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.DefaultProvider)
-		if provider, ok := providers[c.config.DefaultProvider]; ok {
+		if provider, ok := c.providers[c.config.DefaultProvider]; ok {
 
 			request.Request, err = provider.PreHandler(ctx, request.Request)
 			if err != nil {
@@ -61,7 +61,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 
 	// select resource-plugin to send the requests to
 	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)
-	plugin := resources[request.Settings.ResourcePlugin]
+	plugin := c.resources[request.Settings.ResourcePlugin]
 	if plugin == nil {
 		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)
 		response.Error = &pb_core.Error{

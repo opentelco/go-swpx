@@ -26,7 +26,6 @@ import (
 	"sync"
 
 	"git.liero.se/opentelco/go-swpx/shared"
-	"github.com/hashicorp/go-plugin"
 )
 
 type providerMap map[string]shared.Provider
@@ -41,13 +40,7 @@ func (p providerMap) Slice() (ps []shared.Provider) {
 // sorters
 type resourceMap map[string]shared.Resource
 
-var (
-	availableResources = make(map[string]*plugin.Client)
-	availableProviders = make(map[string]*plugin.Client)
-
-	resources resourceMap = make(map[string]shared.Resource)
-	providers providerMap = make(map[string]shared.Provider)
-)
+var ()
 
 // ResourcePlugins is the container for resource plugins
 type ResourcePlugins struct {

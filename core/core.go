@@ -23,8 +23,8 @@
 package core
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -72,6 +72,9 @@ type Core struct {
 	responseCache  ResponseCache
 	interfaceCache InterfaceCache
 
+	resources resourceMap
+	providers providerMap
+
 	config *shared.Configuration
 	logger hclog.Logger
 }
@@ -103,14 +106,19 @@ func New(logger hclog.Logger) (*Core, error) {
 	swarm := newWorkerPool(conf.PollerWorkers, conf.MaxPollerRequests, logger)
 
 	core := &Core{
-		swarm:  swarm,
-		logger: logger,
+		swarm:     swarm,
+		logger:    logger,
+		resources: make(map[string]shared.Resource),
+		providers: make(map[string]shared.Provider),
 	}
 
 	logger.Info("setting core requestHandler for pool")
 	swarm.SetHandler(core.RequestHandler)
 
 	core.config = conf
+
+	availableResources := make(map[string]*plugin.Client)
+	availableProviders := make(map[string]*plugin.Client)
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = core.LoadPlugins(path.Join(PluginPath, Providers), PluginProviderStr); err != nil {
@@ -130,11 +138,11 @@ func New(logger hclog.Logger) (*Core, error) {
 	}
 
 	// load the resources
-	if err := core.LoadResourcePlugins(); err != nil {
+	if err := core.LoadResourcePlugins(availableResources); err != nil {
 		return nil, err
 	}
 	// load the Providers
-	if err := core.LoadProviderPlugins(); err != nil {
+	if err := core.LoadProviderPlugins(availableProviders); err != nil {
 		return nil, err
 	}
 
@@ -164,7 +172,7 @@ func New(logger hclog.Logger) (*Core, error) {
 }
 
 // LoadResourcePlugins iterates the resources and connect to the plugin
-func (c *Core) LoadResourcePlugins() error {
+func (c *Core) LoadResourcePlugins(availableResources map[string]*plugin.Client) error {
 	for name, p := range availableResources {
 		var raw interface{}
 		var err error
@@ -172,25 +180,25 @@ func (c *Core) LoadResourcePlugins() error {
 		c.logger.Debug("connect to resource", "name", name)
 		rrpc, err := p.Client()
 		if err != nil {
-			c.logger.Error("could not return resource client", "error", err.Error())
-			continue
+			return fmt.Errorf("could not get resource client: %w", err)
 		}
+
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-
 			c.logger.Info("successfully dispensed resource plugin", "plugin", name)
+
 			if resource, ok := raw.(shared.Resource); ok {
 				_, err := resource.Version()
-				resources[name] = resource
+				c.resources[name] = resource
 				if err != nil {
-					c.logger.Error("could not get version for plugin", "plugin", name, "error", err.Error())
+					return fmt.Errorf("could not get version for plugin: %w", err)
+
 				}
 			} else {
-				c.logger.Error("type assertions failed for plugin", "plugin", name)
-				os.Exit(1)
+				return fmt.Errorf("type assertions failed for plugin: %s", name)
 			}
 		} else {
-			c.logger.Error("failed to dispense resource or provider", "error", err.Error())
+			return fmt.Errorf("failed to dispense resource plugin: %w", err)
 		}
 
 	}
@@ -198,7 +206,7 @@ func (c *Core) LoadResourcePlugins() error {
 }
 
 // LoadProviderPlugins iterates providers and connect to the plugin.
-func (c *Core) LoadProviderPlugins() error {
+func (c *Core) LoadProviderPlugins(availableProviders map[string]*plugin.Client) error {
 	for name, p := range availableProviders {
 		var raw interface{}
 		var err error
@@ -207,20 +215,19 @@ func (c *Core) LoadProviderPlugins() error {
 
 		rpc, err := p.Client()
 		if err != nil {
-			c.logger.Error(err.Error())
-			continue
+			return fmt.Errorf("could not get provider client: %w", err)
 		}
+
 		err = rpc.Ping()
 		if err != nil {
-			c.logger.Error("could nog ping", "error", err)
+			return fmt.Errorf("could not ping provider plugin: %w", err)
 		}
 
 		raw, err = rpc.Dispense("provider")
 		if err == nil {
 			provider, ok := raw.(shared.Provider)
 			if !ok || provider == nil {
-				c.logger.Error("failed to load provider_plugin", "plugin", name, "provider", provider, "ok", ok)
-				continue
+				return fmt.Errorf("failed to load provider plugin: %s", name, "provider", provider, "ok", ok)
 			}
 
 			// get information about the provider to use on request
@@ -232,23 +239,21 @@ func (c *Core) LoadProviderPlugins() error {
 			)
 
 			if n, err = provider.Name(); err != nil {
-				log.Fatal("could not load provider")
+				return fmt.Errorf("failed to get provider name: %w", err)
 			}
 			if v, err = provider.Version(); err != nil {
-				log.Fatal("could not load provider")
+				return fmt.Errorf("failed to get provider version: %w", err)
 			}
 
-			providers[n] = provider
+			c.providers[n] = provider
 
-			c.logger.Debug("loaded provider", "name", n, "version", v, "weight", w)
+			c.logger.Info("loaded provider", "name", n, "version", v, "weight", w)
 
 			continue
 		} else {
-			c.logger.Error(err.Error())
 
-			rpcErr := rpc.Close()
-			if rpcErr != nil {
-				c.logger.Error("error trying to dispense resource or provider", "error", rpcErr.Error())
+			if err := rpc.Close(); err != nil {
+				return fmt.Errorf("error trying to dispense provider: %w", err)
 			}
 		}
 	}
