@@ -35,7 +35,7 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 	if err != nil {
 		return nil, err
 	}
-	if resp == nil {
+	if resp == nil || resp.NetworkElement == nil {
 		return nil, status.Error(codes.NotFound, "no data from poller")
 	}
 
