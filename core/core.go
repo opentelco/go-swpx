@@ -52,9 +52,6 @@ const (
 
 var (
 	VERSION *version.Version
-
-	// Global request queue
-	RequestQueue = make(chan *Request, RequestBufferSize)
 )
 
 func init() {
@@ -69,6 +66,7 @@ type Core struct {
 	swarm *workerPool
 
 	cacheEnabled   bool
+	RequestQueue   chan *Request
 	responseCache  ResponseCache
 	interfaceCache InterfaceCache
 
@@ -81,7 +79,7 @@ type Core struct {
 
 // Start the core application
 func (c *Core) Start() error {
-	c.swarm.start(RequestQueue)
+	c.swarm.start(c.RequestQueue)
 
 	go func() {
 		// catch interrupt and kill all plugins
@@ -106,10 +104,11 @@ func New(logger hclog.Logger) (*Core, error) {
 	swarm := newWorkerPool(conf.PollerWorkers, conf.MaxPollerRequests, logger)
 
 	core := &Core{
-		swarm:     swarm,
-		logger:    logger,
-		resources: make(map[string]shared.Resource),
-		providers: make(map[string]shared.Provider),
+		swarm:        swarm,
+		logger:       logger,
+		resources:    make(map[string]shared.Resource),
+		providers:    make(map[string]shared.Provider),
+		RequestQueue: make(chan *Request, RequestBufferSize),
 	}
 
 	logger.Info("setting core requestHandler for pool")

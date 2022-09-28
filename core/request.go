@@ -77,7 +77,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		}
 	}
 
-	RequestQueue <- request
+	c.RequestQueue <- request
 	// cache is not set
 	for {
 		select {
