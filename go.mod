@@ -1,6 +1,6 @@
 module git.liero.se/opentelco/go-swpx
 
-go 1.17
+go 1.19
 
 require (
 	git.liero.se/opentelco/go-dnc v1.0.1

@@ -70,7 +70,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		if cr != nil {
 			c.logger.Debug("found cached item", "age", time.Since(cr.Timestamp))
 			if time.Since(cr.Timestamp) < request.GetCacheTTL() {
-				c.logger.Info("found response in cache")
+				c.logger.Debug("found response in cache", "ttl, ", request.GetCacheTTL(), "age", time.Since(cr.Timestamp))
 				return cr.Response, nil
 			}
 
