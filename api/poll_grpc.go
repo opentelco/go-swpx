@@ -38,6 +38,12 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 		resp := &pb_core.Response{
 			NetworkElement: &networkelement.Element{
 				Hostname: request.Hostname,
+				Interfaces: []*networkelement.Interface{
+					{
+						Alias:       request.Port,
+						Description: request.Port,
+					},
+				},
 			},
 			Error:           nil,
 			RequestAccessId: "",
