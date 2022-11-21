@@ -38,7 +38,7 @@ func CreateBasicSshInterfaceTask(el *proto.NetworkElement, conf *shared.Configur
 	message := &transport.Message{
 		Id:      ksuid.New().String(),
 		Target:  el.Hostname,
-		Type:    transport.Type_TELNET,
+		Type:    transport.Type_SSH,
 		Task:    &transport.Message_Ssh{Ssh: task},
 		Status:  shared2.Status_NEW,
 		Created: timestamppb.Now(),
