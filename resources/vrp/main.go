@@ -428,7 +428,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
 
-	msgs = append(msgs, resources.CreateBasicTelnetInterfaceTask(el, conf))
+	msgs = append(msgs, resources.CreateBasicSshInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
@@ -483,6 +483,18 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 
 			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
 				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
+			}
+
+		// parse SSH
+		case *transport.Message_Ssh:
+			if reply.Error != "" {
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Ssh.Payload[0].Command)
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
+				continue
+			}
+
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Ssh.Payload[0].Lookfor); err != nil {
+				errs = d.logAndAppend(err, errs, task.Ssh.Payload[0].Command)
 			}
 
 		}
