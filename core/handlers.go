@@ -150,6 +150,7 @@ func CreateRequestConfig(msg *Request, conf *shared.Configuration) *provider.Con
 func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
 
+	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Interface: "",
 		Hostname:  msg.Hostname,
@@ -191,7 +192,7 @@ func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protConf := shared.Conf2proto(conf)
+	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
@@ -279,7 +280,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 // handleGetBasicInformationPort gets information related to the selected interface
 func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
-
+	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
@@ -390,7 +391,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 // handleGetTechnicalInformationElement gets full information of an Element
 func (c *Core) handleGetPasicInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
-
+	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Interface: "",
 		Hostname:  msg.Hostname,
