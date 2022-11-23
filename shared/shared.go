@@ -36,11 +36,12 @@ import (
 )
 
 const (
-	PluginVersion    uint   = 1
-	VersionString    string = "1.0-beta"
-	CoreName         string = "swpx"
-	MagicCookieKey   string = "SWPX_PLUGIN_COOKE"
-	MagicCookieValue string = "IVbRejBEZ6EnzwoR4wUz"
+	DefaultRequestTimeout        = 60 * time.Second
+	PluginVersion         uint   = 1
+	VersionString         string = "1.0-beta"
+	CoreName              string = "swpx"
+	MagicCookieKey        string = "SWPX_PLUGIN_COOKE"
+	MagicCookieValue      string = "IVbRejBEZ6EnzwoR4wUz"
 
 	PluginResourceKey string = "resource"
 	PluginProviderKey string = "provider"
@@ -119,15 +120,16 @@ type ConfigNATS struct {
 }
 
 type Configuration struct {
-	PollerWorkers     int          `json:"poller_workers" toml:"poller_workers" yaml:"poller_workers" mapstructure:"poller_workers"`
-	MaxPollerRequests int          `json:"max_poller_requests" toml:"max_poller_requests" yaml:"max_poller_requests" mapstructure:"max_poller_requests"`
-	SNMP              ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
-	InterfaceCache    ConfigMongo  `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
-	ResponseCache     ConfigMongo  `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
-	NATS              ConfigNATS   `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
-	Telnet            ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
-	Ssh               ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
-	DefaultProvider   string       `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
+	PollerWorkers         int           `json:"poller_workers" toml:"poller_workers" yaml:"poller_workers" mapstructure:"poller_workers"`
+	MaxPollerRequests     int           `json:"max_poller_requests" toml:"max_poller_requests" yaml:"max_poller_requests" mapstructure:"max_poller_requests"`
+	SNMP                  ConfigSNMP    `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
+	InterfaceCache        ConfigMongo   `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache         ConfigMongo   `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	NATS                  ConfigNATS    `json:"nats" toml:"nats" yaml:"nats" mapstructure:"nats"`
+	Telnet                ConfigTelnet  `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
+	Ssh                   ConfigSSH     `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
+	DefaultProvider       string        `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
+	DefaultRequestTimeout time.Duration `json:"default_request_timeout" mapstructure:"default_request_timeout" yaml:"default_request_timeout" toml:"default_request_timeout"`
 }
 
 func GetConfig() *Configuration {
@@ -156,6 +158,10 @@ func GetConfig() *Configuration {
 
 	if conf.MaxPollerRequests == 0 {
 		conf.MaxPollerRequests = 1000000 //nolint
+	}
+
+	if conf.DefaultRequestTimeout == 0 {
+		conf.DefaultRequestTimeout = DefaultRequestTimeout
 	}
 
 	return conf

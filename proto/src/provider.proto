@@ -27,6 +27,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/provider";
 package provider;
 import "core.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 
 message NameResponse {
@@ -75,10 +76,17 @@ message configSNMP {
   bool DynamicRepetitions = 9;
 }
 
+message configRequest {
+  // time when the request will be thrown out
+  // calculated from the time the request was received + Timeout
+  google.protobuf.Timestamp deadline = 1;
+}
+
 message Configuration{
   configSNMP    SNMP = 1;
   configTelnet Telnet = 2;
   configSSH Ssh = 3;
+  configRequest request = 4;
 }
 
 message SetupConfiguration {}

@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (c *Core) RequestHandler(ctx context.Context, request *Request, response *pb_core.Response) error {
@@ -122,6 +125,24 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	}
 
 	return nil
+
+}
+
+func CreateRequestConfig(msg *Request, conf *shared.Configuration) *provider.ConfigRequest {
+
+	if msg.Request.Settings.Timeout != "" {
+		dur, _ := time.ParseDuration(msg.Request.Settings.Timeout)
+		if dur.Seconds() != 0 {
+			return &provider.ConfigRequest{
+				Deadline: timestamppb.New(time.Now().Add(dur)),
+			}
+		}
+
+	}
+
+	return &provider.ConfigRequest{
+		Deadline: timestamppb.New(time.Now().Add(conf.DefaultRequestTimeout)),
+	}
 
 }
 
@@ -258,6 +279,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 // handleGetBasicInformationPort gets information related to the selected interface
 func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protConf := shared.Conf2proto(conf)
+
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,

@@ -100,12 +100,13 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }
@@ -137,12 +138,13 @@ func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) 
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }
@@ -179,12 +181,13 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }
@@ -250,12 +253,13 @@ func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configurati
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }
@@ -298,12 +302,13 @@ func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 	}
 
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_TELNET,
-		Task:    &transport.Message_Telnet{Telnet: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_TELNET,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Telnet{Telnet: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 
@@ -333,9 +338,10 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 			},
 		},
 		Config: &ssh.Config{
-			User:                conf.Ssh.Username,
-			Password:            conf.Ssh.Password,
-			Port:                conf.Ssh.Port,
+			User:     conf.Ssh.Username,
+			Password: conf.Ssh.Password,
+			Port:     conf.Ssh.Port,
+
 			ScreenLength:        conf.Ssh.ScreenLength,
 			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
 			RegexPrompt:         conf.Ssh.RegexPrompt,
@@ -348,12 +354,13 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 	}
 
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SSH,
-		Task:    &transport.Message_Ssh{Ssh: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SSH,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Ssh{Ssh: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 
@@ -386,12 +393,13 @@ func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *tr
 	}
 
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }
@@ -419,12 +427,13 @@ func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.C
 	}
 
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_TELNET,
-		Task:    &transport.Message_Telnet{Telnet: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_TELNET,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Telnet{Telnet: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 
@@ -453,12 +462,13 @@ func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Confi
 	}
 
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_TELNET,
-		Task:    &transport.Message_Telnet{Telnet: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_TELNET,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Telnet{Telnet: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 
