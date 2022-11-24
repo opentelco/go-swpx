@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -192,11 +191,12 @@ func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
+	protoConf := shared.Conf2proto(conf)
 	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
-		Conf:      protConf,
+		Conf:      protoConf,
 	}
 
 	var mapInterfaceResponse *resource.NetworkElementInterfaces
@@ -279,12 +279,12 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 
 // handleGetBasicInformationPort gets information related to the selected interface
 func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protConf := shared.Conf2proto(conf)
+	protoConf := shared.Conf2proto(conf)
 	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
-		Conf:      protConf,
+		Conf:      protoConf,
 	}
 
 	var mapInterfaceResponse *resource.NetworkElementInterfaces
@@ -324,8 +324,6 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 			}
 
 		} else {
-			js, _ := json.MarshalIndent(physPortResponse, "", "  ")
-			c.logger.Error("map", "data", string(js))
 
 			if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
 				resp.PhysicalPort = val.Description

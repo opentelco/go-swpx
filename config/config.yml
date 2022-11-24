@@ -1,7 +1,7 @@
 default_provider: "vx"
 
 snmp:
-  community: semipublic
+  community: xWTyZ9nA158ktJF2
   timeout: 20s
   version: 2
   retries: 3
@@ -23,8 +23,8 @@ nats:
   event_servers: ['nats://localhost:4222']
 
 ssh:
-  username: "root-ssh"
-  password: "qwerty1234"
+  username: "admin"
+  password: "SAITenable"
   port: 22
   screen_length: "0"
   screen_length_command: "screen-length %s temporary"

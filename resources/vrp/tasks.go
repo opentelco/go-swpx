@@ -40,12 +40,13 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configura
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  el.Hostname,
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Id:              ksuid.New().String(),
+		Target:          el.Hostname,
+		Type:            transport.Type_SNMP,
+		RequestDeadline: el.Conf.Request.Deadline,
+		Task:            &transport.Message_Snmpc{Snmpc: task},
+		Status:          shared2.Status_NEW,
+		Created:         timestamppb.Now(),
 	}
 	return message
 }

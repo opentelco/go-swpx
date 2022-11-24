@@ -404,7 +404,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 }
 
 func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
-	d.logger.Error("log and append error from dnc", "error", err.Error())
+	d.logger.Error("log and append error from dnc", "error", err.Error(), "command", command)
 	errs = append(errs, &networkelement.TransientError{
 		Message: err.Error(),
 		Level:   networkelement.TransientError_WARN,
