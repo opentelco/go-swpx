@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"github.com/hashicorp/go-hclog"
@@ -86,12 +87,9 @@ func (w *worker) handle(ctx context.Context, msg *Request, resp *pb_core.Respons
 
 	select {
 	case <-ctx.Done():
-		w.logger.Error("timeout reached or context cancelled", "error", ctx.Err())
-		return ctx.Err()
+		w.logger.Error("timeout reached or context cancelled, returning error back", "error", ctx.Err())
+		return fmt.Errorf("timeout reached or context cancelled: %s", ctx.Err())
 	case err := <-c:
-		if err != nil {
-			w.logger.Error("error in response", "error", err.Error())
-		}
 		return err
 	}
 }

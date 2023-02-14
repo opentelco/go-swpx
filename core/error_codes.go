@@ -27,6 +27,7 @@ const (
 	ErrInvalidAddr     = 1010
 	ErrInvalidProvider = 1011
 	ErrInvalidResource = 1012
+	ErrUnknownError    = 1013
 
 	// ErrInvalidPort is returned if the request has a invalid port
 	ErrInvalidPort    = 1020

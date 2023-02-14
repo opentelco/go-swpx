@@ -23,7 +23,7 @@ type coreGrpcImpl struct {
 	logger hclog.Logger
 }
 
-var automatedOkList = []string{"olivedale-a96"}
+var automatedOkList = []string{""}
 
 // Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {

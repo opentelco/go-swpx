@@ -445,8 +445,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 	for _, msg := range msgs {
 		reply, err := d.dnc.Put(ctx, msg)
 		if err != nil {
-			d.logger.Error("could not complete BasicTechnicalPortInformation", "error", err.Error())
-			return nil, err
+			return nil, fmt.Errorf("could not complete BasicTechnicalPortInformation: %w", err)
 		}
 
 		switch task := reply.Task.(type) {
@@ -490,6 +489,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			if reply.Error != "" {
 				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Ssh.Payload[0].Command)
 				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
+
 				continue
 			}
 

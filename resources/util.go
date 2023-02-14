@@ -200,5 +200,9 @@ func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
 // rounds to 2 nearest decimals
 func ConvertToDb(uw int64) float64 {
 	v := 10 * math.Log10(float64(uw)/1000)
-	return math.Round(v*100) / 100
+	f := math.Round(v*100) / 100
+	if math.IsInf(f, 0) || math.IsNaN(f) {
+		return -40
+	}
+	return f
 }

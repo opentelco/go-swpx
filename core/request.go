@@ -77,6 +77,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		}
 	}
 
+	// put the request on a queue and wait for it to return
 	c.RequestQueue <- request
 	// cache is not set
 	for {
@@ -96,7 +97,6 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 			return resp, nil
 
 		case <-request.ctx.Done():
-			c.logger.Error("timeout for request was hit")
 			return nil, fmt.Errorf("timeout for request reached")
 
 		}

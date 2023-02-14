@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -317,7 +318,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 			} else {
 				c.logger.Error("error running MapEntityPhysical", "err", err.Error())
 				resp.Error = &pb_core.Error{
-					Message: err.Error(),
+					Message: fmt.Sprintf("could not run MapEntityPhyiscal: %s", err.Error()),
 					Code:    ErrInvalidPort,
 				}
 				return err
@@ -341,7 +342,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 		if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
 			c.logger.Error("error running map interface", "err", err.Error())
 			resp.Error = &pb_core.Error{
-				Message: err.Error(),
+				Message: fmt.Sprintf("could not run MapInterface: %s", err.Error()),
 				Code:    ErrInvalidPort,
 			}
 			return err
@@ -360,6 +361,11 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 		}
 
 	} else if err != nil {
+		resp.Error = &pb_core.Error{
+			Message: fmt.Sprintf("could handle request: %s", err.Error()),
+			Code:    ErrUnknownError,
+		}
+
 		c.logger.Error("error fetching from cache:", err.Error())
 		return err
 	}
