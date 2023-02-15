@@ -23,6 +23,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"git.liero.se/opentelco/go-swpx/core"
@@ -67,12 +68,18 @@ func NewResponse(status *ResponseStatus, payload interface{}) *Response {
 		return &Response{Status: &ResponseStatus{
 			Error:   true,
 			Code:    http.StatusInternalServerError,
-			Type:    "error",
+			Type:    "internal-error",
 			Message: err.Error(),
 		}, Data: nil}
 
 	default:
-		return &Response{Status: ResponseStatusError, Data: nil}
+
+		return &Response{Status: &ResponseStatus{
+			Error:   true,
+			Code:    http.StatusInternalServerError,
+			Type:    "internal-error",
+			Message: fmt.Sprintf("unknown error: %v", err),
+		}, Data: nil}
 	}
 }
 
