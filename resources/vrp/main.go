@@ -317,7 +317,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
-				"execution_time", reply.ExecutionTime.String(),
+				"execution_time", reply.ExecutionTime.AsDuration().String(),
 				"size", len(task.Snmpc.Metrics))
 
 			elementInterface.Index = el.InterfaceIndex
@@ -453,7 +453,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
-				"execution_time", reply.ExecutionTime.String(),
+				"execution_time", reply.ExecutionTime.AsDuration().String(),
 				"size", len(task.Snmpc.Metrics))
 
 			elementInterface.Index = el.InterfaceIndex

@@ -124,7 +124,7 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
-				"execution_time", reply.ExecutionTime.String(),
+				"execution_time", reply.ExecutionTime.AsDuration().String(),
 				"size", len(task.Snmpc.Metrics))
 
 			elementInterface.Index = el.InterfaceIndex
@@ -186,7 +186,7 @@ func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 
 	switch task := msg.Task.(type) {
 	case *transport.Message_Snmpc:
-		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
+		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.AsDuration().String(), "size", len(task.Snmpc.Metrics))
 
 		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
