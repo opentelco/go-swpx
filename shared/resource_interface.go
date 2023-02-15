@@ -58,12 +58,6 @@ type Resource interface {
 
 	// GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
 	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
-
-	// SetConfiguration sets config in the resource plugin
-	SetConfiguration(ctx context.Context, conf *Configuration) error
-
-	// GetConfiguration configuration from provider
-	GetConfiguration(ctx context.Context) (*Configuration, error)
 }
 
 // Here is an implementation that talks over RPC
@@ -96,16 +90,6 @@ func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, proto *pro
 
 func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Transceiver, error) {
 	return rpc.client.GetTransceiverInformation(ctx, proto)
-}
-
-func (rpc *ResourceGRPCClient) GetConfiguration(ctx context.Context) (*Configuration, error) {
-	return rpc.conf, nil
-}
-
-func (rpc *ResourceGRPCClient) SetConfiguration(ctx context.Context, conf *Configuration) error {
-	rpc.conf = conf
-
-	return nil
 }
 
 func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error) {
@@ -150,7 +134,7 @@ func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, ne *proto
 	return rpc.Impl.AllPortInformation(ctx, ne)
 }
 
-//MapInterface has the purppose to map interface name to a index by asking the device
+// MapInterface has the purppose to map interface name to a index by asking the device
 func (rpc *ResourceGRPCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	return rpc.Impl.MapInterface(ctx, ne)
 }

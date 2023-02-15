@@ -29,6 +29,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 		c.logger.Info("request has selected providers", "providers", strings.Join(request.Settings.ProviderPlugin, ","))
 
 		for _, provider := range request.Settings.ProviderPlugin {
+			c.logger.Debug("find provider in loaded plugins", "selected_provider", provider)
 			var err error
 			selectedProvider := c.providers[provider]
 			if selectedProvider == nil {
@@ -36,6 +37,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 				return NewError(response.Error.Message, ErrorCode(response.Error.Code))
 			}
 
+			c.logger.Debug(("pre-process the request with provider func"))
 			// pre-process the request with provider func
 			request.Request, err = selectedProvider.PreHandler(ctx, request.Request)
 			if err != nil {
@@ -71,11 +73,6 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 			Message: "selected driver is missing/does not exist",
 			Code:    ErrInvalidResource,
 		}
-		return nil
-	}
-
-	err = plugin.SetConfiguration(ctx, providerConf)
-	if err != nil {
 		return nil
 	}
 
@@ -128,9 +125,10 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 
 }
 
-func CreateRequestConfig(msg *Request, conf *shared.Configuration) *provider.ConfigRequest {
+func (c *Core) createRequestConfig(msg *Request, conf *shared.Configuration) *provider.ConfigRequest {
 
 	if msg.Request.Settings.Timeout != "" {
+		c.logger.Info("request has timeout set (deadline)", "timeout", msg.Request.Settings.Timeout)
 		dur, _ := time.ParseDuration(msg.Request.Settings.Timeout)
 		if dur.Seconds() != 0 {
 			return &provider.ConfigRequest{
@@ -150,7 +148,7 @@ func CreateRequestConfig(msg *Request, conf *shared.Configuration) *provider.Con
 func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
 
-	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
+	protoConf.Request = c.createRequestConfig(msg, conf)
 	req := &resource.NetworkElement{
 		Interface: "",
 		Hostname:  msg.Hostname,
@@ -193,7 +191,7 @@ func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.
 // handleGetTechnicalInformationPort gets information related to the selected interface
 func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
+	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
@@ -281,7 +279,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Res
 // handleGetBasicInformationPort gets information related to the selected interface
 func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
+	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Hostname:  msg.Hostname,
 		Interface: msg.Port,
@@ -395,7 +393,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 // handleGetTechnicalInformationElement gets full information of an Element
 func (c *Core) handleGetPasicInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
 	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = CreateRequestConfig(msg, conf) // set deadline
+	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	req := &resource.NetworkElement{
 		Interface: "",
 		Hostname:  msg.Hostname,

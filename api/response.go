@@ -55,16 +55,24 @@ func (rs *Response) Render(w http.ResponseWriter, r *http.Request) error {
 // NewResponse creates and returnes a Response.
 // if no response is passed as argument it will create a OK.
 func NewResponse(status *ResponseStatus, payload interface{}) *Response {
-	if payload != nil {
-		if err, ok := payload.(core.Error); ok {
-			status.AppErrorMessage = err.Error()
-			status.AppErrorCode = err.Code
-			payload = nil
-			status.Message = err.Error()
-		}
+	switch err := payload.(type) {
+	case core.Error:
+		status.AppErrorMessage = err.Error()
+		status.AppErrorCode = err.Code
+		payload = nil
+		status.Message = err.Error()
 		return &Response{Status: status, Data: payload}
-	} else {
-		return &Response{Status: ResponseStatusNothingFound, Data: nil}
+	case error:
+
+		return &Response{Status: &ResponseStatus{
+			Error:   true,
+			Code:    http.StatusInternalServerError,
+			Type:    "error",
+			Message: err.Error(),
+		}, Data: nil}
+
+	default:
+		return &Response{Status: ResponseStatusError, Data: nil}
 	}
 }
 

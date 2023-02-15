@@ -6,7 +6,7 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
 	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
-	"git.liero.se/opentelco/go-dnc/models/pb/telnet"
+	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -22,35 +22,39 @@ const (
 )
 
 func CreateCTCTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &telnet.Task{
-		Type: telnet.Type_GET,
-		Payload: []*telnet.Payload{
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
 			{
 				Command: fmt.Sprintf("show mac address-table dynamic interface  %s", el.Interface),
 			},
 		},
-		Config: &telnet.Config{
-			User:                conf.Telnet.Username,
-			Password:            conf.Telnet.Password,
-			Port:                conf.Telnet.Port,
-			ScreenLength:        ScreenLengthCommand,
-			ScreenLengthCommand: ScreenLengthCommand,
-			RegexPrompt:         PromptStringRegex,
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &durationpb.Duration{Seconds: 10},
-			WriteDeadLine:       &durationpb.Duration{Seconds: 10},
+		Config: &terminal.Config{
+			User:                conf.Ssh.Username,
+			Password:            conf.Ssh.Password,
+			RegexPrompt:         conf.Ssh.RegexPrompt,
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Ssh.SSHKeyPath,
 		},
-		Host: el.Hostname,
 	}
 
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_TELNET,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Telnet{Telnet: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Telnet.Port),
+			Source: "swpx",
+			Type:   transport.Type_TELNET,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_TELNET,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+		// RequestDeadline: el.Conf.Request.Deadline,
 	}
 	return message
 
@@ -58,6 +62,7 @@ func CreateCTCTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configu
 
 func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			MaxRepetitions:     0,
@@ -76,15 +81,20 @@ func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration)
 		},
 	}
 
-	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
+
 	return message
 }

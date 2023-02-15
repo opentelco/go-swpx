@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
@@ -20,6 +21,7 @@ import (
 
 func createVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: true,
@@ -43,24 +45,32 @@ func createVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuratio
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		RequestDeadline: el.Conf.Request.Deadline,
-		Status:          shared2.Status_NEW,
-		Created:         &timestamppb.Timestamp{},
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
+
 	return message
 }
 
-func (d *VRPDriver) parseTransceiverMessage(task *transport.Message_Snmpc, startIndex int) *networkelement.Transceiver {
-	tempInt := task.Snmpc.Metrics[startIndex+1].GetIntValue()
-	voltInt := task.Snmpc.Metrics[startIndex+2].GetIntValue()
-	curInt := task.Snmpc.Metrics[startIndex+3].GetIntValue()
+func (d *VRPDriver) parseTransceiverMessage(task *snmpc.Task, startIndex int) *networkelement.Transceiver {
+	tempInt, _ := strconv.Atoi(task.Metrics[startIndex+1].GetValue())
+	voltInt, _ := strconv.Atoi(task.Metrics[startIndex+2].GetValue())
+	curInt, _ := strconv.Atoi(task.Metrics[startIndex+3].GetValue())
 
-	rxInt := task.Snmpc.Metrics[startIndex+4].GetIntValue()
-	txInt := task.Snmpc.Metrics[startIndex+5].GetIntValue()
+	rxInt, _ := strconv.Atoi(task.Metrics[startIndex+4].GetValue())
+	txInt, _ := strconv.Atoi(task.Metrics[startIndex+5].GetValue())
 
 	// no transceiver available, return nil
 	if tempInt == -255 || rxInt == -1 || txInt == -1 {
@@ -68,17 +78,17 @@ func (d *VRPDriver) parseTransceiverMessage(task *transport.Message_Snmpc, start
 	}
 
 	val := &networkelement.Transceiver{
-		SerialNumber: strings.Trim(task.Snmpc.Metrics[startIndex+0].GetStringValue(), " "),
+		SerialNumber: strings.Trim(task.Metrics[startIndex+0].GetValue(), " "),
 		Stats: []*networkelement.TransceiverStatistics{
 			{
 				Temp:    float64(tempInt),
 				Voltage: float64(voltInt) / 1000,
 				Current: float64(curInt) / 1000,
-				Rx:      resources.ConvertToDb(rxInt),
-				Tx:      resources.ConvertToDb(txInt),
+				Rx:      resources.ConvertToDb(int64(rxInt)),
+				Tx:      resources.ConvertToDb(int64(txInt)),
 			},
 		},
-		PartNumber: task.Snmpc.Metrics[startIndex+6].GetStringValue(),
+		PartNumber: task.Metrics[startIndex+6].GetValue(),
 	}
 	return val
 }

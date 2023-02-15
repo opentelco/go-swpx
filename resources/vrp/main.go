@@ -27,14 +27,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
-	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 
 	"git.liero.se/opentelco/go-swpx/resources"
@@ -61,8 +59,6 @@ const (
 	QueueEntryLength = 12
 )
 
-var dncChan chan string
-
 func init() {
 	var err error
 	if VERSION, err = version.NewVersion(VersionBase); err != nil {
@@ -77,19 +73,8 @@ type VRPDriver struct {
 	conf   *shared.Configuration
 }
 
-func (d *VRPDriver) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return d.conf, nil
-}
-
-func (d *VRPDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
-	d.conf = conf
-
-	return nil
-}
-
 func (d *VRPDriver) Version() (string, error) {
 	d.logger.Debug("message from resource-driver running at version", VERSION.String())
-	dncChan <- VERSION.String()
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
@@ -115,37 +100,34 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElem
 		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", err)
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
-		interfaces := make(map[string]*proto.NetworkElementInterface)
-		for _, m := range task.Snmpc.Metrics {
-			fields := strings.Split(m.Oid, ".")
-			index, err := strconv.Atoi(fields[len(fields)-1])
-			if err != nil {
-				d.logger.Error("can't convert phys.port to int: ", err.Error())
-				return nil, err
-			}
+	task := msg.Task.GetSnmpc()
+	if task == nil {
+		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", errors.New("task is nil"))
+	}
 
-			if m.Error != "" {
-				d.logger.Error("problem with snmp collection", "error", m.Error)
+	interfaces := make(map[string]*proto.NetworkElementInterface)
+	for _, m := range task.Metrics {
+		fields := strings.Split(m.Oid, ".")
+		index, err := strconv.Atoi(fields[len(fields)-1])
+		if err != nil {
+			d.logger.Error("can't convert phys.port to int: ", err.Error())
+			return nil, err
+		}
 
-			}
-
-			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
-				Alias:       m.Name,
-				Index:       int64(index),
-				Description: m.GetStringValue(),
-			}
+		if m.Error != "" {
+			d.logger.Error("problem with snmp collection", "error", m.Error)
 
 		}
 
-		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
-	case nil:
-		return nil, errors.Errorf("msg task back from DNC is nil")
-	default:
-		return nil, errors.Errorf("unsupported message task back from dnc: %s", reflect.TypeOf(msg.Task).String())
+		interfaces[m.GetValue()] = &proto.NetworkElementInterface{
+			Alias:       m.Name,
+			Index:       int64(index),
+			Description: m.GetValue(),
+		}
 
 	}
+
+	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
 
 }
 
@@ -161,13 +143,15 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, wrapper *p
 		return wrapper.FullElement, err
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
-		for i := 0; i < len(task.Snmpc.Metrics); i += 7 {
-			index, _ := strconv.Atoi(resources.ReFindIndexinOID.FindString(task.Snmpc.Metrics[i].Oid))
-			if transceiver := d.parseTransceiverMessage(task, i); transceiver != nil {
-				result[int32(index)] = transceiver
-			}
+	task := msg.Task.GetSnmpc()
+	if task == nil {
+		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", errors.New("task is nil"))
+	}
+
+	for i := 0; i < len(task.Metrics); i += 7 {
+		index, _ := strconv.Atoi(resources.ReFindIndexinOID.FindString(task.Metrics[i].Oid))
+		if transceiver := d.parseTransceiverMessage(task, i); transceiver != nil {
+			result[int32(index)] = transceiver
 		}
 	}
 
@@ -191,12 +175,15 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, el *proto.Net
 		return nil, err
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
-		if len(task.Snmpc.Metrics) >= 7 {
-			return d.parseTransceiverMessage(task, 0), nil
-		}
+	task := msg.Task.GetSnmpc()
+	if task == nil {
+		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", errors.New("task is nil"))
 	}
+
+	if len(task.Metrics) >= 7 {
+		return d.parseTransceiverMessage(task, 0), nil
+	}
+
 	return nil, errors.Errorf("Unsupported message type")
 }
 
@@ -215,17 +202,19 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 		return nil, err
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
-		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Snmpc.Metrics))
-		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+	task := msg.Task.GetSnmpc()
+	if task == nil {
+		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", errors.New("task is nil"))
+	}
 
-		for _, v := range discoveryMap {
-			interfaces[v.Descr] = &proto.NetworkElementInterface{
-				Index:       int64(v.Index),
-				Description: v.Descr,
-				Alias:       v.Alias,
-			}
+	d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.String(), "size", len(task.Metrics))
+	resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+
+	for _, v := range discoveryMap {
+		interfaces[v.Descr] = &proto.NetworkElementInterface{
+			Index:       int64(v.Index),
+			Description: v.Descr,
+			Alias:       v.Alias,
 		}
 	}
 
@@ -233,7 +222,6 @@ func (d *VRPDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 }
 
 func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
-	dncChan <- "ok"
 	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
 	conf := shared.Proto2conf(el.Conf)
 	ne := &networkelement.Element{}
@@ -246,8 +234,8 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 		return nil, err
 	}
 
-	sysInfoTask := sysInfoMsg.Task.(*transport.Message_Snmpc)
-	for _, m := range sysInfoTask.Snmpc.Metrics {
+	sysInfoTask := sysInfoMsg.Task.GetSnmpc()
+	for _, m := range sysInfoTask.Metrics {
 		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
 			resources.GetSystemInformation(m, ne)
 		}
@@ -260,18 +248,17 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, el *proto.NetworkEle
 		return nil, err
 	}
 
-	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
-		discoveryMap := make(map[int]*resources.DiscoveryItem)
-		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+	task := portsMsg.Task.GetSnmpc()
+	discoveryMap := make(map[int]*resources.DiscoveryItem)
+	resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
-		for _, discoveryItem := range discoveryMap {
-			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
-		}
-
-		sort.Slice(ne.Interfaces, func(i, j int) bool {
-			return ne.Interfaces[i].Description < ne.Interfaces[j].Description
-		})
+	for _, discoveryItem := range discoveryMap {
+		ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
 	}
+
+	sort.Slice(ne.Interfaces, func(i, j int) bool {
+		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+	})
 
 	return ne, nil
 }
@@ -312,8 +299,8 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 			return nil, err
 		}
 
-		switch task := reply.Task.(type) {
-		case *transport.Message_Snmpc:
+		switch task := reply.Task.Task.(type) {
+		case *transport.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -337,61 +324,36 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, el *proto.Netw
 					resources.GetIfXEntryInformation(m, elementInterface)
 				}
 			}
-		case *transport.Message_Telnet:
+		case *transport.Task_Terminal:
+
 			if reply.Error != "" {
-				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Telnet.Payload[0].Command)
-				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Terminal.Payload[0].Command)
 				continue
 			}
 
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
 			}
 
-			if elementInterface.DhcpTable, err = parseIPTable(task.Telnet.Payload[1].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[1].Command)
+			if elementInterface.DhcpTable, err = parseIPTable(task.Terminal.Payload[1].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[1].Command)
 			}
 
-			elementInterface.Config = parseCurrentConfig(task.Telnet.Payload[2].Lookfor)
+			elementInterface.Config = parseCurrentConfig(task.Terminal.Payload[2].Data)
 
-			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Telnet.Payload[3].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[3].Command)
+			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Terminal.Payload[3].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[3].Command)
 			}
 
-			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Telnet.Payload[4].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[4].Command)
+			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Terminal.Payload[4].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[4].Command)
 			}
 
-			if elementInterface.Qos, err = parseQueueStatistics(task.Telnet.Payload[5].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[5].Command)
+			if elementInterface.Qos, err = parseQueueStatistics(task.Terminal.Payload[5].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[5].Command)
 			}
 
-		case *transport.Message_Ssh:
-			if reply.Error != "" {
-				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
-				continue
-			}
-
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Ssh.Payload[0].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[0].Command)
-			}
-
-			if elementInterface.DhcpTable, err = parseIPTable(task.Ssh.Payload[1].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[1].Command)
-			}
-			elementInterface.Config = parseCurrentConfig(task.Ssh.Payload[2].Lookfor)
-
-			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Ssh.Payload[3].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[3].Command)
-			}
-
-			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Ssh.Payload[4].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[4].Command)
-			}
-
-			if elementInterface.Qos, err = parseQueueStatistics(task.Ssh.Payload[5].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[5].Command)
-			}
 		}
 	}
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
@@ -428,7 +390,9 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
 
-	msgs = append(msgs, resources.CreateBasicSshInterfaceTask(el, conf))
+	t := resources.CreateBasicSshInterfaceTask(el, conf)
+
+	msgs = append(msgs, t)
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname
@@ -448,8 +412,8 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			return nil, fmt.Errorf("could not complete BasicTechnicalPortInformation: %w", err)
 		}
 
-		switch task := reply.Task.(type) {
-		case *transport.Message_Snmpc:
+		switch task := reply.Task.Task.(type) {
+		case *transport.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -473,28 +437,15 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 					resources.GetIfXEntryInformation(m, elementInterface)
 				}
 			}
-		case *transport.Message_Telnet:
+		case *transport.Task_Terminal:
 			if reply.Error != "" {
-				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Telnet.Payload[0].Command)
-				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Terminal.Payload[0].Command)
 				continue
 			}
 
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
-			}
-
-		// parse SSH
-		case *transport.Message_Ssh:
-			if reply.Error != "" {
-				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Ssh.Payload[0].Command)
-				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Ssh.Payload[0].Command)
-
-				continue
-			}
-
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Ssh.Payload[0].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Ssh.Payload[0].Command)
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
 			}
 
 		}
@@ -522,30 +473,9 @@ func main() {
 	})
 
 	sharedConf := shared.GetConfig()
-	natsConf := sharedConf.NATS
 
-	opts := nats.GetDefaultOptions()
-	opts.ReconnectWait = 5
-	opts.MaxReconnect = 20
-	opts.RetryOnFailedConnect = true
-	nc, err := nats.Connect(strings.Join(natsConf.EventServers, ","))
-	if err != nil {
-		logger.Error("failed to connect to nats", "error", err)
-		os.Exit(1)
-	}
-	dncChan = make(chan string)
-	enc, err := nats.NewEncodedConn(nc, "json")
-	if err != nil {
-		logger.Error("failed to create dnc connection", "error", err)
-		os.Exit(1)
-	}
-	err = enc.BindSendChan("vrp-driver", dncChan)
-	if err != nil {
-		logger.Error("failed to bind dnc channel", "error", err)
-		os.Exit(1)
-	}
-
-	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
+	logger.Info("connecting to DNC", "address", sharedConf.DNCServerAddr)
+	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
 	if err != nil {
 		logger.Error("failed to create DNC Client", "error", err)
 		os.Exit(1)

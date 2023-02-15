@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
-	"git.liero.se/opentelco/go-dnc/models/pb/ssh"
+	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -14,35 +14,38 @@ import (
 )
 
 func CreateBasicSshInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &ssh.Task{
-		Type: ssh.Type_GET,
-		Payload: []*ssh.Payload{
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
 			{
 				Command: fmt.Sprintf("display mac-address %s", el.Interface),
 			},
 		},
-		Config: &ssh.Config{
+		Config: &terminal.Config{
 			User:                conf.Ssh.Username,
 			Password:            conf.Ssh.Password,
-			Port:                conf.Ssh.Port,
-			ScreenLength:        conf.Ssh.ScreenLength,
-			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
 			RegexPrompt:         conf.Ssh.RegexPrompt,
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Ssh.TTL.Seconds())},
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
 			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
 			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Ssh.SSHKeyPath,
 		},
-		Host: el.Hostname,
 	}
 
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SSH,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Ssh{Ssh: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Ssh.Port),
+			Source: "swpx",
+			Type:   transport.Type_SSH,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SSH,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
 	}
 	return message
 }

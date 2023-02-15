@@ -24,12 +24,12 @@ package resources
 
 import (
 	"fmt"
+	"time"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
 	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
-	"git.liero.se/opentelco/go-dnc/models/pb/ssh"
-	"git.liero.se/opentelco/go-dnc/models/pb/telnet"
+	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -41,6 +41,7 @@ import (
 
 func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			MaxRepetitions:     72,
@@ -61,13 +62,20 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
 	return message
 }
@@ -76,6 +84,7 @@ func CreateDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *t
 // Default IF-MIB values
 func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
@@ -101,19 +110,27 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
 	return message
 }
 
 func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
@@ -139,19 +156,26 @@ func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) 
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
 	}
 	return message
 }
 
 func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
@@ -182,20 +206,300 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 
 	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
 	return message
 }
 
+func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: true,
+			MaxIterations:      1,
+			NonRepeaters:       0,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_BULKWALK,
+		Oids: []*snmpc.Oid{
+			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metric.MetricType_STRING},
+		},
+	}
+
+	// task.Parameters = params
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
+	}
+	return message
+}
+
+func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
+			{
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			},
+		},
+		Config: &terminal.Config{
+			User:                conf.Telnet.Username,
+			Password:            conf.Telnet.Password,
+			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
+			RegexPrompt:         conf.Telnet.RegexPrompt,
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
+		},
+	}
+
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Telnet.Port),
+			Source: "swpx",
+			Type:   transport.Type_TELNET,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_TELNET,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+		// RequestDeadline: el.Conf.Request.Deadline,
+	}
+	return message
+
+}
+
+func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
+			{
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
+			},
+			{
+				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
+			},
+		},
+
+		Config: &terminal.Config{
+			User:                conf.Ssh.Username,
+			Password:            conf.Ssh.Password,
+			RegexPrompt:         conf.Ssh.RegexPrompt,
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Ssh.SSHKeyPath,
+		},
+	}
+
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Ssh.Port),
+			Source: "swpx",
+			Type:   transport.Type_SSH,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SSH,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+		// RequestDeadline: el.Conf.Request.Deadline,
+	}
+	return message
+
+}
+
+func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: true,
+			MaxIterations:      1,
+			NonRepeaters:       0,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_BULKWALK,
+		Oids: []*snmpc.Oid{
+			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
+			{Oid: oids.IfAlias, Name: "ifAlias", Type: metric.MetricType_STRING},
+			{Oid: oids.IfType, Name: "ifType", Type: metric.MetricType_INT},
+			{Oid: oids.IfMtu, Name: "ifMtu", Type: metric.MetricType_INT},
+			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metric.MetricType_HWADDR},
+			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metric.MetricType_INT},
+			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metric.MetricType_INT},
+			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
+
+			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
+		},
+	}
+
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
+	}
+	return message
+}
+
+func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
+			{
+				Command: "port sfp",
+			},
+		},
+		Config: &terminal.Config{
+			User:                conf.Ssh.Username,
+			Password:            conf.Ssh.Password,
+			RegexPrompt:         conf.Ssh.RegexPrompt,
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Ssh.SSHKeyPath,
+		},
+	}
+
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Telnet.Port),
+			Source: "swpx",
+			Type:   transport.Type_TELNET,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_TELNET,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+		// RequestDeadline: el.Conf.Request.Deadline,
+	}
+	return message
+
+}
+
+func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &terminal.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Payload: []*terminal.Task_Payload{
+			{
+				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+			},
+		},
+		Config: &terminal.Config{
+			User:                conf.Ssh.Username,
+			Password:            conf.Ssh.Password,
+			RegexPrompt:         conf.Ssh.RegexPrompt,
+			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
+			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
+			SshKeyPath:          conf.Ssh.SSHKeyPath,
+		},
+	}
+
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.Telnet.Port),
+			Source: "swpx",
+			Type:   transport.Type_TELNET,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_TELNET,
+		Task: &transport.Task{
+			Task: &transport.Task_Terminal{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
+		// RequestDeadline: el.Conf.Request.Deadline,
+	}
+	return message
+
+}
+
 // CreateMsg uses the pbuf transport for DNC..
 func CreateMsg(conf *shared.Configuration) *transport.Message {
+	dl := time.Now().Add(time.Second * 60)
 	task := &snmpc.Task{
+		Deadline: timestamppb.New(dl),
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: true,
@@ -223,254 +527,19 @@ func CreateMsg(conf *shared.Configuration) *transport.Message {
 		},
 	}
 
-	// task.Parameters = params
 	message := &transport.Message{
-		Id:      ksuid.New().String(),
-		Target:  "10.9.0.10",
-		Type:    transport.Type_SNMP,
-		Task:    &transport.Message_Snmpc{Snmpc: task},
-		Status:  shared2.Status_NEW,
+		Session: &transport.Session{
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
 		Created: timestamppb.Now(),
 	}
 	return message
-}
-
-func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &snmpc.Task{
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: true,
-			MaxIterations:      1,
-			NonRepeaters:       0,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_BULKWALK,
-		Oids: []*snmpc.Oid{
-			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metric.MetricType_STRING},
-		},
-	}
-
-	// task.Parameters = params
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-}
-
-func CreateTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &telnet.Task{
-		Type: telnet.Type_GET,
-		Payload: []*telnet.Payload{
-			{
-				Command: fmt.Sprintf("display mac-address %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
-			},
-		},
-		Config: &telnet.Config{
-			User:                conf.Telnet.Username,
-			Password:            conf.Telnet.Password,
-			Port:                conf.Telnet.Port,
-			ScreenLength:        conf.Telnet.ScreenLength,
-			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
-			RegexPrompt:         conf.Telnet.RegexPrompt,
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
-		},
-		Host: el.Hostname,
-	}
-
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_TELNET,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Telnet{Telnet: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-
-}
-
-func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &ssh.Task{
-		Type: ssh.Type_GET,
-		Payload: []*ssh.Payload{
-			{
-				Command: fmt.Sprintf("display mac-address %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display dhcp snooping user-bind interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display current-configuration interface %s | include traffic-policy|shaping", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display traffic policy statistics interface %s inbound verbose classifier-base", el.Interface),
-			},
-			{
-				Command: fmt.Sprintf("display qos queue statistics interface %s", el.Interface),
-			},
-		},
-		Config: &ssh.Config{
-			User:     conf.Ssh.Username,
-			Password: conf.Ssh.Password,
-			Port:     conf.Ssh.Port,
-
-			ScreenLength:        conf.Ssh.ScreenLength,
-			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
-			RegexPrompt:         conf.Ssh.RegexPrompt,
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Ssh.TTL.Seconds())},
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
-			SshKeyPath:          conf.Ssh.SSHKeyPath,
-		},
-		Host: el.Hostname,
-	}
-
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SSH,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Ssh{Ssh: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-
-}
-
-func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &snmpc.Task{
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: true,
-			MaxIterations:      1,
-			NonRepeaters:       0,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_BULKWALK,
-		Oids: []*snmpc.Oid{
-			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
-			{Oid: oids.IfAlias, Name: "ifAlias", Type: metric.MetricType_STRING},
-			{Oid: oids.IfType, Name: "ifType", Type: metric.MetricType_INT},
-			{Oid: oids.IfMtu, Name: "ifMtu", Type: metric.MetricType_INT},
-			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metric.MetricType_HWADDR},
-			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
-
-			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
-		},
-	}
-
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-}
-
-func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &telnet.Task{
-		Type: telnet.Type_GET,
-		Payload: []*telnet.Payload{
-			{
-				Command: "port sfp",
-			},
-		},
-		Config: &telnet.Config{
-			User:                conf.Telnet.Username,
-			Password:            conf.Telnet.Password,
-			Port:                conf.Telnet.Port,
-			ScreenLength:        conf.Telnet.ScreenLength,
-			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
-			RegexPrompt:         "CP7:\\/>",
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
-		},
-		Host: el.Hostname,
-	}
-
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_TELNET,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Telnet{Telnet: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-
-}
-
-func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &telnet.Task{
-		Type: telnet.Type_GET,
-		Payload: []*telnet.Payload{
-			{
-				Command: fmt.Sprintf("display mac-address %s", el.Interface),
-			},
-		},
-		Config: &telnet.Config{
-			User:                conf.Telnet.Username,
-			Password:            conf.Telnet.Password,
-			Port:                conf.Telnet.Port,
-			ScreenLength:        conf.Telnet.ScreenLength,
-			ScreenLengthCommand: conf.Telnet.ScreenLengthCommand,
-			RegexPrompt:         conf.Telnet.RegexPrompt,
-			Ttl:                 &durationpb.Duration{Seconds: int64(conf.Telnet.TTL.Seconds())},
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Telnet.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Telnet.WriteDeadLine.Seconds())},
-		},
-		Host: el.Hostname,
-	}
-
-	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_TELNET,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Telnet{Telnet: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
-	}
-	return message
-
 }

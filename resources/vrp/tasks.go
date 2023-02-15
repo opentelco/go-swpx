@@ -16,6 +16,7 @@ import (
 // Before the task is sent we need to set the MaxRepetitions to X
 func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configuration, maxRepetitions int32) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false, // FALSE because right now it will lookup the ifIndex to get repetitions which we cannot rely on
@@ -38,15 +39,20 @@ func CreateAllVRPTransceiverMsg(el *proto.NetworkElement, conf *shared.Configura
 		},
 	}
 
-	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         timestamppb.Now(),
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status:  shared2.Status_NEW,
+		Created: timestamppb.Now(),
 	}
 	return message
 }

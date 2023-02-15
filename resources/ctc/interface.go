@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
@@ -12,6 +13,7 @@ import (
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"github.com/araddon/dateparse"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -19,6 +21,7 @@ import (
 
 func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
@@ -47,56 +50,70 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 		},
 	}
 
-	// task.Parameters = params
 	message := &transport.Message{
-		Id:              ksuid.New().String(),
-		Target:          el.Hostname,
-		Type:            transport.Type_SNMP,
-		RequestDeadline: el.Conf.Request.Deadline,
-		Task:            &transport.Message_Snmpc{Snmpc: task},
-		Status:          shared2.Status_NEW,
-		Created:         &timestamppb.Timestamp{},
+		Session: &transport.Session{
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
 	}
+
 	return message
 }
 
 func (d *CTCDriver) getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
-		elementInterface.Stats.Output.Bytes = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Output.Bytes = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfInOctets):
-		elementInterface.Stats.Input.Bytes = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Input.Bytes = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
-		elementInterface.Stats.Input.Unicast = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Input.Unicast = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfInErrors):
-		elementInterface.Stats.Input.Errors = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Input.Errors = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfOutErrors):
-		elementInterface.Stats.Output.Errors = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Output.Errors = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfDescr):
-		elementInterface.Description = m.GetStringValue()
+		elementInterface.Description = m.GetValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfType):
-		elementInterface.Type = networkelement.InterfaceType(m.GetIntValue())
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Type = networkelement.InterfaceType(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfMtu):
-		elementInterface.Mtu = m.GetIntValue()
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Mtu = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfLastChange):
-		elementInterface.LastChanged = m.GetTimestampValue()
+		elementInterface.LastChanged = timestamppb.New(dateparse.MustParse(m.GetValue()))
 
 	case strings.HasPrefix(m.Oid, oids.IfPhysAddress):
-		elementInterface.Hwaddress = m.GetStringValue()
+		elementInterface.Hwaddress = m.GetValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
-		elementInterface.AdminStatus = networkelement.InterfaceStatus(m.GetIntValue())
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.AdminStatus = networkelement.InterfaceStatus(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
-		elementInterface.OperationalStatus = networkelement.InterfaceStatus(m.GetIntValue())
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.OperationalStatus = networkelement.InterfaceStatus(i)
 
 	}
 }

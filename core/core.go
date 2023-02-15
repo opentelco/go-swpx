@@ -79,6 +79,7 @@ type Core struct {
 
 // Start the core application
 func (c *Core) Start() error {
+	c.logger.Debug("starting core")
 	c.swarm.start(c.RequestQueue)
 
 	go func() {
@@ -145,6 +146,7 @@ func New(logger hclog.Logger) (*Core, error) {
 		return nil, err
 	}
 
+	logger.Debug("setting up mongodb cache", "config", conf.InterfaceCache)
 	// setup mongodb cache
 	mongoClient, err := initMongoDb(conf.InterfaceCache, logger.Named("mongodb"))
 	if err != nil {
@@ -154,6 +156,7 @@ func New(logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 
+	logger.Debug("setting up interface cache", "config", conf.InterfaceCache)
 	if core.interfaceCache, err = newInterfaceCache(mongoClient, logger, conf.InterfaceCache); err != nil {
 		logger.Error("error creating cache", "error", err)
 		logger.Info("no mongo connection established", "cache_enabled", false)
@@ -161,6 +164,7 @@ func New(logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 
+	logger.Debug("setting up response cache", "config", conf.ResponseCache)
 	if core.responseCache, err = newResponseCache(mongoClient, logger, conf.ResponseCache); err != nil {
 		logger.Error("cannot set response cache", "error", err)
 		return core, nil
@@ -184,15 +188,17 @@ func (c *Core) LoadResourcePlugins(availableResources map[string]*plugin.Client)
 
 		raw, err = rrpc.Dispense("resource")
 		if err == nil {
-			c.logger.Info("successfully dispensed resource plugin", "plugin", name)
+			c.logger.Info("dispense and load resource plugin", "plugin", name)
 
 			if resource, ok := raw.(shared.Resource); ok {
-				_, err := resource.Version()
+
+				c.logger.Debug("call version on resource plugin", "plugin", name)
+				v, err := resource.Version()
 				c.resources[name] = resource
 				if err != nil {
 					return fmt.Errorf("could not get version for plugin: %w", err)
-
 				}
+				c.logger.Info("loaded resource plugin", "plugin", name, "version", v)
 			} else {
 				return fmt.Errorf("type assertions failed for plugin: %s", name)
 			}

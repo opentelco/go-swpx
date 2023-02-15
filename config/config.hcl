@@ -9,7 +9,7 @@ switchpoller {
   mongodb "responseCache" {
     server {
       addr = "localhost"
-      port = 27017
+      port = 27019
     }
     database = "swpx"
     timeout = "5s"
@@ -18,7 +18,7 @@ switchpoller {
   mongodb "interfaceCache" {
     server {
       addr = "localhost"
-      port = 27017
+      port = 27019
     }
     database = "swpx"
     timeout = "5s"
@@ -30,23 +30,6 @@ switchpoller {
     as_json = false
   }
 
-  /** Nats servers for the DNC **/
-  nats {
-    server {
-      addr = "localhost"
-      port = "14222"
-    }
-
-    server {
-      addr = "localhost"
-      port = "24222"
-    }
-
-    server {
-      addr = "localhost"
-      port = "34222"
-    }
-  }
 
   snmp {
     community = "semipublic"
@@ -60,6 +43,7 @@ switchpoller {
     username = ""
     password = ""
     port = 22
+
     screen_length = ""
     default_prompt = ""
     default_errors = ""

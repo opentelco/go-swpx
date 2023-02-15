@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"github.com/araddon/dateparse"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -29,106 +30,118 @@ type DiscoveryItem struct {
 	highSpeed   int
 }
 
-func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, discoveryMap map[int]*DiscoveryItem) {
-	for _, m := range task.Snmpc.Metrics {
+func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap map[int]*DiscoveryItem) {
+	for _, m := range task.Metrics {
 		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
 		case "ifIndex":
 			if val, ok := discoveryMap[index]; ok {
-				val.Index = m.GetIntValue()
+				i, _ := strconv.Atoi(m.GetValue())
+				val.Index = int64(i)
 			} else {
+				i, _ := strconv.Atoi(m.GetValue())
 				discoveryMap[index] = &DiscoveryItem{
-					Index: m.GetIntValue(),
+					Index: int64(i),
 				}
 			}
 		case "ifAlias":
 			if val, ok := discoveryMap[index]; ok {
-				val.Alias = m.GetStringValue()
+				val.Alias = m.GetValue()
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					Alias: m.GetStringValue(),
+					Alias: m.GetValue(),
 				}
 			}
 
 		case "ifXEntry":
 
 			if val, ok := discoveryMap[index]; ok {
-				val.Descr = m.GetStringValue()
+				val.Descr = m.GetValue()
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					Descr: m.GetStringValue(),
+					Descr: m.GetValue(),
 				}
 			}
 
 		case "ifDescr":
 
 			if val, ok := discoveryMap[index]; ok {
-				val.Descr = m.GetStringValue()
+				val.Descr = m.GetValue()
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					Descr: m.GetStringValue(),
+					Descr: m.GetValue(),
 				}
 			}
 
 		case "ifType":
+
+			i, _ := strconv.Atoi(m.GetValue())
+
 			if val, ok := discoveryMap[index]; ok {
-				val.ifType = int(m.GetIntValue())
+				val.ifType = i
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					ifType: int(m.GetIntValue()),
+					ifType: i,
 				}
 			}
 
 		case "ifMtu":
+			i, _ := strconv.Atoi(m.GetValue())
 			if val, ok := discoveryMap[index]; ok {
-				val.mtu = int(m.GetIntValue())
+				val.mtu = i
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					mtu: int(m.GetIntValue()),
+					mtu: i,
 				}
 			}
 
 		case "ifPhysAddress":
 			if val, ok := discoveryMap[index]; ok {
-				val.physAddress = m.GetHwaddrValue()
+				val.physAddress = m.GetValue()
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					physAddress: m.GetHwaddrValue(),
+					physAddress: m.GetValue(),
 				}
 			}
 
 		case "ifAdminStatus":
+			i, _ := strconv.Atoi(m.GetValue())
 			if val, ok := discoveryMap[index]; ok {
-				val.adminStatus = int(m.GetIntValue())
+				val.adminStatus = i
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					adminStatus: int(m.GetIntValue()),
+					adminStatus: i,
 				}
 			}
 
 		case "ifOperStatus":
+			i, _ := strconv.Atoi(m.GetValue())
 			if val, ok := discoveryMap[index]; ok {
-				val.operStatus = int(m.GetIntValue())
+				val.operStatus = i
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					operStatus: int(m.GetIntValue()),
+					operStatus: i,
 				}
 			}
 
 		case "ifLastChange":
+			ts := dateparse.MustParse(m.GetValue())
+			tspb := timestamppb.New(ts)
 			if val, ok := discoveryMap[index]; ok {
-				val.lastChange = m.GetTimestampValue()
+				val.lastChange = tspb
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					lastChange: m.GetTimestampValue(),
+					lastChange: tspb,
 				}
 			}
 		case "ifHighSpeed":
+			i, _ := strconv.Atoi(m.GetValue())
+
 			if val, ok := discoveryMap[index]; ok {
-				val.highSpeed = int(m.GetIntValue())
+				val.highSpeed = i
 			} else {
 				discoveryMap[index] = &DiscoveryItem{
-					highSpeed: int(m.GetIntValue()),
+					highSpeed: i,
 				}
 			}
 		}
@@ -137,26 +150,27 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *transport.Message_Snmpc, di
 
 func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 
+	i, _ := strconv.Atoi(m.GetValue())
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutUcastPkts):
-		elementInterface.Stats.Output.Unicast = m.GetIntValue()
+		elementInterface.Stats.Output.Unicast = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfInBroadcastPkts):
-		elementInterface.Stats.Input.Broadcast = m.GetIntValue()
+		elementInterface.Stats.Input.Broadcast = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfInMulticastPkts):
-		elementInterface.Stats.Input.Multicast = m.GetIntValue()
+		elementInterface.Stats.Input.Multicast = int64(i)
 	case strings.HasPrefix(m.Oid, oids.IfOutBroadcastPkts):
-		elementInterface.Stats.Output.Broadcast = m.GetIntValue()
+		elementInterface.Stats.Output.Broadcast = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfOutMulticastPkts):
-		elementInterface.Stats.Output.Multicast = m.GetIntValue()
+		elementInterface.Stats.Output.Multicast = int64(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfAlias):
-		elementInterface.Alias = m.GetStringValue()
+		elementInterface.Alias = m.GetValue()
 
 	case strings.HasPrefix(m.Oid, oids.IfHighSpeed):
-		elementInterface.Speed = m.GetIntValue()
+		elementInterface.Speed = int64(i)
 
 	}
 
@@ -165,17 +179,17 @@ func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 func GetSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	switch m.Oid {
 	case oids.SysContact:
-		ne.Contact = m.GetStringValue()
+		ne.Contact = m.GetValue()
 	case oids.SysDescr:
-		ne.Version = m.GetStringValue()
+		ne.Version = m.GetValue()
 	case oids.SysLocation:
-		ne.Location = m.GetStringValue()
+		ne.Location = m.GetValue()
 	case oids.SysName:
-		ne.Sysname = m.GetStringValue()
+		ne.Sysname = m.GetValue()
 	// case oids.SysORLastChange:
 	// case oids.SysObjectID:
 	case oids.SysUpTime:
-		ne.Uptime = m.GetStringValue()
+		ne.Uptime = m.GetValue()
 	}
 }
 

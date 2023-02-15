@@ -1,14 +1,16 @@
 default_provider: "vx"
+dnc_server_addr: "localhost:1339"
 
 snmp:
   community: xWTyZ9nA158ktJF2
   timeout: 20s
   version: 2
   retries: 3
+  port: 161
   dynamic_repetitions: true
 
 interface_cache:
-  server: mongodb://localhost:27017
+  server: mongodb://localhost:27019
   database: test
   collection: interface_cache
   timeout_seconds: 30
@@ -19,15 +21,13 @@ response_cache:
   collection: response_cache
   timeout_seconds: 30
 
-nats:
-  event_servers: ['nats://localhost:4222']
 
 ssh:
-  username: "admin"
-  password: "SAITenable"
+  username: ""
+  password: ""
   port: 22
   screen_length: "0"
-  screen_length_command: "screen-length %s temporary"
+  screen_length_command: "screen-length 0 temporary"
   default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
@@ -35,11 +35,11 @@ ssh:
   write_dead_line: "8s"
 #  ssh_key_path: "/home/ardi/.ssh/id_rsa"
 telnet:
-  username: "vx1110"
-  password: "badingdong"
+  username: ""
+  password: ""
   port: 23
   screen_length: "0"
-  screen_length_command: "screen-length %s temporary"
+  screen_length_command: "screen-length 0 temporary"
   default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"

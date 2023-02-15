@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -88,11 +89,10 @@ func main() {
 	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
 
 	sharedConf := shared.GetConfig()
-
-	natsConf := sharedConf.NATS
-	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
+	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("failed to create DNC Client", "error", err)
+		os.Exit(1)
 	}
 
 	resource := &RaycoreDriver{
@@ -118,8 +118,9 @@ func (d *RaycoreDriver) MapEntityPhysical(ctx context.Context, el *proto.Network
 		d.logger.Error(err.Error())
 		return nil, err
 	}
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
+
+	switch task := msg.Task.Task.(type) {
+	case *transport.Task_Snmpc:
 		interfaces := make(map[string]*proto.NetworkElementInterface)
 		for _, m := range task.Snmpc.Metrics {
 			fields := strings.Split(m.Oid, ".")
@@ -129,10 +130,10 @@ func (d *RaycoreDriver) MapEntityPhysical(ctx context.Context, el *proto.Network
 				return nil, err
 			}
 
-			interfaces[m.GetStringValue()] = &proto.NetworkElementInterface{
+			interfaces[m.GetValue()] = &proto.NetworkElementInterface{
 				Alias:       m.Name,
 				Index:       int64(index),
-				Description: m.GetStringValue(),
+				Description: m.GetValue(),
 			}
 		}
 
@@ -154,8 +155,8 @@ func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.Networ
 		return nil, err
 	}
 
-	sysInfoTask := sysInfoMsg.Task.(*transport.Message_Snmpc)
-	for _, m := range sysInfoTask.Snmpc.Metrics {
+	sysInfoTask := sysInfoMsg.Task.GetSnmpc()
+	for _, m := range sysInfoTask.Metrics {
 		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
 			resources.GetSystemInformation(m, ne)
 		}
@@ -168,18 +169,17 @@ func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.Networ
 		return nil, err
 	}
 
-	if task, ok := portsMsg.Task.(*transport.Message_Snmpc); ok {
-		discoveryMap := make(map[int]*resources.DiscoveryItem)
-		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+	task := portsMsg.Task.GetSnmpc()
+	discoveryMap := make(map[int]*resources.DiscoveryItem)
+	resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
-		for _, discoveryItem := range discoveryMap {
-			ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
-		}
-
-		sort.Slice(ne.Interfaces, func(i, j int) bool {
-			return ne.Interfaces[i].Description < ne.Interfaces[j].Description
-		})
+	for _, discoveryItem := range discoveryMap {
+		ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
 	}
+
+	sort.Slice(ne.Interfaces, func(i, j int) bool {
+		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+	})
 
 	return ne, nil
 }
@@ -201,15 +201,6 @@ func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto
 	return nil, fmt.Errorf("GetTransceiverInformation is not implemented")
 }
 
-func (d *RaycoreDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
-	d.conf = conf
-
-	return nil
-}
-func (d *RaycoreDriver) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return d.conf, nil
-}
-
 func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*networkelement.Element, error) {
 	conf := shared.Proto2conf(el.Element.Conf)
 	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el.Element, conf)
@@ -219,10 +210,10 @@ func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *pr
 		return nil, err
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Telnet:
-		if len(task.Telnet.Payload) > 0 {
-			transceiver, err := parseTransceiverMessage(task.Telnet.Payload[0].Lookfor)
+	switch task := msg.Task.Task.(type) {
+	case *transport.Task_Terminal:
+		if len(task.Terminal.Payload) > 0 {
+			transceiver, err := parseTransceiverMessage(task.Terminal.Payload[0].Data)
 			if err != nil {
 				return nil, err
 			}

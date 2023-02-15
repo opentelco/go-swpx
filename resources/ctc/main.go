@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
-	"github.com/nats-io/nats.go"
 )
 
 var VERSION *version.Version
@@ -33,8 +32,6 @@ const (
 	Float64Size      = 64
 	QueueEntryLength = 12
 )
-
-var dncChan chan string
 
 func init() {
 	var err error
@@ -50,19 +47,8 @@ type CTCDriver struct {
 	conf   *shared.Configuration
 }
 
-func (d *CTCDriver) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return d.conf, nil
-}
-
-func (d *CTCDriver) SetConfiguration(ctx context.Context, conf *shared.Configuration) error {
-	d.conf = conf
-
-	return nil
-}
-
 func (d *CTCDriver) Version() (string, error) {
-	d.logger.Debug("message from resource-driver running at version", VERSION.String())
-	dncChan <- VERSION.String()
+	d.logger.Debug("message from resource-driver running", "version", VERSION.String())
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
@@ -119,8 +105,8 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			return nil, err
 		}
 
-		switch task := reply.Task.(type) {
-		case *transport.Message_Snmpc:
+		switch task := reply.Task.Task.(type) {
+		case *transport.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -141,15 +127,16 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 					resources.GetIfXEntryInformation(m, elementInterface)
 				}
 			}
-		case *transport.Message_Telnet:
+
+		case *transport.Task_Terminal:
 			if reply.Error != "" {
-				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Telnet.Payload[0].Command)
-				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Telnet.Payload[0].Command)
+				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
+				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Terminal.Payload[0].Command)
 				continue
 			}
 
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Telnet.Payload[0].Lookfor); err != nil {
-				errs = d.logAndAppend(err, errs, task.Telnet.Payload[0].Command)
+			if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
+				errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
 			}
 
 		}
@@ -184,11 +171,11 @@ func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 		return nil, err
 	}
 
-	switch task := msg.Task.(type) {
-	case *transport.Message_Snmpc:
+	switch task := msg.Task.Task.(type) {
+	case *transport.Task_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.AsDuration().String(), "size", len(task.Snmpc.Metrics))
 
-		resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+		resources.PopulateDiscoveryMap(d.logger, task.Snmpc, discoveryMap)
 
 		for _, v := range discoveryMap {
 			interfaces[v.Descr] = &proto.NetworkElementInterface{
@@ -229,33 +216,11 @@ func main() {
 	})
 
 	sharedConf := shared.GetConfig()
-	natsConf := sharedConf.NATS
-	opts := nats.GetDefaultOptions()
-	opts.ReconnectWait = 5
-	opts.MaxReconnect = 20
-	opts.RetryOnFailedConnect = true
-	nc, err := nats.Connect(strings.Join(natsConf.EventServers, ","))
-	if err != nil {
-		logger.Error("failed to connect to nats", "error", err)
-		os.Exit(1)
-	}
 
-	dncChan = make(chan string)
-	enc, err := nats.NewEncodedConn(nc, "json")
+	logger.Info("connecting to DNC", "address", sharedConf.DNCServerAddr)
+	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
 	if err != nil {
-		logger.Error("failed to create dnc connection", "error", err)
-		os.Exit(1)
-	}
-	err = enc.BindSendChan("ctc-driver", dncChan)
-	if err != nil {
-		logger.Error("failed to bind dnc channel", "error", err)
-		os.Exit(1)
-	}
-
-	//dncClient, err := client.NewGRPC(DISPATCHER_ADDR)
-	dncClient, err := client.NewNATS(strings.Join(natsConf.EventServers, ","))
-	if err != nil {
-		logger.Error("failed to create dnc client", "error", err)
+		logger.Error("failed to create DNC Client", "error", err)
 		os.Exit(1)
 	}
 

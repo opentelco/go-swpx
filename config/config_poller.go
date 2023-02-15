@@ -14,7 +14,6 @@ type Poller struct {
 	MaxPollerRequests int            `hcl:"max_requests"`
 	MongoCaches       []*MongoConfig `hcl:"mongodb,block"`
 
-	NATS       *NATSConfig `hcl:"nats,block"`
 	Snmp       Snmp        `hcl:"snmp,block"`
 	Transports []Transport `hcl:"transport,block"`
 }

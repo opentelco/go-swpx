@@ -99,24 +99,3 @@ func Test_CTC(t *testing.T) {
 	fmt.Println(pv)
 
 }
-
-func Test_Nats(t *testing.T) {
-
-	bs, err := LoadFile("config.hcl")
-	if err != nil {
-		t.Error(err)
-	}
-
-	cfg := &Configuration{}
-	err = ParseConfig(bs, "config.hcl", cfg)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if cfg == nil {
-		t.Error("no config?")
-	}
-
-	fmt.Println(cfg.Poller.NATS.GetServers())
-
-}

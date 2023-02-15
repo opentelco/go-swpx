@@ -97,7 +97,7 @@ func (b *workerPool) start(requestChan chan *Request) {
 	// TODO prometheus endpoint.. ?
 	go func() {
 		for {
-			b.print()
+			// b.print()
 			time.Sleep(30 * time.Second)
 		}
 	}()
