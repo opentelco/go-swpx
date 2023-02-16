@@ -84,7 +84,7 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
 
-	msgs = append(msgs, CreateCTCTelnetInterfaceTask(el, conf))
+	msgs = append(msgs, CreateCTCSSHInterfaceTask(el, conf))
 
 	ne := &networkelement.Element{}
 	ne.Hostname = el.Hostname

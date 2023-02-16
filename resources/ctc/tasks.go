@@ -21,7 +21,7 @@ const (
 	ScreenLengthCommand string = "terminal length 0"
 )
 
-func CreateCTCTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+func CreateCTCSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &terminal.Task{
 		Deadline: el.Conf.Request.Deadline,
 		Payload: []*terminal.Task_Payload{
@@ -43,18 +43,17 @@ func CreateCTCTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Configu
 	message := &transport.Message{
 		Session: &transport.Session{
 			Target: el.Hostname,
-			Port:   int32(el.Conf.Telnet.Port),
+			Port:   int32(el.Conf.Ssh.Port),
 			Source: "swpx",
-			Type:   transport.Type_TELNET,
+			Type:   transport.Type_SSH,
 		},
 		Id:   ksuid.New().String(),
-		Type: transport.Type_TELNET,
+		Type: transport.Type_SSH,
 		Task: &transport.Task{
 			Task: &transport.Task_Terminal{task},
 		},
 		Status:  shared2.Status_NEW,
 		Created: timestamppb.Now(),
-		// RequestDeadline: el.Conf.Request.Deadline,
 	}
 	return message
 
@@ -93,8 +92,7 @@ func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration)
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
+		Status:  shared2.Status_NEW,
 		Created: timestamppb.Now(),
 	}
 
