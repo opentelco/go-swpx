@@ -33,7 +33,7 @@ func CreateCTCSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 			User:                conf.Ssh.Username,
 			Password:            conf.Ssh.Password,
 			RegexPrompt:         conf.Ssh.RegexPrompt,
-			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
+			ScreenLengthCommand: "terminal length 0", // must be sent down to the terminal
 			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
 			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
 			SshKeyPath:          conf.Ssh.SSHKeyPath,
