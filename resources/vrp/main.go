@@ -94,6 +94,7 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*re
 func (d *VRPDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
 	conf := shared.Proto2conf(el.Conf)
 	portMsg := resources.CreatePortInformationMsg(el, conf)
+
 	msg, err := d.dnc.Put(ctx, portMsg)
 	if err != nil {
 		d.logger.Error("got error back from the dnc", "error", err.Error())

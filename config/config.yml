@@ -2,10 +2,10 @@ default_provider: "vx"
 dnc_server_addr: "localhost:1339"
 
 snmp:
-  community: xWTyZ9nA158ktJF2
-  timeout: 20s
+  # community: xWTyZ9nA158ktJF2
+  timeout: 10s
   version: 2
-  retries: 3
+  retries: 2
   port: 161
   dynamic_repetitions: true
 
