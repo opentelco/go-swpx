@@ -83,6 +83,7 @@ func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration)
 
 	message := &transport.Message{
 		Session: &transport.Session{
+			Target: el.Hostname,
 			Source: "swpx",
 			Type:   transport.Type_SNMP,
 		},

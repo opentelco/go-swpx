@@ -52,6 +52,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 
 	message := &transport.Message{
 		Session: &transport.Session{
+			Target: el.Hostname,
 			Source: "swpx",
 			Type:   transport.Type_SNMP,
 		},
