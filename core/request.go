@@ -24,7 +24,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -77,28 +76,14 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		}
 	}
 
-	// put the request on a queue and wait for it to return
-	c.RequestQueue <- request
-	// cache is not set
-	for {
-		select {
-		case resp := <-request.Response:
-			if resp == nil {
-				return nil, fmt.Errorf("received emptry response for: %s", request.Type.String())
-			}
-			if resp.Error != nil && resp.Error.Message != "" {
-				return nil, fmt.Errorf("received error in response, (%d): %s", resp.Error.Code, resp.Error.Message)
-			}
-
-			if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
-				c.logger.Error("error saving response to cache", "error", err.Error())
-			}
-
-			return resp, nil
-
-		case <-request.ctx.Done():
-			return nil, fmt.Errorf("timeout for request reached")
-
-		}
+	resp := &pb_core.Response{}
+	err := c.RequestHandler(ctx, request, resp)
+	if err != nil {
+		return nil, err
 	}
+	if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
+		c.logger.Error("error saving response to cache", "error", err.Error())
+	}
+	return resp, nil
+
 }
