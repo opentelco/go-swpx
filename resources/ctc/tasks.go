@@ -85,6 +85,7 @@ func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration)
 		Session: &transport.Session{
 			Target: el.Hostname,
 			Source: "swpx",
+			Port:   int32(el.Conf.SNMP.Port),
 			Type:   transport.Type_SNMP,
 		},
 		Id:   ksuid.New().String(),
