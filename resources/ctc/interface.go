@@ -25,7 +25,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 		Config: &snmpc.Config{
 			Community:          conf.SNMP.Community,
 			DynamicRepititions: false,
-			NonRepeaters:       12,
+			NonRepeaters:       10,
 			MaxIterations:      1,
 			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
 			Timeout:            durationpb.New(conf.SNMP.Timeout),
@@ -63,7 +63,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
+
 		Created: timestamppb.Now(),
 	}
 
