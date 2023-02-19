@@ -59,6 +59,7 @@ func init() {
 	TestBulkCmd.Flags().Int("start", 1, "the first port to test")
 	TestBulkCmd.Flags().Int("stop", 1, "the last port to test")
 	TestBulkCmd.Flags().BoolP("concurrent", "c", false, "to run request concurrent or not")
+	TestBulkCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
 
 	Root.AddCommand(TestRootCmd)
 
@@ -172,6 +173,13 @@ var TestBulkCmd = &cobra.Command{
 		start, _ := cmd.Flags().GetInt("start")
 		stop, _ := cmd.Flags().GetInt("stop")
 		concurrent, _ := cmd.Flags().GetBool("concurrent")
+		ttlString, _ := cmd.Flags().GetString("ttl")
+
+		_, err := time.ParseDuration(ttlString)
+		if err != nil {
+			cmd.Println("could not parse ttl: ", err)
+			os.Exit(1)
+		}
 
 		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
 		if err != nil {
@@ -188,11 +196,10 @@ var TestBulkCmd = &cobra.Command{
 			p := func(i int) {
 				resp, err := swpx.Poll(cmd.Context(), &pb.Request{
 					Settings: &pb.Request_Settings{
-						ProviderPlugin:         []string{"default_provider"},
-						ResourcePlugin:         "vrp",
+						ProviderPlugin:         []string{"vx"},
 						RecreateIndex:          false,
 						DisableDistributedLock: false,
-						Timeout:                "90s",
+						Timeout:                ttlString,
 						CacheTtl:               "0s",
 					},
 					Type:     pb.Request_GET_BASIC_INFO,

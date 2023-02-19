@@ -127,6 +127,47 @@ func CreateSinglePortMsg(index int64, el *proto.NetworkElement, conf *shared.Con
 	}
 	return message
 }
+func CreateSinglePortMsgShort(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+	task := &snmpc.Task{
+		Deadline: el.Conf.Request.Deadline,
+		Config: &snmpc.Config{
+			Community:          conf.SNMP.Community,
+			DynamicRepititions: false,
+			NonRepeaters:       5,
+			MaxIterations:      1,
+			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
+			Timeout:            durationpb.New(conf.SNMP.Timeout),
+			Retries:            conf.SNMP.Retries,
+		},
+		Type: snmpc.Type_GET,
+		Oids: []*snmpc.Oid{
+			{Oid: fmt.Sprintf(oids.IfDescrF, index), Name: "ifDescr", Type: metric.MetricType_STRING},
+			{Oid: fmt.Sprintf(oids.IfAliasF, index), Name: "ifAlias", Type: metric.MetricType_STRING},
+			{Oid: fmt.Sprintf(oids.IfAdminStatusF, index), Name: "ifAdminStatus", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOperStatusF, index), Name: "ifOperStatus", Type: metric.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfHighSpeedF, index), Name: "ifHighSpeed", Type: metric.MetricType_INT},
+		},
+	}
+
+	// task.Parameters = params
+	message := &transport.Message{
+		Session: &transport.Session{
+			Target: el.Hostname,
+			Port:   int32(el.Conf.SNMP.Port),
+			Source: "swpx",
+			Type:   transport.Type_SNMP,
+		},
+		Id:   ksuid.New().String(),
+		Type: transport.Type_SNMP,
+		Task: &transport.Task{
+			Task: &transport.Task_Snmpc{task},
+		},
+		Status: shared2.Status_NEW,
+		// RequestDeadline: el.Conf.Request.Deadline,
+		Created: timestamppb.Now(),
+	}
+	return message
+}
 
 func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{

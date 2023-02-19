@@ -385,8 +385,8 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 
 	var msgs []*transport.Message
 	if el.InterfaceIndex != 0 {
-		msgs = append(msgs, resources.CreateSinglePortMsg(el.InterfaceIndex, el, conf))
-		msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
+		msgs = append(msgs, resources.CreateSinglePortMsgShort(el.InterfaceIndex, el, conf))
+		// msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
 	} else {
 		msgs = append(msgs, resources.CreateMsg(conf))
 	}
