@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
@@ -28,6 +29,7 @@ var automatedOkList = []string{""}
 // Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
+	start := time.Now()
 	if request.Type == pb_core.Request_NOT_SET {
 		request.Type = pb_core.Request_GET_TECHNICAL_INFO
 	}
@@ -35,6 +37,7 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 	// if the switch is in the list, return OK.
 	// noc has probably tried to migrate a dead switch
 	if In(request.Hostname, automatedOkList...) {
+		s.logger.Warn("[override] automated OK", "hostname", request.Hostname, "port", request.Port, "type", request.Type.String())
 		resp := &pb_core.Response{
 			NetworkElement: &networkelement.Element{
 				Hostname: request.Hostname,
@@ -53,14 +56,15 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 	}
 
 	req := core.NewRequest(ctx, request)
-
 	resp, err := s.core.SendRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
+
 	if resp == nil || resp.NetworkElement == nil {
 		return nil, status.Error(codes.NotFound, "no data from poller")
 	}
+	resp.ExecutionTime = time.Since(start).String()
 
 	return resp, nil
 }
@@ -103,6 +107,7 @@ func (s *coreGrpcImpl) ListenAndServe(addr string) error {
 		log.Fatalf("failed to listen: %s", err)
 	}
 
+	s.logger.Info("starting grpc server", "addr", addr)
 	err = s.grpc.Serve(lis)
 	if err != nil {
 		return err

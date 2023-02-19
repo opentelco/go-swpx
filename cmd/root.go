@@ -23,18 +23,19 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 
 	"git.liero.se/opentelco/go-swpx/api"
 	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/core/requestcache"
+	pb "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +47,20 @@ var logger hclog.Logger
 func init() {
 	Root.AddCommand(Version)
 	Root.AddCommand(Start)
-	Root.AddCommand(Test)
+
+	TestRootCmd.AddCommand(TestBulkCmd)
+
+	TestBulkCmd.Flags().StringP("target", "t", "", "the target to test")
+	if err := TestBulkCmd.MarkFlagRequired("target"); err != nil {
+		panic(err)
+	}
+
+	TestBulkCmd.Flags().StringP("port-name", "n", "GigabitEthernet0/0/", "the port name to test")
+	TestBulkCmd.Flags().Int("start", 1, "the first port to test")
+	TestBulkCmd.Flags().Int("stop", 1, "the last port to test")
+	TestBulkCmd.Flags().BoolP("concurrent", "c", false, "to run request concurrent or not")
+
+	Root.AddCommand(TestRootCmd)
 
 	Start.Flags().StringVarP(&httpPort, "port", "p", "1337", "the port to use for http")
 	Start.Flags().StringVarP(&grpcPort, "grpc-port", "g", "1338", "the port to use for grpc")
@@ -138,59 +152,72 @@ type eventRequest struct {
 }
 
 // Test is a testing command that should be removed..
-var Test = &cobra.Command{
+var TestRootCmd = &cobra.Command{
 	Use:   "test",
 	Short: "run some testing",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
+// Test is a testing command that should be removed..
+var TestBulkCmd = &cobra.Command{
+	Use:   "bulk",
+	Short: "run some bulk testing",
 	Long:  `test is a command used under development to test libraries and other`,
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := hclog.New(&hclog.LoggerOptions{
-			Name:   APP_NAME,
-			Output: os.Stdout,
-			Level:  hclog.Debug,
-		})
 
-		orchester := requestcache.New()
-		id, _ := uuid.NewUUID()
+		target, _ := cmd.Flags().GetString("target")
+		portName, _ := cmd.Flags().GetString("port-name")
+		start, _ := cmd.Flags().GetInt("start")
+		stop, _ := cmd.Flags().GetInt("stop")
+		concurrent, _ := cmd.Flags().GetBool("concurrent")
 
-		go func() {
-			for {
-				time.Sleep(2 * time.Second)
-				x, err := orchester.Pop(id)
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := pb.NewCoreClient(conn)
+		wg := &sync.WaitGroup{}
+		startTime := time.Now()
+
+		for i := start; i <= stop; i++ {
+			wg.Add(1)
+
+			p := func(i int) {
+				resp, err := swpx.Poll(cmd.Context(), &pb.Request{
+					Settings: &pb.Request_Settings{
+						ProviderPlugin:         []string{"default_provider"},
+						ResourcePlugin:         "vrp",
+						RecreateIndex:          false,
+						DisableDistributedLock: false,
+						Timeout:                "90s",
+						CacheTtl:               "0s",
+					},
+					Type:     pb.Request_GET_BASIC_INFO,
+					Hostname: target,
+					Port:     fmt.Sprintf("%s%d", portName, i),
+				})
 				if err != nil {
-					logger.Error(err.Error())
-					continue
+					cmd.Printf("could not complete poll to %s (%s%d) reason: %s\n", target, portName, i, err)
 				}
-				x <- &eventRequest{ID: id, Key: "some string", Value: "some value"}
-			}
-		}()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		println("handling request:", id.String())
-
-		responseChan := orchester.Put(ctx, id)
-		go func() {
-			for {
-				select {
-				case resp := <-responseChan:
-					if x, ok := resp.(*eventRequest); ok {
-						logger.Info("id:", x.ID.String())
-						logger.Info("key:", x.Key)
-						logger.Info("value:", x.Value)
-					} else {
-						logger.Warn("the returned type could not be converted")
-					}
-					logger.Info("size of cache:", orchester.GetSize())
-					return
-				case <-ctx.Done():
-					println("time out waiting for response")
-					if err := orchester.Delete(id); err != nil {
-						logger.Error("could not delete", "error", err)
-					}
-					logger.Info("Size of cache:", orchester.GetSize())
+				if resp != nil {
+					cmd.Printf("completed request %s (%s%d) in: %s (time since start: %s) \n", target, portName, i, resp.GetExecutionTime(), time.Since(startTime))
 				}
+
+				wg.Done()
+
 			}
-		}()
-		time.Sleep(30 * time.Second)
+
+			if concurrent {
+				go p(i)
+			} else {
+				p(i)
+			}
+		}
+
+		wg.Wait()
+		cmd.Printf("completed all requests (%d) in: %s \n", stop, time.Since(startTime))
 	},
 }

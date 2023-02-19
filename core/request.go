@@ -57,7 +57,7 @@ func (r *Request) GetCacheTTL() time.Duration {
 	return ttl
 }
 
-// SendRequest to CORE
+// SendRequest sends the request!
 func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error) {
 
 	if !request.Settings.RecreateIndex && request.GetCacheTTL() != 0 {

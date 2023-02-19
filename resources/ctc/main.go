@@ -96,8 +96,6 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 			Output: &networkelement.InterfaceStatisticsOutput{},
 		},
 	}
-	var err error
-
 	for _, msg := range msgs {
 		reply, err := d.dnc.Put(ctx, msg)
 		if err != nil {
@@ -141,9 +139,11 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 
 		}
 	}
-	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
-		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
-	}
+	// todo: add support for transceiver information
+	// transceiver information is not implemented CTC
+	// if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
+	// 	errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
+	// }
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
 	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
