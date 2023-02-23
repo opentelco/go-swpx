@@ -1,4 +1,4 @@
-FROM golang:1.17 as builder
+FROM golang:1.20 as builder
 RUN mkdir -p /src/bin /src/bin/plugins/providers /src/bin/plugins/resources
 RUN mkdir -p /swpx/plugins/providers /swpx/plugins/resources
 ADD . /src
