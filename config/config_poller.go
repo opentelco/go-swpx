@@ -1,74 +1,43 @@
 package config
 
-import (
-	"fmt"
-	"net"
-	"strconv"
-	"time"
-)
+type Configuration struct {
+	// HttpAddr is the address to listen on for HTTP requests
+	HttpAddr string `hcl:"http_addr"`
 
-type Poller struct {
-	Logger LoggerConf `hcl:"logger,block"`
+	// GrpcAddr is the address to listen on for GRPC requests
+	GrpcAddr string `hcl:"grpc_addr"`
 
-	PollerWorkers     int            `hcl:"workers"`
-	MaxPollerRequests int            `hcl:"max_requests"`
-	MongoCaches       []*MongoConfig `hcl:"mongodb,block"`
+	Logger Logger `hcl:"logger,block"`
 
-	Snmp       Snmp        `hcl:"snmp,block"`
-	Transports []Transport `hcl:"transport,block"`
+	MongoServer *MongoDb      `hcl:"mongodb,block"`
+	MongoCaches []*MongoCache `hcl:"mongodb-cache,block"`
+	Request     RequestConfig `hcl:"request,block"`
 }
 
-const (
-	ResponseCacheType  string = "responseCache"
-	InterfaceCacheType string = "interfaceCache"
-)
-
-func (p Poller) GetCacheConfig(cacheType string) *MongoConfig {
-	for _, c := range p.MongoCaches {
-		if c.CacheType == cacheType {
+func (cfg Configuration) GetMongoByLabel(label string) *MongoCache {
+	for _, c := range cfg.MongoCaches {
+		if c.Label == label {
 			return c
 		}
 	}
 	return nil
 }
 
-type MongoConfig struct {
-	CacheType  string              `hcl:",label"`
-	Database   string              `hcl:"database"`
-	Collection string              `hcl:"collection"`
-	User       string              `hcl:"user,optional"`
-	Password   string              `hcl:"password,optional"`
-	Timeout    string              `hcl:"timeout" json:"timeout"` // Parse timeout as Duration (from string)
-	Servers    []*MongoServerEntry `hcl:"server,block"`
+type MongoDb struct {
+	User     string   `hcl:"user,optional"`
+	Password string   `hcl:"password,optional"`
+	Timeout  Duration `hcl:"timeout" json:"timeout"` // Parse timeout as Duration (from string)
+	Addr     string   `hcl:"addr"`
+	Port     int      `hcl:"port"`
 }
 
-type MongoServerEntry struct {
-	Addr    string `hcl:"addr"`
-	Port    int    `hcl:"port"`
-	Replica string `hcl:"replica,optional"`
+type MongoCache struct {
+	Label      string `hcl:",label"`
+	Database   string `hcl:"database"`
+	Collection string `hcl:"collection"`
 }
 
-func (c MongoConfig) GetServers() ([]string, error) {
-	servers := make([]string, len(c.Servers))
-
-	for _, s := range c.Servers {
-		servers = append(servers, net.JoinHostPort(s.Addr, strconv.Itoa(s.Port)))
-	}
-	if len(servers) == 0 {
-		return nil, fmt.Errorf("no mongo servers configured")
-	}
-
-	return servers, nil
-}
-func (c MongoConfig) GetTimeout() time.Duration {
-	d, err := time.ParseDuration(c.Timeout)
-	if err != nil {
-		return DefaultMongoTimeout
-	}
-	return d
-}
-
-type LoggerConf struct {
+type Logger struct {
 	Level  string `hcl:"level,optional"`
 	AsJson bool   `hcl:"as_json,optional"`
 }

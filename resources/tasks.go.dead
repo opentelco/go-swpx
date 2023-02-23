@@ -169,50 +169,7 @@ func CreateSinglePortMsgShort(index int64, el *proto.NetworkElement, conf *share
 	return message
 }
 
-func CreateTaskSystemInfo(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &snmpc.Task{
-		Deadline: el.Conf.Request.Deadline,
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: false,
-			NonRepeaters:       12,
-			MaxIterations:      1,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_GET,
-		Oids: []*snmpc.Oid{
 
-			// OUT
-			{Oid: oids.SysDescr, Name: "sysDescr", Type: metric.MetricType_STRING},
-			{Oid: oids.SysObjectID, Name: "sysObjectID", Type: metric.MetricType_STRING},
-			{Oid: oids.SysUpTime, Name: "sysUpTime", Type: metric.MetricType_STRING},
-			{Oid: oids.SysContact, Name: "sysContact", Type: metric.MetricType_STRING},
-			{Oid: oids.SysName, Name: "sysName", Type: metric.MetricType_STRING},
-			{Oid: oids.SysLocation, Name: "sysLocation", Type: metric.MetricType_STRING},
-			{Oid: oids.SysORLastChange, Name: "sysORLastChange", Type: metric.MetricType_INT},
-		},
-	}
-
-	// task.Parameters = params
-	message := &transport.Message{
-		Session: &transport.Session{
-			Target: el.Hostname,
-			Port:   int32(el.Conf.SNMP.Port),
-			Source: "swpx",
-			Type:   transport.Type_SNMP,
-		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
-		Task: &transport.Task{
-			Task: &transport.Task_Snmpc{task},
-		},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
-	}
-	return message
-}
 
 func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &snmpc.Task{
@@ -266,7 +223,7 @@ func CreateTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 	return message
 }
 
-func CreatePortInformationMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+func CreatePortInformationMsg(request *proto.Request, conf *res.Configuration) *transport.Message {
 	task := &snmpc.Task{
 		Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
@@ -412,51 +369,7 @@ func CreateSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration
 
 }
 
-func CreateAllPortsMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
-	task := &snmpc.Task{
-		Deadline: el.Conf.Request.Deadline,
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: true,
-			MaxIterations:      1,
-			NonRepeaters:       0,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_BULKWALK,
-		Oids: []*snmpc.Oid{
-			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
-			{Oid: oids.IfAlias, Name: "ifAlias", Type: metric.MetricType_STRING},
-			{Oid: oids.IfType, Name: "ifType", Type: metric.MetricType_INT},
-			{Oid: oids.IfMtu, Name: "ifMtu", Type: metric.MetricType_INT},
-			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metric.MetricType_HWADDR},
-			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
 
-			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
-		},
-	}
-
-	message := &transport.Message{
-		Session: &transport.Session{
-			Target: el.Hostname,
-			Port:   int32(el.Conf.SNMP.Port),
-			Source: "swpx",
-			Type:   transport.Type_SNMP,
-		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
-		Task: &transport.Task{
-			Task: &transport.Task_Snmpc{task},
-		},
-		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
-		Created: timestamppb.Now(),
-	}
-	return message
-}
 
 func CreateRaycoreTelnetTransceiverTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &terminal.Task{
@@ -534,53 +447,4 @@ func CreateBasicTelnetInterfaceTask(el *proto.NetworkElement, conf *shared.Confi
 	}
 	return message
 
-}
-
-// CreateMsg uses the pbuf transport for DNC..
-func CreateMsg(conf *shared.Configuration) *transport.Message {
-	dl := time.Now().Add(time.Second * 60)
-	task := &snmpc.Task{
-		Deadline: timestamppb.New(dl),
-		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
-			DynamicRepititions: true,
-			MaxIterations:      200,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
-		},
-		Type: snmpc.Type_BULKWALK,
-		Oids: []*snmpc.Oid{
-
-			{Oid: oids.IfIndex, Name: "ifIndex", Type: metric.MetricType_INT},
-			{Oid: oids.IfDescr, Name: "ifDescr", Type: metric.MetricType_STRING},
-			{Oid: oids.IfType, Name: "ifType", Type: metric.MetricType_INT},
-			{Oid: oids.IfMtu, Name: "ifMtu", Type: metric.MetricType_INT},
-			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metric.MetricType_HWADDR},
-			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metric.MetricType_INT},
-			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metric.MetricType_TIMETICKS},
-			{Oid: oids.IfInErrors, Name: "ifInErrors", Type: metric.MetricType_INT},
-			{Oid: oids.IfOutErrors, Name: "ifOutErrors", Type: metric.MetricType_INT},
-
-			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metric.MetricType_INT},
-			{Oid: oids.IfHCOutUcastPkts, Name: "ifHCOutUcastPkts", Type: metric.MetricType_INT},
-		},
-	}
-
-	message := &transport.Message{
-		Session: &transport.Session{
-			Source: "swpx",
-			Type:   transport.Type_SNMP,
-		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
-		Task: &transport.Task{
-			Task: &transport.Task_Snmpc{task},
-		},
-		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
-		Created: timestamppb.Now(),
-	}
-	return message
 }

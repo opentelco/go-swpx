@@ -25,6 +25,7 @@ package shared
 import (
 	"context"
 
+	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"github.com/hashicorp/go-plugin"
@@ -39,61 +40,61 @@ type Resource interface {
 
 	// TechnicalPortInformation Gets all the technical information for a Port
 	// from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-	TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+	TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error)
 
 	// BasicPortInformation
-	BasicPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+	BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error)
 
 	// AllPortInformation
-	AllPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error)
+	AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error)
 
 	// MapInterface Map interfaces (IF-MIB) from device with the swpx model
-	MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
+	MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error)
 
 	// MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
-	MapEntityPhysical(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error)
+	MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error)
 
 	// GetTransceiverInformation Get SFP (transceiver) information
-	GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error)
 
 	// GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-	GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error)
+	GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error)
 }
 
 // Here is an implementation that talks over RPC
 type ResourceGRPCClient struct {
 	client proto.ResourceClient
-	conf   *Configuration
+	conf   *config.Configuration
 }
 
 // MapInterface is the client implementation for the plugin-resource. Connects to the RPC
-func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return rpc.client.MapInterface(ctx, proto)
+func (rpc *ResourceGRPCClient) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+	return rpc.client.MapInterface(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.client.AllPortInformation(ctx, proto)
+func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+	return rpc.client.MapEntityPhysical(ctx, req)
+}
+
+func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.client.AllPortInformation(ctx, req)
 }
 
 // TechnicalPortInformation is the client implementation
-func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.client.TechnicalPortInformation(ctx, proto)
+func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.client.TechnicalPortInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.client.BasicPortInformation(ctx, proto)
+func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.client.BasicPortInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, proto *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return rpc.client.MapEntityPhysical(ctx, proto)
+func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
+	return rpc.client.GetTransceiverInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, proto *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return rpc.client.GetTransceiverInformation(ctx, proto)
-}
-
-func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error) {
-	return rpc.client.GetAllTransceiverInformation(ctx, ne)
+func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
+	return rpc.client.GetAllTransceiverInformation(ctx, req)
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
@@ -110,7 +111,7 @@ type ResourceGRPCServer struct {
 	proto.UnimplementedResourceServer
 	// *plugin.MuxBroker
 	Impl Resource
-	conf *Configuration
+	conf *config.Configuration
 }
 
 // Version returns the current version
@@ -119,45 +120,36 @@ func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*
 	return &proto.VersionResponse{Version: res}, err
 }
 
+// MapInterface has the purppose to map interface name to a index by asking the device
+func (rpc *ResourceGRPCServer) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+	return rpc.Impl.MapInterface(ctx, req)
+}
+
+func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+	return rpc.Impl.MapEntityPhysical(ctx, req)
+}
+
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.Impl.TechnicalPortInformation(ctx, ne)
+func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.Impl.TechnicalPortInformation(ctx, req)
 }
 
 // BasicPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) BasicPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.Impl.BasicPortInformation(ctx, ne)
+func (rpc *ResourceGRPCServer) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.Impl.BasicPortInformation(ctx, req)
 }
 
 // AllPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Element, error) {
-	return rpc.Impl.AllPortInformation(ctx, ne)
+func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.Impl.AllPortInformation(ctx, req)
 }
 
-// MapInterface has the purppose to map interface name to a index by asking the device
-func (rpc *ResourceGRPCServer) MapInterface(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return rpc.Impl.MapInterface(ctx, ne)
+func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
+	return rpc.Impl.GetTransceiverInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, ne *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return rpc.Impl.MapEntityPhysical(ctx, ne)
-}
-
-func (rpc *ResourceGRPCServer) GetConfiguration(ctx context.Context) (*Configuration, error) {
-	return rpc.conf, nil
-}
-
-func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return rpc.Impl.GetTransceiverInformation(ctx, ne)
-}
-
-func (rpc *ResourceGRPCServer) SetConfiguration(ctx context.Context, conf *Configuration) error {
-	rpc.conf = conf
-
-	return nil
-}
-func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, wrapper *proto.NetworkElementWrapper) (*networkelement.Element, error) {
-	return rpc.Impl.GetAllTransceiverInformation(ctx, wrapper)
+func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
+	return rpc.Impl.GetAllTransceiverInformation(ctx, req)
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this

@@ -55,8 +55,7 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 		return resp, nil
 	}
 
-	req := core.NewRequest(ctx, request)
-	resp, err := s.core.SendRequest(ctx, req)
+	resp, err := s.core.SendRequest(ctx, request)
 	if err != nil {
 		return nil, err
 	}

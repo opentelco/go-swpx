@@ -44,9 +44,6 @@ type Provider interface {
 
 	// Process the network element after data has been collected
 	PostHandler(ctx context.Context, response *core.Response) (*pb_core.Response, error)
-
-	// Setup and initiate configuration and other things
-	Setup(ctx context.Context, request *proto.SetupConfiguration) (*proto.SetupResponse, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -75,10 +72,6 @@ func (p *ProviderGRPCClient) PostHandler(ctx context.Context, resp *pb_core.Resp
 	return p.client.PostHandler(ctx, resp)
 }
 
-func (rpc *ProviderGRPCClient) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
-	return rpc.client.Setup(ctx, r)
-}
-
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {
 	proto.UnimplementedProviderServer
@@ -101,10 +94,6 @@ func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, r *pb_core.Reques
 
 func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
 	return rpc.Impl.PostHandler(ctx, resp)
-}
-
-func (rpc *ProviderGRPCServer) Setup(ctx context.Context, r *proto.SetupConfiguration) (*proto.SetupResponse, error) {
-	return rpc.Impl.Setup(ctx, r)
 }
 
 type ProviderPlugin struct {

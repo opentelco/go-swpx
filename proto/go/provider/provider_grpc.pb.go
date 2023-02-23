@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderClient interface {
-	Setup(ctx context.Context, in *SetupConfiguration, opts ...grpc.CallOption) (*SetupResponse, error)
 	Name(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NameResponse, error)
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	PreHandler(ctx context.Context, in *core.Request, opts ...grpc.CallOption) (*core.Request, error)
@@ -37,15 +36,6 @@ type providerClient struct {
 
 func NewProviderClient(cc grpc.ClientConnInterface) ProviderClient {
 	return &providerClient{cc}
-}
-
-func (c *providerClient) Setup(ctx context.Context, in *SetupConfiguration, opts ...grpc.CallOption) (*SetupResponse, error) {
-	out := new(SetupResponse)
-	err := c.cc.Invoke(ctx, "/provider.Provider/Setup", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *providerClient) Name(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NameResponse, error) {
@@ -88,7 +78,6 @@ func (c *providerClient) PostHandler(ctx context.Context, in *core.Response, opt
 // All implementations must embed UnimplementedProviderServer
 // for forward compatibility
 type ProviderServer interface {
-	Setup(context.Context, *SetupConfiguration) (*SetupResponse, error)
 	Name(context.Context, *emptypb.Empty) (*NameResponse, error)
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
 	PreHandler(context.Context, *core.Request) (*core.Request, error)
@@ -100,9 +89,6 @@ type ProviderServer interface {
 type UnimplementedProviderServer struct {
 }
 
-func (UnimplementedProviderServer) Setup(context.Context, *SetupConfiguration) (*SetupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Setup not implemented")
-}
 func (UnimplementedProviderServer) Name(context.Context, *emptypb.Empty) (*NameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Name not implemented")
 }
@@ -126,24 +112,6 @@ type UnsafeProviderServer interface {
 
 func RegisterProviderServer(s grpc.ServiceRegistrar, srv ProviderServer) {
 	s.RegisterService(&Provider_ServiceDesc, srv)
-}
-
-func _Provider_Setup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetupConfiguration)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProviderServer).Setup(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/provider.Provider/Setup",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).Setup(ctx, req.(*SetupConfiguration))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_Name_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -225,10 +193,6 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "provider.Provider",
 	HandlerType: (*ProviderServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Setup",
-			Handler:    _Provider_Setup_Handler,
-		},
 		{
 			MethodName: "Name",
 			Handler:    _Provider_Name_Handler,

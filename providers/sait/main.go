@@ -34,7 +34,6 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -53,17 +52,6 @@ var PROVIDER_NAME = "sait"
 func init() {
 	var err error
 	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	logger = hclog.New(&hclog.LoggerOptions{
-		Name:  fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
-		Level: hclog.Debug,
-		Color: hclog.AutoColor,
-	})
-
-	_, SDDNetwork, err = net.ParseCIDR("192.168.112.0/23")
-	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -142,16 +130,20 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 	return request, nil
 }
 
-func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
-
-	return &provider.SetupResponse{}, nil
-}
-
-func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return nil, nil
-}
-
 func main() {
+	var err error
+	logger = hclog.New(&hclog.LoggerOptions{
+		Name:  fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()),
+		Level: hclog.Debug,
+		Color: hclog.AutoColor,
+	})
+
+	_, SDDNetwork, err = net.ParseCIDR("192.168.112.0/23")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	prov := &Provider{logger: logger}
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,

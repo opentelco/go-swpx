@@ -13,6 +13,7 @@ switchpoller {
     timeout = "5s"
   }
 
+
   mongodb "interfaceCache" {
     server {
       addr = "localhost"
@@ -24,32 +25,22 @@ switchpoller {
     timeout = "5s"
   }
 
+  request {
+    default_request_timeout = "10s"
+    default_task_queue_prefix = "VX_SE2"
+    default_provider = "vx"
+    default_cache_ttl = "5m"
+  }
 
   logger {
     level = "DEBUG"
     as_json = false
   }
 
-  /** Nats servers for the DNC **/
-  nats {
-    server {
-      addr = "localhost"
-      port = "14222"
-    }
 
-    server {
-      addr = "localhost"
-      port = "24222"
-    }
-
-    server {
-      addr = "localhost"
-      port = "34222"
-    }
-  }
-
-  snmp {
+  snmp "v2c"{
     community = "xWTyZ9nA158ktJF2"
+    port = 161
     timeout = "20s"
     version = 2
     retries = 3
@@ -63,7 +54,7 @@ switchpoller {
     screen_length = ""
     default_prompt = ""
     default_errors = ""
-    cache_ttl = ""
+
     read_dead_line = ""
     write_dead_line = ""
     ssh_key_path = ""
@@ -76,7 +67,6 @@ switchpoller {
     screen_length = ""
     default_prompt = ""
     default_errors = ""
-    cache_ttl = ""
     read_dead_line = ""
     write_dead_line = ""
     ssh_key_path = ""
@@ -90,37 +80,39 @@ resource "vrp" {
   version = "v1.0.0"
   description = "switches from huawei (VRP software)"
 
-    dnc {
-      snmp {
-
-      }
-        connection "ssh" {
-
-        }
-        connection "telnet" {
-
-        }
-
-    nats {
-      username = "test"
-      password = "testPassword"
-      server {
-        addr = "localhost"
-        port = "14222"
-      }
-
-      server {
-        addr = "localhost"
-        port = "24222"
-      }
-
-      server {
-        addr = "localhost"
-        port = "34222"
-      }
-    }
+  snmp "v2c" {
+    community = "xWTyZ9nA158ktJF2"
+    port = 161
+    timeout = "20s"
+    version = 2
+    retries = 3
+    dynamic_repetitions = true
   }
 
+  transport "telnet" {
+    username = "telnetUser"
+    password = ""
+    port = 22
+    screen_length = ""
+    default_prompt = ""
+    default_errors = ""
+
+    read_dead_line = ""
+    write_dead_line = ""
+    ssh_key_path = ""
+  }
+
+  transport "ssh" {
+    username = "sshUser"
+    password = ""
+    port = 23
+    screen_length = ""
+    default_prompt = ""
+    default_errors = ""
+    read_dead_line = ""
+    write_dead_line = ""
+    ssh_key_path = ""
+  }
 
 }
 
@@ -131,37 +123,39 @@ resource "ctc" {
   version = "v1.0.0"
   description = "switches from CTC"
 
-    dnc {
-      snmp {
-
-      }
-        connection "ssh" {
-
-        }
-        connection "telnet" {
-
-        }
-
-    nats {
-      username = "test"
-      password = "testPassword"
-      server {
-        addr = "localhost"
-        port = "14222"
-      }
-
-      server {
-        addr = "localhost"
-        port = "24222"
-      }
-
-      server {
-        addr = "localhost"
-        port = "34222"
-      }
-    }
+  snmp "v2c" {
+    community = "xWTyZ9nA158ktJF2"
+    port = 161
+    timeout = "20s"
+    version = 2
+    retries = 3
+    dynamic_repetitions = true
   }
 
+  transport "telnet" {
+    username = "telnetUser"
+    password = ""
+    port = 22
+    screen_length = ""
+    default_prompt = ""
+    default_errors = ""
+
+    read_dead_line = ""
+    write_dead_line = ""
+    ssh_key_path = ""
+  }
+
+  transport "ssh" {
+    username = "sshUser"
+    password = ""
+    port = 23
+    screen_length = ""
+    default_prompt = ""
+    default_errors = ""
+    read_dead_line = ""
+    write_dead_line = ""
+    ssh_key_path = ""
+  }
 
 }
 

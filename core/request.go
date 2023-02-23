@@ -29,38 +29,12 @@ import (
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
-// Request is the internal representation of an incoming request
-// it is passed between the api and the core
-type Request struct {
-	*pb_core.Request
-
-	Response chan *pb_core.Response
-
-	ctx context.Context
-}
-
-func NewRequest(ctx context.Context, request *pb_core.Request) *Request {
-	return &Request{
-		Request: request,
-		// Metadata
-		Response: make(chan *pb_core.Response, 1),
-		ctx:      ctx,
-	}
-}
-
-// GetCacheTTL is a helper function
-func (r *Request) GetCacheTTL() time.Duration {
-	ttl, err := time.ParseDuration(r.Settings.CacheTtl)
-	if err != nil {
-		return 0
-	}
-	return ttl
-}
-
 // SendRequest sends the request!
-func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Response, error) {
+func (c *Core) SendRequest(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
-	if !request.Settings.RecreateIndex && request.GetCacheTTL() != 0 {
+	cacheTTLduration, _ := time.ParseDuration(request.Settings.CacheTtl)
+
+	if !request.Settings.RecreateIndex && cacheTTLduration != 0 {
 		cr, err := c.responseCache.Pop(ctx, request.Hostname, request.Port, request.AccessId, request.Type)
 		if err != nil {
 			c.logger.Warn("could not pop from cache", "error", err)
@@ -68,7 +42,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		// if a cached response exists
 		if cr != nil {
 			c.logger.Debug("found cached item", "age", time.Since(cr.Timestamp))
-			if time.Since(cr.Timestamp) < request.GetCacheTTL() {
+			if time.Since(cr.Timestamp) < cacheTTLduration {
 				c.logger.Info("found response in cache")
 				return cr.Response, nil
 			}
@@ -76,8 +50,7 @@ func (c *Core) SendRequest(ctx context.Context, request *Request) (*pb_core.Resp
 		}
 	}
 
-	resp := &pb_core.Response{}
-	err := c.RequestHandler(ctx, request, resp)
+	resp, err := c.doRequest(ctx, request)
 	if err != nil {
 		return nil, err
 	}

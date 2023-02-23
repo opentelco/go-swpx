@@ -36,7 +36,6 @@ import (
 	"google.golang.org/grpc"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -75,10 +74,6 @@ func (g *Provider) Version() (string, error) {
 
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
-}
-func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
-
-	return &provider.SetupResponse{}, nil
 }
 
 func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*core.Response, error) {
@@ -119,10 +114,6 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 
 	p.logger.Named("pre-handler").Debug("processing request in", "changes", 0)
 	return request, nil
-}
-
-func (p *Provider) GetConfiguration(ctx context.Context) (*shared.Configuration, error) {
-	return nil, nil
 }
 
 func main() {

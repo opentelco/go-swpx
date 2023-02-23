@@ -28,7 +28,6 @@ import (
 	"log"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	 "git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
@@ -58,19 +57,12 @@ type Provider struct {
 }
 
 func (g *Provider) Version() (string, error) {
-	g.logger.Debug("message from provider, running version:", VERSION)
 	return fmt.Sprintf("%s@%s", PROVIDER_NAME, VERSION.String()), nil
 }
 
 func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 
-}
-
-func (p *Provider) Setup(ctx context.Context, request *provider.SetupConfiguration) (*provider.SetupResponse, error) {
-	p.logger.Info("Called SETUP on default provider")
-	
-	return &provider.SetupResponse{}, nil
 }
 
 func (p *Provider) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {

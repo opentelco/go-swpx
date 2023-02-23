@@ -27,7 +27,6 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/provider";
 package provider;
 import "core.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 
 message NameResponse {
@@ -38,63 +37,8 @@ message VersionResponse {
   string version = 1;
 }
 
-message configTelnet {
-  string User = 1;
-  string Password = 2;
-  int32 Port = 3;
-  string ScreenLength = 4;
-  string ScreenLengthCommand = 5;
-  string RegexPrompt = 6;
-  string Errors = 7;
-  uint64 TTL = 8;
-  uint64 ReadDeadLine = 9;
-  uint64 WriteDeadLine = 10;
-}
-message configSSH {
-  string User = 1;
-  string Password = 2;
-  int32 Port = 3;
-  string ScreenLength = 4;
-  string ScreenLengthCommand = 5;
-  string RegexPrompt = 6;
-  string Errors = 7;
-  uint64 TTL = 8;
-  uint64 ReadDeadLine = 9;
-  uint64 WriteDeadLine = 10;
-  string SSHKeyPath = 11;
-}
-
-message configSNMP {
-  string  Community = 1;
-  uint32 Version = 2;
-  uint32 Port = 3;
-  uint64 Timeout = 4;
-  int32 Retries = 5;
-  int32 MaxIterations = 6;
-  int32 MaxRepetitions = 7;
-  int32 NonRepeaters = 8;
-  bool DynamicRepetitions = 9;
-}
-
-message configRequest {
-  // time when the request will be thrown out
-  // calculated from the time the request was received + Timeout
-  google.protobuf.Timestamp deadline = 1;
-}
-
-message Configuration{
-  configSNMP    SNMP = 1;
-  configTelnet Telnet = 2;
-  configSSH Ssh = 3;
-  configRequest request = 4;
-}
-
-message SetupConfiguration {}
-message SetupResponse {}
-
 
 service Provider {
-  rpc Setup(SetupConfiguration) returns (SetupResponse);
   rpc Name(google.protobuf.Empty) returns (NameResponse);
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
 

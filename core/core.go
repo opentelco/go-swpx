@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
+	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -62,25 +63,21 @@ func init() {
 
 // core app
 type Core struct {
-	// workers and queues
-	swarm *workerPool
+	cacheEnabled bool
 
-	cacheEnabled   bool
-	RequestQueue   chan *Request
 	responseCache  ResponseCache
 	interfaceCache InterfaceCache
 
 	resources resourceMap
 	providers providerMap
 
-	config *shared.Configuration
+	config *config.Configuration
 	logger hclog.Logger
 }
 
 // Start the core application
 func (c *Core) Start() error {
 	c.logger.Debug("starting core")
-	c.swarm.start(c.RequestQueue)
 
 	go func() {
 		// catch interrupt and kill all plugins
@@ -88,7 +85,6 @@ func (c *Core) Start() error {
 		signal.Notify(csig, os.Interrupt)
 		for range csig {
 			plugin.CleanupClients()
-			// TODO need to close swarm c.swarm.Close() ?
 		}
 	}()
 
@@ -96,29 +92,18 @@ func (c *Core) Start() error {
 }
 
 // New creates a new SWPX Core Application
-func New(logger hclog.Logger) (*Core, error) {
+func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 	var err error
 
-	// create core
-	conf := shared.GetConfig()
-
-	swarm := newWorkerPool(conf.PollerWorkers, conf.MaxPollerRequests, logger)
-
 	core := &Core{
-		swarm:        swarm,
-		logger:       logger,
-		resources:    make(map[string]shared.Resource),
-		providers:    make(map[string]shared.Provider),
-		RequestQueue: make(chan *Request, RequestBufferSize),
+		config:    conf,
+		logger:    logger,
+		resources: make(map[string]shared.Resource),
+		providers: make(map[string]shared.Provider),
 	}
 
-	logger.Info("setting core requestHandler for pool")
-	swarm.SetHandler(core.RequestHandler)
-
-	core.config = conf
-
-	availableResources := make(map[string]*plugin.Client)
-	availableProviders := make(map[string]*plugin.Client)
+	var availableResources = make(map[string]*plugin.Client)
+	var availableProviders = make(map[string]*plugin.Client)
 
 	// load all provider and resource plugins (files)
 	if availableProviders, err = core.LoadPlugins(path.Join(PluginPath, Providers), PluginProviderStr); err != nil {
@@ -129,11 +114,11 @@ func New(logger hclog.Logger) (*Core, error) {
 		logger.Error("error getting available resources resources", "error", err)
 	}
 
-	if core.config.DefaultProvider != "" {
-		if _, ok := availableProviders[core.config.DefaultProvider]; !ok {
-			logger.Warn("the selected provider was not found, falling back on no provider", "default_provider", core.config.DefaultProvider)
+	if core.config.Request.DefaultProvider != "" {
+		if _, ok := availableProviders[core.config.Request.DefaultProvider]; !ok {
+			logger.Warn("the selected provider was not found, falling back on no provider", "default_provider", core.config.Request.DefaultProvider)
 		} else {
-			logger.Info("selected default_provider found and loaded", "default_provider", core.config.DefaultProvider)
+			logger.Info("selected default_provider found and loaded", "default_provider", core.config.Request.DefaultProvider)
 		}
 	}
 
@@ -146,9 +131,8 @@ func New(logger hclog.Logger) (*Core, error) {
 		return nil, err
 	}
 
-	logger.Debug("setting up mongodb cache", "config", conf.InterfaceCache)
-	// setup mongodb cache
-	mongoClient, err := initMongoDb(conf.InterfaceCache, logger.Named("mongodb"))
+	// setup mongodb client
+	mongoClient, err := initMongoDb(*conf.MongoServer, logger.Named("mongodb"))
 	if err != nil {
 		logger.Warn("could not establish mongodb connection", "error", err)
 		logger.Info("no mongo connection established", "cache_enabled", false)
@@ -156,16 +140,14 @@ func New(logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 
-	logger.Debug("setting up interface cache", "config", conf.InterfaceCache)
-	if core.interfaceCache, err = newInterfaceCache(mongoClient, logger, conf.InterfaceCache); err != nil {
+	if core.interfaceCache, err = newInterfaceCache(mongoClient, logger, conf.GetMongoByLabel(config.LabelMongoInterfaceCache)); err != nil {
 		logger.Error("error creating cache", "error", err)
 		logger.Info("no mongo connection established", "cache_enabled", false)
 		core.cacheEnabled = false
 		return core, nil
 	}
 
-	logger.Debug("setting up response cache", "config", conf.ResponseCache)
-	if core.responseCache, err = newResponseCache(mongoClient, logger, conf.ResponseCache); err != nil {
+	if core.responseCache, err = newResponseCache(mongoClient, logger, conf.GetMongoByLabel(config.LabelMongoInterfaceCache)); err != nil {
 		logger.Error("cannot set response cache", "error", err)
 		return core, nil
 	}

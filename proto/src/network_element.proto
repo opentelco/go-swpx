@@ -171,21 +171,26 @@ message AggregatedInterface {
   repeated Interface interfaces = 7;
 }
 
+message Transceivers {
+  repeated Transceiver transceivers = 1;
+}
 
 message Transceiver {
-  string connector_type = 1;
-  bool ddm = 2;
-  string vendor = 3;
-  string type = 4;
-  string transfer_distance = 5;
-  string wavelength = 6;
-  string serial_number = 7;
-  string part_number = 8;
-  string manufacturing_date = 9;
-  repeated TransceiverStatistics stats = 10;
-  
-  repeated analysis.Analysis analysis = 11;
-  
+  int64 physical_port_index = 1;
+  string connector_type = 2;
+  bool ddm = 3;
+  string vendor = 4;
+  string type = 5;
+  string transfer_distance = 6;
+  string wavelength = 7;
+  string serial_number = 8;
+  string part_number = 9;
+  string manufacturing_date = 10;
+
+  repeated TransceiverStatistics stats = 11;
+
+  repeated analysis.Analysis analysis = 12;
+
 }
 
 message TransceiverStatistics {

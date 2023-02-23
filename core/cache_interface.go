@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"git.liero.se/opentelco/go-swpx/config"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,14 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	collectionInterfaceCache = "cache_interface"
-	collectionResponseCache  = "cache_response"
-)
-
 type InterfaceCache interface {
 	Pop(ctx context.Context, hostname, port string) (*CachedInterface, error)
-	Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error
+	Upsert(ctx context.Context, hostname string, logicalPortIndex *proto.PortIndex, physicalPortIndex *proto.PortIndex) error
 }
 
 // CachedInterface is the data object stored in mongo for a cached interface
@@ -34,8 +29,12 @@ type CachedInterface struct {
 	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
-func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (InterfaceCache, error) {
-	col := client.Database(conf.Database).Collection(collectionInterfaceCache)
+func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf *config.MongoCache) (InterfaceCache, error) {
+	if conf == nil {
+		return nil, errors.New("cannot enable interface cache: no mongo config")
+	}
+
+	col := client.Database(conf.Database).Collection(conf.Collection)
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
 	defer cancel()
 
@@ -83,32 +82,32 @@ func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedI
 	return obj, nil
 }
 
-func (c *ifCacheImpl) Upsert(ctx context.Context, ne *proto.NetworkElement, interfaces *proto.NetworkElementInterfaces, phys *proto.NetworkElementInterfaces) error {
-	for k, v := range interfaces.Interfaces {
+func (c *ifCacheImpl) Upsert(ctx context.Context, hostname string, logicalPortIndex *proto.PortIndex, physicalPortIndex *proto.PortIndex) error {
+	for k, v := range logicalPortIndex.Ports {
 
 		data := bson.M{
-			"hostname": ne.Hostname,
+			"hostname": hostname,
 			"port":     v.Description,
 			"if_index": v.Index,
 		}
 
 		// All vendors (CTC Union) does not have implemented/enabled the phys entity MIB
 		// This means that we cannot know for sure if the PHYS is set.
-		if phys != nil { // check if phys is set
-			if physInterface, ok := phys.Interfaces[k]; ok {
+		if physicalPortIndex != nil { // check if phys is set
+			if physInterface, ok := physicalPortIndex.Ports[k]; ok {
 				data["physical_entity_index"] = physInterface.Index
 			}
 		}
 
 		opts := options.Update().SetUpsert(true)
 		filter := bson.M{
-			"hostname": ne.Hostname,
+			"hostname": hostname,
 			"port":     v.Description,
 		}
 		_, err := c.col.UpdateOne(ctx, filter, bson.M{"$set": data}, opts)
 
 		if err != nil {
-			c.logger.Error("error saving interface in cache", "error", err, "hostname", ne.Hostname, "port", v.Description)
+			c.logger.Error("error saving interface in cache", "error", err, "hostname", hostname, "port", v.Description)
 			return err
 		}
 	}

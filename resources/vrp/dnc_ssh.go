@@ -1,4 +1,4 @@
-package resources
+package main
 
 import (
 	"fmt"
@@ -6,36 +6,38 @@ import (
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
 	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-swpx/config"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func CreateBasicSshInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
+
+	sshConf := conf.Transports.GetByLabel("ssh")
 	task := &terminal.Task{
-		Deadline: el.Conf.Request.Deadline,
+		// Deadline: el.Conf.Request.Deadline,
 		Payload: []*terminal.Task_Payload{
 			{
-				Command: fmt.Sprintf("display mac-address %s", el.Interface),
+				Command: fmt.Sprintf("display mac-address %s", req.Port),
 			},
 		},
 		Config: &terminal.Config{
-			User:                conf.Ssh.Username,
-			Password:            conf.Ssh.Password,
-			RegexPrompt:         conf.Ssh.RegexPrompt,
-			ScreenLengthCommand: conf.Ssh.ScreenLengthCommand,
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
-			SshKeyPath:          conf.Ssh.SSHKeyPath,
+			User:                sshConf.User,
+			Password:            sshConf.Password,
+			RegexPrompt:         sshConf.RegexPrompt,
+			ScreenLengthCommand: sshConf.ScreenLength,
+			ReadDeadLine:        durationpb.New(sshConf.ReadDeadLine.AsDuration()),
+			WriteDeadLine:       durationpb.New(sshConf.WriteDeadLine.AsDuration()),
+			SshKeyPath:          sshConf.SSHKeyPath,
 		},
 	}
 
 	message := &transport.Message{
 		Session: &transport.Session{
-			Target: el.Hostname,
-			Port:   int32(el.Conf.Ssh.Port),
+			Target: req.Hostname,
+			Port:   int32(sshConf.Port),
 			Source: "swpx",
 			Type:   transport.Type_SSH,
 		},

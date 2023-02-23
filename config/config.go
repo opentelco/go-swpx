@@ -41,44 +41,7 @@ var (
 	ErrProviderConfigurationMissing = fmt.Errorf("provider plugin was not found or loaded")
 )
 
-type Configuration struct {
-	Poller    Poller      `hcl:"switchpoller,block"`
-	Resources []*Resource `hcl:"resource,block"`
-	Providers []*Provider `hcl:"provider,block"`
-}
-
-func (c *Configuration) GetProviderConfig(plug string, config interface{}) (*Provider, error) {
-	if c.Providers == nil || len(c.Providers) == 0 {
-		return nil, ErrProviderConfigurationMissing
-	}
-
-	for _, p := range c.Providers {
-		if p.Plugin == plug {
-			diag := gohcl.DecodeBody(p.Config, nil, config)
-			if diag.HasErrors() {
-				return p, fmt.Errorf(diag.Error())
-			}
-			return p, nil
-		}
-	}
-
-	return nil, ErrProviderConfigurationMissing
-}
-
-func (c *Configuration) GetResourceConfig(plug string, config interface{}) (*Resource, error) {
-	for _, r := range c.Resources {
-		if r.Plugin == plug {
-			diag := gohcl.DecodeBody(r.Config, nil, config)
-			if diag.HasErrors() {
-				return r, fmt.Errorf(diag.Error())
-			}
-			return r, nil
-		}
-	}
-	return nil, ErrResourceConfigurationMissing
-}
-
-func LoadFile(fname string) ([]byte, error) {
+func loadFile(fname string) ([]byte, error) {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
@@ -86,7 +49,7 @@ func LoadFile(fname string) ([]byte, error) {
 	return content, nil
 }
 
-func ParseConfig(src []byte, filename string, cfg interface{}) error {
+func parseConfig(src []byte, filename string, cfg interface{}) error {
 	var diags hcl.Diagnostics
 	if len(src) == 0 {
 		return fmt.Errorf("no byte array supplied")
@@ -103,4 +66,13 @@ func ParseConfig(src []byte, filename string, cfg interface{}) error {
 	}
 
 	return nil
+}
+
+func LoadConfig(fname string, cfg interface{}) error {
+	content, err := loadFile(fname)
+	if err != nil {
+		return err
+	}
+
+	return parseConfig(content, fname, cfg)
 }

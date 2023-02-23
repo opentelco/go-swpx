@@ -1,6 +1,10 @@
 default_provider: "vx"
 dnc_server_addr: "localhost:1339"
 
+request:
+  default_tq_prefix: "VX_SE2"
+
+
 snmp:
   # community: xWTyZ9nA158ktJF2
   timeout: 10s
@@ -28,7 +32,7 @@ ssh:
   port: 22
   screen_length: "0"
   screen_length_command: "screen-length 0 temporary"
-  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+  default_prompt: "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
   read_dead_line: "8s"
@@ -40,7 +44,7 @@ telnet:
   port: 23
   screen_length: "0"
   screen_length_command: "screen-length 0 temporary"
-  default_prompt: "\\n[<\\[](\\S+)[>#\\]]$"
+  default_prompt: "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors: "error|failed|unrecognized"
   ttl: "30s"
   read_dead_line: "180s"

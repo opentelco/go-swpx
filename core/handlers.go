@@ -3,65 +3,25 @@ package core
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
+	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (c *Core) RequestHandler(ctx context.Context, request *Request, response *pb_core.Response) error {
+func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
-	var err error
+	response := &pb_core.Response{}
 
-	// TODO what to do if this is empty? Should fallback on default? change to pointer so we can check if == nil ?
-	var providerConf *shared.Configuration
-	defaultConf := shared.GetConfig()
-
-	var selectedProviders []shared.Provider
-	// check if a providers are selected in the request
-	if len(request.Settings.ProviderPlugin) > 0 {
-		c.logger.Info("request has selected providers", "providers", strings.Join(request.Settings.ProviderPlugin, ","))
-
-		for _, provider := range request.Settings.ProviderPlugin {
-			c.logger.Debug("find provider in loaded plugins", "selected_provider", provider)
-			var err error
-			selectedProvider := c.providers[provider]
-			if selectedProvider == nil {
-				response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
-				return NewError(response.Error.Message, ErrorCode(response.Error.Code))
-			}
-
-			c.logger.Debug(("pre-process the request with provider func"))
-			// pre-process the request with provider func
-			request.Request, err = selectedProvider.PreHandler(ctx, request.Request)
-			if err != nil {
-				return err
-			}
-
-			// add the provider to a slice for usage in the end
-			selectedProviders = append(selectedProviders, selectedProvider)
-			providerConf = defaultConf
-		}
-	} else {
-
-		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.DefaultProvider)
-		if provider, ok := c.providers[c.config.DefaultProvider]; ok {
-
-			request.Request, err = provider.PreHandler(ctx, request.Request)
-			if err != nil {
-				return err
-			}
-
-			selectedProviders = append(selectedProviders, provider)
-		}
-
-		providerConf = defaultConf
+	selectedProviders, err := c.selectProviders(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	if len(selectedProviders) == 0 {
+		response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
+		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
 	// select resource-plugin to send the requests to
@@ -73,7 +33,7 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 			Message: "selected driver is missing/does not exist",
 			Code:    ErrInvalidResource,
 		}
-		return nil
+		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
 	// implementation of different requests that SWP-X can handle right now
@@ -81,15 +41,15 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	case pb_core.Request_GET_BASIC_INFO:
 
 		if request.Port != "" {
-			err := c.handleGetBasicInformationPort(request, response, plugin, providerConf)
+			response, err = c.handleGetBasicInformationPort(ctx, request, plugin)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 		} else {
-			err := c.handleGetPasicInformationElement(request, response, plugin, providerConf)
+			err := c.handleGetPasicInformationElement(request, response, plugin)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 		}
@@ -97,211 +57,187 @@ func (c *Core) RequestHandler(ctx context.Context, request *Request, response *p
 	case pb_core.Request_GET_TECHNICAL_INFO:
 
 		if request.Port != "" {
-			err := c.handleGetTechnicalInformationPort(request, response, plugin, providerConf)
+			err := c.handleGetTechnicalInformationPort(request, response, plugin)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		} else {
-			err := c.handleGetTechnicalInformationElement(request, response, plugin, providerConf)
+			err := c.getTechnicalInformationElement(request, response, plugin)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 
 	}
 
-	// PostProcess the response with the selected Providers
-	for _, selectedProvider := range selectedProviders {
-		if selectedProvider != nil {
-			nr, err := selectedProvider.PostHandler(ctx, response)
-			if err != nil {
-				return nil
-			}
-			response.NetworkElement = nr.NetworkElement
-		}
+	// process the response with the selected providers (post-process)
+	if err := providerPostProcess(ctx, selectedProviders, response); err != nil {
+		return nil, err
 	}
 
-	return nil
-
-}
-
-func (c *Core) createRequestConfig(msg *Request, conf *shared.Configuration) *provider.ConfigRequest {
-
-	if msg.Request.Settings.Timeout != "" {
-		c.logger.Info("request has timeout set (deadline)", "timeout", msg.Request.Settings.Timeout)
-		dur, _ := time.ParseDuration(msg.Request.Settings.Timeout)
-		if dur.Seconds() != 0 {
-			return &provider.ConfigRequest{
-				Deadline: timestamppb.New(time.Now().Add(dur)),
-			}
-		}
-
-	}
-
-	return &provider.ConfigRequest{
-		Deadline: timestamppb.New(time.Now().Add(conf.DefaultRequestTimeout)),
-	}
+	return response, nil
 
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) handleGetTechnicalInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protoConf := shared.Conf2proto(conf)
+func (c *Core) getTechnicalInformationElement(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
 
-	protoConf.Request = c.createRequestConfig(msg, conf)
-	req := &resource.NetworkElement{
-		Interface: "",
-		Hostname:  msg.Hostname,
-		Conf:      protoConf,
-	}
+	// req := &resource.Request{
+	// 	Port:     "",
+	// 	Hostname: msg.Hostname,
+	// }
 
-	physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
-	if err != nil {
-		c.logger.Error("error fetching physical entities:", err.Error())
-		return err
-	}
+	// physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
+	// if err != nil {
+	// 	c.logger.Error("error fetching physical entities:", err.Error())
+	// 	return err
+	// }
 
-	allPortInformation, err := plugin.AllPortInformation(msg.ctx, req)
-	if err != nil {
-		c.logger.Error("error fetching port information for all interfaces:", err.Error())
-		return err
-	}
+	// allPortInformation, err := plugin.AllPortInformation(msg.ctx, req)
+	// if err != nil {
+	// 	c.logger.Error("error fetching port information for all interfaces:", err.Error())
+	// 	return err
+	// }
 
-	var matchingInterfaces int32 = 0
-	for _, iface := range allPortInformation.Interfaces {
-		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
-			matchingInterfaces++
-		}
-	}
-	allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
-		Element:        req,
-		NumInterfaces:  matchingInterfaces,
-		FullElement:    allPortInformation,
-		PhysInterfaces: physPortResponse,
-	})
-	if err != nil {
-		c.logger.Error("error fetching transceiver information: ", err)
-	}
+	// var matchingInterfaces int32 = 0
+	// for _, iface := range allPortInformation.Interfaces {
+	// 	if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
+	// 		matchingInterfaces++
+	// 	}
+	// }
+	// allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
+	// 	Element:        req,
+	// 	NumInterfaces:  matchingInterfaces,
+	// 	FullElement:    allPortInformation,
+	// 	PhysInterfaces: physPortResponse,
+	// })
+	// if err != nil {
+	// 	c.logger.Error("error fetching transceiver information: ", err)
+	// }
 
-	resp.NetworkElement = allPortInformation
+	// resp.NetworkElement = allPortInformation
 
 	return nil
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func (c *Core) handleGetTechnicalInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
-	req := &resource.NetworkElement{
-		Hostname:  msg.Hostname,
-		Interface: msg.Port,
-		Conf:      protoConf,
-	}
+func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
+	// protoConf := shared.Conf2proto(conf)
+	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
+	// req := &resource.NetworkElement{
+	// 	Hostname:  msg.Hostname,
+	// 	Interface: msg.Port,
+	// 	Conf:      protoConf,
+	// }
 
-	var mapInterfaceResponse *resource.NetworkElementInterfaces
-	var cachedInterface *CachedInterface
-	var err error
+	// var mapInterfaceResponse *resource.NetworkElementInterfaces
+	// var cachedInterface *CachedInterface
+	// var err error
 
-	if c.cacheEnabled && !msg.Settings.RecreateIndex {
-		c.logger.Info("cache is enabled, pop index from cache")
-		cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Interface)
-		if cachedInterface != nil {
-			resp.PhysicalPort = cachedInterface.Port
-			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
-			req.InterfaceIndex = cachedInterface.InterfaceIndex
-		}
-	}
+	// if c.cacheEnabled && !msg.Settings.RecreateIndex {
+	// 	c.logger.Info("cache is enabled, pop index from cache")
+	// 	cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Interface)
+	// 	if cachedInterface != nil {
+	// 		resp.PhysicalPort = cachedInterface.Port
+	// 		req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
+	// 		req.InterfaceIndex = cachedInterface.InterfaceIndex
+	// 	}
+	// }
 
-	// did not find cached item or cached is disabled
-	if cachedInterface == nil || !c.cacheEnabled {
-		var physPortResponse *resource.NetworkElementInterfaces
-		c.logger.Info("run mapEntity to get physical entity index on device")
-		if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
-			c.logger.Error("error running MapEntityPhysical", "err", err.Error())
-			resp.Error = &pb_core.Error{
-				Message: err.Error(),
-				Code:    ErrInvalidPort,
-			}
-			return err
-		}
+	// // did not find cached item or cached is disabled
+	// if cachedInterface == nil || !c.cacheEnabled {
+	// 	var physPortResponse *resource.NetworkElementInterfaces
+	// 	c.logger.Info("run mapEntity to get physical entity index on device")
+	// 	if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
+	// 		c.logger.Error("error running MapEntityPhysical", "err", err.Error())
+	// 		resp.Error = &pb_core.Error{
+	// 			Message: err.Error(),
+	// 			Code:    ErrInvalidPort,
+	// 		}
+	// 		return err
+	// 	}
 
-		if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
-			resp.PhysicalPort = val.Description
-			req.PhysicalIndex = val.Index
-		}
+	// 	if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+	// 		resp.PhysicalPort = val.Description
+	// 		req.PhysicalIndex = val.Index
+	// 	}
 
-		if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
-			c.logger.Error("error running map interface", "err", err.Error())
-			resp.Error = &pb_core.Error{
-				Message: err.Error(),
-				Code:    ErrInvalidPort,
-			}
-			return err
-		}
-		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
-			req.InterfaceIndex = val.Index
-		}
+	// 	if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
+	// 		c.logger.Error("error running map interface", "err", err.Error())
+	// 		resp.Error = &pb_core.Error{
+	// 			Message: err.Error(),
+	// 			Code:    ErrInvalidPort,
+	// 		}
+	// 		return err
+	// 	}
+	// 	if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
+	// 		req.InterfaceIndex = val.Index
+	// 	}
 
-		// save in cache upon success (if enabled)
-		if c.cacheEnabled {
-			if err = c.interfaceCache.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
-				return err
-			}
-		}
+	// 	// save in cache upon success (if enabled)
+	// 	if c.cacheEnabled {
+	// 		if err = c.interfaceCache.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
+	// 			return err
+	// 		}
+	// 	}
 
-	} else if err != nil {
-		c.logger.Error("error fetching from cache:", err.Error())
-		return err
-	}
+	// } else if err != nil {
+	// 	c.logger.Error("error fetching from cache:", err.Error())
+	// 	return err
+	// }
 
-	//if the return is 0 something went wrong
-	if req.InterfaceIndex == 0 {
-		c.logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = &pb_core.Error{
-			Message: "interface index returned zero",
-			Code:    ErrInvalidPort,
-		}
-		return err
-	}
+	// //if the return is 0 something went wrong
+	// if req.InterfaceIndex == 0 {
+	// 	c.logger.Error("error running map interface", "err", "index is zero")
+	// 	resp.Error = &pb_core.Error{
+	// 		Message: "interface index returned zero",
+	// 		Code:    ErrInvalidPort,
+	// 	}
+	// 	return err
+	// }
 
-	c.logger.Info("found index for selected interface", "index", req.InterfaceIndex)
+	// c.logger.Info("found index for selected interface", "index", req.InterfaceIndex)
 
-	ti, err := plugin.TechnicalPortInformation(msg.ctx, req)
-	if err != nil {
-		c.logger.Error(err.Error())
-		return err
-	}
-	resp.NetworkElement = ti
+	// ti, err := plugin.TechnicalPortInformation(msg.ctx, req)
+	// if err != nil {
+	// 	c.logger.Error(err.Error())
+	// 	return err
+	// }
+	// resp.NetworkElement = ti
 
 	return nil
 }
 
 // handleGetBasicInformationPort gets information related to the selected interface
-func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
-	req := &resource.NetworkElement{
-		Hostname:  msg.Hostname,
-		Interface: msg.Port,
-		Conf:      protoConf,
+func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.Request, plugin shared.Resource) (*pb_core.Response, error) {
+
+	var resp pb_core.Response
+	req := proto.Request{
+		Hostname: msg.Hostname,
+		Port:     msg.Port,
 	}
 
-	var mapInterfaceResponse *resource.NetworkElementInterfaces
-	var cachedInterface *CachedInterface
-	var err error
+	var (
+		mapInterfaceResponse *proto.PortIndex
+		cachedInterface      *CachedInterface
+		err                  error
+	)
 
 	if c.cacheEnabled && !msg.Settings.RecreateIndex {
 		c.logger.Info("cache is enabled, pop index from cache")
-		cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Interface)
+		cachedInterface, err = c.interfaceCache.Pop(context.TODO(), req.Hostname, req.Port)
+
 		if cachedInterface != nil {
 			c.logger.Info("cached interface indexs",
-				"physicalPort", resp.PhysicalPort,
-				"physicalIndex", req.PhysicalIndex,
-				"interfaceIndex", req.InterfaceIndex,
+				"physicalPort", cachedInterface.Port,
+				"physicalIndex", cachedInterface.PhysicalEntityIndex,
+				"interfaceIndex", cachedInterface.InterfaceIndex,
 			)
+
 			resp.PhysicalPort = cachedInterface.Port
-			req.PhysicalIndex = cachedInterface.PhysicalEntityIndex
-			req.InterfaceIndex = cachedInterface.InterfaceIndex
+
+			req.PhysicalPortIndex = cachedInterface.PhysicalEntityIndex
+			req.LogicalPortIndex = cachedInterface.InterfaceIndex
 		}
 	}
 
@@ -309,7 +245,7 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 	if cachedInterface == nil || !c.cacheEnabled {
 		c.logger.Info("run mapEntity to get physical entity index on device")
 
-		physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
+		physPortResponse, err := plugin.MapEntityPhysical(ctx, &req)
 		if err != nil {
 			if status.Code(err) == codes.Unimplemented {
 				c.logger.Error("warn MapEntityPhysical is not implemented, skipping", "err", err.Error())
@@ -319,116 +255,117 @@ func (c *Core) handleGetBasicInformationPort(msg *Request, resp *pb_core.Respons
 					Message: fmt.Sprintf("could not run MapEntityPhyiscal: %s", err.Error()),
 					Code:    ErrInvalidPort,
 				}
-				return err
+				return nil, err
 			}
 
 		} else {
 
-			if val, ok := physPortResponse.Interfaces[req.Interface]; ok {
+			if val, ok := physPortResponse.Ports[req.Port]; ok {
 				resp.PhysicalPort = val.Description
-				req.PhysicalIndex = val.Index
+				req.PhysicalPortIndex = val.Index
 
 				c.logger.Debug("found physInterface",
-					"port", req.Interface,
+					"port", req.Port,
 					"resp.physicalPort", val.Description,
-					"req.physicalIndex", req.PhysicalIndex,
+					"req.physicalIndex", val.Index,
 				)
 
 			}
 		}
 
-		if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
+		if mapInterfaceResponse, err = plugin.MapInterface(ctx, &req); err != nil {
 			c.logger.Error("error running map interface", "err", err.Error())
 			resp.Error = &pb_core.Error{
 				Message: fmt.Sprintf("could not run MapInterface: %s", err.Error()),
 				Code:    ErrInvalidPort,
 			}
-			return err
+			return nil, err
 		}
 
-		if val, ok := mapInterfaceResponse.Interfaces[req.Interface]; ok {
-			req.InterfaceIndex = val.Index
+		if val, ok := mapInterfaceResponse.Ports[req.Port]; ok {
+			req.LogicalPortIndex = val.Index
 			c.logger.Info("found ifMIB interface index", "index", val.Index)
 		}
 
 		// save in cache upon success (if enabled)
 		if c.cacheEnabled {
-			if err = c.interfaceCache.Upsert(context.TODO(), req, mapInterfaceResponse, physPortResponse); err != nil {
-				return err
+			if err = c.interfaceCache.Upsert(ctx, req.Hostname, mapInterfaceResponse, physPortResponse); err != nil {
+				return nil, err
 			}
 		}
 
 	} else if err != nil {
+
 		resp.Error = &pb_core.Error{
 			Message: fmt.Sprintf("could handle request: %s", err.Error()),
 			Code:    ErrUnknownError,
 		}
 
 		c.logger.Error("error fetching from cache:", err.Error())
-		return err
+		return nil, err
 	}
 
 	//if the return is 0 something went wrong
-	if req.InterfaceIndex == 0 {
+	if req.LogicalPortIndex == 0 {
 		c.logger.Error("error running map interface", "err", "index is zero")
 		resp.Error = &pb_core.Error{
 			Message: "interface index returned zero",
 			Code:    ErrInvalidPort,
 		}
-		return err
+		return nil, err
 	}
 
-	c.logger.Info("found index for selected interface", "index", req.InterfaceIndex)
+	c.logger.Info("found index for selected interface", "index", req.LogicalPortIndex)
 
-	ti, err := plugin.BasicPortInformation(msg.ctx, req)
+	ne, err := plugin.BasicPortInformation(ctx, &req)
 	if err != nil {
 		c.logger.Error(err.Error())
-		return err
+		return nil, err
 	}
-	resp.NetworkElement = ti
+	resp.NetworkElement = ne
 
-	return nil
+	return &resp, nil
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) handleGetPasicInformationElement(msg *Request, resp *pb_core.Response, plugin shared.Resource, conf *shared.Configuration) error {
-	protoConf := shared.Conf2proto(conf)
-	protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
-	req := &resource.NetworkElement{
-		Interface: "",
-		Hostname:  msg.Hostname,
-		Conf:      protoConf,
-	}
+func (c *Core) handleGetPasicInformationElement(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
+	// protoConf := shared.Conf2proto(conf)
+	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
+	// req := &resource.NetworkElement{
+	// 	Interface: "",
+	// 	Hostname:  msg.Hostname,
+	// 	Conf:      protoConf,
+	// }
 
-	physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
-	if err != nil {
-		c.logger.Error("error fetching physical entities:", err.Error())
-		return err
-	}
+	// physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)
+	// if err != nil {
+	// 	c.logger.Error("error fetching physical entities:", err.Error())
+	// 	return err
+	// }
 
-	allPortInformation, err := plugin.AllPortInformation(msg.ctx, req)
-	if err != nil {
-		c.logger.Error("error fetching port information for all interfaces:", err.Error())
-		return err
-	}
+	// allPortInformation, err := plugin.AllPortInformation(msg.ctx, req)
+	// if err != nil {
+	// 	c.logger.Error("error fetching port information for all interfaces:", err.Error())
+	// 	return err
+	// }
 
-	var matchingInterfaces int32 = 0
-	for _, iface := range allPortInformation.Interfaces {
-		if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
-			matchingInterfaces++
-		}
-	}
-	allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
-		Element:        req,
-		NumInterfaces:  matchingInterfaces,
-		FullElement:    allPortInformation,
-		PhysInterfaces: physPortResponse,
-	})
-	if err != nil {
-		c.logger.Error("error fetching transceiver information: ", err)
-	}
+	// var matchingInterfaces int32 = 0
+	// for _, iface := range allPortInformation.Interfaces {
+	// 	if _, ok := physPortResponse.Interfaces[iface.Description]; ok {
+	// 		matchingInterfaces++
+	// 	}
+	// }
+	// allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
+	// 	Element:        req,
+	// 	NumInterfaces:  matchingInterfaces,
+	// 	FullElement:    allPortInformation,
+	// 	PhysInterfaces: physPortResponse,
+	// })
+	// if err != nil {
+	// 	c.logger.Error("error fetching transceiver information: ", err)
+	// }
 
-	resp.NetworkElement = allPortInformation
+	// resp.NetworkElement = allPortInformation
 
 	return nil
 }

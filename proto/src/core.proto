@@ -43,15 +43,51 @@ message Error {
 // This means that the Request needs to be a generic one and the
 message Request {
 
+    enum Channel {
+        PRIMARY = 0;
+        SECONDARY = 1;
+    }
+
+    enum Priority {
+        DEFAULT = 0;
+        LOW = 1;
+        MEDIUM = 2;
+        HIGH = 3;
+        URGENT = 4;
+      }
+
     // Settings for the request
     message Settings {
+
+
         repeated string provider_plugin = 1;
+
         string resource_plugin = 2;
+
+        // recreate_index will recreate the index for the resource through snmp
+        // this is useful if the index is not correct or if the resource is not
+        // parsed correctly, changes of virtual interfaces could cause a change of index
         bool recreate_index = 3;
-        bool disable_distributed_lock = 4;
+
+        // timout for the request, after the timeout the request will be aborted server side
+        // any request sent down to the network will be skipped as the ttl is set as Deadline on
+        // the request
         string timeout = 5;
+
+        // how long should the cache be valid
         string cache_ttl = 6;
+
+        // tq_prefix can be used to send traffic to different dnc-pollers in the network
+        string tq_prefix = 7;
+
+        // tq_channel can be used to spread traffic load on different channels
+        Channel tq_channel = 8;
+
+        // priority of the request, the DNC will try to prioritize the requests based on this
+        // if it has several requests to process in the queue
+        Priority priority = 9;
     }
+
     Settings settings = 1;
 
     enum Type {
@@ -75,7 +111,7 @@ message Request {
         // GET_CONFIG on the whole network element or on a specific port
         GET_CONFIG         = 5;
 
-        // GET_TRANSCEIVER on all ports on a device or on a specific prot
+        // GET_TRANSCEIVER on all ports on a device or on a specific port
         GET_TRANSCEIVER    = 6;
     }
 
@@ -110,7 +146,7 @@ service Core {
 
     // Send a command to a network device through the Poller
     rpc Command(CommandRequest) returns (CommandResponse);
-    
+
     // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
     rpc Information(google.protobuf.Empty) returns (InformationResponse);
 }
@@ -129,11 +165,11 @@ message ProvideCPEResponse {}
 message ProvideAccessRequest {}
 message ProvideAccessResponse {}
 
-// Provide 
+// Provide
 service Provide {
     // Ask provider to return a valid CPE for a access
     rpc CPE(ProvideCPERequest) returns (ProvideCPEResponse);
-    
+
     // Ask a provider to return information about a selected access
     rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
 

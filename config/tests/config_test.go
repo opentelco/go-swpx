@@ -11,22 +11,22 @@ import (
 func Test_Parse(t *testing.T) {
 
 	cfg := config.Configuration{}
-
-	bs, err := config.LoadFile("config.hcl")
+	err := config.LoadConfig("config.hcl", &cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	config.ParseConfig(bs, "config.hcl", &cfg)
+	fmt.Println(cfg)
 
-	db := cfg.Poller.GetCacheConfig(config.ResponseCacheType)
+	db := cfg.GetMongoByLabel(config.LabelMongoInterfaceCache)
 	if db == nil {
 		log.Fatal("could not find cache type")
 	}
 	fmt.Println(db)
 
-	db = cfg.Poller.GetCacheConfig(config.InterfaceCacheType)
+	db = cfg.GetMongoByLabel(config.LabelMongoResponseCache)
 	if db == nil {
 		log.Fatal("could not find cache type")
 	}
 	fmt.Println(db)
+
 }

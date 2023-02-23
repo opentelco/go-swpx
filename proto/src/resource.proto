@@ -25,7 +25,6 @@ syntax = "proto3";
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
 import "network_element.proto";
 import "google/protobuf/empty.proto";
-import "provider.proto";
 
 
 package resource;
@@ -36,7 +35,6 @@ message VersionResponse {
 }
 
 
-
 message Status {
   bool error = 1;
   int32 code = 2;
@@ -45,59 +43,57 @@ message Status {
 }
 
 
-// used in resource request
-message NetworkElement {
-  string hostname = 1;
-  string ip = 2;
-  string interface = 3;
-  int64 interface_index = 4;
-  int64 physical_index = 5;
-  provider.Configuration conf = 6;
-}
-
-message NetworkElementInterface {
+// PortIndexEntity is a entity that is used to map the port index to the description
+// this is used both for the physical port and the logical port
+message PortIndexEntity {
   int64 index = 1;
   string description = 2;
   string alias = 3;
 }
 
-// map port to entire interface for faster retrieval
-message NetworkElementInterfaces {
-  map<string, NetworkElementInterface> interfaces = 1;
+// PortIndex is a map of the port index to the description
+message PortIndex {
+  map<string, PortIndexEntity> ports = 1;
 }
 
-message Transceivers {
-  map<int32, networkelement.Transceiver> transceivers = 1;
-}
+message Request {
+  // hostname or ip address
+  string hostname = 1;
 
-message NetworkElementWrapper {
-  NetworkElement element = 1;
-  int32 num_interfaces = 2;
-  networkelement.Element full_element = 3;
-  NetworkElementInterfaces phys_interfaces = 4;
+  // port name (e.g. GigabitEthernet0/0/1 )
+  string port = 2;
+
+  // the number of interfaces discovered on the port
+  // this is used to bulk get with by setting the "repition" to the number of interfaces
+  int32 num_interfaces = 3;
+
+  int64 physical_port_index = 4;
+  int64 logical_port_index = 5;
 }
 
 service Resource {
   // Get the version of the network element
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
-  rpc BasicPortInformation(NetworkElement) returns (networkelement.Element);
+  // Map the interfaces with ifIndex and description
+  rpc MapInterface(Request) returns (PortIndex);
+
+  // Map the interace description and the environemnt index
+  rpc MapEntityPhysical(Request) returns (PortIndex);
+
+
+  rpc BasicPortInformation(Request) returns (networkelement.Element);
 
   // Get technical information about a port
-  rpc TechnicalPortInformation(NetworkElement) returns (networkelement.Element);
-  
+  rpc TechnicalPortInformation(Request) returns (networkelement.Element);
+
   // Get technical information about all ports TODO: rename
-  rpc AllPortInformation(NetworkElement) returns (networkelement.Element);
-  
-  // Map the interfaces with ifIndex and description
-  rpc MapInterface(NetworkElement) returns (NetworkElementInterfaces);
-  
-  // Map the interace description and the environemnt index
-  rpc MapEntityPhysical(NetworkElement) returns (NetworkElementInterfaces);
+  rpc AllPortInformation(Request) returns (networkelement.Element);
+
 
   // Get transceiver information about a interface
-  rpc GetTransceiverInformation(NetworkElement) returns (networkelement.Transceiver);
-  
+  rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
+
   // Get transceiver information about all interfaces
-  rpc GetAllTransceiverInformation(NetworkElementWrapper) returns (networkelement.Element);
+  rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
 }

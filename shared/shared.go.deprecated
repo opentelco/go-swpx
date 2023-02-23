@@ -48,14 +48,9 @@ const (
 )
 
 var VERSION *version.Version
-var DefaultCorePath = fmt.Sprintf(".%s", CoreName)
 
 func init() {
 	VERSION, _ = version.NewVersion(VersionString)
-}
-
-type DNCRequest struct {
-	OriginalID string
 }
 
 var Handshake = plugin.HandshakeConfig{
@@ -115,21 +110,27 @@ type ConfigMongo struct {
 	TimeoutSeconds int    `json:"timeout_seconds" toml:"timeout_seconds" yaml:"timeout_seconds"`
 }
 
-type ConfigNATS struct {
-	EventServers []string `json:"event_servers" toml:"event_servers" yaml:"event_servers" mapstructure:"event_servers"`
+type ConfigRequest struct {
+	// DefaultRequestTimeout is the default timeout to use when no timeout is specified in the request
+	DefaultRequestTimeout time.Duration `json:"default_request_timeout" mapstructure:"default_request_timeout" yaml:"default_request_timeout" toml:"default_request_timeout"`
+
+	// DefaultTaskQueuePrefix is the default prefix to use when no prefix is specified in the request
+	DefaultTaskQueuePrefix string `json:"default_task_queue_prefix" mapstructure:"default_task_queue_prefix" yaml:"default_task_queue_prefix" toml:"default_task_queue_prefix"`
+
+	// DefaultProvider is the default provider to use when no provider is specified in the request
+	DefaultProvider string `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
 }
 
 type Configuration struct {
-	PollerWorkers         int           `json:"poller_workers" toml:"poller_workers" yaml:"poller_workers" mapstructure:"poller_workers"`
-	MaxPollerRequests     int           `json:"max_poller_requests" toml:"max_poller_requests" yaml:"max_poller_requests" mapstructure:"max_poller_requests"`
-	SNMP                  ConfigSNMP    `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
-	InterfaceCache        ConfigMongo   `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
-	ResponseCache         ConfigMongo   `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
-	Telnet                ConfigTelnet  `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
-	Ssh                   ConfigSSH     `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
-	DefaultProvider       string        `json:"default_provider" mapstructure:"default_provider" yaml:"default_provider" toml:"default_provider"`
-	DefaultRequestTimeout time.Duration `json:"default_request_timeout" mapstructure:"default_request_timeout" yaml:"default_request_timeout" toml:"default_request_timeout"`
-	DNCServerAddr         string        `json:"dnc_server_addr" mapstructure:"dnc_server_addr" yaml:"dnc_server_addr" toml:"dnc_server_addr"`
+	DNCServerAddr string `json:"dnc_server_addr" mapstructure:"dnc_server_addr" yaml:"dnc_server_addr" toml:"dnc_server_addr"`
+
+	InterfaceCache ConfigMongo   `json:"interface_cache" toml:"interface_cache" yaml:"interface_cache" mapstructure:"interface_cache"`
+	ResponseCache  ConfigMongo   `json:"response_cache" toml:"response_cache" yaml:"response_cache" mapstructure:"response_cache"`
+	Request        ConfigRequest `json:"request" mapstructure:"request" yaml:"request" toml:"request"`
+
+	SNMP   ConfigSNMP   `json:"snmp" toml:"snmp" yaml:"snmp" mapstructure:"snmp"`
+	Telnet ConfigTelnet `json:"telnet" mapstructure:"telnet" yaml:"telnet" toml:"telnet"`
+	Ssh    ConfigSSH    `json:"ssh" mapstructure:"ssh" yaml:"ssh" toml:"ssh"`
 }
 
 func GetConfig() *Configuration {
@@ -152,16 +153,12 @@ func GetConfig() *Configuration {
 		os.Exit(1)
 	}
 
-	if conf.PollerWorkers == 0 {
-		conf.PollerWorkers = 1
+	if conf.Request.DefaultRequestTimeout == 0 {
+		conf.Request.DefaultRequestTimeout = DefaultRequestTimeout
 	}
-
-	if conf.MaxPollerRequests == 0 {
-		conf.MaxPollerRequests = 1000000 //nolint
-	}
-
-	if conf.DefaultRequestTimeout == 0 {
-		conf.DefaultRequestTimeout = DefaultRequestTimeout
+	if conf.Request.DefaultTaskQueuePrefix == "" {
+		fmt.Println("DefaultTaskQueuePrefix cannot be empty")
+		os.Exit(1)
 	}
 
 	return conf

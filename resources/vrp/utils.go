@@ -1,4 +1,4 @@
-package resources
+package main
 
 import (
 	"math"
@@ -15,9 +15,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var ReFindIndexinOID = regexp.MustCompile(`(\d+)$`) // used to get the last number of the oid
+var reFindIndexinOID = regexp.MustCompile(`(\d+)$`) // used to get the last number of the oid
 
-type DiscoveryItem struct {
+type discoveryItem struct {
 	Index       int64
 	Descr       string
 	Alias       string
@@ -30,9 +30,9 @@ type DiscoveryItem struct {
 	highSpeed   int
 }
 
-func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap map[int]*DiscoveryItem) {
+func populateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap map[int]*discoveryItem) {
 	for _, m := range task.Metrics {
-		index, _ := strconv.Atoi(ReFindIndexinOID.FindString(m.Oid))
+		index, _ := strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
 		case "ifIndex":
 			if val, ok := discoveryMap[index]; ok {
@@ -40,7 +40,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 				val.Index = int64(i)
 			} else {
 				i, _ := strconv.Atoi(m.GetValue())
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					Index: int64(i),
 				}
 			}
@@ -48,7 +48,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.Alias = m.GetValue()
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					Alias: m.GetValue(),
 				}
 			}
@@ -58,7 +58,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.Descr = m.GetValue()
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					Descr: m.GetValue(),
 				}
 			}
@@ -68,7 +68,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.Descr = m.GetValue()
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					Descr: m.GetValue(),
 				}
 			}
@@ -80,7 +80,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.ifType = i
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					ifType: i,
 				}
 			}
@@ -90,7 +90,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.mtu = i
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					mtu: i,
 				}
 			}
@@ -99,7 +99,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.physAddress = m.GetValue()
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					physAddress: m.GetValue(),
 				}
 			}
@@ -109,7 +109,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.adminStatus = i
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					adminStatus: i,
 				}
 			}
@@ -119,7 +119,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.operStatus = i
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					operStatus: i,
 				}
 			}
@@ -130,7 +130,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.lastChange = tspb
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					lastChange: tspb,
 				}
 			}
@@ -140,7 +140,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 			if val, ok := discoveryMap[index]; ok {
 				val.highSpeed = i
 			} else {
-				discoveryMap[index] = &DiscoveryItem{
+				discoveryMap[index] = &discoveryItem{
 					highSpeed: i,
 				}
 			}
@@ -148,7 +148,7 @@ func PopulateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 	}
 }
 
-func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 
 	i, _ := strconv.Atoi(m.GetValue())
 	switch {
@@ -176,7 +176,7 @@ func GetIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 
 }
 
-func GetSystemInformation(m *metric.Metric, ne *networkelement.Element) {
+func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	switch m.Oid {
 	case oids.SysContact:
 		ne.Contact = m.GetValue()
@@ -193,7 +193,7 @@ func GetSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	}
 }
 
-func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
+func itemToInterface(v *discoveryItem) *networkelement.Interface {
 	iface := &networkelement.Interface{
 		AggregatedId:      "",
 		Index:             int64(v.Index),
@@ -212,7 +212,7 @@ func ItemToInterface(v *DiscoveryItem) *networkelement.Interface {
 
 // convert uW(int) to dB(float64)
 // rounds to 2 nearest decimals
-func ConvertToDb(uw int64) float64 {
+func convertToDb(uw int64) float64 {
 	v := 10 * math.Log10(float64(uw)/1000)
 	f := math.Round(v*100) / 100
 	if math.IsInf(f, 0) || math.IsNaN(f) {

@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"git.liero.se/opentelco/go-swpx/config"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/shared"
 )
 
 type ResponseCache interface {
@@ -29,8 +29,12 @@ type CachedResponse struct {
 	Timestamp   time.Time         `bson:"timestamp" json:"timestamp"`
 }
 
-func newResponseCache(client *mongo.Client, logger hclog.Logger, conf shared.ConfigMongo) (ResponseCache, error) {
-	col := client.Database(conf.Database).Collection(collectionResponseCache)
+func newResponseCache(client *mongo.Client, logger hclog.Logger, conf *config.MongoCache) (ResponseCache, error) {
+	if conf == nil {
+		return nil, errors.New("cannot enable response cache: no mongo config")
+	}
+
+	col := client.Database(conf.Database).Collection(conf.Collection)
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
 	defer cancel()
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{

@@ -28,8 +28,7 @@ import (
 
 	"git.liero.se/opentelco/go-dnc/models/pb/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
-	"git.liero.se/opentelco/go-swpx/resources"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"git.liero.se/opentelco/go-swpx/config"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 )
@@ -39,15 +38,15 @@ func TestMapInterface(t *testing.T) {
 	driver := &VRPDriver{
 		logger: nil,
 		dnc:    &MockClient{},
-		conf:   &shared.Configuration{},
+		conf:   &config.ResourceVRP{},
 	}
 
-	req := &proto.NetworkElement{
-		Hostname:  "någon-host",
-		Interface: "GigabitEthernet0/0/1",
+	req := &proto.Request{
+		Hostname: "någon-host",
+		Port:     "GigabitEthernet0/0/1",
 	}
 
-	msg := resources.CreateDiscoveryMsg(req, driver.conf)
+	msg := createLogicalPortIndex(req, driver.conf)
 	msg, err := driver.dnc.Put(context.Background(), msg)
 	if err != nil {
 		t.Errorf(err.Error())

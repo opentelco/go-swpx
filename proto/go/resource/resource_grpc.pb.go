@@ -26,19 +26,19 @@ const _ = grpc.SupportPackageIsVersion7
 type ResourceClient interface {
 	// Get the version of the network element
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
-	BasicPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
-	// Get technical information about a port
-	TechnicalPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
-	// Get technical information about all ports TODO: rename
-	AllPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error)
 	// Map the interfaces with ifIndex and description
-	MapInterface(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error)
+	MapInterface(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error)
 	// Map the interace description and the environemnt index
-	MapEntityPhysical(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error)
+	MapEntityPhysical(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error)
+	BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	// Get technical information about a port
+	TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	// Get technical information about all ports TODO: rename
+	AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
 	// Get transceiver information about a interface
-	GetTransceiverInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceiver, error)
 	// Get transceiver information about all interfaces
-	GetAllTransceiverInformation(ctx context.Context, in *NetworkElementWrapper, opts ...grpc.CallOption) (*networkelement.Element, error)
+	GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceivers, error)
 }
 
 type resourceClient struct {
@@ -58,7 +58,25 @@ func (c *resourceClient) Version(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
-func (c *resourceClient) BasicPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error) {
+func (c *resourceClient) MapInterface(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error) {
+	out := new(PortIndex)
+	err := c.cc.Invoke(ctx, "/resource.Resource/MapInterface", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceClient) MapEntityPhysical(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error) {
+	out := new(PortIndex)
+	err := c.cc.Invoke(ctx, "/resource.Resource/MapEntityPhysical", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceClient) BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
 	out := new(networkelement.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/BasicPortInformation", in, out, opts...)
 	if err != nil {
@@ -67,7 +85,7 @@ func (c *resourceClient) BasicPortInformation(ctx context.Context, in *NetworkEl
 	return out, nil
 }
 
-func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error) {
+func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
 	out := new(networkelement.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/TechnicalPortInformation", in, out, opts...)
 	if err != nil {
@@ -76,7 +94,7 @@ func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *Netwo
 	return out, nil
 }
 
-func (c *resourceClient) AllPortInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Element, error) {
+func (c *resourceClient) AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
 	out := new(networkelement.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/AllPortInformation", in, out, opts...)
 	if err != nil {
@@ -85,25 +103,7 @@ func (c *resourceClient) AllPortInformation(ctx context.Context, in *NetworkElem
 	return out, nil
 }
 
-func (c *resourceClient) MapInterface(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error) {
-	out := new(NetworkElementInterfaces)
-	err := c.cc.Invoke(ctx, "/resource.Resource/MapInterface", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *resourceClient) MapEntityPhysical(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*NetworkElementInterfaces, error) {
-	out := new(NetworkElementInterfaces)
-	err := c.cc.Invoke(ctx, "/resource.Resource/MapEntityPhysical", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *NetworkElement, opts ...grpc.CallOption) (*networkelement.Transceiver, error) {
+func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceiver, error) {
 	out := new(networkelement.Transceiver)
 	err := c.cc.Invoke(ctx, "/resource.Resource/GetTransceiverInformation", in, out, opts...)
 	if err != nil {
@@ -112,8 +112,8 @@ func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Netw
 	return out, nil
 }
 
-func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *NetworkElementWrapper, opts ...grpc.CallOption) (*networkelement.Element, error) {
-	out := new(networkelement.Element)
+func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceivers, error) {
+	out := new(networkelement.Transceivers)
 	err := c.cc.Invoke(ctx, "/resource.Resource/GetAllTransceiverInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -127,19 +127,19 @@ func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *N
 type ResourceServer interface {
 	// Get the version of the network element
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
-	BasicPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
-	// Get technical information about a port
-	TechnicalPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
-	// Get technical information about all ports TODO: rename
-	AllPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error)
 	// Map the interfaces with ifIndex and description
-	MapInterface(context.Context, *NetworkElement) (*NetworkElementInterfaces, error)
+	MapInterface(context.Context, *Request) (*PortIndex, error)
 	// Map the interace description and the environemnt index
-	MapEntityPhysical(context.Context, *NetworkElement) (*NetworkElementInterfaces, error)
+	MapEntityPhysical(context.Context, *Request) (*PortIndex, error)
+	BasicPortInformation(context.Context, *Request) (*networkelement.Element, error)
+	// Get technical information about a port
+	TechnicalPortInformation(context.Context, *Request) (*networkelement.Element, error)
+	// Get technical information about all ports TODO: rename
+	AllPortInformation(context.Context, *Request) (*networkelement.Element, error)
 	// Get transceiver information about a interface
-	GetTransceiverInformation(context.Context, *NetworkElement) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(context.Context, *Request) (*networkelement.Transceiver, error)
 	// Get transceiver information about all interfaces
-	GetAllTransceiverInformation(context.Context, *NetworkElementWrapper) (*networkelement.Element, error)
+	GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error)
 	mustEmbedUnimplementedResourceServer()
 }
 
@@ -150,25 +150,25 @@ type UnimplementedResourceServer struct {
 func (UnimplementedResourceServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (UnimplementedResourceServer) BasicPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
-}
-func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TechnicalPortInformation not implemented")
-}
-func (UnimplementedResourceServer) AllPortInformation(context.Context, *NetworkElement) (*networkelement.Element, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AllPortInformation not implemented")
-}
-func (UnimplementedResourceServer) MapInterface(context.Context, *NetworkElement) (*NetworkElementInterfaces, error) {
+func (UnimplementedResourceServer) MapInterface(context.Context, *Request) (*PortIndex, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MapInterface not implemented")
 }
-func (UnimplementedResourceServer) MapEntityPhysical(context.Context, *NetworkElement) (*NetworkElementInterfaces, error) {
+func (UnimplementedResourceServer) MapEntityPhysical(context.Context, *Request) (*PortIndex, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MapEntityPhysical not implemented")
 }
-func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *NetworkElement) (*networkelement.Transceiver, error) {
+func (UnimplementedResourceServer) BasicPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
+}
+func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TechnicalPortInformation not implemented")
+}
+func (UnimplementedResourceServer) AllPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllPortInformation not implemented")
+}
+func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *Request) (*networkelement.Transceiver, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTransceiverInformation not implemented")
 }
-func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context, *NetworkElementWrapper) (*networkelement.Element, error) {
+func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllTransceiverInformation not implemented")
 }
 func (UnimplementedResourceServer) mustEmbedUnimplementedResourceServer() {}
@@ -202,62 +202,8 @@ func _Resource_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Resource_BasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResourceServer).BasicPortInformation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/resource.Resource/BasicPortInformation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).BasicPortInformation(ctx, req.(*NetworkElement))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Resource_TechnicalPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResourceServer).TechnicalPortInformation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/resource.Resource/TechnicalPortInformation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).TechnicalPortInformation(ctx, req.(*NetworkElement))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Resource_AllPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResourceServer).AllPortInformation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/resource.Resource/AllPortInformation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).AllPortInformation(ctx, req.(*NetworkElement))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Resource_MapInterface_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -269,13 +215,13 @@ func _Resource_MapInterface_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/resource.Resource/MapInterface",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).MapInterface(ctx, req.(*NetworkElement))
+		return srv.(ResourceServer).MapInterface(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Resource_MapEntityPhysical_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -287,13 +233,67 @@ func _Resource_MapEntityPhysical_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/resource.Resource/MapEntityPhysical",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).MapEntityPhysical(ctx, req.(*NetworkElement))
+		return srv.(ResourceServer).MapEntityPhysical(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Resource_BasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).BasicPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/BasicPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).BasicPortInformation(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Resource_TechnicalPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).TechnicalPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/TechnicalPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).TechnicalPortInformation(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Resource_AllPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).AllPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/AllPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).AllPortInformation(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Resource_GetTransceiverInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElement)
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -305,13 +305,13 @@ func _Resource_GetTransceiverInformation_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/resource.Resource/GetTransceiverInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).GetTransceiverInformation(ctx, req.(*NetworkElement))
+		return srv.(ResourceServer).GetTransceiverInformation(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Resource_GetAllTransceiverInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkElementWrapper)
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func _Resource_GetAllTransceiverInformation_Handler(srv interface{}, ctx context
 		FullMethod: "/resource.Resource/GetAllTransceiverInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServer).GetAllTransceiverInformation(ctx, req.(*NetworkElementWrapper))
+		return srv.(ResourceServer).GetAllTransceiverInformation(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -340,6 +340,14 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Resource_Version_Handler,
 		},
 		{
+			MethodName: "MapInterface",
+			Handler:    _Resource_MapInterface_Handler,
+		},
+		{
+			MethodName: "MapEntityPhysical",
+			Handler:    _Resource_MapEntityPhysical_Handler,
+		},
+		{
 			MethodName: "BasicPortInformation",
 			Handler:    _Resource_BasicPortInformation_Handler,
 		},
@@ -350,14 +358,6 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllPortInformation",
 			Handler:    _Resource_AllPortInformation_Handler,
-		},
-		{
-			MethodName: "MapInterface",
-			Handler:    _Resource_MapInterface_Handler,
-		},
-		{
-			MethodName: "MapEntityPhysical",
-			Handler:    _Resource_MapEntityPhysical_Handler,
 		},
 		{
 			MethodName: "GetTransceiverInformation",

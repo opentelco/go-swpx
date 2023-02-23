@@ -67,12 +67,7 @@ func (r *Poll) Parse() error {
 	if r.AccessId == "" && r.Hostname == "" {
 		return fmt.Errorf("access_id and hostname cannot both be empty: %w", ErrInvalidRequest)
 	}
-	// if r.AccessId == "" && r.Hostname != "" {
-	// 	if err := r.parseAddr(); err != nil {
-	// 		r.logger.Error(err.Error())
-	// 		return core.NewError(err.Error(), core.ErrInvalidAddr)
-	// 	}
-	// }
+
 	return nil
 }
 
@@ -120,14 +115,13 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), data.Timeout.Duration)
 	defer cancel()
 
-	pbRequest := &pb_core.Request{
+	request := &pb_core.Request{
 		Settings: &pb_core.Request_Settings{
-			ProviderPlugin:         data.Provider,
-			ResourcePlugin:         data.Driver,
-			RecreateIndex:          data.RecreateIndex,
-			DisableDistributedLock: false,
-			Timeout:                data.Timeout.String(),
-			CacheTtl:               data.CacheTTL.String(),
+			ProviderPlugin: data.Provider,
+			ResourcePlugin: data.Driver,
+			RecreateIndex:  data.RecreateIndex,
+			Timeout:        data.Timeout.String(),
+			CacheTtl:       data.CacheTTL.String(),
 		},
 		AccessId: data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
 		Hostname: data.Hostname,
@@ -135,10 +129,8 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		Type:     pbType,
 	}
 
-	req := core.NewRequest(ctx, pbRequest)
-
 	// send the request
-	resp, err := s.core.SendRequest(ctx, req)
+	resp, err := s.core.SendRequest(ctx, request)
 	if err != nil {
 		render.JSON(w, r, NewResponse(ResponseStatusNotFound, err))
 		return

@@ -29,6 +29,7 @@ providers:
 	@cd $(providers_dir)/default/; go build -o $(providers_plugin_dir)/default .
 	@cd $(providers_dir)/sait/; go build -o $(providers_plugin_dir)/sait .
 
+
 resources:
 	# Building RESOURCES
 	@rm -f $(resources_bin)/*
@@ -36,6 +37,9 @@ resources:
 	@cd $(resources_dir)/ctc/; go build -o $(resources_plugin_dir)/ctc .
 	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
 
+r_vrp:
+	# Building RESOURCES-VRP
+	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .
 
 core:
 	# Building SWPX ($(bin_path)/$(app_name))
