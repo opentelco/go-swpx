@@ -74,6 +74,7 @@ func (d *VRPDriver) parseTransceiverMessage(task *snmpc.Task, startIndex int) *n
 
 	// no transceiver available, return nil
 	if tempInt == -255 || rxInt == -1 || txInt == -1 {
+		d.logger.Warn("could not parse transceiver (no transceiver)", "temp", tempInt, "rx", rxInt, "tx", txInt)
 		return nil
 	}
 

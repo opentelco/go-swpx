@@ -198,6 +198,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *p
 
 func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
 
+	d.logger.Debug("get transceiver information", "host", req.Hostname, "port", req.Port, "phys-index", req.PhysicalPortIndex)
 	vrpMsg := createVRPTransceiverMsg(req, d.conf)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
 	if err != nil {
@@ -212,7 +213,10 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *proto.Re
 
 	if len(task.Metrics) >= 7 {
 		t := d.parseTransceiverMessage(task, 0)
-		t.PhysicalPortIndex = int64(req.PhysicalPortIndex)
+		if t != nil {
+			t.PhysicalPortIndex = int64(req.PhysicalPortIndex)
+		}
+
 		return t, nil
 	}
 
@@ -443,6 +447,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 
 		}
 	}
+
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, req); err != nil {
 		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
 	}
