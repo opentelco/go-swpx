@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -76,7 +77,8 @@ var TestBulkCmd = &cobra.Command{
 		for i := start; i <= stop; i++ {
 			wg.Add(1)
 
-			p := func(i int) {
+			p := func(i int) *pb.Response {
+				defer wg.Done()
 				resp, err := swpx.Poll(cmd.Context(), &pb.Request{
 					Settings: &pb.Request_Settings{
 						ProviderPlugin: providers,
@@ -96,14 +98,16 @@ var TestBulkCmd = &cobra.Command{
 					cmd.Printf("completed request %s (%s%d) in: %s (time since start: %s) \n", target, portName, i, resp.GetExecutionTime(), time.Since(startTime))
 				}
 
-				wg.Done()
+				return resp
 
 			}
 
 			if concurrent {
 				go p(i)
 			} else {
-				p(i)
+				r := p(i)
+				bs, _ := json.MarshalIndent(r, "", "  ")
+				cmd.Println(string(bs))
 			}
 		}
 

@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"errors"
-	"time"
 
 	"git.liero.se/opentelco/go-swpx/config"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
@@ -29,13 +28,14 @@ type CachedInterface struct {
 	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
-func newInterfaceCache(client *mongo.Client, logger hclog.Logger, conf *config.MongoCache) (InterfaceCache, error) {
+func newInterfaceCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (InterfaceCache, error) {
 	if conf == nil {
 		return nil, errors.New("cannot enable interface cache: no mongo config")
 	}
 
+	logger.Info("enabling response cache", "db", conf.Database, "collection", conf.Collection)
 	col := client.Database(conf.Database).Collection(conf.Collection)
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
+	ctx, cancel := context.WithTimeout(ctx, defaultCacheConnectionTimeout)
 	defer cancel()
 
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
@@ -103,6 +103,7 @@ func (c *ifCacheImpl) Upsert(ctx context.Context, hostname string, logicalPortIn
 		filter := bson.M{
 			"hostname": hostname,
 			"port":     v.Description,
+			"if_index": v.Index,
 		}
 		_, err := c.col.UpdateOne(ctx, filter, bson.M{"$set": data}, opts)
 

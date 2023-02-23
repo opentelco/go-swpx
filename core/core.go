@@ -23,6 +23,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -94,6 +95,7 @@ func (c *Core) Start() error {
 // New creates a new SWPX Core Application
 func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 	var err error
+	var ctx = context.Background()
 
 	core := &Core{
 		config:    conf,
@@ -140,14 +142,14 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 
-	if core.interfaceCache, err = newInterfaceCache(mongoClient, logger, conf.GetMongoByLabel(config.LabelMongoInterfaceCache)); err != nil {
+	if core.interfaceCache, err = newInterfaceCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoInterfaceCache), logger); err != nil {
 		logger.Error("error creating cache", "error", err)
 		logger.Info("no mongo connection established", "cache_enabled", false)
 		core.cacheEnabled = false
 		return core, nil
 	}
 
-	if core.responseCache, err = newResponseCache(mongoClient, logger, conf.GetMongoByLabel(config.LabelMongoInterfaceCache)); err != nil {
+	if core.responseCache, err = newResponseCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoResponseCache), logger); err != nil {
 		logger.Error("cannot set response cache", "error", err)
 		return core, nil
 	}

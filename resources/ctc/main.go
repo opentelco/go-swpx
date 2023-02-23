@@ -73,7 +73,7 @@ func (d *CTCDriver) logAndAppend(err error, errs []*networkelement.TransientErro
 
 // BasicPortInformation
 func (d *CTCDriver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
-	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port)
+	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "index", req.LogicalPortIndex)
 	errs := make([]*networkelement.TransientError, 0)
 
 	var msgs []*transport.Message

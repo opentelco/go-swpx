@@ -14,6 +14,10 @@ import (
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
+const (
+	defaultCacheConnectionTimeout = 30 * time.Second
+)
+
 type ResponseCache interface {
 	Pop(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) (*CachedResponse, error)
 	Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type, response *pb_core.Response) error
@@ -29,13 +33,15 @@ type CachedResponse struct {
 	Timestamp   time.Time         `bson:"timestamp" json:"timestamp"`
 }
 
-func newResponseCache(client *mongo.Client, logger hclog.Logger, conf *config.MongoCache) (ResponseCache, error) {
+func newResponseCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (ResponseCache, error) {
 	if conf == nil {
 		return nil, errors.New("cannot enable response cache: no mongo config")
 	}
 
+	logger.Info("enabling response cache", "db", conf.Database, "collection", conf.Collection)
+
 	col := client.Database(conf.Database).Collection(conf.Collection)
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*60)
+	ctx, cancel := context.WithTimeout(ctx, defaultCacheConnectionTimeout)
 	defer cancel()
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
