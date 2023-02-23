@@ -13,7 +13,7 @@ snmp "v2c" {
 }
 
 transport "telnet" {
-  username = "telnetUser"
+  username = ""
   password = ""
   port = 22
   screen_length = ""
@@ -26,9 +26,9 @@ transport "telnet" {
 }
 
 transport "ssh" {
-  username = "sshUser"
+  username = ""
   password = ""
-  port = 23
+  port = 22
   screen_length = ""
   default_prompt = ""
   default_errors = ""

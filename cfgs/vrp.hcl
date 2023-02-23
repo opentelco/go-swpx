@@ -13,27 +13,27 @@ snmp "v2c" {
 }
 
 transport "telnet" {
-  username = "telnetUser"
+  username = ""
   password = ""
   port = 22
   screen_length = ""
-  default_prompt = ""
+  default_prompt = "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors = ""
 
-  read_dead_line = ""
-  write_dead_line = ""
+  read_dead_line = "30s"
+  write_dead_line = "10s"
   ssh_key_path = ""
 }
 
 transport "ssh" {
-  username = "sshUser"
+  username = ""
   password = ""
-  port = 23
+  port = 22
   screen_length = ""
-  default_prompt = ""
+  default_prompt = "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors = ""
-  read_dead_line = ""
-  write_dead_line = ""
+  read_dead_line = "30s"
+  write_dead_line = "10s"
   ssh_key_path = ""
 }
 
