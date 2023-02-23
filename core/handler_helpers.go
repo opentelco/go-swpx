@@ -8,8 +8,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
-func (c *Core) selectProviders(ctx context.Context, request *pb_core.Request) ([]shared.Provider, error) {
-	var err error
+func (c *Core) providerPreProccessing(ctx context.Context, request *pb_core.Request) ([]shared.Provider, error) {
 
 	var selectedProviders []shared.Provider
 	// check if a providers are selected in the request
@@ -18,7 +17,6 @@ func (c *Core) selectProviders(ctx context.Context, request *pb_core.Request) ([
 
 		for _, provider := range request.Settings.ProviderPlugin {
 			c.logger.Debug("find provider in loaded plugins", "selected_provider", provider)
-			var err error
 			selectedProvider := c.providers[provider]
 			if selectedProvider == nil {
 				return nil, nil
@@ -26,10 +24,11 @@ func (c *Core) selectProviders(ctx context.Context, request *pb_core.Request) ([
 
 			c.logger.Debug(("pre-process the request with provider func"))
 			// pre-process the request with provider func
-			request, err = selectedProvider.PreHandler(ctx, request)
+			r, err := selectedProvider.PreHandler(ctx, request)
 			if err != nil {
 				return nil, err
 			}
+			request = r
 
 			// add the provider to a slice for usage in the end
 			selectedProviders = append(selectedProviders, selectedProvider)
@@ -38,11 +37,11 @@ func (c *Core) selectProviders(ctx context.Context, request *pb_core.Request) ([
 
 		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
 		if provider, ok := c.providers[c.config.Request.DefaultProvider]; ok {
-
-			request, err = provider.PreHandler(ctx, request)
+			r, err := provider.PreHandler(ctx, request)
 			if err != nil {
 				return nil, err
 			}
+			request = r
 
 			selectedProviders = append(selectedProviders, provider)
 		}

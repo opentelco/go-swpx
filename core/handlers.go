@@ -15,7 +15,7 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 
 	response := &pb_core.Response{}
 
-	selectedProviders, err := c.selectProviders(ctx, request)
+	selectedProviders, err := c.providerPreProccessing(ctx, request)
 	if err != nil {
 		return nil, err
 	}
