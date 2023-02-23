@@ -22,270 +22,247 @@
 
 package main
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"sort"
-	"strconv"
-	"strings"
+// var VERSION *version.Version
 
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/resources"
-	"git.liero.se/opentelco/go-swpx/shared"
-	"git.liero.se/opentelco/go-swpx/shared/oids"
-	"github.com/pkg/errors"
+// const (
+// 	VERSION_BASE string = "1.0-beta"
+// 	DRIVER_NAME  string = "raycore-driver"
+// )
 
-	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-version"
-)
+// func init() {
+// 	var err error
+// 	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
-var VERSION *version.Version
+// type RaycoreDriver struct {
+// 	logger hclog.Logger
+// 	dnc    client.Client
+// 	conf   *shared.Configuration
+// }
 
-const (
-	VERSION_BASE string = "1.0-beta"
-	DRIVER_NAME  string = "raycore-driver"
-)
+// func (d *RaycoreDriver) Version() (string, error) {
+// 	return VERSION_BASE, nil
+// }
 
-func init() {
-	var err error
-	if VERSION, err = version.NewVersion(VERSION_BASE); err != nil {
-		log.Fatal(err)
-	}
-}
+// // handshakeConfigs are used to just do a basic handshake between
+// // a plugin and host. If the handshake fails, a user friendly error is shown.
+// // This prevents users from executing bad plugins or executing a plugin
+// // directory. It is a UX feature, not a security feature.
+// var handshakeConfig = plugin.HandshakeConfig{
+// 	ProtocolVersion:  1,
+// 	MagicCookieKey:   shared.MagicCookieKey,
+// 	MagicCookieValue: shared.MagicCookieValue,
+// }
 
-type RaycoreDriver struct {
-	logger hclog.Logger
-	dnc    client.Client
-	conf   *shared.Configuration
-}
+// func main() {
+// 	logger := hclog.New(&hclog.LoggerOptions{
+// 		Name:            fmt.Sprintf("raycore@%s", VERSION.String()),
+// 		Level:           hclog.Trace,
+// 		Color:           hclog.AutoColor,
+// 		IncludeLocation: true,
+// 	})
+// 	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
 
-func (d *RaycoreDriver) Version() (string, error) {
-	return VERSION_BASE, nil
-}
+// 	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
+// 	if err != nil {
+// 		logger.Error("failed to create DNC Client", "error", err)
+// 		os.Exit(1)
+// 	}
 
-// handshakeConfigs are used to just do a basic handshake between
-// a plugin and host. If the handshake fails, a user friendly error is shown.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
-var handshakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   shared.MagicCookieKey,
-	MagicCookieValue: shared.MagicCookieValue,
-}
+// 	resource := &RaycoreDriver{
+// 		logger: logger,
+// 		dnc:    dncClient,
+// 		conf:   sharedConf,
+// 	}
 
-func main() {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:            fmt.Sprintf("raycore@%s", VERSION.String()),
-		Level:           hclog.Trace,
-		Color:           hclog.AutoColor,
-		IncludeLocation: true,
-	})
-	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
+// 	plugin.Serve(&plugin.ServeConfig{
+// 		HandshakeConfig: shared.Handshake,
+// 		Plugins: map[string]plugin.Plugin{
+// 			"resource": &shared.ResourcePlugin{Impl: resource},
+// 		},
+// 		GRPCServer: plugin.DefaultGRPCServer,
+// 	})
+// }
 
-	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
-	if err != nil {
-		logger.Error("failed to create DNC Client", "error", err)
-		os.Exit(1)
-	}
+// func (d *RaycoreDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+// 	conf := shared.Proto2conf(el.Conf)
+// 	portMsg := resources.CreatePortInformationMsg(el, conf)
+// 	msg, err := d.dnc.Put(ctx, portMsg)
+// 	if err != nil {
+// 		d.logger.Error(err.Error())
+// 		return nil, err
+// 	}
 
-	resource := &RaycoreDriver{
-		logger: logger,
-		dnc:    dncClient,
-		conf:   sharedConf,
-	}
+// 	switch task := msg.Task.Task.(type) {
+// 	case *transport.Task_Snmpc:
+// 		interfaces := make(map[string]*proto.NetworkElementInterface)
+// 		for _, m := range task.Snmpc.Metrics {
+// 			fields := strings.Split(m.Oid, ".")
+// 			index, err := strconv.Atoi(fields[len(fields)-1])
+// 			if err != nil {
+// 				d.logger.Error("can't convert phys.port to int: ", err.Error())
+// 				return nil, err
+// 			}
 
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins: map[string]plugin.Plugin{
-			"resource": &shared.ResourcePlugin{Impl: resource},
-		},
-		GRPCServer: plugin.DefaultGRPCServer,
-	})
-}
+// 			interfaces[m.GetValue()] = &proto.NetworkElementInterface{
+// 				Alias:       m.Name,
+// 				Index:       int64(index),
+// 				Description: m.GetValue(),
+// 			}
+// 		}
 
-func (d *RaycoreDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	conf := shared.Proto2conf(el.Conf)
-	portMsg := resources.CreatePortInformationMsg(el, conf)
-	msg, err := d.dnc.Put(ctx, portMsg)
-	if err != nil {
-		d.logger.Error(err.Error())
-		return nil, err
-	}
+// 		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+// 	}
+// 	return nil, errors.Errorf("Unsupported message type")
+// }
 
-	switch task := msg.Task.Task.(type) {
-	case *transport.Task_Snmpc:
-		interfaces := make(map[string]*proto.NetworkElementInterface)
-		for _, m := range task.Snmpc.Metrics {
-			fields := strings.Split(m.Oid, ".")
-			index, err := strconv.Atoi(fields[len(fields)-1])
-			if err != nil {
-				d.logger.Error("can't convert phys.port to int: ", err.Error())
-				return nil, err
-			}
+// func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+// 	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+// 	conf := shared.Proto2conf(el.Conf)
+// 	ne := &networkelement.Element{}
+// 	ne.Hostname = el.Hostname
 
-			interfaces[m.GetValue()] = &proto.NetworkElementInterface{
-				Alias:       m.Name,
-				Index:       int64(index),
-				Description: m.GetValue(),
-			}
-		}
+// 	sysInfoMsg := resources.CreateTaskSystemInfo(el, conf)
+// 	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
+// 	if err != nil {
+// 		d.logger.Error(err.Error())
+// 		return nil, err
+// 	}
 
-		return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
-	}
-	return nil, errors.Errorf("Unsupported message type")
-}
+// 	sysInfoTask := sysInfoMsg.Task.GetSnmpc()
+// 	for _, m := range sysInfoTask.Metrics {
+// 		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
+// 			resources.GetSystemInformation(m, ne)
+// 		}
+// 	}
 
-func (d *RaycoreDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
-	d.logger.Info("running ALL port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
-	conf := shared.Proto2conf(el.Conf)
-	ne := &networkelement.Element{}
-	ne.Hostname = el.Hostname
+// 	portsMsg := resources.CreateAllPortsMsg(el, conf)
+// 	portsMsg, err = d.dnc.Put(ctx, portsMsg)
+// 	if err != nil {
+// 		d.logger.Error(err.Error())
+// 		return nil, err
+// 	}
 
-	sysInfoMsg := resources.CreateTaskSystemInfo(el, conf)
-	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
-	if err != nil {
-		d.logger.Error(err.Error())
-		return nil, err
-	}
+// 	task := portsMsg.Task.GetSnmpc()
+// 	discoveryMap := make(map[int]*resources.DiscoveryItem)
+// 	resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
 
-	sysInfoTask := sysInfoMsg.Task.GetSnmpc()
-	for _, m := range sysInfoTask.Metrics {
-		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
-			resources.GetSystemInformation(m, ne)
-		}
-	}
+// 	for _, discoveryItem := range discoveryMap {
+// 		ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
+// 	}
 
-	portsMsg := resources.CreateAllPortsMsg(el, conf)
-	portsMsg, err = d.dnc.Put(ctx, portsMsg)
-	if err != nil {
-		d.logger.Error(err.Error())
-		return nil, err
-	}
+// 	sort.Slice(ne.Interfaces, func(i, j int) bool {
+// 		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+// 	})
 
-	task := portsMsg.Task.GetSnmpc()
-	discoveryMap := make(map[int]*resources.DiscoveryItem)
-	resources.PopulateDiscoveryMap(d.logger, task, discoveryMap)
+// 	return ne, nil
+// }
 
-	for _, discoveryItem := range discoveryMap {
-		ne.Interfaces = append(ne.Interfaces, resources.ItemToInterface(discoveryItem))
-	}
+// func (d *RaycoreDriver) BasicPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
+// 	return nil, fmt.Errorf("BasicPortInformation is not implemented")
+// }
 
-	sort.Slice(ne.Interfaces, func(i, j int) bool {
-		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
-	})
+// // Gets all the technical information for a Port
+// func (d *RaycoreDriver) TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
+// 	return nil, fmt.Errorf("TechnicalPortInformation is not implemented")
+// }
 
-	return ne, nil
-}
+// func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
+// 	return nil, fmt.Errorf("MapInterface is not implemented")
+// }
 
-func (d *RaycoreDriver) BasicPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
-	return nil, fmt.Errorf("BasicPortInformation is not implemented")
-}
+// func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
+// 	return nil, fmt.Errorf("GetTransceiverInformation is not implemented")
+// }
 
-// Gets all the technical information for a Port
-func (d *RaycoreDriver) TechnicalPortInformation(context.Context, *proto.NetworkElement) (*networkelement.Element, error) {
-	return nil, fmt.Errorf("TechnicalPortInformation is not implemented")
-}
+// func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*networkelement.Element, error) {
+// 	conf := shared.Proto2conf(el.Element.Conf)
+// 	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el.Element, conf)
+// 	msg, err := d.dnc.Put(ctx, vrpMsg)
+// 	if err != nil {
+// 		d.logger.Error("transceiver put error", err.Error())
+// 		return nil, err
+// 	}
 
-func (d *RaycoreDriver) MapInterface(context.Context, *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	return nil, fmt.Errorf("MapInterface is not implemented")
-}
+// 	switch task := msg.Task.Task.(type) {
+// 	case *transport.Task_Terminal:
+// 		if len(task.Terminal.Payload) > 0 {
+// 			transceiver, err := parseTransceiverMessage(task.Terminal.Payload[0].Data)
+// 			if err != nil {
+// 				return nil, err
+// 			}
 
-func (d *RaycoreDriver) GetTransceiverInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Transceiver, error) {
-	return nil, fmt.Errorf("GetTransceiverInformation is not implemented")
-}
+// 			//  assign the transceiver to the last interface with type ETHERNETCSMACD once it is found
+// 			assignToLastInterface(el, transceiver)
+// 		}
+// 	}
 
-func (d *RaycoreDriver) GetAllTransceiverInformation(ctx context.Context, el *proto.NetworkElementWrapper) (*networkelement.Element, error) {
-	conf := shared.Proto2conf(el.Element.Conf)
-	vrpMsg := resources.CreateRaycoreTelnetTransceiverTask(el.Element, conf)
-	msg, err := d.dnc.Put(ctx, vrpMsg)
-	if err != nil {
-		d.logger.Error("transceiver put error", err.Error())
-		return nil, err
-	}
+// 	return el.FullElement, nil
+// }
 
-	switch task := msg.Task.Task.(type) {
-	case *transport.Task_Terminal:
-		if len(task.Terminal.Payload) > 0 {
-			transceiver, err := parseTransceiverMessage(task.Terminal.Payload[0].Data)
-			if err != nil {
-				return nil, err
-			}
+// func parseTransceiverMessage(msg string) (*networkelement.Transceiver, error) {
+// 	lines := strings.Split(msg, "\n\r")
 
-			//  assign the transceiver to the last interface with type ETHERNETCSMACD once it is found
-			assignToLastInterface(el, transceiver)
-		}
-	}
+// 	var serial, part string
+// 	var cur, rx, tx, temp, voltage float64
+// 	var err error
 
-	return el.FullElement, nil
-}
+// 	for _, line := range lines {
+// 		switch {
+// 		case strings.HasPrefix(line, "Vendor Port Number"):
+// 			part = strings.Split(line, ": ")[1]
+// 		case strings.HasPrefix(line, "Vendor Serial Number"):
+// 			serial = strings.Split(line, ": ")[1]
+// 		case strings.HasPrefix(line, "Tx Power"):
+// 			txStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
+// 			if tx, err = strconv.ParseFloat(txStr, 64); err != nil {
+// 				return nil, err
+// 			}
+// 		case strings.HasPrefix(line, "Rx Power"):
+// 			rxStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
+// 			if rx, err = strconv.ParseFloat(rxStr, 64); err != nil {
+// 				return nil, err
+// 			}
+// 		case strings.HasPrefix(line, "Tx Bias"):
+// 			curStr := strings.TrimRight(strings.Split(line, ": ")[1], " mA")
+// 			if cur, err = strconv.ParseFloat(curStr, 64); err != nil {
+// 				return nil, err
+// 			}
+// 		case strings.HasPrefix(line, "Supply voltage"):
+// 			voltageStr := strings.TrimRight(strings.Split(line, ": ")[1], " V")
+// 			if voltage, err = strconv.ParseFloat(voltageStr, 64); err != nil {
+// 				return nil, err
+// 			}
+// 		case strings.HasPrefix(line, "Temperature"):
+// 			tempStr := strings.TrimRight(strings.Split(line, ": ")[1], " degree C")
+// 			if temp, err = strconv.ParseFloat(tempStr, 64); err != nil {
+// 				return nil, err
+// 			}
+// 		}
+// 	}
 
-func parseTransceiverMessage(msg string) (*networkelement.Transceiver, error) {
-	lines := strings.Split(msg, "\n\r")
+// 	return &networkelement.Transceiver{
+// 		SerialNumber: strings.Trim(serial, " "),
+// 		PartNumber:   strings.Trim(part, " "),
+// 		Stats: []*networkelement.TransceiverStatistics{
+// 			{
+// 				Current: cur,
+// 				Rx:      rx,
+// 				Tx:      tx,
+// 				Temp:    temp,
+// 				Voltage: voltage,
+// 			},
+// 		},
+// 	}, nil
+// }
 
-	var serial, part string
-	var cur, rx, tx, temp, voltage float64
-	var err error
-
-	for _, line := range lines {
-		switch {
-		case strings.HasPrefix(line, "Vendor Port Number"):
-			part = strings.Split(line, ": ")[1]
-		case strings.HasPrefix(line, "Vendor Serial Number"):
-			serial = strings.Split(line, ": ")[1]
-		case strings.HasPrefix(line, "Tx Power"):
-			txStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
-			if tx, err = strconv.ParseFloat(txStr, 64); err != nil {
-				return nil, err
-			}
-		case strings.HasPrefix(line, "Rx Power"):
-			rxStr := strings.TrimRight(strings.Split(line, ": ")[1], " dBm")
-			if rx, err = strconv.ParseFloat(rxStr, 64); err != nil {
-				return nil, err
-			}
-		case strings.HasPrefix(line, "Tx Bias"):
-			curStr := strings.TrimRight(strings.Split(line, ": ")[1], " mA")
-			if cur, err = strconv.ParseFloat(curStr, 64); err != nil {
-				return nil, err
-			}
-		case strings.HasPrefix(line, "Supply voltage"):
-			voltageStr := strings.TrimRight(strings.Split(line, ": ")[1], " V")
-			if voltage, err = strconv.ParseFloat(voltageStr, 64); err != nil {
-				return nil, err
-			}
-		case strings.HasPrefix(line, "Temperature"):
-			tempStr := strings.TrimRight(strings.Split(line, ": ")[1], " degree C")
-			if temp, err = strconv.ParseFloat(tempStr, 64); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return &networkelement.Transceiver{
-		SerialNumber: strings.Trim(serial, " "),
-		PartNumber:   strings.Trim(part, " "),
-		Stats: []*networkelement.TransceiverStatistics{
-			{
-				Current: cur,
-				Rx:      rx,
-				Tx:      tx,
-				Temp:    temp,
-				Voltage: voltage,
-			},
-		},
-	}, nil
-}
-
-func assignToLastInterface(el *proto.NetworkElementWrapper, transceiver *networkelement.Transceiver) {
-	for i, iface := range el.FullElement.Interfaces {
-		if iface.Type == networkelement.InterfaceType_ethernetCsmacd && el.FullElement.Interfaces[i+1].Type != networkelement.InterfaceType_ethernetCsmacd {
-			iface.Transceiver = transceiver
-			break
-		}
-	}
-}
+// func assignToLastInterface(el *proto.NetworkElementWrapper, transceiver *networkelement.Transceiver) {
+// 	for i, iface := range el.FullElement.Interfaces {
+// 		if iface.Type == networkelement.InterfaceType_ethernetCsmacd && el.FullElement.Interfaces[i+1].Type != networkelement.InterfaceType_ethernetCsmacd {
+// 			iface.Transceiver = transceiver
+// 			break
+// 		}
+// 	}
+// }
