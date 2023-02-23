@@ -15,7 +15,7 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 
 	response := &pb_core.Response{}
 
-	selectedProviders, err := c.providerPreProccessing(ctx, request)
+	selectedProviders, err := c.selectProviders(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,15 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
+	// pre-process the request with the selected providers
+	request, err = c.providerPreProccessing(ctx, request, selectedProviders)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pre-proccess request: %w", err)
+	}
+
 	// select resource-plugin to send the requests to
 	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)
+
 	plugin := c.resources[request.Settings.ResourcePlugin]
 	if plugin == nil {
 		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)

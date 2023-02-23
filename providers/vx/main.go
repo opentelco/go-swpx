@@ -83,7 +83,9 @@ func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*co
 
 func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
 
+	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
+
 	isIp := net.ParseIP(request.Hostname)
 	params := &device.GetParameters{}
 	if isIp == nil {
@@ -102,18 +104,22 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
 		return request, nil
 	}
+
 	host := d.Devices[0]
 	switch strings.ToUpper(host.Vendor) {
 	case "HUAWEI":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "vrp")
 		request.Settings.ResourcePlugin = "vrp"
+		countChanges++
 	case "CTC", "VXFIBER":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "ctc")
 		request.Settings.ResourcePlugin = "ctc"
+		countChanges++
 	}
 
-	p.logger.Named("pre-handler").Debug("processing request in", "changes", 0)
+	p.logger.Named("pre-handler").Debug("processing request in", "changes", countChanges)
 	return request, nil
+
 }
 
 func main() {

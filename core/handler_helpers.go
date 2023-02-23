@@ -8,8 +8,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
-func (c *Core) providerPreProccessing(ctx context.Context, request *pb_core.Request) ([]shared.Provider, error) {
-
+func (c *Core) selectProviders(ctx context.Context, request *pb_core.Request) ([]shared.Provider, error) {
 	var selectedProviders []shared.Provider
 	// check if a providers are selected in the request
 	if len(request.Settings.ProviderPlugin) > 0 {
@@ -17,37 +16,35 @@ func (c *Core) providerPreProccessing(ctx context.Context, request *pb_core.Requ
 
 		for _, provider := range request.Settings.ProviderPlugin {
 			c.logger.Debug("find provider in loaded plugins", "selected_provider", provider)
-			selectedProvider := c.providers[provider]
-			if selectedProvider == nil {
-				return nil, nil
+			if selectedProvider, ok := c.providers[provider]; ok {
+				selectedProviders = append(selectedProviders, selectedProvider)
 			}
-
-			c.logger.Debug(("pre-process the request with provider func"))
-			// pre-process the request with provider func
-			r, err := selectedProvider.PreHandler(ctx, request)
-			if err != nil {
-				return nil, err
-			}
-			request = r
-
-			// add the provider to a slice for usage in the end
-			selectedProviders = append(selectedProviders, selectedProvider)
 		}
-	} else {
 
+	} else {
 		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
 		if provider, ok := c.providers[c.config.Request.DefaultProvider]; ok {
-			r, err := provider.PreHandler(ctx, request)
-			if err != nil {
-				return nil, err
-			}
-			request = r
-
 			selectedProviders = append(selectedProviders, provider)
 		}
-
 	}
+
 	return selectedProviders, nil
+}
+
+// providerPreProccessing pre-process the request with the selected providers
+func (c *Core) providerPreProccessing(ctx context.Context, request *pb_core.Request, selectedProviders []shared.Provider) (*pb_core.Request, error) {
+	// check if a providers are selected in the request
+	for _, provider := range selectedProviders {
+		var err error
+		pname, _ := provider.Name()
+		c.logger.Info("pre-process request with provider", "provider", pname)
+		request, err = provider.PreHandler(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return request, nil
 }
 
 // providerPostProcess post-process the response with the selected providers
