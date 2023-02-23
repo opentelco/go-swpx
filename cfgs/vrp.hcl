@@ -1,6 +1,6 @@
 
 dnc {
-  addr = "localhost:1338"
+  addr = "localhost:1339"
 }
 
 snmp "v2c" {

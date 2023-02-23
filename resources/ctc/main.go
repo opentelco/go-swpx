@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"git.liero.se/opentelco/go-dnc/client"
+	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/resources"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/hashicorp/go-hclog"
@@ -44,7 +44,7 @@ func init() {
 type CTCDriver struct {
 	logger hclog.Logger
 	dnc    client.Client
-	conf   *shared.Configuration
+	conf   *config.ResourceCTC
 }
 
 func (d *CTCDriver) Version() (string, error) {
@@ -54,7 +54,7 @@ func (d *CTCDriver) Version() (string, error) {
 
 // TechnicalPortInformation Gets all the technical information for a Port
 // from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-func (d *CTCDriver) TechnicalPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+func (d *CTCDriver) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
@@ -70,24 +70,22 @@ func (d *CTCDriver) logAndAppend(err error, errs []*networkelement.TransientErro
 }
 
 // BasicPortInformation
-func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
-	d.logger.Info("running basic port info", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+func (d *CTCDriver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port)
 	errs := make([]*networkelement.TransientError, 0)
 
-	conf := shared.Proto2conf(el.Conf)
-
 	var msgs []*transport.Message
-	if el.InterfaceIndex != 0 {
-		msgs = append(msgs, resources.CreateSinglePortMsgShort(el.InterfaceIndex, el, conf))
+	if req.LogicalPortIndex != 0 {
+		msgs = append(msgs, createSinglePortMsgShort(req.LogicalPortIndex, req, d.conf))
 		// msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
 	} else {
-		msgs = append(msgs, resources.CreateMsg(conf))
+		msgs = append(msgs, createMsg(req, d.conf))
 	}
 
-	msgs = append(msgs, CreateCTCSSHInterfaceTask(el, conf))
+	msgs = append(msgs, createCTCSSHInterfaceTask(req, d.conf))
 
 	ne := &networkelement.Element{}
-	ne.Hostname = el.Hostname
+	ne.Hostname = req.Hostname
 
 	// Create the model
 	elementInterface := &networkelement.Interface{
@@ -111,18 +109,18 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 				"execution_time", reply.ExecutionTime.AsDuration().String(),
 				"size", len(task.Snmpc.Metrics))
 
-			elementInterface.Index = el.InterfaceIndex
+			elementInterface.Index = req.LogicalPortIndex
 
 			for _, m := range task.Snmpc.Metrics {
 				switch {
 				case strings.HasPrefix(m.Oid, oids.SysPrefix):
-					resources.GetSystemInformation(m, ne)
+					getSystemInformation(m, ne)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
 					d.getIfEntryInformation(m, elementInterface)
 
 				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
-					resources.GetIfXEntryInformation(m, elementInterface)
+					getIfXEntryInformation(m, elementInterface)
 				}
 			}
 
@@ -151,23 +149,21 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, el *proto.NetworkE
 }
 
 // AllPortInformation
-func (d *CTCDriver) AllPortInformation(ctx context.Context, el *proto.NetworkElement) (*networkelement.Element, error) {
+func (d *CTCDriver) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
 // MapInterface Map interfaces (IF-MIB) from device with the swpx model
-func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-	d.logger.Info("determine what index and name this interface has", "host", el.Hostname, "ip", el.Ip, "interface", el.Interface)
+func (d *CTCDriver) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+	d.logger.Info("determine what index and name this interface has", "host", req.Hostname, "port", req.Port)
 	var msg *transport.Message
-	discoveryMap := make(map[int]*resources.DiscoveryItem)
-	var interfaces = make(map[string]*proto.NetworkElementInterface)
+	discoveryMap := make(map[int]*discoveryItem)
+	var interfaces = make(map[string]*proto.PortIndexEntity)
 
-	conf := shared.Proto2conf(el.Conf)
-
-	msg = CreateCTCDiscoveryMsg(el, conf)
+	msg = createCTCDiscoveryMsg(req, d.conf)
 	msg, err := d.dnc.Put(ctx, msg)
 	if err != nil {
-		d.logger.Error("could not complete MapInterface", "error", err)
+		d.logger.Error("could not complete Mapport", "error", err)
 		return nil, err
 	}
 
@@ -175,10 +171,10 @@ func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 	case *transport.Task_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.AsDuration().String(), "size", len(task.Snmpc.Metrics))
 
-		resources.PopulateDiscoveryMap(d.logger, task.Snmpc, discoveryMap)
+		populateDiscoveryMap(d.logger, task.Snmpc, discoveryMap)
 
 		for _, v := range discoveryMap {
-			interfaces[v.Descr] = &proto.NetworkElementInterface{
+			interfaces[v.Descr] = &proto.PortIndexEntity{
 				Index:       v.Index,
 				Description: v.Descr,
 				Alias:       v.Alias,
@@ -186,24 +182,22 @@ func (d *CTCDriver) MapInterface(ctx context.Context, el *proto.NetworkElement) 
 		}
 	}
 
-	return &proto.NetworkElementInterfaces{Interfaces: interfaces}, nil
+	return &proto.PortIndex{Ports: interfaces}, nil
 }
 
 // MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
 // Find matching OID for port
-func (d *CTCDriver) MapEntityPhysical(ctx context.Context, el *proto.NetworkElement) (*proto.NetworkElementInterfaces, error) {
-
+func (d *CTCDriver) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
 	return nil, status.Error(codes.Unimplemented, "MapEntityPhysical is unimplemented")
-
 }
 
 // GetTransceiverInformation Get SFP (transceiver) information
-func (d *CTCDriver) GetTransceiverInformation(ctx context.Context, ne *proto.NetworkElement) (*networkelement.Transceiver, error) {
+func (d *CTCDriver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
 	return nil, status.Error(codes.Unimplemented, "GetTransceiverInformation is unimplemented")
 }
 
 // GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-func (d *CTCDriver) GetAllTransceiverInformation(ctx context.Context, ne *proto.NetworkElementWrapper) (*networkelement.Element, error) {
+func (d *CTCDriver) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
 	return nil, status.Error(codes.Unimplemented, "GetAllTransceiverInformation is unimplemented")
 }
 
@@ -215,10 +209,19 @@ func main() {
 		JSONFormat: true,
 	})
 
-	sharedConf := shared.GetConfig()
+	var appConf config.ResourceCTC
+	configPath := os.Getenv("CTC_CONFIG_FILE")
+	if configPath == "" {
+		configPath = "ctc.hcl"
+	}
+	err := config.LoadConfig(configPath, &appConf)
+	if err != nil {
+		logger.Error("failed to loadd.config", "error", err)
+		os.Exit(1)
+	}
 
-	logger.Info("connecting to DNC", "address", sharedConf.DNCServerAddr)
-	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
+	logger.Info("connecting to DNC", "address", appConf.DNC.Addr)
+	dncClient, err := client.NewGRPC(appConf.DNC.Addr)
 	if err != nil {
 		logger.Error("failed to create DNC Client", "error", err)
 		os.Exit(1)
@@ -227,7 +230,7 @@ func main() {
 	driver := &CTCDriver{
 		logger: logger,
 		dnc:    dncClient,
-		conf:   sharedConf,
+		conf:   &appConf,
 	}
 
 	plugin.Serve(&plugin.ServeConfig{

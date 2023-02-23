@@ -1,5 +1,7 @@
-version = "v1.0.0"
-description = "switches from CTC"
+
+dnc {
+  addr = "localhost:1339"
+}
 
 snmp "v2c" {
   community = "xWTyZ9nA158ktJF2"

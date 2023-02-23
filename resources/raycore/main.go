@@ -88,7 +88,6 @@ func main() {
 	})
 	logger.Info("loaded raycore plugin", "version", hclog.Fmt("%s", VERSION))
 
-	sharedConf := shared.GetConfig()
 	dncClient, err := client.NewGRPC(sharedConf.DNCServerAddr)
 	if err != nil {
 		logger.Error("failed to create DNC Client", "error", err)

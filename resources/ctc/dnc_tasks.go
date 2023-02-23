@@ -8,43 +8,40 @@ import (
 	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
 	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-swpx/config"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const (
-	PromptStringRegex   string = "([<\\[]|)(\\S+)([>#\\]])$"
-	ScreenLengthCommand string = "terminal length 0"
-)
+func createCTCSSHInterfaceTask(req *proto.Request, conf *config.ResourceCTC) *transport.Message {
+	sshConf := conf.Transports.GetByLabel("ssh")
 
-func CreateCTCSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
 	task := &terminal.Task{
-		Deadline: el.Conf.Request.Deadline,
+		// Deadline: req.Conf.Request.Deadline,
 		Payload: []*terminal.Task_Payload{
 			{
-				Command: fmt.Sprintf("show mac address-table dynamic interface  %s", el.Interface),
+				Command: fmt.Sprintf("show mac address-table dynamic interface  %s", req.Port),
 			},
 		},
 		Config: &terminal.Config{
-			User:                conf.Ssh.Username,
-			Password:            conf.Ssh.Password,
-			RegexPrompt:         conf.Ssh.RegexPrompt,
+			User:                sshConf.User,
+			Password:            sshConf.Password,
+			RegexPrompt:         sshConf.RegexPrompt,
 			ScreenLengthCommand: "terminal length 0", // must be sent down to the terminal
-			ReadDeadLine:        &durationpb.Duration{Seconds: int64(conf.Ssh.ReadDeadLine.Seconds())},
-			WriteDeadLine:       &durationpb.Duration{Seconds: int64(conf.Ssh.WriteDeadLine.Seconds())},
-			SshKeyPath:          conf.Ssh.SSHKeyPath,
+			ReadDeadLine:        durationpb.New(sshConf.ReadDeadLine.AsDuration()),
+			WriteDeadLine:       durationpb.New(sshConf.WriteDeadLine.AsDuration()),
+			SshKeyPath:          sshConf.SSHKeyPath,
 		},
 	}
 
 	message := &transport.Message{
 		Session: &transport.Session{
-			Target: el.Hostname,
-			Port:   int32(el.Conf.Ssh.Port),
-			Source: "swpx",
+			Target: req.Hostname,
+			Port:   int32(sshConf.Port),
+			Source: VERSION.String(),
 			Type:   transport.Type_SSH,
 		},
 		Id:   ksuid.New().String(),
@@ -59,18 +56,18 @@ func CreateCTCSSHInterfaceTask(el *proto.NetworkElement, conf *shared.Configurat
 
 }
 
-func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+func createCTCDiscoveryMsg(req *proto.Request, conf *config.ResourceCTC) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: el.Conf.Request.Deadline,
+		// Deadline: req.Conf.Request.Deadline,
 		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
+			Community:          conf.Snmp.Community,
 			MaxRepetitions:     0,
 			DynamicRepititions: true,
 			MaxIterations:      5,
 			NonRepeaters:       0,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
+			Version:            snmpc.SnmpVersion(conf.Snmp.Version),
+			Timeout:            durationpb.New(conf.Snmp.Timeout.AsDuration()),
+			Retries:            int32(conf.Snmp.Retries),
 		},
 		Type: snmpc.Type_BULKWALK,
 		Oids: []*snmpc.Oid{
@@ -82,9 +79,9 @@ func CreateCTCDiscoveryMsg(el *proto.NetworkElement, conf *shared.Configuration)
 
 	message := &transport.Message{
 		Session: &transport.Session{
-			Target: el.Hostname,
-			Source: "swpx",
-			Port:   int32(el.Conf.SNMP.Port),
+			Target: req.Hostname,
+			Source: VERSION.String(),
+			Port:   int32(conf.Snmp.Port),
 			Type:   transport.Type_SNMP,
 		},
 		Id:   ksuid.New().String(),

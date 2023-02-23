@@ -9,9 +9,9 @@ import (
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
 	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/araddon/dateparse"
 	"github.com/segmentio/ksuid"
@@ -19,17 +19,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.Configuration) *transport.Message {
+func createTaskGetPortStats(index int64, req proto.Request, conf *config.ResourceCTC) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: el.Conf.Request.Deadline,
+		// Deadline: el.Conf.Request.Deadline,
 		Config: &snmpc.Config{
-			Community:          conf.SNMP.Community,
+			Community:          conf.Snmp.Community,
 			DynamicRepititions: false,
 			NonRepeaters:       10,
 			MaxIterations:      1,
-			Version:            snmpc.SnmpVersion(conf.SNMP.Version),
-			Timeout:            durationpb.New(conf.SNMP.Timeout),
-			Retries:            conf.SNMP.Retries,
+			Version:            snmpc.SnmpVersion(conf.Snmp.Version),
+			Timeout:            durationpb.New(conf.Snmp.Timeout.AsDuration()),
+			Retries:            int32(conf.Snmp.Retries),
 		},
 		Type: snmpc.Type_GET,
 		Oids: []*snmpc.Oid{
@@ -52,9 +52,8 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 
 	message := &transport.Message{
 		Session: &transport.Session{
-			Target: el.Hostname,
-			Port:   int32(el.Conf.SNMP.Port),
-			Source: "swpx",
+			Target: req.Hostname,
+			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
 		Id:   ksuid.New().String(),
@@ -63,7 +62,7 @@ func createTaskGetPortStats(index int64, el *proto.NetworkElement, conf *shared.
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status: shared2.Status_NEW,
-
+		// RequestDeadline: el.Conf.Request.Deadline,
 		Created: timestamppb.Now(),
 	}
 

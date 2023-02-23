@@ -38,8 +38,12 @@ resources:
 	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
 
 r_vrp:
-	# Building RESOURCES-VRP
+	# Building R-VRP
 	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .
+
+r_ctc:
+	# Building R-CTC
+	@cd $(resources_dir)/ctc/; go build -o $(resources_plugin_dir)/ctc .
 
 core:
 	# Building SWPX ($(bin_path)/$(app_name))
