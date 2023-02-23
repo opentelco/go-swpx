@@ -30,6 +30,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
@@ -53,10 +54,11 @@ var VERSION *version.Version
 var logger hclog.Logger
 
 const (
-	VersionBase      = "1.0-beta"
-	DriverName       = "vrp-driver"
-	Float64Size      = 64
-	QueueEntryLength = 12
+	VersionBase            = "1.0-beta"
+	DriverName             = "vrp-driver"
+	Float64Size            = 64
+	QueueEntryLength       = 12
+	defaultDeadlineTimeout = 90 * time.Second
 )
 
 func init() {
@@ -493,4 +495,16 @@ func main() {
 		},
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
+}
+
+func validateEOLTimeout(req *proto.Request, defaultDuration time.Duration) time.Duration {
+	dur, _ := time.ParseDuration(req.Timeout)
+
+	if dur.Seconds() == 0 {
+		dur = defaultDuration
+
+	}
+
+	return dur
+
 }

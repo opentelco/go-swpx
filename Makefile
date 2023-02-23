@@ -30,13 +30,13 @@ providers:
 	@cd $(providers_dir)/sait/; go build -o $(providers_plugin_dir)/sait .
 
 
-resources:
-	# Building RESOURCES
-	@rm -f $(resources_bin)/*
-	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .
-	@cd $(resources_dir)/ctc/; go build -o $(resources_plugin_dir)/ctc .
-	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
+resources: r_clean r_vrp r_ctc
 
+r_clean:
+	@rm -f $(resources_bin)/*
+
+r_raycore:
+	@cd $(resources_dir)/raycore/; go build -o $(resources_plugin_dir)/raycore .
 r_vrp:
 	# Building R-VRP
 	@cd $(resources_dir)/vrp/; go build -o $(resources_plugin_dir)/vrp .

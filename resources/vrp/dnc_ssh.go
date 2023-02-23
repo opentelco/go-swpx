@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
 	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
@@ -17,7 +18,7 @@ func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *
 
 	sshConf := conf.Transports.GetByLabel("ssh")
 	task := &terminal.Task{
-		// Deadline: el.Conf.Request.Deadline,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
 		Payload: []*terminal.Task_Payload{
 			{
 				Command: fmt.Sprintf("display mac-address %s", req.Port),

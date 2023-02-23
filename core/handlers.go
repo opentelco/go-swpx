@@ -215,6 +215,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 	req := proto.Request{
 		Hostname: msg.Hostname,
 		Port:     msg.Port,
+		Timeout:  msg.Settings.Timeout,
 	}
 
 	var (

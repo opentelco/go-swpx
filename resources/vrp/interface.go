@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/metric"
 	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
@@ -21,7 +22,7 @@ import (
 
 func createTaskGetPortStats(index int64, req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		// Deadline: el.Conf.Request.Deadline,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: false,

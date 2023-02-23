@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/providers/vx
 # build resource plugins
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/vrp ./resources/vrp
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/ctc ./resources/ctc
-RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/raycore ./resources/raycore
+# RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/raycore ./resources/raycore
 
 
 

@@ -69,6 +69,10 @@ message Request {
 
   int64 physical_port_index = 4;
   int64 logical_port_index = 5;
+
+  // should be a string we can parse to a duration
+  // used to set the EOL timeout for requests
+  string timeout = 6;
 }
 
 service Resource {
