@@ -39,16 +39,16 @@ func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(sshConf.Port),
-			Source: "swpx",
 			Type:   transport.Type_SSH,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SSH,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Terminal{task},
 		},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }

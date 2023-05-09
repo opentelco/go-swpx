@@ -24,6 +24,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -33,7 +34,12 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"go.vxfiber.dev/proto-go/inventory/device"
+	"go.vxfiber.dev/proto-go/region"
+	"go.vxfiber.dev/vx-bouncer/iam/go-sdk"
+	"go.vxfiber.dev/vx-bouncer/iam/go-sdk/appauth"
+	"go.vxfiber.dev/vx-bouncer/iam/go-sdk/middleware"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/shared"
@@ -66,6 +72,8 @@ func init() {
 type Provider struct {
 	devClient device.ServiceClient
 	logger    hclog.Logger
+	appToken  string
+	appRegion region.Region
 }
 
 func (g *Provider) Version() (string, error) {
@@ -83,6 +91,7 @@ func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*co
 
 func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
 
+	ctx = sdk.WithToken(ctx, p.appToken)
 	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
@@ -122,20 +131,89 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 
 }
 
+func setupEnv() error {
+
+	if os.Getenv("APP_AUTH_ROLE_NAME") == "" {
+		os.Setenv("APP_AUTH_ROLE_NAME", "role-test-fiberop-swpx")
+	}
+	if os.Getenv("APP_AUTH_MOUNT_PATH") == "" {
+		os.Setenv("APP_AUTH_MOUNT_PATH", "fo-approle")
+	}
+	if os.Getenv("APP_AUTH_REGION") == "" {
+		os.Setenv("APP_AUTH_REGION", "VX_SE2")
+	}
+
+	if os.Getenv("VAULT_ADDR") == "" {
+		os.Setenv("VAULT_ADDR", "https://vault.vxfiber.dev")
+	}
+	if os.Getenv("VAULT_TOKEN") == "" {
+		return errors.New("cannot run without vault token, VAULT_TOKEN is not set")
+	}
+	if os.Getenv("DISABLE_SECURITY") == "" {
+		os.Setenv("DISABLE_SECURITY", "false")
+	}
+	return nil
+}
+
 func main() {
+
+	logger = hclog.New(&hclog.LoggerOptions{
+		Name:        PROVIDER_NAME,
+		Level:       hclog.Debug,
+		JSONFormat:  true,
+		DisableTime: true,
+	})
+	if err := setupEnv(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// setup security for the application
+	var appToken string
+	var appRegion region.Region
+	if os.Getenv("DISABLE_SECURITY") == "true" {
+		logger.Warn("RUNNING IN INSECURE MODE, app auth is disabled, enforcing of endpoints is disabled")
+	} else {
+
+		appCfg := appauth.Enable()
+		aa, err := appauth.New(appCfg, logger.Named("app-auth"))
+		if err != nil {
+			logger.Error("could not enable app auth", "error", err)
+			os.Exit(1)
+		}
+
+		if err := aa.Authenticate(); err != nil {
+			logger.Error("could not authenticate app", "error", err)
+			os.Exit(1)
+
+		}
+
+		appToken = aa.GetToken()
+		appRegion = *aa.GetRegion()
+
+		logger.Info("app auth enabled", "region", aa.GetRegion())
+	}
+
+	_ = appRegion
+	_ = appToken
+
 	// when the config system in swpx is done this could be moved to that instead
 	// for now this will be good enough
 	grpcAddr := os.Getenv("OSS_INVENTORY_ADDR")
 	if grpcAddr == "" {
 		grpcAddr = "127.0.0.1:9001"
 	}
-	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		grpcAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		middleware.WithGrpcClientAuthInterceptor(),
+	)
 	if err != nil {
 		logger.Error("could not connect to inventory GRPC")
 		os.Exit(1)
 	}
 	devClient := device.NewServiceClient(conn)
-	prov := &Provider{logger: logger, devClient: devClient}
+	prov := &Provider{logger: logger, devClient: devClient, appToken: appToken, appRegion: appRegion}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,

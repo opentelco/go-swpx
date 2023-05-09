@@ -54,17 +54,16 @@ func createTaskGetPortStats(index int64, req *proto.Request, conf *config.Resour
 	message := &transport.Message{
 		Session: &transport.Session{
 			Target: req.Hostname,
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 
 	return message

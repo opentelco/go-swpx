@@ -24,6 +24,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
@@ -50,13 +51,36 @@ func (c *Core) SendRequest(ctx context.Context, request *pb_core.Request) (*pb_c
 		}
 	}
 
-	resp, err := c.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
+	timeoutDur, _ := time.ParseDuration(request.Settings.Timeout)
+	if timeoutDur == 0 {
+		timeoutDur = c.config.Request.DefaultRequestTimeout.AsDuration()
 	}
-	if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
-		c.logger.Error("error saving response to cache", "error", err.Error())
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, timeoutDur)
+	defer cancel()
+
+	var resp *pb_core.Response
+	respCh := make(chan *pb_core.Response)
+	errCh := make(chan error)
+	go func() {
+		resp, err := c.doRequest(ctx, request)
+		if err != nil {
+			errCh <- err
+		}
+		respCh <- resp
+	}()
+
+	select {
+	case <-ctxTimeout.Done():
+		return nil, fmt.Errorf("timeout reached for requet: %w", ctxTimeout.Err())
+	case err := <-errCh:
+		return nil, fmt.Errorf("could not complete request: %w", err)
+
+	case resp = <-respCh:
+		if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
+			c.logger.Warn("error saving response to cache", "error", err.Error())
+		}
+		return resp, nil
 	}
-	return resp, nil
 
 }

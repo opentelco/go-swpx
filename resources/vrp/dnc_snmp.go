@@ -40,17 +40,16 @@ func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *
 		Session: &transport.Session{
 			Target: request.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status: shared.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
-		Created: timestamppb.Now(),
+		Status:   shared.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -86,16 +85,16 @@ func createAllVRPTransceiverMsg(request *proto.Request, conf *config.ResourceVRP
 		Session: &transport.Session{
 			Target: request.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -126,16 +125,16 @@ func createLogicalPortIndex(req *proto.Request, conf *config.ResourceVRP) *trans
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -171,16 +170,17 @@ func createTaskSystemInfo(req *proto.Request, conf *config.ResourceVRP) *transpo
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
-			Type:   transport.Type_SNMP,
+
+			Type: transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -216,16 +216,16 @@ func createAllPortsMsg(req *proto.Request, conf *config.ResourceVRP) *transport.
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -260,16 +260,16 @@ func createSinglePortMsg(index int64, req *proto.Request, conf *config.ResourceV
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -299,16 +299,16 @@ func createSinglePortMsgShort(index int64, req *proto.Request, conf *config.Reso
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status:  shared2.Status_NEW,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }
@@ -348,17 +348,16 @@ func createMsg(req *proto.Request, conf *config.ResourceVRP) *transport.Message 
 	message := &transport.Message{
 		Session: &transport.Session{
 			Target: req.Hostname,
-			Source: VERSION.String(),
 			Type:   transport.Type_SNMP,
 		},
-		Id:   ksuid.New().String(),
-		Type: transport.Type_SNMP,
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
 		Task: &transport.Task{
 			Task: &transport.Task_Snmpc{task},
 		},
-		Status: shared2.Status_NEW,
-		// RequestDeadline: el.Conf.Request.Deadline,
-		Created: timestamppb.Now(),
+		Status:   shared2.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
 	}
 	return message
 }

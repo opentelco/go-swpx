@@ -48,3 +48,8 @@ func TestProvider_PreHandler_Ip(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, req.Hostname, "172.26.11.232")
 }
+
+func Test_setEnv(t *testing.T) {
+	err := setupEnv()
+	assert.NoError(t, err)
+}
