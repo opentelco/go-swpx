@@ -29,6 +29,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -109,6 +110,10 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
 	} else {
 		params.Ip = isIp.String()
+	}
+
+	if region.deviceClient == nil {
+		return request, errors.New("provider has not been able to connect to the requested deviceClient to do lookups in the OSS for the region")
 	}
 
 	d, err := region.deviceClient.Get(ctx, params)
@@ -222,12 +227,18 @@ func main() {
 			v,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			middleware.WithGrpcClientAuthInterceptor(),
+			grpc.WithTimeout(5*time.Second),
+			grpc.WithBlock(),
 		)
 		if err != nil {
 			logger.Error("could not connect to inventory GRPC server", "error", err, "region", k, "address", v)
-			os.Exit(1)
+			continue
 		}
 		devClients[k] = device.NewServiceClient(conn)
+	}
+
+	for k := range devClients {
+		logger.Info("connected to inventory GRPC server", "region", k)
 	}
 
 	prov := &Provider{logger: logger, deviceClients: devClients, appToken: appToken, appRegion: appRegion}
