@@ -45,6 +45,8 @@ type Poll struct {
 	Hostname string `json:"hostname"`
 	Port     string `json:"port"`
 
+	NetworkRegion string `json:"network_region"`
+
 	Provider []string `json:"provider"`
 	Driver   string   `json:"driver"` // optional, need to be able to set with provider
 
@@ -115,6 +117,11 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), data.Timeout.Duration)
 	defer cancel()
 
+	if data.NetworkRegion == "" {
+		render.JSON(w, r, NewResponse(ErrInvalidArgument("network_region empty/nil"), fmt.Errorf("network_region cannot be empty")))
+		return
+	}
+
 	request := &pb_core.Request{
 		Settings: &pb_core.Request_Settings{
 			ProviderPlugin: data.Provider,
@@ -123,10 +130,11 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 			Timeout:        data.Timeout.String(),
 			CacheTtl:       data.CacheTTL.String(),
 		},
-		AccessId: data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
-		Hostname: data.Hostname,
-		Port:     data.Port,
-		Type:     pbType,
+		NetworkRegion: data.NetworkRegion,
+		AccessId:      data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
+		Hostname:      data.Hostname,
+		Port:          data.Port,
+		Type:          pbType,
 	}
 
 	// send the request

@@ -24,9 +24,21 @@ package api
 
 import (
 	"net/http"
-	
+
 	"git.liero.se/opentelco/go-swpx/core"
 )
+
+func ErrInvalidArgument(message string) *ResponseStatus {
+	return &ResponseStatus{
+		AppErrorCode:    core.ErrInvalidArgument,
+		AppErrorMessage: message,
+
+		Error:   true,
+		Code:    http.StatusBadRequest,
+		Type:    "invalid argument",
+		Message: message,
+	}
+}
 
 // ErrorStatusInvalidAddr is the status response when the app cannot do anything about the host
 // the error can be traced back to bad dns settings
@@ -35,7 +47,7 @@ var ErrorStatusInvalidAddr = &ResponseStatus{
 	AppErrorMessage: "",
 
 	Error:   true,
-	Code:    http.StatusNotAcceptable,
+	Code:    http.StatusBadRequest,
 	Type:    "failed",
 	Message: "invalid or mistyped hostname/addr",
 }
@@ -45,7 +57,7 @@ var ErrorStatusInvalidProvider = &ResponseStatus{
 	AppErrorMessage: "",
 
 	Error:   true,
-	Code:    http.StatusNotAcceptable,
+	Code:    http.StatusBadRequest,
 	Type:    "failed",
 	Message: "the selected provider does not exist",
 }

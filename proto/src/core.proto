@@ -121,6 +121,11 @@ message Request {
     string access_id = 8;
     string hostname = 9;
     string port = 10;
+
+    // network_region is used to send the request to the right pollers
+    // each poller group is separted by network_regions and contacts the network
+    // elements in that region.
+    string network_region = 11;
 }
 
 

@@ -70,10 +70,10 @@ func init() {
 
 // Provider is the implementation of the GRPC
 type Provider struct {
-	devClient device.ServiceClient
-	logger    hclog.Logger
-	appToken  string
-	appRegion region.Region
+	deviceClients map[string]device.ServiceClient
+	logger        hclog.Logger
+	appToken      string
+	appRegion     region.Region
 }
 
 func (g *Provider) Version() (string, error) {
@@ -97,18 +97,21 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 
 	isIp := net.ParseIP(request.Hostname)
 	params := &device.GetParameters{}
+	region := p.parseRegion(request.NetworkRegion)
+	if region == nil {
+		return request, fmt.Errorf("could not parse region from network region '%s'", request.NetworkRegion)
+	}
+
 	if isIp == nil {
 		params.Hostname = request.Hostname
-
-		domain := parseDomain()
+		domain := fmt.Sprintf(".%s", region.domain)
 		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
-
 	} else {
 		params.Ip = isIp.String()
 	}
 
-	d, err := p.devClient.Get(ctx, params)
+	d, err := region.deviceClient.Get(ctx, params)
 	if err != nil || len(d.Devices) == 0 {
 		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
 		return request, nil
@@ -153,6 +156,15 @@ func setupEnv() error {
 		os.Setenv("DISABLE_SECURITY", "false")
 	}
 	return nil
+}
+
+var vxRegions map[string]string = map[string]string{
+	"VX_SE1": "localhost:9001",
+	"VX_SE2": "localhost:9002",
+	"VX_SA1": "localhost:9003",
+	"VX_DE1": "localhost:9004",
+	"VX_AT1": "localhost:9005",
+	"VX_UK1": "localhost:9006",
 }
 
 func main() {
@@ -203,17 +215,22 @@ func main() {
 	if grpcAddr == "" {
 		grpcAddr = "127.0.0.1:9001"
 	}
-	conn, err := grpc.Dial(
-		grpcAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		middleware.WithGrpcClientAuthInterceptor(),
-	)
-	if err != nil {
-		logger.Error("could not connect to inventory GRPC")
-		os.Exit(1)
+
+	devClients := map[string]device.ServiceClient{}
+	for k, v := range vxRegions {
+		conn, err := grpc.Dial(
+			v,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			middleware.WithGrpcClientAuthInterceptor(),
+		)
+		if err != nil {
+			logger.Error("could not connect to inventory GRPC server", "error", err, "region", k, "address", v)
+			os.Exit(1)
+		}
+		devClients[k] = device.NewServiceClient(conn)
 	}
-	devClient := device.NewServiceClient(conn)
-	prov := &Provider{logger: logger, devClient: devClient, appToken: appToken, appRegion: appRegion}
+
+	prov := &Provider{logger: logger, deviceClients: devClients, appToken: appToken, appRegion: appRegion}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
@@ -228,32 +245,58 @@ func main() {
 
 }
 
-func parseDomain() string {
+type networkRegion struct {
+	region       string
+	domain       string
+	deviceClient device.ServiceClient
+}
 
-	switch strings.ToUpper(os.Getenv("REGION")) {
+func (p *Provider) parseRegion(msgRegion string) *networkRegion {
+
+	switch strings.ToUpper(msgRegion) {
 	case "VX_SA1", "SA1":
-		return ".joburg.net.venturanext.se"
-
+		return &networkRegion{
+			region:       "VX_SA1",
+			domain:       ".joburg.net.venturanext.se",
+			deviceClient: p.deviceClients["VX_SA1"],
+		}
 	case "VX_UK1", "UK1":
-		return ".net.uk1.vx.se"
+		return &networkRegion{
+			region:       "VX_UK1",
+			domain:       ".net.uk1.vx.se",
+			deviceClient: p.deviceClients["VX_UK1"],
+		}
 
 	case "VX_DE1", "DE1":
-		return ".net.de1.vx.se"
-
-	case "VX_BE1", "BE1":
-		return ".net.be1.vx.se"
+		return &networkRegion{
+			region:       "VX_DE1",
+			domain:       ".net.de1.vx.se",
+			deviceClient: p.deviceClients["VX_DE1"],
+		}
 
 	case "VX_AT1", "AT1":
-		return ".net.at1.vx.se"
+		return &networkRegion{
+			region:       "VX_AT1",
+			domain:       ".net.at1.vx.se",
+			deviceClient: p.deviceClients["VX_AT1"],
+		}
 
 	case "VX_SE2", "SE2":
-		return ".net.se2.vx.se"
+		return &networkRegion{
+			region:       "VX_SE2",
+			domain:       ".net.se2.vx.se",
+			deviceClient: p.deviceClients["VX_SE2"],
+		}
 
 	case "VX_SE1", "SE1":
-		return ".net.se1.vx.se"
+		return &networkRegion{
+			region:       "VX_SE1",
+			domain:       ".net.se1.vx.se",
+			deviceClient: p.deviceClients["VX_SE1"],
+		}
 
 	default:
-		return ""
+		return nil
 	}
 
 }

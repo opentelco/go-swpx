@@ -41,6 +41,7 @@ func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *
 			Port:   int32(sshConf.Port),
 			Type:   transport.Type_SSH,
 		},
+
 		Id:     ksuid.New().String(),
 		Source: VERSION.String(),
 		Task: &transport.Task{

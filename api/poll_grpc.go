@@ -14,7 +14,6 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
 )
 
 type coreGrpcImpl struct {
@@ -24,8 +23,6 @@ type coreGrpcImpl struct {
 	logger hclog.Logger
 }
 
-var automatedOkList = []string{""}
-
 // Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
 
@@ -34,25 +31,8 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 		request.Type = pb_core.Request_GET_TECHNICAL_INFO
 	}
 
-	// if the switch is in the list, return OK.
-	// noc has probably tried to migrate a dead switch
-	if In(request.Hostname, automatedOkList...) {
-		s.logger.Warn("[override] automated OK", "hostname", request.Hostname, "port", request.Port, "type", request.Type.String())
-		resp := &pb_core.Response{
-			NetworkElement: &networkelement.Element{
-				Hostname: request.Hostname,
-				Interfaces: []*networkelement.Interface{
-					{
-						Alias:       request.Port,
-						Description: request.Port,
-					},
-				},
-			},
-			Error:           nil,
-			RequestAccessId: "",
-			ExecutionTime:   "0s",
-		}
-		return resp, nil
+	if request.NetworkRegion == "" {
+		return nil, status.Error(codes.InvalidArgument, "network_region is required")
 	}
 
 	resp, err := s.core.SendRequest(ctx, request)
@@ -61,7 +41,7 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 	}
 
 	if resp == nil || resp.NetworkElement == nil {
-		return nil, status.Error(codes.NotFound, "no data from poller")
+		return nil, status.Error(codes.NotFound, "response is empty, no data from go-dnc")
 	}
 	resp.ExecutionTime = time.Since(start).String()
 
