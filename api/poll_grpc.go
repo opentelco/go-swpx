@@ -24,7 +24,7 @@ type coreGrpcImpl struct {
 	logger hclog.Logger
 }
 
-var automatedOkList = []string{""}
+var automatedOkList = []string{"mulbarton-migration-a1"}
 
 // Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
