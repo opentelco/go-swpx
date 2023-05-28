@@ -12,6 +12,7 @@ type Configuration struct {
 	MongoServer *MongoDb      `hcl:"mongodb,block"`
 	MongoCaches []*MongoCache `hcl:"mongodb-cache,block"`
 	Request     RequestConfig `hcl:"request,block"`
+	Temporal    Temporal      `hcl:"temporal,block"`
 }
 
 func (cfg Configuration) GetMongoByLabel(label string) *MongoCache {
@@ -40,4 +41,11 @@ type MongoCache struct {
 type Logger struct {
 	Level  string `hcl:"level,optional"`
 	AsJson bool   `hcl:"as_json,optional"`
+}
+
+// Temporal config stanza
+type Temporal struct {
+	Address   string `hcl:"addr"`
+	Namespace string `hcl:"namespace"`
+	TaskQueue string `hcl:"task_queue"`
 }

@@ -5,8 +5,8 @@
  * a copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -29,10 +29,8 @@ import "google/protobuf/empty.proto";
 
 message Error {
     string message = 1;
-    int32 code = 2;
+    int32 code     = 2;
 }
-
-
 
 // Request is the Package that travels through the SwitchPoller and its Plugins.
 // The idea is that a Request enters the Core and is then, if a Provider Plugin is
@@ -42,23 +40,8 @@ message Error {
 //
 // This means that the Request needs to be a generic one and the
 message Request {
-
-    enum Channel {
-        PRIMARY = 0;
-        SECONDARY = 1;
-    }
-
-    enum Priority {
-        DEFAULT = 0;
-        LOW = 1;
-        MEDIUM = 2;
-        HIGH = 3;
-        URGENT = 4;
-      }
-
     // Settings for the request
     message Settings {
-
 
         repeated string provider_plugin = 1;
 
@@ -77,11 +60,21 @@ message Request {
         // how long should the cache be valid
         string cache_ttl = 6;
 
-        // tq_prefix can be used to send traffic to different dnc-pollers in the network
-        string tq_prefix = 7;
+        enum Channel {
+            CHANNEL_PRIMARY = 0;
+            SECONDARY       = 1;
+        }
 
         // tq_channel can be used to spread traffic load on different channels
-        Channel tq_channel = 8;
+        Channel tq_channel = 7;
+
+        enum Priority {
+            DEFAULT = 0;
+            LOW     = 1;
+            MEDIUM  = 2;
+            HIGH    = 3;
+            URGENT  = 4;
+        }
 
         // priority of the request, the DNC will try to prioritize the requests based on this
         // if it has several requests to process in the queue
@@ -98,21 +91,21 @@ message Request {
 
         // GET_BASIC_INFO fetches the basic information on a network element
         // or a specific port.
-        GET_BASIC_INFO     = 2;
+        GET_BASIC_INFO = 2;
 
         // GET_MAC_TABLE fetches the mac table on the network element or the
         // specified port
         // note: if MAC learning is disabled this will be the same as the GET_IP_TABLE
-        GET_MAC_TABLE      = 3;
+        GET_MAC_TABLE = 3;
 
         // GET_IP_TABLE fetches the dhcp snooping table on the network element
-        GET_IP_TABLE       = 4;
+        GET_IP_TABLE = 4;
 
         // GET_CONFIG on the whole network element or on a specific port
-        GET_CONFIG         = 5;
+        GET_CONFIG = 5;
 
         // GET_TRANSCEIVER on all ports on a device or on a specific port
-        GET_TRANSCEIVER    = 6;
+        GET_TRANSCEIVER = 6;
     }
 
     Type type = 7;
@@ -128,22 +121,17 @@ message Request {
     string network_region = 11;
 }
 
-
-
-message Response{
+message Response {
     networkelement.Element network_element = 2;
-    string physical_port = 3;
-    Error error = 4;
-    string request_access_id = 5;
-    string execution_time = 6;
+    string physical_port                   = 3;
+    Error error                            = 4;
+    string request_access_id               = 5;
+    string execution_time                  = 6;
 }
-
 
 message CommandRequest {}
 message CommandResponse {}
 message InformationResponse {}
-
-
 
 service Core {
     // SWP Polling call to get technical Information
@@ -154,16 +142,14 @@ service Core {
 
     // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
     rpc Information(google.protobuf.Empty) returns (InformationResponse);
+
+    rpc CollectConfig(Request) returns (Response);
 }
-
-
 
 service Commander {
     rpc TogglePort(CommandRequest) returns (CommandResponse);
     rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
-
-
 
 message ProvideCPERequest {}
 message ProvideCPEResponse {}
@@ -177,5 +163,4 @@ service Provide {
 
     // Ask a provider to return information about a selected access
     rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
-
 }
