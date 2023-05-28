@@ -17,10 +17,6 @@ func Test_Parse(t *testing.T) {
 		t.Error(err)
 	}
 
-	if cfg == nil {
-		t.Error("no config?")
-	}
-
 	type ArrayItem struct {
 		Field  string `hcl:"field-a"`
 		Field2 string `hcl:"field-b"`

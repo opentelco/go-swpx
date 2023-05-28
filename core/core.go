@@ -31,12 +31,12 @@ import (
 	"os/signal"
 	"path"
 
+	"git.liero.se/opentelco/go-swpx/config"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
-
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.temporal.io/sdk/client"
 )
 
 const (
@@ -72,6 +72,8 @@ type Core struct {
 	resources resourceMap
 	providers providerMap
 
+	tc client.Client
+
 	config *config.Configuration
 	logger hclog.Logger
 }
@@ -98,10 +100,10 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 	var ctx = context.Background()
 
 	core := &Core{
-		config:    conf,
-		logger:    logger,
 		resources: make(map[string]shared.Resource),
 		providers: make(map[string]shared.Provider),
+		config:    conf,
+		logger:    logger,
 	}
 
 	var availableResources = make(map[string]*plugin.Client)
