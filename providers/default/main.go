@@ -27,7 +27,8 @@ import (
 	"fmt"
 	"log"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
@@ -64,16 +65,19 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 
 }
-
-func (p *Provider) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
-	return req, nil
+func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
+	return request, nil
 }
 
-func (p *Provider) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
+	return &provider.ResolveResourcePluginResponse{}, nil
+}
+
+func (p *Provider) ProcessPollResponse(ctx context.Context, resp *core.PollResponse) (*core.PollResponse, error) {
 	return resp, nil
 }
 
-// func (p *Provider)  PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {return nil,nil}
+// func (p *Provider)  ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {return nil,nil}
 // func (p *Provider)  PostHandler(ctx context.Context, response *core.Response) (*core.Response, error) {return nil,nil}
 
 func main() {

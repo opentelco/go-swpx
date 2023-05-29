@@ -17,10 +17,11 @@ import (
 )
 
 type coreGrpcImpl struct {
-	pb_core.UnimplementedCoreServer
 	core   *core.Core
 	grpc   *grpc.Server
 	logger hclog.Logger
+
+	pb_core.UnimplementedCoreServer
 }
 
 var automatedOkList = []string{
@@ -35,18 +36,18 @@ var automatedOkList = []string{
 }
 
 // Request to SWP-core
-func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
+func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
 
 	start := time.Now()
-	if request.Type == pb_core.Request_NOT_SET {
-		request.Type = pb_core.Request_GET_TECHNICAL_INFO
+	if request.Type == pb_core.PollRequest_NOT_SET {
+		request.Type = pb_core.PollRequest_GET_TECHNICAL_INFO
 	}
 
-	if request.NetworkRegion == "" {
+	if request.Session.NetworkRegion == "" {
 		return nil, status.Error(codes.InvalidArgument, "network_region is required")
 	}
 
-	resp, err := s.core.SendRequest(ctx, request)
+	resp, err := s.core.PollNetworkElement(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +68,10 @@ func In(hostname string, list ...string) bool {
 		}
 	}
 	return false
+}
+
+func (s *coreGrpcImpl) CollectConfig(ctx context.Context, request *pb_core.CollectConfigRequest) (*pb_core.CollectConfigResponse, error) {
+	return s.core.CollectConfig(ctx, request)
 }
 
 func (s *coreGrpcImpl) Command(ctx context.Context, request *pb_core.CommandRequest) (*pb_core.CommandResponse, error) {

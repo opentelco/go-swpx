@@ -29,7 +29,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
 )
@@ -40,10 +39,12 @@ type Provider interface {
 	Version() (string, error)
 
 	// Process the request before it hits the main functions  in the Core
-	PreHandler(ctx context.Context, request *pb_core.Request) (*pb_core.Request, error)
+	ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error)
 
 	// Process the network element after data has been collected
-	PostHandler(ctx context.Context, response *core.Response) (*pb_core.Response, error)
+	ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error)
+
+	ResolveResourcePlugin(ctx context.Context, request *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error)
 }
 
 // Here is an implementation that talks over GRPC
@@ -64,12 +65,16 @@ func (p *ProviderGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
-func (p *ProviderGRPCClient) PreHandler(ctx context.Context, req *pb_core.Request) (*pb_core.Request, error) {
-	return p.client.PreHandler(ctx, req)
+func (p *ProviderGRPCClient) ResolveSessionRequest(ctx context.Context, req *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {
+	return p.client.ResolveSessionRequest(ctx, req)
 }
 
-func (p *ProviderGRPCClient) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
-	return p.client.PostHandler(ctx, resp)
+func (p *ProviderGRPCClient) ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error) {
+	return p.client.ProcessPollResponse(ctx, resp)
+}
+
+func (p *ProviderGRPCClient) ResolveResourcePlugin(ctx context.Context, req *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error) {
+	return p.client.ResolveResourcePlugin(ctx, req)
 }
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
@@ -88,12 +93,16 @@ func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*
 	return &proto.VersionResponse{Version: res}, err
 }
 
-func (rpc *ProviderGRPCServer) PreHandler(ctx context.Context, r *pb_core.Request) (*pb_core.Request, error) {
-	return rpc.Impl.PreHandler(ctx, r)
+func (rpc *ProviderGRPCServer) ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {
+	return rpc.Impl.ResolveSessionRequest(ctx, request)
 }
 
-func (rpc *ProviderGRPCServer) PostHandler(ctx context.Context, resp *pb_core.Response) (*pb_core.Response, error) {
-	return rpc.Impl.PostHandler(ctx, resp)
+func (rpc *ProviderGRPCServer) ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error) {
+	return rpc.Impl.ProcessPollResponse(ctx, resp)
+}
+
+func (rpc *ProviderGRPCServer) ResolveResourcePlugin(ctx context.Context, req *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error) {
+	return rpc.Impl.ResolveResourcePlugin(ctx, req)
 }
 
 type ProviderPlugin struct {

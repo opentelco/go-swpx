@@ -26,8 +26,16 @@ const _ = grpc.SupportPackageIsVersion7
 type ProviderClient interface {
 	Name(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NameResponse, error)
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
-	PreHandler(ctx context.Context, in *core.Request, opts ...grpc.CallOption) (*core.Request, error)
-	PostHandler(ctx context.Context, in *core.Response, opts ...grpc.CallOption) (*core.Response, error)
+	// PRE.1 Always called first in the chain of Provider RPCs
+	// Resolve any hostname and or port in the session request
+	ResolveSessionRequest(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*core.SessionRequest, error)
+	// PRE.2 Called second in the chain of Provider RPCs
+	// From the resolved session request, resolve the resource plugin to be used
+	// This is only called if the settings.resource_plugin is empty
+	ResolveResourcePlugin(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error)
+	// POST.1 Called in the end after returning any response to the client
+	// Process the Poll response with the provider's own logic
+	ProcessPollResponse(ctx context.Context, in *core.PollResponse, opts ...grpc.CallOption) (*core.PollResponse, error)
 }
 
 type providerClient struct {
@@ -56,18 +64,27 @@ func (c *providerClient) Version(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
-func (c *providerClient) PreHandler(ctx context.Context, in *core.Request, opts ...grpc.CallOption) (*core.Request, error) {
-	out := new(core.Request)
-	err := c.cc.Invoke(ctx, "/provider.Provider/PreHandler", in, out, opts...)
+func (c *providerClient) ResolveSessionRequest(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*core.SessionRequest, error) {
+	out := new(core.SessionRequest)
+	err := c.cc.Invoke(ctx, "/provider.Provider/ResolveSessionRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *providerClient) PostHandler(ctx context.Context, in *core.Response, opts ...grpc.CallOption) (*core.Response, error) {
-	out := new(core.Response)
-	err := c.cc.Invoke(ctx, "/provider.Provider/PostHandler", in, out, opts...)
+func (c *providerClient) ResolveResourcePlugin(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error) {
+	out := new(ResolveResourcePluginResponse)
+	err := c.cc.Invoke(ctx, "/provider.Provider/ResolveResourcePlugin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *providerClient) ProcessPollResponse(ctx context.Context, in *core.PollResponse, opts ...grpc.CallOption) (*core.PollResponse, error) {
+	out := new(core.PollResponse)
+	err := c.cc.Invoke(ctx, "/provider.Provider/ProcessPollResponse", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +97,16 @@ func (c *providerClient) PostHandler(ctx context.Context, in *core.Response, opt
 type ProviderServer interface {
 	Name(context.Context, *emptypb.Empty) (*NameResponse, error)
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
-	PreHandler(context.Context, *core.Request) (*core.Request, error)
-	PostHandler(context.Context, *core.Response) (*core.Response, error)
+	// PRE.1 Always called first in the chain of Provider RPCs
+	// Resolve any hostname and or port in the session request
+	ResolveSessionRequest(context.Context, *core.SessionRequest) (*core.SessionRequest, error)
+	// PRE.2 Called second in the chain of Provider RPCs
+	// From the resolved session request, resolve the resource plugin to be used
+	// This is only called if the settings.resource_plugin is empty
+	ResolveResourcePlugin(context.Context, *core.SessionRequest) (*ResolveResourcePluginResponse, error)
+	// POST.1 Called in the end after returning any response to the client
+	// Process the Poll response with the provider's own logic
+	ProcessPollResponse(context.Context, *core.PollResponse) (*core.PollResponse, error)
 	mustEmbedUnimplementedProviderServer()
 }
 
@@ -95,11 +120,14 @@ func (UnimplementedProviderServer) Name(context.Context, *emptypb.Empty) (*NameR
 func (UnimplementedProviderServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (UnimplementedProviderServer) PreHandler(context.Context, *core.Request) (*core.Request, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PreHandler not implemented")
+func (UnimplementedProviderServer) ResolveSessionRequest(context.Context, *core.SessionRequest) (*core.SessionRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveSessionRequest not implemented")
 }
-func (UnimplementedProviderServer) PostHandler(context.Context, *core.Response) (*core.Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PostHandler not implemented")
+func (UnimplementedProviderServer) ResolveResourcePlugin(context.Context, *core.SessionRequest) (*ResolveResourcePluginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveResourcePlugin not implemented")
+}
+func (UnimplementedProviderServer) ProcessPollResponse(context.Context, *core.PollResponse) (*core.PollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessPollResponse not implemented")
 }
 func (UnimplementedProviderServer) mustEmbedUnimplementedProviderServer() {}
 
@@ -150,38 +178,56 @@ func _Provider_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Provider_PreHandler_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(core.Request)
+func _Provider_ResolveSessionRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(core.SessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProviderServer).PreHandler(ctx, in)
+		return srv.(ProviderServer).ResolveSessionRequest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provider.Provider/PreHandler",
+		FullMethod: "/provider.Provider/ResolveSessionRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).PreHandler(ctx, req.(*core.Request))
+		return srv.(ProviderServer).ResolveSessionRequest(ctx, req.(*core.SessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Provider_PostHandler_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(core.Response)
+func _Provider_ResolveResourcePlugin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(core.SessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProviderServer).PostHandler(ctx, in)
+		return srv.(ProviderServer).ResolveResourcePlugin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/provider.Provider/PostHandler",
+		FullMethod: "/provider.Provider/ResolveResourcePlugin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).PostHandler(ctx, req.(*core.Response))
+		return srv.(ProviderServer).ResolveResourcePlugin(ctx, req.(*core.SessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Provider_ProcessPollResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(core.PollResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).ProcessPollResponse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provider.Provider/ProcessPollResponse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).ProcessPollResponse(ctx, req.(*core.PollResponse))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -202,12 +248,16 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Provider_Version_Handler,
 		},
 		{
-			MethodName: "PreHandler",
-			Handler:    _Provider_PreHandler_Handler,
+			MethodName: "ResolveSessionRequest",
+			Handler:    _Provider_ResolveSessionRequest_Handler,
 		},
 		{
-			MethodName: "PostHandler",
-			Handler:    _Provider_PostHandler_Handler,
+			MethodName: "ResolveResourcePlugin",
+			Handler:    _Provider_ResolveResourcePlugin_Handler,
+		},
+		{
+			MethodName: "ProcessPollResponse",
+			Handler:    _Provider_ProcessPollResponse_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

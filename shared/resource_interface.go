@@ -59,6 +59,8 @@ type Resource interface {
 
 	// GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
 	GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error)
+
+	GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error)
 }
 
 // Here is an implementation that talks over RPC
@@ -95,6 +97,10 @@ func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, re
 
 func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
 	return rpc.client.GetAllTransceiverInformation(ctx, req)
+}
+
+func (rpc *ResourceGRPCClient) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+	return rpc.client.GetRunningConfig(ctx, req)
 }
 
 func (rpc *ResourceGRPCClient) Version() (string, error) {
@@ -150,6 +156,10 @@ func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, re
 
 func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
 	return rpc.Impl.GetAllTransceiverInformation(ctx, req)
+}
+
+func (rpc *ResourceGRPCServer) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+	return rpc.Impl.GetRunningConfig(ctx, req)
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this

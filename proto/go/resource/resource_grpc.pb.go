@@ -39,6 +39,8 @@ type ResourceClient interface {
 	GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceiver, error)
 	// Get transceiver information about all interfaces
 	GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceivers, error)
+	// Get the running config and return it
+	GetRunningConfig(ctx context.Context, in *GetRunningConfigParameters, opts ...grpc.CallOption) (*GetRunningConfigResponse, error)
 }
 
 type resourceClient struct {
@@ -121,6 +123,15 @@ func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *R
 	return out, nil
 }
 
+func (c *resourceClient) GetRunningConfig(ctx context.Context, in *GetRunningConfigParameters, opts ...grpc.CallOption) (*GetRunningConfigResponse, error) {
+	out := new(GetRunningConfigResponse)
+	err := c.cc.Invoke(ctx, "/resource.Resource/GetRunningConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ResourceServer is the server API for Resource service.
 // All implementations must embed UnimplementedResourceServer
 // for forward compatibility
@@ -140,6 +151,8 @@ type ResourceServer interface {
 	GetTransceiverInformation(context.Context, *Request) (*networkelement.Transceiver, error)
 	// Get transceiver information about all interfaces
 	GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error)
+	// Get the running config and return it
+	GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error)
 	mustEmbedUnimplementedResourceServer()
 }
 
@@ -170,6 +183,9 @@ func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *R
 }
 func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllTransceiverInformation not implemented")
+}
+func (UnimplementedResourceServer) GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRunningConfig not implemented")
 }
 func (UnimplementedResourceServer) mustEmbedUnimplementedResourceServer() {}
 
@@ -328,6 +344,24 @@ func _Resource_GetAllTransceiverInformation_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Resource_GetRunningConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRunningConfigParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).GetRunningConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/GetRunningConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).GetRunningConfig(ctx, req.(*GetRunningConfigParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Resource_ServiceDesc is the grpc.ServiceDesc for Resource service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -366,6 +400,10 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllTransceiverInformation",
 			Handler:    _Resource_GetAllTransceiverInformation_Handler,
+		},
+		{
+			MethodName: "GetRunningConfig",
+			Handler:    _Resource_GetRunningConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

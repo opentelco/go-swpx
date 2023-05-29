@@ -21,7 +21,7 @@ import (
 
 func createVRPTransceiverMsg(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: true,
@@ -56,7 +56,7 @@ func createVRPTransceiverMsg(req *proto.Request, conf *config.ResourceVRP) *tran
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared2.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 

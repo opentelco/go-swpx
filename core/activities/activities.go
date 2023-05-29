@@ -9,3 +9,7 @@ type Activities struct {
 func New(c *core.Core) *Activities {
 	return &Activities{c: c}
 }
+
+func (a *Activities) Test() error {
+	return nil
+}

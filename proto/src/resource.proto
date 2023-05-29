@@ -101,4 +101,21 @@ service Resource {
 
   // Get transceiver information about all interfaces
   rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
+
+
+  // Get the running config and return it
+  rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);
+}
+
+message GetRunningConfigParameters {
+  // hostname or ip address
+  string hostname = 1;
+
+  // should be a string we can parse to a duration
+  // used to set the EOL timeout for requests
+  string timeout = 3;
+}
+
+message GetRunningConfigResponse {
+  string config = 1;
 }

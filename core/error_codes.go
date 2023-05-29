@@ -23,14 +23,14 @@
 package core
 
 const (
-	// ErrInvalidAddr if the Request has a invalid hostname
-	ErrInvalidAddr     = 1010
-	ErrInvalidProvider = 1011
-	ErrInvalidResource = 1012
-	ErrUnknownError    = 1013
-	ErrInvalidArgument = 1014
+	// ErrCodeInvalidAddr if the Request has a invalid hostname
+	ErrCodeInvalidAddr     = 1010
+	ErrCodeInvalidProvider = 1011
+	ErrCodeInvalidResource = 1012
+	ErrCodeUnknownError    = 1013
+	ErrCodeInvalidArgument = 1014
 
-	// ErrInvalidPort is returned if the request has a invalid port
-	ErrInvalidPort    = 1020
-	ErrTimeoutRequest = 2010
+	// ErrCodeInvalidPort is returned if the request has a invalid port
+	ErrCodeInvalidPort    = 1020
+	ErrCodeTimeoutRequest = 2010
 )

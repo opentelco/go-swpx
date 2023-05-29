@@ -11,21 +11,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
+func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
 
-	response := &pb_core.Response{}
+	response := &pb_core.PollResponse{}
 
-	selectedProviders, err := c.selectProviders(ctx, request)
+	selectedProviders, err := c.selectProviders(ctx, request.Settings)
 	if err != nil {
 		return nil, err
 	}
 	if len(selectedProviders) == 0 {
-		response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrInvalidProvider}
+		response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrCodeInvalidProvider}
 		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
 	// pre-process the request with the selected providers
-	request, err = c.providerPreProccessing(ctx, request, selectedProviders)
+	err = c.providerGenericPreProccessing(ctx, request.Session, request.Settings, selectedProviders)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pre-proccess request: %w", err)
 	}
@@ -38,16 +38,16 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)
 		response.Error = &pb_core.Error{
 			Message: "selected driver is missing/does not exist",
-			Code:    ErrInvalidResource,
+			Code:    ErrCodeInvalidResource,
 		}
 		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
 	// implementation of different requests that SWP-X can handle right now
 	switch request.Type {
-	case pb_core.Request_GET_BASIC_INFO:
+	case pb_core.PollRequest_GET_BASIC_INFO:
 
-		if request.Port != "" {
+		if request.Session.Port != "" {
 			response, err = c.handleGetBasicInformationPort(ctx, request, plugin)
 			if err != nil {
 				return nil, err
@@ -61,9 +61,9 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 
 		}
 
-	case pb_core.Request_GET_TECHNICAL_INFO:
+	case pb_core.PollRequest_GET_TECHNICAL_INFO:
 
-		if request.Port != "" {
+		if request.Session.Port != "" {
 			err := c.handleGetTechnicalInformationPort(request, response, plugin)
 			if err != nil {
 				return nil, err
@@ -77,8 +77,8 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 
 	}
 
-	// process the response with the selected providers (post-process)
-	if err := providerPostProcess(ctx, selectedProviders, response); err != nil {
+	// process the response with the selected providers (post-process for polling)
+	if err := providerPollPostProcess(ctx, selectedProviders, response); err != nil {
 		return nil, err
 	}
 
@@ -87,7 +87,7 @@ func (c *Core) doRequest(ctx context.Context, request *pb_core.Request) (*pb_cor
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) getTechnicalInformationElement(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
+func (c *Core) getTechnicalInformationElement(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
 
 	// req := &resource.Request{
 	// 	Port:     "",
@@ -128,7 +128,7 @@ func (c *Core) getTechnicalInformationElement(msg *pb_core.Request, resp *pb_cor
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
+func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
 	// protoConf := shared.Conf2proto(conf)
 	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	// req := &resource.NetworkElement{
@@ -216,12 +216,12 @@ func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.Request, resp *pb_
 }
 
 // handleGetBasicInformationPort gets information related to the selected interface
-func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.Request, plugin shared.Resource) (*pb_core.Response, error) {
+func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.PollRequest, plugin shared.Resource) (*pb_core.PollResponse, error) {
 
-	var resp pb_core.Response
+	var resp pb_core.PollResponse
 	req := proto.Request{
-		Hostname: msg.Hostname,
-		Port:     msg.Port,
+		Hostname: msg.Session.Hostname,
+		Port:     msg.Session.Port,
 		Timeout:  msg.Settings.Timeout,
 	}
 
@@ -261,7 +261,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 				c.logger.Error("error running MapEntityPhysical", "err", err.Error())
 				resp.Error = &pb_core.Error{
 					Message: fmt.Sprintf("could not run MapEntityPhyiscal: %s", err.Error()),
-					Code:    ErrInvalidPort,
+					Code:    ErrCodeInvalidPort,
 				}
 				return nil, err
 			}
@@ -285,7 +285,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 			c.logger.Error("error running map interface", "err", err.Error())
 			resp.Error = &pb_core.Error{
 				Message: fmt.Sprintf("could not run MapInterface: %s", err.Error()),
-				Code:    ErrInvalidPort,
+				Code:    ErrCodeInvalidPort,
 			}
 			return nil, err
 		}
@@ -306,7 +306,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 
 		resp.Error = &pb_core.Error{
 			Message: fmt.Sprintf("could handle request: %s", err.Error()),
-			Code:    ErrUnknownError,
+			Code:    ErrCodeUnknownError,
 		}
 
 		c.logger.Error("error fetching from cache:", err.Error())
@@ -318,7 +318,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 		c.logger.Error("error running map interface", "err", "index is zero")
 		resp.Error = &pb_core.Error{
 			Message: "interface index returned zero",
-			Code:    ErrInvalidPort,
+			Code:    ErrCodeInvalidPort,
 		}
 		return nil, err
 	}
@@ -336,7 +336,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.R
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) handleGetPasicInformationElement(msg *pb_core.Request, resp *pb_core.Response, plugin shared.Resource) error {
+func (c *Core) handleGetPasicInformationElement(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
 	// protoConf := shared.Conf2proto(conf)
 	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	// req := &resource.NetworkElement{

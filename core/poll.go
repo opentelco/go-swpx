@@ -30,13 +30,13 @@ import (
 	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
 )
 
-// SendRequest sends the request!
-func (c *Core) SendRequest(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
+// PollNetworkElement sends the request!
+func (c *Core) PollNetworkElement(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
 
 	cacheTTLduration, _ := time.ParseDuration(request.Settings.CacheTtl)
 
 	if !request.Settings.RecreateIndex && cacheTTLduration != 0 {
-		cr, err := c.responseCache.Pop(ctx, request.Hostname, request.Port, request.AccessId, request.Type)
+		cr, err := c.pollResponseCache.Pop(ctx, request.Session.Hostname, request.Session.Port, request.Session.AccessId, request.Type)
 		if err != nil {
 			c.logger.Warn("could not pop from cache", "error", err)
 		}
@@ -59,11 +59,11 @@ func (c *Core) SendRequest(ctx context.Context, request *pb_core.Request) (*pb_c
 	ctxTimeout, cancel := context.WithTimeout(ctx, timeoutDur)
 	defer cancel()
 
-	var resp *pb_core.Response
-	respCh := make(chan *pb_core.Response)
+	var resp *pb_core.PollResponse
+	respCh := make(chan *pb_core.PollResponse)
 	errCh := make(chan error)
 	go func() {
-		resp, err := c.doRequest(ctx, request)
+		resp, err := c.doPollRequest(ctx, request)
 		if err != nil {
 			errCh <- err
 		}
@@ -77,7 +77,7 @@ func (c *Core) SendRequest(ctx context.Context, request *pb_core.Request) (*pb_c
 		return nil, fmt.Errorf("could not complete request: %w", err)
 
 	case resp = <-respCh:
-		if err := c.responseCache.Upsert(ctx, request.Hostname, request.Port, request.AccessId, request.Type, resp); err != nil {
+		if err := c.pollResponseCache.Upsert(ctx, request.Session.Hostname, request.Session.Port, request.Session.AccessId, request.Type, resp); err != nil {
 			c.logger.Warn("error saving response to cache", "error", err.Error())
 		}
 		return resp, nil

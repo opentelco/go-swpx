@@ -24,16 +24,18 @@ func Test_Grpc(t *testing.T) {
 	}
 
 	client := core.NewCoreClient(conn)
-	r, err := client.Poll(ctx, &core.Request{
-		Settings: &core.Request_Settings{
+	r, err := client.Poll(ctx, &core.PollRequest{
+		Settings: &core.Settings{
 			ProviderPlugin: []string{"vx"},
 			ResourcePlugin: "vrp",
 			RecreateIndex:  false,
 			Timeout:        "60s",
 			CacheTtl:       "0s",
 		},
-		Hostname: "bryanston-west-a39",
-		Port:     "GigabitEthernet0/0/1",
+		Session: &core.SessionRequest{
+			Hostname: "bryanston-west-a39",
+			Port:     "GigabitEthernet0/0/1",
+		},
 	})
 	if err != nil {
 		fmt.Println("error", err)

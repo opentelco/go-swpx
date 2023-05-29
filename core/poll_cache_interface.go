@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type InterfaceCache interface {
+type PollInterfaceCache interface {
 	Pop(ctx context.Context, hostname, port string) (*CachedInterface, error)
 	Upsert(ctx context.Context, hostname string, logicalPortIndex *proto.PortIndex, physicalPortIndex *proto.PortIndex) error
 }
@@ -28,7 +28,7 @@ type CachedInterface struct {
 	PhysicalEntityIndex int64 `bson:"physical_entity_index"`
 }
 
-func newInterfaceCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (InterfaceCache, error) {
+func newInterfaceCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (PollInterfaceCache, error) {
 	if conf == nil {
 		return nil, errors.New("cannot enable interface cache: no mongo config")
 	}

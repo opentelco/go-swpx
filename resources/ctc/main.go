@@ -244,6 +244,10 @@ func main() {
 	})
 }
 
+func (d *CTCDriver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+	return nil, nil
+}
+
 func validateEOLTimeout(req *proto.Request, defaultDuration time.Duration) time.Duration {
 	dur, _ := time.ParseDuration(req.Timeout)
 

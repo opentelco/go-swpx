@@ -30,7 +30,7 @@ import (
 
 func ErrInvalidArgument(message string) *ResponseStatus {
 	return &ResponseStatus{
-		AppErrorCode:    core.ErrInvalidArgument,
+		AppErrorCode:    core.ErrCodeInvalidArgument,
 		AppErrorMessage: message,
 
 		Error:   true,
@@ -43,7 +43,7 @@ func ErrInvalidArgument(message string) *ResponseStatus {
 // ErrorStatusInvalidAddr is the status response when the app cannot do anything about the host
 // the error can be traced back to bad dns settings
 var ErrorStatusInvalidAddr = &ResponseStatus{
-	AppErrorCode:    core.ErrInvalidAddr,
+	AppErrorCode:    core.ErrCodeInvalidAddr,
 	AppErrorMessage: "",
 
 	Error:   true,
@@ -53,7 +53,7 @@ var ErrorStatusInvalidAddr = &ResponseStatus{
 }
 
 var ErrorStatusInvalidProvider = &ResponseStatus{
-	AppErrorCode:    core.ErrInvalidProvider,
+	AppErrorCode:    core.ErrCodeInvalidProvider,
 	AppErrorMessage: "",
 
 	Error:   true,
@@ -63,7 +63,7 @@ var ErrorStatusInvalidProvider = &ResponseStatus{
 }
 
 var ErrorStatusRequestTimeout = &ResponseStatus{
-	AppErrorCode:    core.ErrTimeoutRequest,
+	AppErrorCode:    core.ErrCodeTimeoutRequest,
 	AppErrorMessage: "",
 
 	Error:   true,

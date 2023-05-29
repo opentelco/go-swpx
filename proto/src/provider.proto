@@ -42,6 +42,21 @@ service Provider {
   rpc Name(google.protobuf.Empty) returns (NameResponse);
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
-  rpc PreHandler(core.Request) returns (core.Request);
-  rpc PostHandler(core.Response) returns (core.Response);
+  // PRE.1 Always called first in the chain of Provider RPCs
+  // Resolve any hostname and or port in the session request
+  rpc ResolveSessionRequest(core.SessionRequest) returns (core.SessionRequest);
+
+  // PRE.2 Called second in the chain of Provider RPCs
+  // From the resolved session request, resolve the resource plugin to be used
+  // This is only called if the settings.resource_plugin is empty
+  rpc ResolveResourcePlugin(core.SessionRequest) returns (ResolveResourcePluginResponse);
+
+  // POST.1 Called in the end after returning any response to the client
+  // Process the Poll response with the provider's own logic
+  rpc ProcessPollResponse(core.PollResponse) returns (core.PollResponse);
+}
+
+
+message ResolveResourcePluginResponse {
+  string resource_plugin = 1;
 }

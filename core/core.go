@@ -66,8 +66,8 @@ func init() {
 type Core struct {
 	cacheEnabled bool
 
-	responseCache  ResponseCache
-	interfaceCache InterfaceCache
+	pollResponseCache PollResponseCache
+	interfaceCache    PollInterfaceCache
 
 	resources resourceMap
 	providers providerMap
@@ -151,7 +151,7 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 
-	if core.responseCache, err = newResponseCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoResponseCache), logger); err != nil {
+	if core.pollResponseCache, err = newResponseCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoResponseCache), logger); err != nil {
 		logger.Error("cannot set response cache", "error", err)
 		return core, nil
 	}

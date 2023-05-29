@@ -23,12 +23,17 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CoreClient interface {
-	// SWP Polling call to get technical Information
-	Poll(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	// SWP Polling call to get technical Information and other information about a network element
+	// the request is sent to the correct poller based on the network_region of the request
+	// the type of the request is used to determine what information to collect from the network element
+	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
 	// Send a command to a network device through the Poller
 	Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
 	Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error)
+	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
+	// collected one. Returs a list of changes and the config collected from the network element
+	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
 }
 
 type coreClient struct {
@@ -39,8 +44,8 @@ func NewCoreClient(cc grpc.ClientConnInterface) CoreClient {
 	return &coreClient{cc}
 }
 
-func (c *coreClient) Poll(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
+func (c *coreClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
+	out := new(PollResponse)
 	err := c.cc.Invoke(ctx, "/core.Core/Poll", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,16 +71,30 @@ func (c *coreClient) Information(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
+func (c *coreClient) CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error) {
+	out := new(CollectConfigResponse)
+	err := c.cc.Invoke(ctx, "/core.Core/CollectConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CoreServer is the server API for Core service.
 // All implementations must embed UnimplementedCoreServer
 // for forward compatibility
 type CoreServer interface {
-	// SWP Polling call to get technical Information
-	Poll(context.Context, *Request) (*Response, error)
+	// SWP Polling call to get technical Information and other information about a network element
+	// the request is sent to the correct poller based on the network_region of the request
+	// the type of the request is used to determine what information to collect from the network element
+	Poll(context.Context, *PollRequest) (*PollResponse, error)
 	// Send a command to a network device through the Poller
 	Command(context.Context, *CommandRequest) (*CommandResponse, error)
 	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
 	Information(context.Context, *emptypb.Empty) (*InformationResponse, error)
+	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
+	// collected one. Returs a list of changes and the config collected from the network element
+	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
 	mustEmbedUnimplementedCoreServer()
 }
 
@@ -83,7 +102,7 @@ type CoreServer interface {
 type UnimplementedCoreServer struct {
 }
 
-func (UnimplementedCoreServer) Poll(context.Context, *Request) (*Response, error) {
+func (UnimplementedCoreServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
 }
 func (UnimplementedCoreServer) Command(context.Context, *CommandRequest) (*CommandResponse, error) {
@@ -91,6 +110,9 @@ func (UnimplementedCoreServer) Command(context.Context, *CommandRequest) (*Comma
 }
 func (UnimplementedCoreServer) Information(context.Context, *emptypb.Empty) (*InformationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Information not implemented")
+}
+func (UnimplementedCoreServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectConfig not implemented")
 }
 func (UnimplementedCoreServer) mustEmbedUnimplementedCoreServer() {}
 
@@ -106,7 +128,7 @@ func RegisterCoreServer(s grpc.ServiceRegistrar, srv CoreServer) {
 }
 
 func _Core_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(PollRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -118,7 +140,7 @@ func _Core_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface
 		FullMethod: "/core.Core/Poll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).Poll(ctx, req.(*Request))
+		return srv.(CoreServer).Poll(ctx, req.(*PollRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -159,6 +181,24 @@ func _Core_Information_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Core_CollectConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServer).CollectConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Core/CollectConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServer).CollectConfig(ctx, req.(*CollectConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Core_ServiceDesc is the grpc.ServiceDesc for Core service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -177,6 +217,10 @@ var Core_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Information",
 			Handler:    _Core_Information_Handler,
+		},
+		{
+			MethodName: "CollectConfig",
+			Handler:    _Core_CollectConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

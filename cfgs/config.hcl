@@ -11,19 +11,22 @@ request {
 
 mongodb-cache "response" {
   collection = "response_cache"
-  database = "swpx"
+  database = "VX_SE2_SWPX"
 }
 
 
 mongodb-cache "interface" {
-  database = "swpx"
+  database = "VX_SE2_SWPX"
   collection = "request_cache"
+
 }
 
 mongodb {
   addr = "localhost"
-  port = 27019
+  port = 27017
   timeout = "5s"
+  user = "SE2_SWPX"
+  password = "RD2!fM@nQzQQ8MgrQJtTxFUJpHp4PBAK-7yEGeBcj.N-!TP-hjxevbPN-vNuxVVoE"
 }
 
 

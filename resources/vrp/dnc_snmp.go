@@ -19,7 +19,7 @@ import (
 
 func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: true,
@@ -48,7 +48,7 @@ func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -58,7 +58,7 @@ func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *
 // the help of bulk walk
 func createAllVRPTransceiverMsg(request *proto.Request, conf *config.ResourceVRP, maxRepetitions int32) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: false, // FALSE because right now it will lookup the ifIndex to get repetitions which we cannot rely on
@@ -93,7 +93,7 @@ func createAllVRPTransceiverMsg(request *proto.Request, conf *config.ResourceVRP
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(request.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -101,7 +101,7 @@ func createAllVRPTransceiverMsg(request *proto.Request, conf *config.ResourceVRP
 
 func createLogicalPortIndex(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			MaxRepetitions:     72,
@@ -133,7 +133,7 @@ func createLogicalPortIndex(req *proto.Request, conf *config.ResourceVRP) *trans
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -141,7 +141,7 @@ func createLogicalPortIndex(req *proto.Request, conf *config.ResourceVRP) *trans
 
 func createTaskSystemInfo(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: false,
@@ -179,7 +179,7 @@ func createTaskSystemInfo(req *proto.Request, conf *config.ResourceVRP) *transpo
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -187,7 +187,7 @@ func createTaskSystemInfo(req *proto.Request, conf *config.ResourceVRP) *transpo
 
 func createAllPortsMsg(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: true,
@@ -224,7 +224,7 @@ func createAllPortsMsg(req *proto.Request, conf *config.ResourceVRP) *transport.
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared2.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -232,7 +232,7 @@ func createAllPortsMsg(req *proto.Request, conf *config.ResourceVRP) *transport.
 
 func createSinglePortMsg(index int64, req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: false,
@@ -268,14 +268,14 @@ func createSinglePortMsg(index int64, req *proto.Request, conf *config.ResourceV
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared2.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
 }
 func createSinglePortMsgShort(index int64, req *proto.Request, conf *config.ResourceVRP) *transport.Message {
 	task := &snmpc.Task{
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Config: &snmpc.Config{
 			Community:          conf.Snmp.Community,
 			DynamicRepititions: false,
@@ -307,7 +307,7 @@ func createSinglePortMsgShort(index int64, req *proto.Request, conf *config.Reso
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared2.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
@@ -356,7 +356,7 @@ func createMsg(req *proto.Request, conf *config.ResourceVRP) *transport.Message 
 			Task: &transport.Task_Snmpc{task},
 		},
 		Status:   shared2.Status_NEW,
-		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req, defaultDeadlineTimeout))),
+		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message

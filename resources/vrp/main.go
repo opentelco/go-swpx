@@ -457,6 +457,33 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 	return ne, nil
 }
 
+func (d *VRPDriver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+	d.logger.Info("running get running config", "host", req.Hostname)
+	reply, err := d.dnc.Put(ctx, createCollectConfigMsg(req, d.conf))
+	if err != nil {
+		return nil, fmt.Errorf("could not complete BasicTechnicalPortInformation: %w", err)
+	}
+	switch task := reply.Task.Task.(type) {
+	case *transport.Task_Terminal:
+		if reply.Error != "" {
+			logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
+			return nil, fmt.Errorf(reply.Error)
+		}
+		if t, ok := reply.Task.Task.(*transport.Task_Terminal); ok {
+
+			if len(t.Terminal.Payload) == 0 {
+				return nil, fmt.Errorf("no payload returned from terminal task")
+			}
+
+			payload := t.Terminal.Payload[0]
+			return &proto.GetRunningConfigResponse{
+				Config: payload.Data,
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("could not get running config, unknown error")
+}
+
 // handshakeConfigs are used to just do a basic handshake between
 // a plugin and host. If the handshake fails, a user friendly error is shown.
 // This prevents users from executing bad plugins or executing a plugin
@@ -502,8 +529,8 @@ func main() {
 	})
 }
 
-func validateEOLTimeout(req *proto.Request, defaultDuration time.Duration) time.Duration {
-	dur, _ := time.ParseDuration(req.Timeout)
+func validateEOLTimeout(reqTimeout string, defaultDuration time.Duration) time.Duration {
+	dur, _ := time.ParseDuration(reqTimeout)
 
 	if dur.Seconds() == 0 {
 		dur = defaultDuration

@@ -32,6 +32,63 @@ message Error {
     int32 code     = 2;
 }
 
+// Settings for the request
+message Settings {
+    repeated string provider_plugin = 1;
+
+    string resource_plugin = 2;
+
+    // recreate_index will recreate the index for the resource through snmp
+    // this is useful if the index is not correct or if the resource is not
+    // parsed correctly, changes of virtual interfaces could cause a change of index
+    bool recreate_index = 3;
+
+    // timout for the request, after the timeout the request will be aborted server side
+    // any request sent down to the network will be skipped as the ttl is set as Deadline on
+    // the request
+    string timeout = 5;
+
+    // how long should the cache be valid
+    string cache_ttl = 6;
+
+    enum Channel {
+        CHANNEL_PRIMARY = 0;
+        SECONDARY       = 1;
+    }
+
+    // tq_channel can be used to spread traffic load on different channels
+    Channel tq_channel = 7;
+
+    enum Priority {
+        DEFAULT = 0;
+        LOW     = 1;
+        MEDIUM  = 2;
+        HIGH    = 3;
+        URGENT  = 4;
+    }
+
+    // priority of the request, the DNC will try to prioritize the requests based on this
+    // if it has several requests to process in the queue
+    Priority priority = 9;
+}
+
+// SessionRequest is passed through the plugin system to resolve the hostname and port etc
+message SessionRequest {
+    // used to locate the resource by a provider plugin
+    // the provider plugin should look up the access_id in the database and populate the hostname and port fields
+    // if the access_id is not found the provider plugin should return an error with code 404
+    string access_id = 1;
+
+    // hostname and port are used to locate the resource by a resource plugin
+    string hostname = 2;
+    string port     = 3;
+
+    // network_region is used to send the request to the right pollers
+    // each poller group is separted by network_regions and contacts the network
+    // elements in that region.
+    string network_region = 4;
+}
+
 // Request is the Package that travels through the SwitchPoller and its Plugins.
 // The idea is that a Request enters the Core and is then, if a Provider Plugin is
 // selected, it will process the Request with provider.PreHandler(Request) this
@@ -39,49 +96,10 @@ message Error {
 // a provider.PostHandler(Response) is executed to alter the output of the Request.
 //
 // This means that the Request needs to be a generic one and the
-message Request {
-    // Settings for the request
-    message Settings {
+message PollRequest {
+    SessionRequest session = 1;
 
-        repeated string provider_plugin = 1;
-
-        string resource_plugin = 2;
-
-        // recreate_index will recreate the index for the resource through snmp
-        // this is useful if the index is not correct or if the resource is not
-        // parsed correctly, changes of virtual interfaces could cause a change of index
-        bool recreate_index = 3;
-
-        // timout for the request, after the timeout the request will be aborted server side
-        // any request sent down to the network will be skipped as the ttl is set as Deadline on
-        // the request
-        string timeout = 5;
-
-        // how long should the cache be valid
-        string cache_ttl = 6;
-
-        enum Channel {
-            CHANNEL_PRIMARY = 0;
-            SECONDARY       = 1;
-        }
-
-        // tq_channel can be used to spread traffic load on different channels
-        Channel tq_channel = 7;
-
-        enum Priority {
-            DEFAULT = 0;
-            LOW     = 1;
-            MEDIUM  = 2;
-            HIGH    = 3;
-            URGENT  = 4;
-        }
-
-        // priority of the request, the DNC will try to prioritize the requests based on this
-        // if it has several requests to process in the queue
-        Priority priority = 9;
-    }
-
-    Settings settings = 1;
+    Settings settings      = 2;
 
     enum Type {
         NOT_SET = 0;
@@ -106,22 +124,16 @@ message Request {
 
         // GET_TRANSCEIVER on all ports on a device or on a specific port
         GET_TRANSCEIVER = 6;
+
+        // COLLECT_CONFIG collects the config of a network element and compares it
+        // with the stored config, if there are any changes it will return the changes
+        // and the new config
+        COLLECT_CONFIG = 7;
     }
-
-    Type type = 7;
-
-    // used to locate the resource
-    string access_id = 8;
-    string hostname = 9;
-    string port = 10;
-
-    // network_region is used to send the request to the right pollers
-    // each poller group is separted by network_regions and contacts the network
-    // elements in that region.
-    string network_region = 11;
+    Type type = 3;
 }
 
-message Response {
+message PollResponse {
     networkelement.Element network_element = 2;
     string physical_port                   = 3;
     Error error                            = 4;
@@ -134,8 +146,10 @@ message CommandResponse {}
 message InformationResponse {}
 
 service Core {
-    // SWP Polling call to get technical Information
-    rpc Poll(Request) returns (Response);
+    // SWP Polling call to get technical Information and other information about a network element
+    // the request is sent to the correct poller based on the network_region of the request
+    // the type of the request is used to determine what information to collect from the network element
+    rpc Poll(PollRequest) returns (PollResponse);
 
     // Send a command to a network device through the Poller
     rpc Command(CommandRequest) returns (CommandResponse);
@@ -143,7 +157,9 @@ service Core {
     // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
     rpc Information(google.protobuf.Empty) returns (InformationResponse);
 
-    rpc CollectConfig(Request) returns (Response);
+    // CollectConfig collects the configuration of a network element check for any changes between the stored config and the
+    // collected one. Returs a list of changes and the config collected from the network element
+    rpc CollectConfig(CollectConfigRequest) returns (CollectConfigResponse);
 }
 
 service Commander {
@@ -163,4 +179,22 @@ service Provide {
 
     // Ask a provider to return information about a selected access
     rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
+}
+
+
+message CollectConfigRequest {
+    Settings settings = 1;
+    SessionRequest session = 2;
+}
+
+message ConfigChange  {
+    string path = 1;
+    string old_value = 2;
+    string new_value = 3;
+}
+
+message CollectConfigResponse {
+    string config = 1;
+    repeated ConfigChange changes = 2;
+    Error error   = 3;
 }

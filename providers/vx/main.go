@@ -43,6 +43,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -85,58 +86,72 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) PostHandler(ctx context.Context, request *core.Response) (*core.Response, error) {
-	p.logger.Named("post-handler").Debug("processing response", "changes", 0)
+func (p *Provider) ProcessPollResponse(ctx context.Context, request *core.PollResponse) (*core.PollResponse, error) {
+	p.logger.Named("post.ProcessPollResponse").Debug("processing response", "changes", 0)
 	return request, nil
 }
 
-func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
-
-	ctx = sdk.WithToken(ctx, p.appToken)
+func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
 	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
 	isIp := net.ParseIP(request.Hostname)
-	params := &device.GetParameters{}
 	region := p.parseRegion(request.NetworkRegion)
 	if region == nil {
 		return request, fmt.Errorf("could not parse region from network region '%s'", request.NetworkRegion)
 	}
 
 	if isIp == nil {
-		params.Hostname = request.Hostname
 		domain := fmt.Sprintf(".%s", region.domain)
 		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
-	} else {
-		params.Ip = isIp.String()
+	}
+
+	p.logger.Named("pre.ResolveSessionRequest").Debug("processing request in", "changes", countChanges)
+	return request, nil
+
+}
+
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
+	ctx = sdk.WithToken(ctx, p.appToken)
+	countChanges := 0
+	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
+
+	region := p.parseRegion(request.NetworkRegion)
+	if region == nil {
+		return nil, fmt.Errorf("could not parse region from network region '%s'", request.NetworkRegion)
 	}
 
 	if region.deviceClient == nil {
-		return request, errors.New("provider has not been able to connect to the requested deviceClient to do lookups in the OSS for the region")
+		return nil, errors.New("provider has not been able to connect to the requested deviceClient to do lookups in the OSS for the region")
 	}
 
+	params := &device.GetParameters{
+		// The inventory does not have fully qualified domain names for devices
+		// so we need to strip the domain from the hostname before we do the lookup
+		Hostname: HostFromFQDN(request.Hostname),
+	}
 	d, err := region.deviceClient.Get(ctx, params)
 	if err != nil || len(d.Devices) == 0 {
 		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
-		return request, nil
+		return nil, nil
 	}
+
+	resp := &provider.ResolveResourcePluginResponse{}
 
 	host := d.Devices[0]
 	switch strings.ToUpper(host.Vendor) {
 	case "HUAWEI":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "vrp")
-		request.Settings.ResourcePlugin = "vrp"
+		resp.ResourcePlugin = "vrp"
 		countChanges++
 	case "CTC", "VXFIBER":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "ctc")
-		request.Settings.ResourcePlugin = "ctc"
+		resp.ResourcePlugin = "ctc"
 		countChanges++
 	}
-
-	p.logger.Named("pre-handler").Debug("processing request in", "changes", countChanges)
-	return request, nil
-
+	p.logger.Named("pre.ResolveResourcePlugin").Debug("processing request in", "changes", countChanges)
+	return resp, nil
 }
 
 func setupEnv() error {
@@ -163,9 +178,12 @@ func setupEnv() error {
 	return nil
 }
 
-var vxRegions map[string]string = map[string]string{
+var vxTestRegions map[string]string = map[string]string{
 	"VX_SE1": "localhost:9001",
 	"VX_SE2": "localhost:9002",
+}
+
+var vxRegions map[string]string = map[string]string{
 	"VX_SA1": "localhost:9003",
 	"VX_DE1": "localhost:9004",
 	"VX_AT1": "localhost:9005",
@@ -222,7 +240,14 @@ func main() {
 	}
 
 	devClients := map[string]device.ServiceClient{}
-	for k, v := range vxRegions {
+	var vxr map[string]string
+	switch appRegion {
+	case region.Region_VX_SE1, region.Region_VX_SE2:
+		vxr = vxTestRegions
+	default:
+		vxr = vxRegions
+	}
+	for k, v := range vxr {
 		conn, err := grpc.Dial(
 			v,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),

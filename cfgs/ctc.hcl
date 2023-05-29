@@ -1,12 +1,10 @@
 
 
-
 dnc {
   addr = "localhost:1339"
 }
 
 snmp "v2c" {
-  community = "xWTyZ9nA158ktJF2"
   port = 161
   timeout = "20s"
   version = 2
@@ -15,28 +13,22 @@ snmp "v2c" {
 }
 
 transport "telnet" {
-  username = ""
-  password = ""
   port = 22
-  screen_length = ""
-  default_prompt = ""
+  screen_length = "terminal length 0"
   default_errors = ""
-
-  read_dead_line = ""
-  write_dead_line = ""
-  ssh_key_path = ""
+  default_prompt = "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
+  read_dead_line = "30s"
+  write_dead_line = "10s"
 }
 
 transport "ssh" {
-  username = ""
-  password = ""
   port = 22
-  screen_length = ""
-  default_prompt = ""
+  screen_length = "terminal length 0"
+  default_prompt = "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors = ""
-  read_dead_line = ""
-  write_dead_line = ""
-  ssh_key_path = ""
+  read_dead_line = "30s"
+  write_dead_line = "10s"
+
 }
 
 logger {

@@ -18,22 +18,22 @@ const (
 	defaultCacheConnectionTimeout = 30 * time.Second
 )
 
-type ResponseCache interface {
-	Pop(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) (*CachedResponse, error)
-	Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type, response *pb_core.Response) error
-	Clear(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) error
+type PollResponseCache interface {
+	Pop(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type) (*CachedResponse, error)
+	Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type, response *pb_core.PollResponse) error
+	Clear(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type) error
 }
 
 type CachedResponse struct {
-	Hostname    string            `bson:"hostname"`
-	Port        string            `bson:"port"`
-	AccessId    string            `bson:"access_id"`
-	RequestType string            `bson:"request_type"`
-	Response    *pb_core.Response `bson:"response,omitempty"`
-	Timestamp   time.Time         `bson:"timestamp" json:"timestamp"`
+	Hostname    string                `bson:"hostname"`
+	Port        string                `bson:"port"`
+	AccessId    string                `bson:"access_id"`
+	RequestType string                `bson:"request_type"`
+	Response    *pb_core.PollResponse `bson:"response,omitempty"`
+	Timestamp   time.Time             `bson:"timestamp" json:"timestamp"`
 }
 
-func newResponseCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (ResponseCache, error) {
+func newResponseCache(ctx context.Context, client *mongo.Client, conf *config.MongoCache, logger hclog.Logger) (PollResponseCache, error) {
 	if conf == nil {
 		return nil, errors.New("cannot enable response cache: no mongo config")
 	}
@@ -70,7 +70,7 @@ type respCacheImpl struct {
 	logger hclog.Logger
 }
 
-func (c *respCacheImpl) Pop(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) (*CachedResponse, error) {
+func (c *respCacheImpl) Pop(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type) (*CachedResponse, error) {
 	var filter bson.M
 	if accessId != "" {
 		c.logger.Debug("access id is set, filter by that", "access_id", accessId, "rt", rt.String())
@@ -105,7 +105,7 @@ func (c *respCacheImpl) Pop(ctx context.Context, hostname, port, accessId string
 	return obj, nil
 }
 
-func (c *respCacheImpl) Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type, response *pb_core.Response) error {
+func (c *respCacheImpl) Upsert(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type, response *pb_core.PollResponse) error {
 
 	c.logger.Debug("insert into cache", "hostname", hostname, "port", port, "type", rt.String(), "access_id", accessId)
 	_, err := c.col.InsertOne(ctx, &CachedResponse{
@@ -125,7 +125,7 @@ func (c *respCacheImpl) Upsert(ctx context.Context, hostname, port, accessId str
 	return nil
 }
 
-func (c *respCacheImpl) Clear(ctx context.Context, hostname, port, accessId string, rt pb_core.Request_Type) error {
+func (c *respCacheImpl) Clear(ctx context.Context, hostname, port, accessId string, rt pb_core.PollRequest_Type) error {
 	_, err := c.col.DeleteMany(ctx, bson.M{"hostname": hostname, "port": port, "request_type": rt.String(), "access_id": accessId})
 	return err
 }

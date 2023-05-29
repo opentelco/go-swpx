@@ -34,6 +34,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/provider"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -71,7 +72,7 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) PostHandler(ctx context.Context, r *core.Response) (*core.Response, error) {
+func (p *Provider) ProcessPollResponse(ctx context.Context, r *core.PollResponse) (*core.PollResponse, error) {
 	changes := 0
 	if r.NetworkElement == nil {
 		p.logger.Warn("network element is empt ")
@@ -93,7 +94,7 @@ func (p *Provider) PostHandler(ctx context.Context, r *core.Response) (*core.Res
 	return r, nil
 }
 
-func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core.Request, error) {
+func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
 	p.logger.Named("pre-handler").Debug("processing request")
 
 	if request.AccessId != "" {
@@ -102,11 +103,22 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			p.logger.Named("pre-handler").Info("found access ID on provider", "access_id", request.AccessId, "network_element", access.NetworkElement, "port", access.Interface)
 			request.Hostname = access.NetworkElement
 			request.Port = access.Interface
-			request.Settings.ResourcePlugin = access.ResourcePlugin
 
 		} else {
 			p.logger.Named("pre-handler").Warn("could not find access id on provider", "access_id", request.AccessId)
 			return request, fmt.Errorf("access id was not found with selected provider")
+		}
+	}
+
+	return request, nil
+}
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
+	resp := &provider.ResolveResourcePluginResponse{}
+
+	if request.AccessId != "" {
+		access, ok := translationMap[request.AccessId]
+		if ok {
+			resp.ResourcePlugin = access.ResourcePlugin
 		}
 	} else {
 		var ip net.IP
@@ -119,15 +131,11 @@ func (p *Provider) PreHandler(ctx context.Context, request *core.Request) (*core
 			}
 			ip = net.ParseIP(addrs[0])
 		}
-
 		if SDDNetwork.Contains(ip) {
-			request.Settings.ResourcePlugin = "raycore"
+			resp.ResourcePlugin = "raycore"
 		}
-
-		p.logger.Named("pre-handler").Debug("access id is empty")
 	}
-
-	return request, nil
+	return resp, nil
 }
 
 func main() {
