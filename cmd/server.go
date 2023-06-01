@@ -2,26 +2,40 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"git.liero.se/opentelco/go-swpx/api"
 	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/core"
+	"git.liero.se/opentelco/go-swpx/core/api"
 	"git.liero.se/opentelco/go-swpx/core/worker"
+	"git.liero.se/opentelco/go-swpx/database"
+	"git.liero.se/opentelco/go-swpx/fleet"
+	"git.liero.se/opentelco/go-swpx/fleet/repo"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 	"go.temporal.io/sdk/client"
+	"google.golang.org/grpc"
 )
 
 func init() {
-	Root.AddCommand(StartCmd)
+	Root.AddCommand(serverCmd)
+	serverCmd.AddCommand(StartCmd)
 	StartCmd.Flags().StringP("config", "c", "config.hcl", "the config file to use")
 	if err := StartCmd.MarkFlagFilename("config", "hcl", "hcl"); err != nil {
 		panic(err)
 	}
 
+}
+
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "server commands for swpx",
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = cmd.Help()
+	},
 }
 
 // Start starts Switchpoller daemon/server
@@ -65,7 +79,21 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		c, err := core.New(&appConfig, logger)
+		mongoClient, err := database.New(*appConfig.MongoServer, logger.Named("mongodb"))
+		if err != nil {
+			logger.Warn("could not establish mongodb connection", "error", err)
+			logger.Info("no mongo connection established", "cache_enabled", false)
+		}
+
+		repo, err := repo.New(mongoClient, appConfig.MongoServer.Database, logger.Named("fleet"))
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		myfleet := fleet.New(repo, logger)
+
+		c, err := core.New(&appConfig, mongoClient, logger)
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
@@ -95,10 +123,17 @@ var StartCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}()
-		// GRPC
-		grpcServer := api.NewCoreGrpcServer(c, logger)
+		// GRPC Core
+		lis, err := net.Listen("tcp", appConfig.GrpcAddr)
+		if err != nil {
+			cmd.PrintErrf("failed to listen: %s", err)
+			os.Exit(1)
+		}
+		grpcServer := grpc.NewServer()
+		api.NewGrpc(c, grpcServer, logger)
+		fleet.NewGRPC(myfleet, grpcServer)
 		go func() {
-			err = grpcServer.ListenAndServe(appConfig.GrpcAddr)
+			err = grpcServer.Serve(lis)
 			if err != nil {
 				cmd.PrintErr(err)
 				os.Exit(1)

@@ -30,6 +30,9 @@ type MongoDb struct {
 	Timeout  Duration `hcl:"timeout" json:"timeout"` // Parse timeout as Duration (from string)
 	Addr     string   `hcl:"addr"`
 	Port     int      `hcl:"port"`
+
+	// default one if not override in cache configs
+	Database string `hcl:"database"`
 }
 
 type MongoCache struct {

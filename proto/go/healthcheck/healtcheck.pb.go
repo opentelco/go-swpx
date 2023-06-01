@@ -95,7 +95,7 @@ type HealthCheckRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Service string `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	Service string `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty" bson:"service"`
 }
 
 func (x *HealthCheckRequest) Reset() {
@@ -142,7 +142,7 @@ type HealthCheckResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status HealthCheckResponse_ServingStatus `protobuf:"varint,1,opt,name=status,proto3,enum=healthcheck.HealthCheckResponse_ServingStatus" json:"status,omitempty"`
+	Status HealthCheckResponse_ServingStatus `protobuf:"varint,1,opt,name=status,proto3,enum=healthcheck.HealthCheckResponse_ServingStatus" json:"status,omitempty" bson:"status"`
 }
 
 func (x *HealthCheckResponse) Reset() {

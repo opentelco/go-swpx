@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.temporal.io/sdk/client"
 )
 
@@ -95,7 +96,7 @@ func (c *Core) Start() error {
 }
 
 // New creates a new SWPX Core Application
-func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
+func New(conf *config.Configuration, mongoClient *mongo.Client, logger hclog.Logger) (*Core, error) {
 	var err error
 	var ctx = context.Background()
 
@@ -104,6 +105,10 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 		providers: make(map[string]shared.Provider),
 		config:    conf,
 		logger:    logger,
+	}
+
+	if mongoClient == nil {
+		core.cacheEnabled = false
 	}
 
 	var availableResources = make(map[string]*plugin.Client)
@@ -136,13 +141,6 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 	}
 
 	// setup mongodb client
-	mongoClient, err := initMongoDb(*conf.MongoServer, logger.Named("mongodb"))
-	if err != nil {
-		logger.Warn("could not establish mongodb connection", "error", err)
-		logger.Info("no mongo connection established", "cache_enabled", false)
-		core.cacheEnabled = false
-		return core, nil
-	}
 
 	if core.interfaceCache, err = newInterfaceCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoInterfaceCache), logger); err != nil {
 		logger.Error("error creating cache", "error", err)

@@ -1,4 +1,4 @@
-package core
+package database
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func initMongoDb(conf config.MongoDb, logger hclog.Logger) (*mongo.Client, error) {
+func New(conf config.MongoDb, logger hclog.Logger) (*mongo.Client, error) {
 	logger.Info("attempting to connect to mongoDb server", "server", conf.Addr)
 
 	reg := codecs.Register(bson.NewRegistryBuilder()).Build()

@@ -29,11 +29,11 @@ type ConfiguredTrafficPolicy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Inbound  string                       `protobuf:"bytes,1,opt,name=inbound,proto3" json:"inbound,omitempty"`
-	Outbound string                       `protobuf:"bytes,2,opt,name=outbound,proto3" json:"outbound,omitempty"`
-	Qos      *ConfiguredTrafficPolicy_QOS `protobuf:"bytes,3,opt,name=qos,proto3" json:"qos,omitempty"`
+	Inbound  string                       `protobuf:"bytes,1,opt,name=inbound,proto3" json:"inbound,omitempty" bson:"inbound"`
+	Outbound string                       `protobuf:"bytes,2,opt,name=outbound,proto3" json:"outbound,omitempty" bson:"outbound"`
+	Qos      *ConfiguredTrafficPolicy_QOS `protobuf:"bytes,3,opt,name=qos,proto3" json:"qos,omitempty" bson:"qos"`
 	// display traffic policy statistics interface GigabitEthernet0/0/5 inbound verbose classifier-base
-	InboundStatistics *ConfiguredTrafficPolicy_Statistics `protobuf:"bytes,4,opt,name=inbound_statistics,json=inboundStatistics,proto3" json:"inbound_statistics,omitempty"`
+	InboundStatistics *ConfiguredTrafficPolicy_Statistics `protobuf:"bytes,4,opt,name=inbound_statistics,json=inboundStatistics,proto3" json:"inbound_statistics,omitempty" bson:"inbound_statistics"`
 }
 
 func (x *ConfiguredTrafficPolicy) Reset() {
@@ -101,7 +101,7 @@ type QOS struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueueStatistics []*QOS_QueueStatistics `protobuf:"bytes,1,rep,name=queue_statistics,json=queueStatistics,proto3" json:"queue_statistics,omitempty"`
+	QueueStatistics []*QOS_QueueStatistics `protobuf:"bytes,1,rep,name=queue_statistics,json=queueStatistics,proto3" json:"queue_statistics,omitempty" bson:"queue_statistics"`
 }
 
 func (x *QOS) Reset() {
@@ -148,8 +148,8 @@ type ConfiguredTrafficPolicy_QOS struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Queue   int64                                `protobuf:"varint,1,opt,name=queue,proto3" json:"queue,omitempty"`
-	Shaping *ConfiguredTrafficPolicy_QOS_Shaping `protobuf:"bytes,2,opt,name=shaping,proto3" json:"shaping,omitempty"`
+	Queue   int64                                `protobuf:"varint,1,opt,name=queue,proto3" json:"queue,omitempty" bson:"queue"`
+	Shaping *ConfiguredTrafficPolicy_QOS_Shaping `protobuf:"bytes,2,opt,name=shaping,proto3" json:"shaping,omitempty" bson:"shaping"`
 }
 
 func (x *ConfiguredTrafficPolicy_QOS) Reset() {
@@ -203,17 +203,17 @@ type ConfiguredTrafficPolicy_Statistics struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	TrafficPolicy string `protobuf:"bytes,1,opt,name=traffic_policy,json=trafficPolicy,proto3" json:"traffic_policy,omitempty"`
-	RuleNumber    int64  `protobuf:"varint,2,opt,name=rule_number,json=ruleNumber,proto3" json:"rule_number,omitempty"`
-	Status        string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	Interval      int64  `protobuf:"varint,4,opt,name=interval,proto3" json:"interval,omitempty"`
+	TrafficPolicy string `protobuf:"bytes,1,opt,name=traffic_policy,json=trafficPolicy,proto3" json:"traffic_policy,omitempty" bson:"traffic_policy"`
+	RuleNumber    int64  `protobuf:"varint,2,opt,name=rule_number,json=ruleNumber,proto3" json:"rule_number,omitempty" bson:"rule_number"`
+	Status        string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty" bson:"status"`
+	Interval      int64  `protobuf:"varint,4,opt,name=interval,proto3" json:"interval,omitempty" bson:"interval"`
 	// AS A TABLE
 	//
 	//	PERMIT       drop        0 pass        0 for KBPS_0000
 	//	DISCARD      drop        0 pass        0 for DISCARD
 	//	VOIP         drop        0 pass        0 for VOIP
 	//	OTHER        drop        0 pass        0 for KBPS_0000
-	Classifiers map[string]*ConfiguredTrafficPolicy_Statistics_Classifier `protobuf:"bytes,5,rep,name=classifiers,proto3" json:"classifiers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Classifiers map[string]*ConfiguredTrafficPolicy_Statistics_Classifier `protobuf:"bytes,5,rep,name=classifiers,proto3" json:"classifiers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3" bson:"classifiers" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *ConfiguredTrafficPolicy_Statistics) Reset() {
@@ -288,10 +288,10 @@ type ConfiguredTrafficPolicy_QOS_Shaping struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Cir float64 `protobuf:"fixed64,1,opt,name=cir,proto3" json:"cir,omitempty"`
-	Pir float64 `protobuf:"fixed64,2,opt,name=pir,proto3" json:"pir,omitempty"`
-	Cbs float64 `protobuf:"fixed64,3,opt,name=cbs,proto3" json:"cbs,omitempty"`
-	Pbs float64 `protobuf:"fixed64,4,opt,name=pbs,proto3" json:"pbs,omitempty"`
+	Cir float64 `protobuf:"fixed64,1,opt,name=cir,proto3" json:"cir,omitempty" bson:"cir"`
+	Pir float64 `protobuf:"fixed64,2,opt,name=pir,proto3" json:"pir,omitempty" bson:"pir"`
+	Cbs float64 `protobuf:"fixed64,3,opt,name=cbs,proto3" json:"cbs,omitempty" bson:"cbs"`
+	Pbs float64 `protobuf:"fixed64,4,opt,name=pbs,proto3" json:"pbs,omitempty" bson:"pbs"`
 }
 
 func (x *ConfiguredTrafficPolicy_QOS_Shaping) Reset() {
@@ -359,10 +359,10 @@ type ConfiguredTrafficPolicy_Statistics_Classifier struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Classifier string                                                           `protobuf:"bytes,1,opt,name=classifier,proto3" json:"classifier,omitempty"`
-	Behavior   string                                                           `protobuf:"bytes,2,opt,name=behavior,proto3" json:"behavior,omitempty"`
-	Board      string                                                           `protobuf:"bytes,3,opt,name=board,proto3" json:"board,omitempty"`
-	Metrics    map[string]*ConfiguredTrafficPolicy_Statistics_Classifier_Metric `protobuf:"bytes,4,rep,name=metrics,proto3" json:"metrics,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Classifier string                                                           `protobuf:"bytes,1,opt,name=classifier,proto3" json:"classifier,omitempty" bson:"classifier"`
+	Behavior   string                                                           `protobuf:"bytes,2,opt,name=behavior,proto3" json:"behavior,omitempty" bson:"behavior"`
+	Board      string                                                           `protobuf:"bytes,3,opt,name=board,proto3" json:"board,omitempty" bson:"board"`
+	Metrics    map[string]*ConfiguredTrafficPolicy_Statistics_Classifier_Metric `protobuf:"bytes,4,rep,name=metrics,proto3" json:"metrics,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3" bson:"metrics" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *ConfiguredTrafficPolicy_Statistics_Classifier) Reset() {
@@ -430,7 +430,7 @@ type ConfiguredTrafficPolicy_Statistics_Classifier_Metric struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Values map[string]float64 `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"fixed64,2,opt,name=value,proto3"`
+	Values map[string]float64 `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"fixed64,2,opt,name=value,proto3" bson:"values" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"fixed64,2,opt,name=value,proto3"`
 }
 
 func (x *ConfiguredTrafficPolicy_Statistics_Classifier_Metric) Reset() {
@@ -477,17 +477,17 @@ type QOS_QueueStatistics struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueueId        int64   `protobuf:"varint,1,opt,name=queue_id,json=queueId,proto3" json:"queue_id,omitempty"`
-	Cir            float64 `protobuf:"fixed64,2,opt,name=cir,proto3" json:"cir,omitempty"` // kbps
-	Pir            float64 `protobuf:"fixed64,3,opt,name=pir,proto3" json:"pir,omitempty"` // kbps
-	PassedPackets  int64   `protobuf:"varint,4,opt,name=passed_packets,json=passedPackets,proto3" json:"passed_packets,omitempty"`
-	PassedRatePps  float64 `protobuf:"fixed64,5,opt,name=passed_rate_pps,json=passedRatePps,proto3" json:"passed_rate_pps,omitempty"` //pps
-	PassedBytes    int64   `protobuf:"varint,6,opt,name=passed_bytes,json=passedBytes,proto3" json:"passed_bytes,omitempty"`
-	PassedRateBps  float64 `protobuf:"fixed64,7,opt,name=passed_rate_bps,json=passedRateBps,proto3" json:"passed_rate_bps,omitempty"`
-	DroppedPackets int64   `protobuf:"varint,8,opt,name=dropped_packets,json=droppedPackets,proto3" json:"dropped_packets,omitempty"`
-	DroppedRatePps float64 `protobuf:"fixed64,9,opt,name=dropped_rate_pps,json=droppedRatePps,proto3" json:"dropped_rate_pps,omitempty"` //pps
-	DroppedBytes   int64   `protobuf:"varint,10,opt,name=dropped_bytes,json=droppedBytes,proto3" json:"dropped_bytes,omitempty"`
-	DroppedRateBps float64 `protobuf:"fixed64,11,opt,name=dropped_rate_bps,json=droppedRateBps,proto3" json:"dropped_rate_bps,omitempty"`
+	QueueId        int64   `protobuf:"varint,1,opt,name=queue_id,json=queueId,proto3" json:"queue_id,omitempty" bson:"queue_id"`
+	Cir            float64 `protobuf:"fixed64,2,opt,name=cir,proto3" json:"cir,omitempty" bson:"cir"` // kbps
+	Pir            float64 `protobuf:"fixed64,3,opt,name=pir,proto3" json:"pir,omitempty" bson:"pir"` // kbps
+	PassedPackets  int64   `protobuf:"varint,4,opt,name=passed_packets,json=passedPackets,proto3" json:"passed_packets,omitempty" bson:"passed_packets"`
+	PassedRatePps  float64 `protobuf:"fixed64,5,opt,name=passed_rate_pps,json=passedRatePps,proto3" json:"passed_rate_pps,omitempty" bson:"passed_rate_pps"` //pps
+	PassedBytes    int64   `protobuf:"varint,6,opt,name=passed_bytes,json=passedBytes,proto3" json:"passed_bytes,omitempty" bson:"passed_bytes"`
+	PassedRateBps  float64 `protobuf:"fixed64,7,opt,name=passed_rate_bps,json=passedRateBps,proto3" json:"passed_rate_bps,omitempty" bson:"passed_rate_bps"`
+	DroppedPackets int64   `protobuf:"varint,8,opt,name=dropped_packets,json=droppedPackets,proto3" json:"dropped_packets,omitempty" bson:"dropped_packets"`
+	DroppedRatePps float64 `protobuf:"fixed64,9,opt,name=dropped_rate_pps,json=droppedRatePps,proto3" json:"dropped_rate_pps,omitempty" bson:"dropped_rate_pps"` //pps
+	DroppedBytes   int64   `protobuf:"varint,10,opt,name=dropped_bytes,json=droppedBytes,proto3" json:"dropped_bytes,omitempty" bson:"dropped_bytes"`
+	DroppedRateBps float64 `protobuf:"fixed64,11,opt,name=dropped_rate_bps,json=droppedRateBps,proto3" json:"dropped_rate_bps,omitempty" bson:"dropped_rate_bps"`
 }
 
 func (x *QOS_QueueStatistics) Reset() {

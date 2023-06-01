@@ -125,10 +125,6 @@ message PollRequest {
         // GET_TRANSCEIVER on all ports on a device or on a specific port
         GET_TRANSCEIVER = 6;
 
-        // COLLECT_CONFIG collects the config of a network element and compares it
-        // with the stored config, if there are any changes it will return the changes
-        // and the new config
-        COLLECT_CONFIG = 7;
     }
     Type type = 3;
 }

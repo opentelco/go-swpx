@@ -37,6 +37,8 @@ import (
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/network_element.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/traffic_policy.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/analysis.proto
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/fleet.proto
+//go:generate go run ./proto/tagparser/tagparser.go ./proto/go
 
 func main() {
 	if err := cmd.Root.Execute(); err != nil {

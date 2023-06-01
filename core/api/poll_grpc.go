@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"log"
-	"net"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -82,31 +80,10 @@ func (s *coreGrpcImpl) Information(ctx context.Context, request *emptypb.Empty) 
 	panic("implement me")
 }
 
-func NewCoreGrpcServer(core *core.Core, logger hclog.Logger) *coreGrpcImpl {
-
-	grpcServer := grpc.NewServer()
+func NewGrpc(core *core.Core, srv *grpc.Server, logger hclog.Logger) {
 	instance := &coreGrpcImpl{
 		core:   core,
-		grpc:   grpcServer,
 		logger: logger,
 	}
-
-	pb_core.RegisterCoreServer(grpcServer, instance)
-
-	return instance
-}
-
-func (s *coreGrpcImpl) ListenAndServe(addr string) error {
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatalf("failed to listen: %s", err)
-	}
-
-	s.logger.Info("starting grpc server", "addr", addr)
-	err = s.grpc.Serve(lis)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	pb_core.RegisterCoreServer(srv, instance)
 }
