@@ -13,7 +13,10 @@ import (
 	"git.liero.se/opentelco/go-swpx/core/worker"
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet"
-	"git.liero.se/opentelco/go-swpx/fleet/repo"
+	"git.liero.se/opentelco/go-swpx/fleet/configuration"
+	configRepo "git.liero.se/opentelco/go-swpx/fleet/configuration/repo"
+	"git.liero.se/opentelco/go-swpx/fleet/device"
+	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 	"go.temporal.io/sdk/client"
@@ -85,13 +88,21 @@ var StartCmd = &cobra.Command{
 			logger.Info("no mongo connection established", "cache_enabled", false)
 		}
 
-		repo, err := repo.New(mongoClient, appConfig.MongoServer.Database, logger.Named("fleet"))
+		drepo, err := deviceRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
 
-		myfleet := fleet.New(repo, logger)
+		crepo, err := configRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		deviceService := device.New(drepo, logger)
+		configService := configuration.New(crepo, logger)
+		fleetService := fleet.New(deviceService, configService, nil, logger)
 
 		c, err := core.New(&appConfig, mongoClient, logger)
 		if err != nil {
@@ -131,7 +142,12 @@ var StartCmd = &cobra.Command{
 		}
 		grpcServer := grpc.NewServer()
 		api.NewGrpc(c, grpcServer, logger)
-		fleet.NewGRPC(myfleet, grpcServer)
+
+		// add fleet to grpc
+		fleet.NewGRPC(fleetService, grpcServer)
+		device.NewGRPC(deviceService, grpcServer)
+		configuration.NewGRPC(configService, grpcServer)
+
 		go func() {
 			err = grpcServer.Serve(lis)
 			if err != nil {

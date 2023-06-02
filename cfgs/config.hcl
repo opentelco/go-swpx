@@ -21,6 +21,8 @@ mongodb-cache "interface" {
 }
 
 
+blacklist_provider = ["vx"]
+
 mongodb {
   addr    = "localhost"
   port    = 27019

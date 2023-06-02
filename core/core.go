@@ -125,7 +125,7 @@ func New(conf *config.Configuration, mongoClient *mongo.Client, logger hclog.Log
 
 	if core.config.Request.DefaultProvider != "" {
 		if _, ok := availableProviders[core.config.Request.DefaultProvider]; !ok {
-			logger.Warn("the selected provider was not found, falling back on no provider", "default_provider", core.config.Request.DefaultProvider)
+			logger.Warn("the selected provider was not found, falling back on no provider", "selected", core.config.Request.DefaultProvider)
 		} else {
 			logger.Info("selected default_provider found and loaded", "default_provider", core.config.Request.DefaultProvider)
 		}
@@ -259,6 +259,10 @@ func (c *Core) LoadPlugins(pluginPath string, pluginType string) (map[string]*pl
 	}
 	for _, p := range plugs {
 		if !p.IsDir() {
+			if c.config.BlacklistProvider.Has(p.Name()) {
+				c.logger.Debug("plugin is blacklisted", "plugin", p.Name())
+				continue
+			}
 			c.logger.Debug("found plugin", "type", pluginType, "plugin", p.Name())
 			loadedPlugins[p.Name()] = plugin.NewClient(&plugin.ClientConfig{
 				HandshakeConfig:  shared.Handshake,

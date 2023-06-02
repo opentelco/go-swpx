@@ -9,10 +9,23 @@ type Configuration struct {
 
 	Logger Logger `hcl:"logger,block"`
 
+	BlacklistProvider ListStr `hcl:"blacklist_provider,optional"`
+
 	MongoServer *MongoDb      `hcl:"mongodb,block"`
 	MongoCaches []*MongoCache `hcl:"mongodb-cache,block"`
 	Request     RequestConfig `hcl:"request,block"`
 	Temporal    Temporal      `hcl:"temporal,block"`
+}
+
+type ListStr []string
+
+func (l ListStr) Has(s string) bool {
+	for _, v := range l {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (cfg Configuration) GetMongoByLabel(label string) *MongoCache {

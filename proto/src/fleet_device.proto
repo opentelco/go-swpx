@@ -1,0 +1,215 @@
+/*
+ * Copyright (c) 2020. Liero AB
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software
+ * is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+syntax = "proto3";
+
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package fleet.device;
+
+message Device {
+    // id of the device
+    string id = 1;
+
+    // the hostname of the device
+    string hostname = 2;
+
+    // the domain of the device
+    string domain = 3;
+
+    // the primary management ip of the device
+    string management_ip = 4;
+
+    // the serial number of the device
+    string serial_number = 5;
+
+    // the model of the device, e.g Huawei S6720-54C-EI-48S-AC
+    string model = 6;
+
+    // the version of the device, e.g V200R019C10SPC500
+    string version = 7;
+
+    // switch poller resource plugin to use for this device
+    string poller_resource_plugin = 8;
+
+    // switch poller provider to use for this device
+    string poller_provider = 9;
+
+    // the last time the device was seen
+    google.protobuf.Timestamp last_seen = 10;
+
+    // the time the device was created
+    google.protobuf.Timestamp created = 11;
+
+    // the time the device was updated
+    google.protobuf.Timestamp updated = 12;
+
+    // the time the device was updated
+    google.protobuf.Timestamp deleted = 13;
+}
+
+
+message Change {
+    // the id of the change
+    string id = 1;
+
+    // the id of the device
+    string device_id = 2;
+
+    // the field that was changed
+    string field = 3;
+
+    // the old value of the field
+    string old_value = 4;
+
+    // the new value of the field
+    string new_value = 5;
+
+    // the timestamp when the changes was created
+    google.protobuf.Timestamp created = 6;
+}
+
+service DeviceService {
+    // *** Device ***
+    // Get a device by its ID, this is used to get a specific device
+    rpc GetByID(GetByIDParameters) returns (Device) {}
+
+    // Get a device by its hostname, managment ip or serial number etc (used to search for a device)
+    rpc List(ListParameters) returns (ListResponse) {}
+
+    // Create a device in the fleet
+    rpc Create(CreateParameters) returns (Device) {}
+
+    // Update a device in the fleet (this is used to update the device with new information)
+    rpc Update(UpdateParameters) returns (Device) {}
+
+    // Delete a device from the fleet and all changes for the device
+    // To purge a device use the Delete in the FleetService instead (as it also also deletes the configuration)
+    rpc Delete(DeleteParameters) returns (google.protobuf.Empty) {}
+
+    // Get changes for a device, changes are created when a device is updated
+    rpc GetChangeByID(GetChangeByIDParameters) returns (Change) {}
+    // Max number of changes to return (default 100)
+    rpc ListChanges(ListChangesParameters) returns (ListChangesResponse) {}
+}
+
+message GetByIDParameters {
+    // the id of the device to get
+    string id = 1;
+}
+
+message ListParameters {
+    // hostname of the device (exact match)
+    string hostname = 1;
+    // management ip of the device (exact match)
+    string management_ip = 2;
+
+    // free text search for hostname and management_ip
+    string search = 3;
+}
+
+message CreateParameters {
+    // the hostname of the device (switch-a1)
+    string hostname = 1;
+
+    // the domain of the device (net.liero.se)
+    string domain = 2;
+
+    // the primary management ip of the device (172.22.13.3)
+    string management_ip = 3;
+
+    // the serial number of the device (210235T0A2000001)
+    string serial_number = 4;
+
+    // model of the device (Huawei S6720-54C-EI-48S-AC)
+    string model = 5;
+
+    // version of the device (V200R019C10SPC500)
+    string version = 6;
+
+    // provider plugin to use for this device, e.g. default_provider, vx etc
+    string poller_provider = 7;
+
+    // switch poller resource plugin to use for this device, vrp, ios, junos etc
+    string poller_resource_plugin = 8;
+}
+
+message UpdateParameters {
+    // the id of the device to update
+    string id = 1;
+
+    // the hostname of the device (switch-a1)
+    optional string hostname = 2;
+
+    // the domain of the device (net.liero.se)
+    optional string domain = 3;
+
+    // the primary management ip of the device (
+    optional string management_ip = 4;
+
+    // the serial number of the device (210235T0A2000001)
+    optional string serial_number = 5;
+
+    // model of the device (Huawei S6720-54C-EI-48S-AC)
+    optional string model = 6;
+
+    // version of the device (V200R019C10SPC500)
+    optional string version = 7;
+
+    // provider plugin to use for this device, e.g. default_provider, vx etc
+    optional string poller_provider = 8;
+
+    // switch poller resource plugin to use for this device, vrp, ios, junos etc
+    optional string poller_resource_plugin = 9;
+}
+message DeleteParameters {
+    // the id of the device to delete
+    string id = 1;
+}
+
+message ListResponse {
+    // the devices that matched the search
+    repeated Device devices = 1;
+}
+
+
+message ListChangesParameters {
+    // the id of the device to get changes for
+    string device_id = 1;
+
+    // pagination, the number of changes to return
+    int32 limit = 2;
+    // pagination, the offset to start from
+    int32 offset = 3;
+}
+message ListChangesResponse {
+    // the changes that matched the search
+    repeated Change changes = 1;
+}
+
+message GetChangeByIDParameters {
+    // the id of the change to get
+    string id = 1;
+}
