@@ -13,6 +13,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const (
+	pollerDefaultProvider = "default_provider"
+	pollerDefaultResource = "default_resource"
+)
+
 var pj = protojson.MarshalOptions{
 	Multiline:       false,
 	AllowPartial:    false,
@@ -56,8 +61,12 @@ func (d *device) List(ctx context.Context, params *devicepb.ListParameters) (*de
 // Create a device in the fleet
 func (d *device) Create(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
 
-	if params.PollerProvider == "" {
-		params.PollerProvider = "default_provider"
+	if params.PollerProviderPlugin == "" {
+		params.PollerProviderPlugin = pollerDefaultProvider
+	}
+
+	if params.PollerResourcePlugin == "" {
+		params.PollerResourcePlugin = pollerDefaultResource
 	}
 
 	if params.Hostname == "" {
@@ -72,7 +81,7 @@ func (d *device) Create(ctx context.Context, params *devicepb.CreateParameters) 
 		Model:                params.Model,
 		Version:              params.Version,
 		PollerResourcePlugin: params.PollerResourcePlugin,
-		PollerProvider:       params.PollerProvider,
+		PollerProviderPlugin: params.PollerProviderPlugin,
 	}
 
 	return d.repo.Upsert(ctx, device)
@@ -113,8 +122,8 @@ func (d *device) Update(ctx context.Context, params *devicepb.UpdateParameters) 
 	if params.PollerResourcePlugin != nil {
 		deviceB.PollerResourcePlugin = *params.PollerResourcePlugin
 	}
-	if params.PollerProvider != nil {
-		deviceB.PollerProvider = *params.PollerProvider
+	if params.PollerProviderPlugin != nil {
+		deviceB.PollerProviderPlugin = *params.PollerProviderPlugin
 	}
 
 	changes := getChanges(deviceA, deviceB)

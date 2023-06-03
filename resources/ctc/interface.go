@@ -69,7 +69,7 @@ func createTaskGetPortStats(index int64, req *proto.Request, conf *config.Resour
 	return message
 }
 
-func (d *CTCDriver) getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func (d *driver) getIfEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
 		i, _ := strconv.Atoi(m.GetValue())

@@ -51,25 +51,29 @@ message Device {
     // the version of the device, e.g V200R019C10SPC500
     string version = 7;
 
+    // the network region of the device, this is used to match segmentation of the network
+    // and tell the Distributed Network Client (go-dnc) which worker to use for polling the device
+    // must match the configuration of the go-dnc
+    string network_region = 8;
+
     // switch poller resource plugin to use for this device
-    string poller_resource_plugin = 8;
+    string poller_resource_plugin = 9;
 
     // switch poller provider to use for this device
-    string poller_provider = 9;
+    string poller_provider_plugin = 10;
 
     // the last time the device was seen
-    google.protobuf.Timestamp last_seen = 10;
+    google.protobuf.Timestamp last_seen = 11;
 
     // the time the device was created
-    google.protobuf.Timestamp created = 11;
+    google.protobuf.Timestamp created = 12;
 
     // the time the device was updated
-    google.protobuf.Timestamp updated = 12;
+    google.protobuf.Timestamp updated = 13;
 
     // the time the device was updated
-    google.protobuf.Timestamp deleted = 13;
+    google.protobuf.Timestamp deleted = 14;
 }
-
 
 message Change {
     // the id of the change
@@ -149,11 +153,15 @@ message CreateParameters {
     // version of the device (V200R019C10SPC500)
     string version = 6;
 
+    // the network region of the device, this is used to match segmentation of the network
+    // must match the configuration of the Distributed Network Client (go-dnc)
+    string network_region = 7;
+
     // provider plugin to use for this device, e.g. default_provider, vx etc
-    string poller_provider = 7;
+    string poller_provider_plugin = 8;
 
     // switch poller resource plugin to use for this device, vrp, ios, junos etc
-    string poller_resource_plugin = 8;
+    string poller_resource_plugin = 9;
 }
 
 message UpdateParameters {
@@ -178,11 +186,15 @@ message UpdateParameters {
     // version of the device (V200R019C10SPC500)
     optional string version = 7;
 
+    // the network region of the device, this is used to match segmentation of the network
+    // must match the configuration of the Distributed Network Client (go-dnc)
+    optional string network_region = 8;
+
     // provider plugin to use for this device, e.g. default_provider, vx etc
-    optional string poller_provider = 8;
+    optional string poller_provider_plugin = 9;
 
     // switch poller resource plugin to use for this device, vrp, ios, junos etc
-    optional string poller_resource_plugin = 9;
+    optional string poller_resource_plugin = 10;
 }
 message DeleteParameters {
     // the id of the device to delete
@@ -193,7 +205,6 @@ message ListResponse {
     // the devices that matched the search
     repeated Device devices = 1;
 }
-
 
 message ListChangesParameters {
     // the id of the device to get changes for

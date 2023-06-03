@@ -41,7 +41,7 @@ var logger hclog.Logger
 
 const (
 	VERSION_BASE  string = "1.0-beta"
-	PROVIDER_NAME string = "default_provider"
+	PROVIDER_NAME string = "default"
 	WEIGHT        int64  = 1
 )
 

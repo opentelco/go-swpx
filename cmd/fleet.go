@@ -23,7 +23,7 @@ func init() {
 	createDeviceCmd.Flags().String("serial", "", "serial/mac of the device")
 	createDeviceCmd.Flags().String("model", "", "model of the device")
 	createDeviceCmd.Flags().String("version", "", "what version the device is running")
-	createDeviceCmd.Flags().String("poller-provider", "default_provider", "default provider for the device")
+	createDeviceCmd.Flags().String("poller-provider-plugin", "default_provider", "default provider for the device")
 	createDeviceCmd.Flags().String("poller-resource-plugin", "", "resource plugin to use when polling the device (VRP, CTC, etc)")
 	fleetCmd.AddCommand(createDeviceCmd)
 
@@ -32,9 +32,11 @@ func init() {
 	updateDeviceCmd.Flags().String("serial", "", "serial/mac of the device")
 	updateDeviceCmd.Flags().String("model", "", "model of the device")
 	updateDeviceCmd.Flags().String("version", "", "what version the device is running")
-	updateDeviceCmd.Flags().String("poller-provider", "default_provider", "default provider for the device")
+	updateDeviceCmd.Flags().String("poller-provider-plugin", "default_provider", "default provider for the device")
 	updateDeviceCmd.Flags().String("poller-resource-plugin", "", "resource plugin to use when polling the device (VRP, CTC, etc)")
 	fleetCmd.AddCommand(updateDeviceCmd)
+
+	fleetCmd.AddCommand(listDeviceChangesCmd)
 
 	fleetCmd.AddCommand(deleteDeviceCmd)
 
@@ -62,7 +64,7 @@ var createDeviceCmd = &cobra.Command{
 		serial, _ := cmd.Flags().GetString("serial")
 		model, _ := cmd.Flags().GetString("model")
 		version, _ := cmd.Flags().GetString("version")
-		pollerProvider, _ := cmd.Flags().GetString("poller-provider")
+		pollerProviderPlugin, _ := cmd.Flags().GetString("poller-provider-plugin")
 		pollerResourcePlugin, _ := cmd.Flags().GetString("poller-resource-plugin")
 
 		fleetDeviceClient, err := getDeviceClient(cmd)
@@ -78,7 +80,7 @@ var createDeviceCmd = &cobra.Command{
 			SerialNumber:         serial,
 			Model:                model,
 			Version:              version,
-			PollerProvider:       pollerProvider,
+			PollerProviderPlugin: pollerProviderPlugin,
 			PollerResourcePlugin: pollerResourcePlugin,
 		})
 		if err != nil {
@@ -102,7 +104,7 @@ var updateDeviceCmd = &cobra.Command{
 		serial, _ := cmd.Flags().GetString("serial")
 		model, _ := cmd.Flags().GetString("model")
 		version, _ := cmd.Flags().GetString("version")
-		pollerProvider, _ := cmd.Flags().GetString("poller-provider")
+		pollerProviderPlugin, _ := cmd.Flags().GetString("poller-provider-plugin")
 		pollerResourcePlugin, _ := cmd.Flags().GetString("poller-resource-plugin")
 
 		fleetDeviceClient, err := getDeviceClient(cmd)
@@ -131,8 +133,8 @@ var updateDeviceCmd = &cobra.Command{
 		if version != "" {
 			params.Version = &version
 		}
-		if pollerProvider != "" {
-			params.PollerProvider = &pollerProvider
+		if pollerProviderPlugin != "" {
+			params.PollerProviderPlugin = &pollerProviderPlugin
 		}
 		if pollerResourcePlugin != "" {
 			params.PollerResourcePlugin = &pollerResourcePlugin
@@ -174,6 +176,32 @@ var listDeviceCmd = &cobra.Command{
 		}
 		for _, dev := range res.Devices {
 			fmt.Println(prettyPrintJSON(dev))
+		}
+
+	},
+}
+
+var listDeviceChangesCmd = &cobra.Command{
+	Use:   "list-changes [id]",
+	Short: "list changes for a device",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		fleetDeviceClient, err := getDeviceClient(cmd)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		res, err := fleetDeviceClient.ListChanges(cmd.Context(), &devicepb.ListChangesParameters{
+			DeviceId: args[0],
+		})
+
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+		for _, change := range res.Changes {
+			fmt.Println(prettyPrintJSON(change))
 		}
 
 	},

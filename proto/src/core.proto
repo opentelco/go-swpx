@@ -103,6 +103,7 @@ message PollRequest {
 
     enum Type {
         NOT_SET = 0;
+
         // GET_TECHNICAL_INFO returns a full picture of the network element or
         // on a specific port
         GET_TECHNICAL_INFO = 1;
@@ -137,11 +138,26 @@ message PollResponse {
     string execution_time                  = 6;
 }
 
+// DiscoverRequest is used to discover a network element
+message DiscoverRequest {
+    // session is used to locate the network element
+    SessionRequest session = 1;
+    // settings is used to configure the request
+    Settings settings      = 2;
+}
+
+message DiscoverResponse {
+    networkelement.Element network_element = 2;
+}
+
 message CommandRequest {}
 message CommandResponse {}
 message InformationResponse {}
 
-service Core {
+service CoreService {
+    // Discover is used to get basic information about an network element
+    rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+
     // SWP Polling call to get technical Information and other information about a network element
     // the request is sent to the correct poller based on the network_region of the request
     // the type of the request is used to determine what information to collect from the network element
@@ -158,7 +174,7 @@ service Core {
     rpc CollectConfig(CollectConfigRequest) returns (CollectConfigResponse);
 }
 
-service Commander {
+service CommanderService {
     rpc TogglePort(CommandRequest) returns (CommandResponse);
     rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
@@ -168,8 +184,8 @@ message ProvideCPEResponse {}
 message ProvideAccessRequest {}
 message ProvideAccessResponse {}
 
-// Provide
-service Provide {
+// Provider
+service ProviderService {
     // Ask provider to return a valid CPE for a access
     rpc CPE(ProvideCPERequest) returns (ProvideCPEResponse);
 

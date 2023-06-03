@@ -36,9 +36,18 @@ func init() {
 	}
 	collectConfigCmd.Flags().StringSlice("providers", []string{"default"}, "specify which provider plugins to use")
 	collectConfigCmd.Flags().StringP("resource", "r", "vrp", "specify which resource plugin to use")
+	Root.AddCommand(collectConfigCmd)
+
+	discoverCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
+	discoverCmd.Flags().StringP("target", "t", "", "the target to test")
+	if err := discoverCmd.MarkFlagRequired("target"); err != nil {
+		panic(err)
+	}
+	discoverCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
+	discoverCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
+	Root.AddCommand(discoverCmd)
 
 	Root.AddCommand(TestRootCmd)
-	Root.AddCommand(collectConfigCmd)
 
 }
 
@@ -80,7 +89,7 @@ var TestBulkCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := pb.NewCoreClient(conn)
+		swpx := pb.NewCoreServiceClient(conn)
 		wg := &sync.WaitGroup{}
 		startTime := time.Now()
 
@@ -151,7 +160,7 @@ var collectConfigCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := pb.NewCoreClient(conn)
+		swpx := pb.NewCoreServiceClient(conn)
 
 		resp, err := swpx.CollectConfig(cmd.Context(), &pb.CollectConfigRequest{
 			Settings: &pb.Settings{
@@ -171,6 +180,53 @@ var collectConfigCmd = &cobra.Command{
 			fmt.Println(resp.GetConfig())
 		} else {
 			fmt.Println("Failed to collect config")
+		}
+
+	},
+}
+
+var discoverCmd = &cobra.Command{
+	Use:   "discover",
+	Short: "discover the device and return basic info",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		target, _ := cmd.Flags().GetString("target")
+		ttlString, _ := cmd.Flags().GetString("ttl")
+		providers, _ := cmd.Flags().GetStringSlice("providers")
+		resource, _ := cmd.Flags().GetString("resource")
+
+		cmd.Println("selected providers: ", providers)
+
+		_, err := time.ParseDuration(ttlString)
+		if err != nil {
+			cmd.Println("could not parse ttl: ", err)
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := pb.NewCoreServiceClient(conn)
+
+		resp, err := swpx.Discover(cmd.Context(), &pb.DiscoverRequest{
+			Settings: &pb.Settings{
+				ProviderPlugin: providers,
+				ResourcePlugin: resource,
+				Timeout:        ttlString,
+			},
+			Session: &pb.SessionRequest{
+				Hostname: target,
+			},
+		})
+		if err != nil {
+			cmd.PrintErr(err)
+		}
+		if resp != nil {
+			cmd.Println(prettyPrintJSON(resp.NetworkElement))
+		} else {
+			fmt.Println("failed to discover")
 		}
 
 	},

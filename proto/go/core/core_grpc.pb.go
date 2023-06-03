@@ -19,10 +19,12 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// CoreClient is the client API for Core service.
+// CoreServiceClient is the client API for CoreService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CoreClient interface {
+type CoreServiceClient interface {
+	// Discover is used to get basic information about an network element
+	Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
@@ -36,54 +38,65 @@ type CoreClient interface {
 	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
 }
 
-type coreClient struct {
+type coreServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCoreClient(cc grpc.ClientConnInterface) CoreClient {
-	return &coreClient{cc}
+func NewCoreServiceClient(cc grpc.ClientConnInterface) CoreServiceClient {
+	return &coreServiceClient{cc}
 }
 
-func (c *coreClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
+func (c *coreServiceClient) Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
+	out := new(DiscoverResponse)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Discover", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coreServiceClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
 	out := new(PollResponse)
-	err := c.cc.Invoke(ctx, "/core.Core/Poll", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Poll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreClient) Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+func (c *coreServiceClient) Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
 	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.Core/Command", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Command", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreClient) Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error) {
+func (c *coreServiceClient) Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error) {
 	out := new(InformationResponse)
-	err := c.cc.Invoke(ctx, "/core.Core/Information", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Information", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreClient) CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error) {
+func (c *coreServiceClient) CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error) {
 	out := new(CollectConfigResponse)
-	err := c.cc.Invoke(ctx, "/core.Core/CollectConfig", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CoreService/CollectConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CoreServer is the server API for Core service.
-// All implementations must embed UnimplementedCoreServer
+// CoreServiceServer is the server API for CoreService service.
+// All implementations must embed UnimplementedCoreServiceServer
 // for forward compatibility
-type CoreServer interface {
+type CoreServiceServer interface {
+	// Discover is used to get basic information about an network element
+	Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
@@ -95,380 +108,405 @@ type CoreServer interface {
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
 	// collected one. Returs a list of changes and the config collected from the network element
 	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
-	mustEmbedUnimplementedCoreServer()
+	mustEmbedUnimplementedCoreServiceServer()
 }
 
-// UnimplementedCoreServer must be embedded to have forward compatible implementations.
-type UnimplementedCoreServer struct {
+// UnimplementedCoreServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedCoreServiceServer struct {
 }
 
-func (UnimplementedCoreServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
+func (UnimplementedCoreServiceServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
+}
+func (UnimplementedCoreServiceServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
 }
-func (UnimplementedCoreServer) Command(context.Context, *CommandRequest) (*CommandResponse, error) {
+func (UnimplementedCoreServiceServer) Command(context.Context, *CommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Command not implemented")
 }
-func (UnimplementedCoreServer) Information(context.Context, *emptypb.Empty) (*InformationResponse, error) {
+func (UnimplementedCoreServiceServer) Information(context.Context, *emptypb.Empty) (*InformationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Information not implemented")
 }
-func (UnimplementedCoreServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
+func (UnimplementedCoreServiceServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectConfig not implemented")
 }
-func (UnimplementedCoreServer) mustEmbedUnimplementedCoreServer() {}
+func (UnimplementedCoreServiceServer) mustEmbedUnimplementedCoreServiceServer() {}
 
-// UnsafeCoreServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CoreServer will
+// UnsafeCoreServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CoreServiceServer will
 // result in compilation errors.
-type UnsafeCoreServer interface {
-	mustEmbedUnimplementedCoreServer()
+type UnsafeCoreServiceServer interface {
+	mustEmbedUnimplementedCoreServiceServer()
 }
 
-func RegisterCoreServer(s grpc.ServiceRegistrar, srv CoreServer) {
-	s.RegisterService(&Core_ServiceDesc, srv)
+func RegisterCoreServiceServer(s grpc.ServiceRegistrar, srv CoreServiceServer) {
+	s.RegisterService(&CoreService_ServiceDesc, srv)
 }
 
-func _Core_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CoreService_Discover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiscoverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServiceServer).Discover(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.CoreService/Discover",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServiceServer).Discover(ctx, req.(*DiscoverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CoreService_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PollRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).Poll(ctx, in)
+		return srv.(CoreServiceServer).Poll(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/Poll",
+		FullMethod: "/core.CoreService/Poll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).Poll(ctx, req.(*PollRequest))
+		return srv.(CoreServiceServer).Poll(ctx, req.(*PollRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Core_Command_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CoreService_Command_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).Command(ctx, in)
+		return srv.(CoreServiceServer).Command(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/Command",
+		FullMethod: "/core.CoreService/Command",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).Command(ctx, req.(*CommandRequest))
+		return srv.(CoreServiceServer).Command(ctx, req.(*CommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Core_Information_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CoreService_Information_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).Information(ctx, in)
+		return srv.(CoreServiceServer).Information(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/Information",
+		FullMethod: "/core.CoreService/Information",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).Information(ctx, req.(*emptypb.Empty))
+		return srv.(CoreServiceServer).Information(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Core_CollectConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CoreService_CollectConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CollectConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServer).CollectConfig(ctx, in)
+		return srv.(CoreServiceServer).CollectConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Core/CollectConfig",
+		FullMethod: "/core.CoreService/CollectConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServer).CollectConfig(ctx, req.(*CollectConfigRequest))
+		return srv.(CoreServiceServer).CollectConfig(ctx, req.(*CollectConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Core_ServiceDesc is the grpc.ServiceDesc for Core service.
+// CoreService_ServiceDesc is the grpc.ServiceDesc for CoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Core_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.Core",
-	HandlerType: (*CoreServer)(nil),
+var CoreService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.CoreService",
+	HandlerType: (*CoreServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Discover",
+			Handler:    _CoreService_Discover_Handler,
+		},
+		{
 			MethodName: "Poll",
-			Handler:    _Core_Poll_Handler,
+			Handler:    _CoreService_Poll_Handler,
 		},
 		{
 			MethodName: "Command",
-			Handler:    _Core_Command_Handler,
+			Handler:    _CoreService_Command_Handler,
 		},
 		{
 			MethodName: "Information",
-			Handler:    _Core_Information_Handler,
+			Handler:    _CoreService_Information_Handler,
 		},
 		{
 			MethodName: "CollectConfig",
-			Handler:    _Core_CollectConfig_Handler,
+			Handler:    _CoreService_CollectConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "core.proto",
 }
 
-// CommanderClient is the client API for Commander service.
+// CommanderServiceClient is the client API for CommanderService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CommanderClient interface {
+type CommanderServiceClient interface {
 	TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 }
 
-type commanderClient struct {
+type commanderServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCommanderClient(cc grpc.ClientConnInterface) CommanderClient {
-	return &commanderClient{cc}
+func NewCommanderServiceClient(cc grpc.ClientConnInterface) CommanderServiceClient {
+	return &commanderServiceClient{cc}
 }
 
-func (c *commanderClient) TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+func (c *commanderServiceClient) TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
 	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.Commander/TogglePort", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CommanderService/TogglePort", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *commanderClient) EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
+func (c *commanderServiceClient) EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
 	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.Commander/EnablePortFlapDetection", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.CommanderService/EnablePortFlapDetection", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CommanderServer is the server API for Commander service.
-// All implementations must embed UnimplementedCommanderServer
+// CommanderServiceServer is the server API for CommanderService service.
+// All implementations must embed UnimplementedCommanderServiceServer
 // for forward compatibility
-type CommanderServer interface {
+type CommanderServiceServer interface {
 	TogglePort(context.Context, *CommandRequest) (*CommandResponse, error)
 	EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error)
-	mustEmbedUnimplementedCommanderServer()
+	mustEmbedUnimplementedCommanderServiceServer()
 }
 
-// UnimplementedCommanderServer must be embedded to have forward compatible implementations.
-type UnimplementedCommanderServer struct {
+// UnimplementedCommanderServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedCommanderServiceServer struct {
 }
 
-func (UnimplementedCommanderServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {
+func (UnimplementedCommanderServiceServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TogglePort not implemented")
 }
-func (UnimplementedCommanderServer) EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error) {
+func (UnimplementedCommanderServiceServer) EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnablePortFlapDetection not implemented")
 }
-func (UnimplementedCommanderServer) mustEmbedUnimplementedCommanderServer() {}
+func (UnimplementedCommanderServiceServer) mustEmbedUnimplementedCommanderServiceServer() {}
 
-// UnsafeCommanderServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CommanderServer will
+// UnsafeCommanderServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CommanderServiceServer will
 // result in compilation errors.
-type UnsafeCommanderServer interface {
-	mustEmbedUnimplementedCommanderServer()
+type UnsafeCommanderServiceServer interface {
+	mustEmbedUnimplementedCommanderServiceServer()
 }
 
-func RegisterCommanderServer(s grpc.ServiceRegistrar, srv CommanderServer) {
-	s.RegisterService(&Commander_ServiceDesc, srv)
+func RegisterCommanderServiceServer(s grpc.ServiceRegistrar, srv CommanderServiceServer) {
+	s.RegisterService(&CommanderService_ServiceDesc, srv)
 }
 
-func _Commander_TogglePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CommanderService_TogglePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CommanderServer).TogglePort(ctx, in)
+		return srv.(CommanderServiceServer).TogglePort(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Commander/TogglePort",
+		FullMethod: "/core.CommanderService/TogglePort",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommanderServer).TogglePort(ctx, req.(*CommandRequest))
+		return srv.(CommanderServiceServer).TogglePort(ctx, req.(*CommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Commander_EnablePortFlapDetection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CommanderService_EnablePortFlapDetection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CommanderServer).EnablePortFlapDetection(ctx, in)
+		return srv.(CommanderServiceServer).EnablePortFlapDetection(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Commander/EnablePortFlapDetection",
+		FullMethod: "/core.CommanderService/EnablePortFlapDetection",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommanderServer).EnablePortFlapDetection(ctx, req.(*CommandRequest))
+		return srv.(CommanderServiceServer).EnablePortFlapDetection(ctx, req.(*CommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Commander_ServiceDesc is the grpc.ServiceDesc for Commander service.
+// CommanderService_ServiceDesc is the grpc.ServiceDesc for CommanderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Commander_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.Commander",
-	HandlerType: (*CommanderServer)(nil),
+var CommanderService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.CommanderService",
+	HandlerType: (*CommanderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "TogglePort",
-			Handler:    _Commander_TogglePort_Handler,
+			Handler:    _CommanderService_TogglePort_Handler,
 		},
 		{
 			MethodName: "EnablePortFlapDetection",
-			Handler:    _Commander_EnablePortFlapDetection_Handler,
+			Handler:    _CommanderService_EnablePortFlapDetection_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "core.proto",
 }
 
-// ProvideClient is the client API for Provide service.
+// ProviderServiceClient is the client API for ProviderService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ProvideClient interface {
+type ProviderServiceClient interface {
 	// Ask provider to return a valid CPE for a access
 	CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error)
 	// Ask a provider to return information about a selected access
 	Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error)
 }
 
-type provideClient struct {
+type providerServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewProvideClient(cc grpc.ClientConnInterface) ProvideClient {
-	return &provideClient{cc}
+func NewProviderServiceClient(cc grpc.ClientConnInterface) ProviderServiceClient {
+	return &providerServiceClient{cc}
 }
 
-func (c *provideClient) CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error) {
+func (c *providerServiceClient) CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error) {
 	out := new(ProvideCPEResponse)
-	err := c.cc.Invoke(ctx, "/core.Provide/CPE", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.ProviderService/CPE", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *provideClient) Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error) {
+func (c *providerServiceClient) Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error) {
 	out := new(ProvideAccessResponse)
-	err := c.cc.Invoke(ctx, "/core.Provide/Access", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.ProviderService/Access", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ProvideServer is the server API for Provide service.
-// All implementations must embed UnimplementedProvideServer
+// ProviderServiceServer is the server API for ProviderService service.
+// All implementations must embed UnimplementedProviderServiceServer
 // for forward compatibility
-type ProvideServer interface {
+type ProviderServiceServer interface {
 	// Ask provider to return a valid CPE for a access
 	CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error)
 	// Ask a provider to return information about a selected access
 	Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error)
-	mustEmbedUnimplementedProvideServer()
+	mustEmbedUnimplementedProviderServiceServer()
 }
 
-// UnimplementedProvideServer must be embedded to have forward compatible implementations.
-type UnimplementedProvideServer struct {
+// UnimplementedProviderServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedProviderServiceServer struct {
 }
 
-func (UnimplementedProvideServer) CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error) {
+func (UnimplementedProviderServiceServer) CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CPE not implemented")
 }
-func (UnimplementedProvideServer) Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error) {
+func (UnimplementedProviderServiceServer) Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Access not implemented")
 }
-func (UnimplementedProvideServer) mustEmbedUnimplementedProvideServer() {}
+func (UnimplementedProviderServiceServer) mustEmbedUnimplementedProviderServiceServer() {}
 
-// UnsafeProvideServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ProvideServer will
+// UnsafeProviderServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ProviderServiceServer will
 // result in compilation errors.
-type UnsafeProvideServer interface {
-	mustEmbedUnimplementedProvideServer()
+type UnsafeProviderServiceServer interface {
+	mustEmbedUnimplementedProviderServiceServer()
 }
 
-func RegisterProvideServer(s grpc.ServiceRegistrar, srv ProvideServer) {
-	s.RegisterService(&Provide_ServiceDesc, srv)
+func RegisterProviderServiceServer(s grpc.ServiceRegistrar, srv ProviderServiceServer) {
+	s.RegisterService(&ProviderService_ServiceDesc, srv)
 }
 
-func _Provide_CPE_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProviderService_CPE_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProvideCPERequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProvideServer).CPE(ctx, in)
+		return srv.(ProviderServiceServer).CPE(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Provide/CPE",
+		FullMethod: "/core.ProviderService/CPE",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProvideServer).CPE(ctx, req.(*ProvideCPERequest))
+		return srv.(ProviderServiceServer).CPE(ctx, req.(*ProvideCPERequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Provide_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ProviderService_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProvideAccessRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProvideServer).Access(ctx, in)
+		return srv.(ProviderServiceServer).Access(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Provide/Access",
+		FullMethod: "/core.ProviderService/Access",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProvideServer).Access(ctx, req.(*ProvideAccessRequest))
+		return srv.(ProviderServiceServer).Access(ctx, req.(*ProvideAccessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Provide_ServiceDesc is the grpc.ServiceDesc for Provide service.
+// ProviderService_ServiceDesc is the grpc.ServiceDesc for ProviderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Provide_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.Provide",
-	HandlerType: (*ProvideServer)(nil),
+var ProviderService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.ProviderService",
+	HandlerType: (*ProviderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CPE",
-			Handler:    _Provide_CPE_Handler,
+			Handler:    _ProviderService_CPE_Handler,
 		},
 		{
 			MethodName: "Access",
-			Handler:    _Provide_Access_Handler,
+			Handler:    _ProviderService_Access_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

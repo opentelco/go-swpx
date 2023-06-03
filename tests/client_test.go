@@ -23,7 +23,7 @@ func Test_Grpc(t *testing.T) {
 
 	}
 
-	client := core.NewCoreClient(conn)
+	client := core.NewCoreServiceClient(conn)
 	r, err := client.Poll(ctx, &core.PollRequest{
 		Settings: &core.Settings{
 			ProviderPlugin: []string{"vx"},

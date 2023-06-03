@@ -35,6 +35,8 @@ import (
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"git.liero.se/opentelco/go-swpx/config"
 
@@ -78,6 +80,10 @@ type VRPDriver struct {
 func (d *VRPDriver) Version() (string, error) {
 	d.logger.Debug("message from resource-driver running at version", VERSION.String())
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
+}
+
+func (d *VRPDriver) Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return &networkelement.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
 // parse a map of description/alias and return the ID

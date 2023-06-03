@@ -36,7 +36,11 @@ import (
 // NetworkElementPlugin is the interface that we're exposing as a plugin.
 
 type Resource interface {
+	// return the version of the plugin
 	Version() (string, error)
+
+	// discover the network element, simple lookup on the device
+	Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error)
 
 	// TechnicalPortInformation Gets all the technical information for a Port
 	// from interface name/descr a SNMP index must be found. This functions helps to solve this problem
@@ -67,6 +71,10 @@ type Resource interface {
 type ResourceGRPCClient struct {
 	client proto.ResourceClient
 	conf   *config.Configuration
+}
+
+func (rpc *ResourceGRPCClient) Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.client.Discover(ctx, req)
 }
 
 // MapInterface is the client implementation for the plugin-resource. Connects to the RPC
@@ -124,6 +132,10 @@ type ResourceGRPCServer struct {
 func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*proto.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
 	return &proto.VersionResponse{Version: res}, err
+}
+
+func (rpc *ResourceGRPCServer) Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return rpc.Impl.Discover(ctx, req)
 }
 
 // MapInterface has the purppose to map interface name to a index by asking the device

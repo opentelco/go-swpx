@@ -26,6 +26,8 @@ const _ = grpc.SupportPackageIsVersion7
 type ResourceClient interface {
 	// Get the version of the network element
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	// discover the device, type version and other basic information about the device
+	Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
 	// Map the interfaces with ifIndex and description
 	MapInterface(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error)
 	// Map the interace description and the environemnt index
@@ -54,6 +56,15 @@ func NewResourceClient(cc grpc.ClientConnInterface) ResourceClient {
 func (c *resourceClient) Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/resource.Resource/Version", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceClient) Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
+	out := new(networkelement.Element)
+	err := c.cc.Invoke(ctx, "/resource.Resource/Discover", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +149,8 @@ func (c *resourceClient) GetRunningConfig(ctx context.Context, in *GetRunningCon
 type ResourceServer interface {
 	// Get the version of the network element
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
+	// discover the device, type version and other basic information about the device
+	Discover(context.Context, *Request) (*networkelement.Element, error)
 	// Map the interfaces with ifIndex and description
 	MapInterface(context.Context, *Request) (*PortIndex, error)
 	// Map the interace description and the environemnt index
@@ -162,6 +175,9 @@ type UnimplementedResourceServer struct {
 
 func (UnimplementedResourceServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
+}
+func (UnimplementedResourceServer) Discover(context.Context, *Request) (*networkelement.Element, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
 }
 func (UnimplementedResourceServer) MapInterface(context.Context, *Request) (*PortIndex, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MapInterface not implemented")
@@ -214,6 +230,24 @@ func _Resource_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ResourceServer).Version(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Resource_Discover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).Discover(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/Discover",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).Discover(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -372,6 +406,10 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Version",
 			Handler:    _Resource_Version_Handler,
+		},
+		{
+			MethodName: "Discover",
+			Handler:    _Resource_Discover_Handler,
 		},
 		{
 			MethodName: "MapInterface",

@@ -43,24 +43,24 @@ func init() {
 }
 
 // Here is a real implementation of Driver
-type CTCDriver struct {
+type driver struct {
 	logger hclog.Logger
 	dnc    client.Client
 	conf   *config.ResourceCTC
 }
 
-func (d *CTCDriver) Version() (string, error) {
+func (d *driver) Version() (string, error) {
 	d.logger.Debug("message from resource-driver running", "version", VERSION.String())
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
 // TechnicalPortInformation Gets all the technical information for a Port
 // from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-func (d *CTCDriver) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
-func (d *CTCDriver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
+func (d *driver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
 	d.logger.Error("log and append error from dnc", "error", err.Error())
 	errs = append(errs, &networkelement.TransientError{
 		Message: err.Error(),
@@ -72,7 +72,7 @@ func (d *CTCDriver) logAndAppend(err error, errs []*networkelement.TransientErro
 }
 
 // BasicPortInformation
-func (d *CTCDriver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
 	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "index", req.LogicalPortIndex)
 	errs := make([]*networkelement.TransientError, 0)
 
@@ -151,12 +151,12 @@ func (d *CTCDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 }
 
 // AllPortInformation
-func (d *CTCDriver) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
 // MapInterface Map interfaces (IF-MIB) from device with the swpx model
-func (d *CTCDriver) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+func (d *driver) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
 	d.logger.Info("determine what index and name this interface has", "host", req.Hostname, "port", req.Port)
 	var msg *transport.Message
 	discoveryMap := make(map[int]*discoveryItem)
@@ -189,18 +189,22 @@ func (d *CTCDriver) MapInterface(ctx context.Context, req *proto.Request) (*prot
 
 // MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
 // Find matching OID for port
-func (d *CTCDriver) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+func (d *driver) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
 	return nil, status.Error(codes.Unimplemented, "MapEntityPhysical is unimplemented")
 }
 
 // GetTransceiverInformation Get SFP (transceiver) information
-func (d *CTCDriver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
+func (d *driver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
 	return nil, status.Error(codes.Unimplemented, "GetTransceiverInformation is unimplemented")
 }
 
 // GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-func (d *CTCDriver) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
+func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
 	return nil, status.Error(codes.Unimplemented, "GetAllTransceiverInformation is unimplemented")
+}
+
+func (d *driver) Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+	return &networkelement.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
 func main() {
@@ -229,7 +233,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	driver := &CTCDriver{
+	driver := &driver{
 		logger: logger,
 		dnc:    dncClient,
 		conf:   &appConf,
@@ -244,7 +248,7 @@ func main() {
 	})
 }
 
-func (d *CTCDriver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+func (d *driver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
 	return nil, nil
 }
 

@@ -19,7 +19,7 @@ type coreGrpcImpl struct {
 	grpc   *grpc.Server
 	logger hclog.Logger
 
-	pb_core.UnimplementedCoreServer
+	pb_core.UnimplementedCoreServiceServer
 }
 
 var automatedOkList = []string{
@@ -31,6 +31,10 @@ var automatedOkList = []string{
 	"only-for-migration-a3",
 	"only-for-migration-a4",
 	"only-for-migration-a5",
+}
+
+func (s *coreGrpcImpl) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (*pb_core.DiscoverResponse, error) {
+	return s.core.Discover(ctx, request)
 }
 
 // Request to SWP-core
@@ -85,5 +89,5 @@ func NewGrpc(core *core.Core, srv *grpc.Server, logger hclog.Logger) {
 		core:   core,
 		logger: logger,
 	}
-	pb_core.RegisterCoreServer(srv, instance)
+	pb_core.RegisterCoreServiceServer(srv, instance)
 }

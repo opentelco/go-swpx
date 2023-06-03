@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller core.CoreClient, logger hclog.Logger) fleetpb.FleetServiceServer {
+func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller core.CoreServiceClient, logger hclog.Logger) fleetpb.FleetServiceServer {
 	return &fleet{
 		device: device,
 		config: config,
@@ -24,7 +24,7 @@ type fleet struct {
 	logger hclog.Logger
 	device devicepb.DeviceServiceServer
 	config configurationpb.ConfigurationServiceServer
-	poller core.CoreClient
+	poller core.CoreServiceClient
 
 	fleetpb.UnimplementedFleetServiceServer
 }

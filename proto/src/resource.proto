@@ -80,6 +80,9 @@ service Resource {
   // Get the version of the network element
   rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
+  // discover the device, type version and other basic information about the device
+  rpc Discover(Request) returns (networkelement.Element);
+
   // Map the interfaces with ifIndex and description
   rpc MapInterface(Request) returns (PortIndex);
 
