@@ -25,6 +25,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FleetServiceClient interface {
+	// DiscoverDevice discovers a device in the network, creates the device with the information provided
+	// by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
+	// NOTE: hostname OR management_ip must be set
+	DiscoverDevice(ctx context.Context, in *devicepb.CreateParameters, opts ...grpc.CallOption) (*devicepb.Device, error)
 	// CollectDevice collects information about the device from the network (with the help of the poller)
 	// and returns the device with the updated information
 	CollectDevice(ctx context.Context, in *CollectDeviceParameters, opts ...grpc.CallOption) (*devicepb.Device, error)
@@ -41,6 +45,15 @@ type fleetServiceClient struct {
 
 func NewFleetServiceClient(cc grpc.ClientConnInterface) FleetServiceClient {
 	return &fleetServiceClient{cc}
+}
+
+func (c *fleetServiceClient) DiscoverDevice(ctx context.Context, in *devicepb.CreateParameters, opts ...grpc.CallOption) (*devicepb.Device, error) {
+	out := new(devicepb.Device)
+	err := c.cc.Invoke(ctx, "/fleet.FleetService/DiscoverDevice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *fleetServiceClient) CollectDevice(ctx context.Context, in *CollectDeviceParameters, opts ...grpc.CallOption) (*devicepb.Device, error) {
@@ -74,6 +87,10 @@ func (c *fleetServiceClient) DeleteDevice(ctx context.Context, in *devicepb.Dele
 // All implementations must embed UnimplementedFleetServiceServer
 // for forward compatibility
 type FleetServiceServer interface {
+	// DiscoverDevice discovers a device in the network, creates the device with the information provided
+	// by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
+	// NOTE: hostname OR management_ip must be set
+	DiscoverDevice(context.Context, *devicepb.CreateParameters) (*devicepb.Device, error)
 	// CollectDevice collects information about the device from the network (with the help of the poller)
 	// and returns the device with the updated information
 	CollectDevice(context.Context, *CollectDeviceParameters) (*devicepb.Device, error)
@@ -89,6 +106,9 @@ type FleetServiceServer interface {
 type UnimplementedFleetServiceServer struct {
 }
 
+func (UnimplementedFleetServiceServer) DiscoverDevice(context.Context, *devicepb.CreateParameters) (*devicepb.Device, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiscoverDevice not implemented")
+}
 func (UnimplementedFleetServiceServer) CollectDevice(context.Context, *CollectDeviceParameters) (*devicepb.Device, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectDevice not implemented")
 }
@@ -109,6 +129,24 @@ type UnsafeFleetServiceServer interface {
 
 func RegisterFleetServiceServer(s grpc.ServiceRegistrar, srv FleetServiceServer) {
 	s.RegisterService(&FleetService_ServiceDesc, srv)
+}
+
+func _FleetService_DiscoverDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(devicepb.CreateParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FleetServiceServer).DiscoverDevice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.FleetService/DiscoverDevice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FleetServiceServer).DiscoverDevice(ctx, req.(*devicepb.CreateParameters))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _FleetService_CollectDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -172,6 +210,10 @@ var FleetService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "fleet.FleetService",
 	HandlerType: (*FleetServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DiscoverDevice",
+			Handler:    _FleetService_DiscoverDevice_Handler,
+		},
 		{
 			MethodName: "CollectDevice",
 			Handler:    _FleetService_CollectDevice_Handler,

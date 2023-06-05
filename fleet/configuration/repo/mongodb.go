@@ -54,9 +54,18 @@ func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters)
 	if params.DeviceId != "" {
 		filter["device_id"] = params.DeviceId
 	}
+	// order by created time (newest first)
+	opts := options.Find().SetSort(bson.M{"created": -1})
+	// set limit and offset
+	if params.Limit != nil {
+		opts.SetLimit(*params.Limit)
+	}
+	if params.Offset != nil {
+		opts.SetSkip(*params.Offset)
+	}
 
 	var deviceConfigurations []*configurationpb.Configuration
-	cur, err := r.configCollection.Find(ctx, filter)
+	cur, err := r.configCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}

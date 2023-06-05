@@ -31,6 +31,11 @@ import "google/protobuf/empty.proto";
 package fleet;
 
 service FleetService {
+    // DiscoverDevice discovers a device in the network, creates the device with the information provided
+    // by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
+    // NOTE: hostname OR management_ip must be set
+    rpc DiscoverDevice(fleet.device.CreateParameters) returns (fleet.device.Device) {}
+
     // CollectDevice collects information about the device from the network (with the help of the poller)
     // and returns the device with the updated information
     rpc CollectDevice(CollectDeviceParameters) returns (fleet.device.Device) {}

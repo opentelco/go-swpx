@@ -18,12 +18,14 @@ const (
 	defaultDatabase          string = "swpx"
 	defaultDeviceCollection  string = "devices"
 	defaultChangesCollection string = "device_changes"
+	defaultEventsCollection  string = "device_events"
 )
 
 type repo struct {
 	mc *mongo.Client
 
 	deviceCollection  *mongo.Collection
+	eventsCollection  *mongo.Collection
 	changesCollection *mongo.Collection
 
 	logger hclog.Logger
@@ -37,6 +39,7 @@ func New(mc *mongo.Client, database string, logger hclog.Logger) (device.Reposit
 	return &repo{
 		mc:                mc,
 		deviceCollection:  mc.Database(database).Collection(defaultDeviceCollection),
+		eventsCollection:  mc.Database(database).Collection(defaultEventsCollection),
 		changesCollection: mc.Database(database).Collection(defaultChangesCollection),
 		logger:            logger.Named("db"),
 	}, nil
@@ -155,12 +158,6 @@ func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesPara
 	if params.DeviceId != "" {
 		filter["device_id"] = params.DeviceId
 	}
-	if params.Limit > 0 {
-		filter["limit"] = params.Limit
-	}
-	if params.Offset > 0 {
-		filter["offset"] = params.Offset
-	}
 
 	var changes []*devicepb.Change
 	cur, err := r.changesCollection.Find(ctx, filter)
@@ -200,4 +197,58 @@ func (r *repo) DeleteChangersByDeviceID(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *repo) AddEvent(ctx context.Context, event *devicepb.Event) (*devicepb.Event, error) {
+	// add a event to the events collection and return it
+	event.Id = database.NewID()
+	event.Created = timestamppb.New(time.Now())
+
+	_, err := r.eventsCollection.InsertOne(ctx, event)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetEventByID(ctx, event.Id)
+}
+
+func (r *repo) GetEventByID(ctx context.Context, id string) (*devicepb.Event, error) {
+	// get a event by its ID
+	filter := bson.M{"_id": id}
+	var event devicepb.Event
+	err := r.eventsCollection.FindOne(ctx, filter).Decode(&event)
+	if err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+
+}
+func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) ([]*devicepb.Event, error) {
+	// list events for a device
+	filter := bson.M{}
+	if params.DeviceId != "" {
+		filter["device_id"] = params.DeviceId
+	}
+
+	var events []*devicepb.Event
+	cur, err := r.eventsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(context.Background())
+	for cur.Next(context.Background()) {
+
+		var event devicepb.Event
+		err := cur.Decode(&event)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, &event)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	return events, nil
+
 }

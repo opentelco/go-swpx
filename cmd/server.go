@@ -17,6 +17,7 @@ import (
 	configRepo "git.liero.se/opentelco/go-swpx/fleet/configuration/repo"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
+	corepb "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 	"go.temporal.io/sdk/client"
@@ -100,9 +101,16 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		cc, err := grpc.Dial(appConfig.GrpcAddr, grpc.WithInsecure())
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+		poller := corepb.NewCoreServiceClient(cc)
+
 		deviceService := device.New(drepo, logger)
 		configService := configuration.New(crepo, logger)
-		fleetService := fleet.New(deviceService, configService, nil, logger)
+		fleetService := fleet.New(deviceService, configService, poller, logger)
 
 		c, err := core.New(&appConfig, mongoClient, logger)
 		if err != nil {

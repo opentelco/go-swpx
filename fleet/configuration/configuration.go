@@ -2,10 +2,12 @@ package configuration
 
 import (
 	"context"
+	"fmt"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-uuid"
+	"github.com/mitchellh/hashstructure/v2"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -51,9 +53,18 @@ func (c *config) List(ctx context.Context, params *configurationpb.ListParameter
 
 // Create a device configuration in the fleet (this is used to store the configuration of a device)
 func (c *config) Create(ctx context.Context, params *configurationpb.CreateParameters) (*configurationpb.Configuration, error) {
+
+	if params.Hash == "" {
+		hash, err := Hash(params.Configuration)
+		if err != nil {
+			return nil, fmt.Errorf("could not hash config before save: %w", err)
+		}
+		params.Hash = hash
+	}
 	conf := &configurationpb.Configuration{
 		DeviceId:      params.DeviceId,
 		Configuration: params.Configuration,
+		Hash:          params.Hash,
 	}
 
 	return c.repo.Upsert(ctx, conf)
@@ -73,4 +84,12 @@ func (c *config) Delete(ctx context.Context, params *configurationpb.DeleteParam
 func NewID() string {
 	guid, _ := uuid.GenerateUUID()
 	return guid
+}
+
+func Hash(data interface{}) (string, error) {
+	hash, err := hashstructure.Hash(data, hashstructure.FormatV2, nil)
+	if err != nil {
+		return "", fmt.Errorf("counld not create hash of config: %w", err)
+	}
+	return fmt.Sprintf("%d", hash), nil
 }

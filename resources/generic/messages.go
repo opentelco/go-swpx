@@ -34,11 +34,11 @@ func createTaskSystemInfo(req *proto.Request, conf *config.Snmp) *transport.Mess
 			// OUT
 			{Oid: oids.SysDescr, Name: "sysDescr", Type: metric.MetricType_STRING},
 			{Oid: oids.SysObjectID, Name: "sysObjectID", Type: metric.MetricType_STRING},
-			{Oid: oids.SysUpTime, Name: "sysUpTime", Type: metric.MetricType_STRING},
+			{Oid: oids.SysUpTime, Name: "sysUpTime", Type: metric.MetricType_TIMETICKS},
 			{Oid: oids.SysContact, Name: "sysContact", Type: metric.MetricType_STRING},
 			{Oid: oids.SysName, Name: "sysName", Type: metric.MetricType_STRING},
 			{Oid: oids.SysLocation, Name: "sysLocation", Type: metric.MetricType_STRING},
-			{Oid: oids.SysORLastChange, Name: "sysORLastChange", Type: metric.MetricType_INT},
+			// {Oid: oids.SysORLastChange, Name: "sysORLastChange", Type: metric.MetricType_TIMETICKS},
 		},
 	}
 
@@ -53,7 +53,7 @@ func createTaskSystemInfo(req *proto.Request, conf *config.Snmp) *transport.Mess
 		Id:     ksuid.New().String(),
 		Source: VERSION.String(),
 		Task: &transport.Task{
-			Task: &transport.Task_Snmpc{task},
+			Task: &transport.Task_Snmpc{Snmpc: task},
 		},
 		Status:   shared.Status_NEW,
 		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
@@ -72,8 +72,13 @@ func parseSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 		ne.Location = m.GetValue()
 	case oids.SysName:
 		ne.Sysname = m.GetValue()
+
 	// case oids.SysORLastChange:
-	// case oids.SysObjectID:
+	// 	ne.LastChanged = m.GetValue()
+
+	case oids.SysObjectID:
+		ne.SnmpObjectId = m.GetValue()
+
 	case oids.SysUpTime:
 		ne.Uptime = m.GetValue()
 	}

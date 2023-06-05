@@ -29,6 +29,7 @@ type DeviceServiceClient interface {
 	// Get a device by its hostname, managment ip or serial number etc (used to search for a device)
 	List(ctx context.Context, in *ListParameters, opts ...grpc.CallOption) (*ListResponse, error)
 	// Create a device in the fleet
+	// note: if device needs to be discovered use the FleetService instead
 	Create(ctx context.Context, in *CreateParameters, opts ...grpc.CallOption) (*Device, error)
 	// Update a device in the fleet (this is used to update the device with new information)
 	Update(ctx context.Context, in *UpdateParameters, opts ...grpc.CallOption) (*Device, error)
@@ -37,8 +38,14 @@ type DeviceServiceClient interface {
 	Delete(ctx context.Context, in *DeleteParameters, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Get changes for a device, changes are created when a device is updated
 	GetChangeByID(ctx context.Context, in *GetChangeByIDParameters, opts ...grpc.CallOption) (*Change, error)
-	// Max number of changes to return (default 100)
+	// returns a list of changes (default 100)
 	ListChanges(ctx context.Context, in *ListChangesParameters, opts ...grpc.CallOption) (*ListChangesResponse, error)
+	// add an event
+	AddEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error)
+	// Get changes for a device, changes are created when a device is updated
+	GetEventByID(ctx context.Context, in *GetEventByIDParameters, opts ...grpc.CallOption) (*Event, error)
+	// returns a list of events (default 100)
+	ListEvents(ctx context.Context, in *ListEventsParameters, opts ...grpc.CallOption) (*ListEventsResponse, error)
 }
 
 type deviceServiceClient struct {
@@ -112,6 +119,33 @@ func (c *deviceServiceClient) ListChanges(ctx context.Context, in *ListChangesPa
 	return out, nil
 }
 
+func (c *deviceServiceClient) AddEvent(ctx context.Context, in *Event, opts ...grpc.CallOption) (*Event, error) {
+	out := new(Event)
+	err := c.cc.Invoke(ctx, "/fleet.device.DeviceService/AddEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deviceServiceClient) GetEventByID(ctx context.Context, in *GetEventByIDParameters, opts ...grpc.CallOption) (*Event, error) {
+	out := new(Event)
+	err := c.cc.Invoke(ctx, "/fleet.device.DeviceService/GetEventByID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deviceServiceClient) ListEvents(ctx context.Context, in *ListEventsParameters, opts ...grpc.CallOption) (*ListEventsResponse, error) {
+	out := new(ListEventsResponse)
+	err := c.cc.Invoke(ctx, "/fleet.device.DeviceService/ListEvents", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeviceServiceServer is the server API for DeviceService service.
 // All implementations must embed UnimplementedDeviceServiceServer
 // for forward compatibility
@@ -122,6 +156,7 @@ type DeviceServiceServer interface {
 	// Get a device by its hostname, managment ip or serial number etc (used to search for a device)
 	List(context.Context, *ListParameters) (*ListResponse, error)
 	// Create a device in the fleet
+	// note: if device needs to be discovered use the FleetService instead
 	Create(context.Context, *CreateParameters) (*Device, error)
 	// Update a device in the fleet (this is used to update the device with new information)
 	Update(context.Context, *UpdateParameters) (*Device, error)
@@ -130,8 +165,14 @@ type DeviceServiceServer interface {
 	Delete(context.Context, *DeleteParameters) (*emptypb.Empty, error)
 	// Get changes for a device, changes are created when a device is updated
 	GetChangeByID(context.Context, *GetChangeByIDParameters) (*Change, error)
-	// Max number of changes to return (default 100)
+	// returns a list of changes (default 100)
 	ListChanges(context.Context, *ListChangesParameters) (*ListChangesResponse, error)
+	// add an event
+	AddEvent(context.Context, *Event) (*Event, error)
+	// Get changes for a device, changes are created when a device is updated
+	GetEventByID(context.Context, *GetEventByIDParameters) (*Event, error)
+	// returns a list of events (default 100)
+	ListEvents(context.Context, *ListEventsParameters) (*ListEventsResponse, error)
 	mustEmbedUnimplementedDeviceServiceServer()
 }
 
@@ -159,6 +200,15 @@ func (UnimplementedDeviceServiceServer) GetChangeByID(context.Context, *GetChang
 }
 func (UnimplementedDeviceServiceServer) ListChanges(context.Context, *ListChangesParameters) (*ListChangesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListChanges not implemented")
+}
+func (UnimplementedDeviceServiceServer) AddEvent(context.Context, *Event) (*Event, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddEvent not implemented")
+}
+func (UnimplementedDeviceServiceServer) GetEventByID(context.Context, *GetEventByIDParameters) (*Event, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEventByID not implemented")
+}
+func (UnimplementedDeviceServiceServer) ListEvents(context.Context, *ListEventsParameters) (*ListEventsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEvents not implemented")
 }
 func (UnimplementedDeviceServiceServer) mustEmbedUnimplementedDeviceServiceServer() {}
 
@@ -299,6 +349,60 @@ func _DeviceService_ListChanges_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeviceService_AddEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Event)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceServiceServer).AddEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.device.DeviceService/AddEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceServiceServer).AddEvent(ctx, req.(*Event))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeviceService_GetEventByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEventByIDParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceServiceServer).GetEventByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.device.DeviceService/GetEventByID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceServiceServer).GetEventByID(ctx, req.(*GetEventByIDParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeviceService_ListEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEventsParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceServiceServer).ListEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.device.DeviceService/ListEvents",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceServiceServer).ListEvents(ctx, req.(*ListEventsParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DeviceService_ServiceDesc is the grpc.ServiceDesc for DeviceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -333,6 +437,18 @@ var DeviceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListChanges",
 			Handler:    _DeviceService_ListChanges_Handler,
+		},
+		{
+			MethodName: "AddEvent",
+			Handler:    _DeviceService_AddEvent_Handler,
+		},
+		{
+			MethodName: "GetEventByID",
+			Handler:    _DeviceService_GetEventByID_Handler,
+		},
+		{
+			MethodName: "ListEvents",
+			Handler:    _DeviceService_ListEvents_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

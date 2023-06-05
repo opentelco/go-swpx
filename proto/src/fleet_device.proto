@@ -73,6 +73,9 @@ message Device {
 
     // the time the device was updated
     google.protobuf.Timestamp deleted = 14;
+
+    google.protobuf.Timestamp last_reboot = 15;
+
 }
 
 message Change {
@@ -104,6 +107,7 @@ service DeviceService {
     rpc List(ListParameters) returns (ListResponse) {}
 
     // Create a device in the fleet
+    // note: if device needs to be discovered use the FleetService instead
     rpc Create(CreateParameters) returns (Device) {}
 
     // Update a device in the fleet (this is used to update the device with new information)
@@ -115,8 +119,18 @@ service DeviceService {
 
     // Get changes for a device, changes are created when a device is updated
     rpc GetChangeByID(GetChangeByIDParameters) returns (Change) {}
-    // Max number of changes to return (default 100)
+
+    // returns a list of changes (default 100)
     rpc ListChanges(ListChangesParameters) returns (ListChangesResponse) {}
+
+    // add an event
+    rpc AddEvent(Event) returns (Event) {}
+
+    // Get changes for a device, changes are created when a device is updated
+    rpc GetEventByID(GetEventByIDParameters) returns (Event) {}
+
+    // returns a list of events (default 100)
+    rpc ListEvents(ListEventsParameters) returns (ListEventsResponse) {}
 }
 
 message GetByIDParameters {
@@ -135,33 +149,46 @@ message ListParameters {
 }
 
 message CreateParameters {
-    // the hostname of the device (switch-a1)
-    string hostname = 1;
+    // the hostname of the device (switch-a1) this is the DNS name of the device
+    // and could differ from the system name of the device
+    // NOTE: hostname OR management_ip must be set
+    optional string hostname = 1;
+
+    // sysname of the device (switch-a1)
+    // the name set in the configuration of the device and will be set on discovery
+    optional string sysname = 2;
 
     // the domain of the device (net.liero.se)
-    string domain = 2;
+    optional string domain = 3;
 
     // the primary management ip of the device (172.22.13.3)
-    string management_ip = 3;
+    // NOTE: hostname OR management_ip must be set
+    optional string management_ip = 4;
 
     // the serial number of the device (210235T0A2000001)
-    string serial_number = 4;
+    optional string serial_number = 5;
 
     // model of the device (Huawei S6720-54C-EI-48S-AC)
-    string model = 5;
+    optional string model = 6;
 
     // version of the device (V200R019C10SPC500)
-    string version = 6;
+    optional string version = 7;
 
     // the network region of the device, this is used to match segmentation of the network
     // must match the configuration of the Distributed Network Client (go-dnc)
-    string network_region = 7;
+    optional string network_region = 8;
 
     // provider plugin to use for this device, e.g. default_provider, vx etc
-    string poller_provider_plugin = 8;
+    optional string poller_provider_plugin = 9;
 
     // switch poller resource plugin to use for this device, vrp, ios, junos etc
-    string poller_resource_plugin = 9;
+    optional string poller_resource_plugin = 10;
+
+    // the last time the device was seen by collect or discovery
+    optional google.protobuf.Timestamp  last_seen = 11;
+
+    // the last time the device was rebooted (known by the poller)
+    optional google.protobuf.Timestamp  last_reboot = 12;
 }
 
 message UpdateParameters {
@@ -195,6 +222,17 @@ message UpdateParameters {
 
     // switch poller resource plugin to use for this device, vrp, ios, junos etc
     optional string poller_resource_plugin = 10;
+
+    // sysname of the device (switch-a1)
+    // the name set in the configuration of the device and will be set on discovery
+    optional string sysname = 11;
+
+    // the last time the device was seen by collect or discovery
+    optional google.protobuf.Timestamp  last_seen = 12;
+
+    // the last time the device was rebooted (known by the poller)
+    optional google.protobuf.Timestamp  last_reboot = 13;
+
 }
 message DeleteParameters {
     // the id of the device to delete
@@ -210,10 +248,6 @@ message ListChangesParameters {
     // the id of the device to get changes for
     string device_id = 1;
 
-    // pagination, the number of changes to return
-    int32 limit = 2;
-    // pagination, the offset to start from
-    int32 offset = 3;
 }
 message ListChangesResponse {
     // the changes that matched the search
@@ -223,4 +257,57 @@ message ListChangesResponse {
 message GetChangeByIDParameters {
     // the id of the change to get
     string id = 1;
+}
+
+
+message ListEventsParameters {
+    // the id of the device to get Events for
+    string device_id = 1;
+
+}
+message ListEventsResponse {
+    // the Events that matched the search
+    repeated Event events = 1;
+}
+
+message GetEventByIDParameters {
+    // the id of the change to get
+    string id = 1;
+}
+
+message Event {
+    string id = 1;
+    // the device related to the event
+    string device_id = 2;
+
+    // type of event
+    enum Type {
+        TYPE_NOT_SET  = 0;
+        DEVICE        = 1;
+        CONFIGURATION = 2;
+    }
+    Type type = 3;
+
+    string message = 4;
+
+    // Action taken on the device
+    enum Action {
+        ACTION_NOT_SET = 0;
+        CREATE         = 1;
+        UPDATE         = 2;
+        COLLECT_CONFIG = 3;
+        COLLECT_DEVICE = 4;
+    }
+    Action action = 5;
+
+    // the outcome of the event
+    enum Outcome {
+        OUTCOME_NOT_SET = 0;
+        SUCCESS         = 1;
+        FAILURE         = 2;
+    }
+    Outcome outcome = 6;
+
+    // the timestamp when the event was created
+    google.protobuf.Timestamp created = 7;
 }

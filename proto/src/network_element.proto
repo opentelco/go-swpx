@@ -49,6 +49,8 @@ message Element {
   string driver = 15;
   TransientErrors transient_errors = 16;
   // bool virtual = 16;
+
+  string last_changed = 17;
 }
 
 message TransientErrors {

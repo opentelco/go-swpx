@@ -87,6 +87,24 @@ func (s *grpcServer) GetChangeByID(ctx context.Context, params *devicepb.GetChan
 
 }
 
+func (d *grpcServer) GetEventByID(ctx context.Context, params *devicepb.GetEventByIDParameters) (*devicepb.Event, error) {
+	res, err := d.device.GetEventByID(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+
+}
+
+// returns a list of events (default 100)
+func (d *grpcServer) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) (*devicepb.ListEventsResponse, error) {
+	res, err := d.device.ListEvents(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+}
+
 func errHandler(err error) error {
 	if err == nil {
 		return nil

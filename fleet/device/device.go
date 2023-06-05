@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	pollerDefaultProvider = "default_provider"
-	pollerDefaultResource = "default_resource"
+	pollerDefaultProvider = "default"
+	pollerDefaultResource = "generic"
 )
 
 var pj = protojson.MarshalOptions{
@@ -61,27 +61,56 @@ func (d *device) List(ctx context.Context, params *devicepb.ListParameters) (*de
 // Create a device in the fleet
 func (d *device) Create(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
 
-	if params.PollerProviderPlugin == "" {
-		params.PollerProviderPlugin = pollerDefaultProvider
+	device := &devicepb.Device{}
+	if params.Hostname == nil && params.ManagementIp == nil {
+		return nil, ErrHostnameOrManagementIpRequired
 	}
 
-	if params.PollerResourcePlugin == "" {
-		params.PollerResourcePlugin = pollerDefaultResource
+	if params.Hostname != nil {
+		device.Hostname = *params.Hostname
 	}
 
-	if params.Hostname == "" {
-		return nil, ErrHostnameRequired
+	if params.Domain != nil {
+		device.Domain = *params.Domain
 	}
 
-	device := &devicepb.Device{
-		Hostname:             params.Hostname,
-		Domain:               params.Domain,
-		ManagementIp:         params.ManagementIp,
-		SerialNumber:         params.SerialNumber,
-		Model:                params.Model,
-		Version:              params.Version,
-		PollerResourcePlugin: params.PollerResourcePlugin,
-		PollerProviderPlugin: params.PollerProviderPlugin,
+	if params.ManagementIp != nil {
+		device.ManagementIp = *params.ManagementIp
+	}
+
+	if params.SerialNumber != nil {
+		device.SerialNumber = *params.SerialNumber
+	}
+
+	if params.Model != nil {
+		device.Model = *params.Model
+	}
+
+	if params.Version != nil {
+		device.Version = *params.Version
+	}
+
+	if params.PollerResourcePlugin != nil {
+		device.PollerResourcePlugin = *params.PollerResourcePlugin
+	} else {
+		device.PollerResourcePlugin = pollerDefaultResource
+	}
+
+	if params.PollerProviderPlugin != nil {
+		device.PollerProviderPlugin = *params.PollerProviderPlugin
+	} else {
+		device.PollerProviderPlugin = pollerDefaultProvider
+	}
+
+	if params.LastReboot != nil {
+		device.LastReboot = params.LastReboot
+	}
+	if params.LastSeen != nil {
+		device.LastSeen = params.LastSeen
+	}
+
+	if params.NetworkRegion != nil {
+		device.NetworkRegion = *params.NetworkRegion
 	}
 
 	return d.repo.Upsert(ctx, device)
@@ -97,38 +126,50 @@ func (d *device) Update(ctx context.Context, params *devicepb.UpdateParameters) 
 		return nil, err
 	}
 
-	deviceB := &devicepb.Device{
-		Id: params.Id,
-	}
+	x := proto.Clone(deviceA)
+	var deviceToUpdate = x.(*devicepb.Device)
+
 	if params.Hostname != nil {
-		deviceB.Hostname = *params.Hostname
+		deviceToUpdate.Hostname = *params.Hostname
 	}
 	if params.Domain != nil {
-		deviceB.Domain = *params.Domain
+		deviceToUpdate.Domain = *params.Domain
 	}
 	if params.ManagementIp != nil {
-		deviceB.ManagementIp = *params.ManagementIp
+		deviceToUpdate.ManagementIp = *params.ManagementIp
 	}
 
 	if params.SerialNumber != nil {
-		deviceB.SerialNumber = *params.SerialNumber
+		deviceToUpdate.SerialNumber = *params.SerialNumber
 	}
 	if params.Model != nil {
-		deviceB.Model = *params.Model
+		deviceToUpdate.Model = *params.Model
 	}
 	if params.Version != nil {
-		deviceB.Version = *params.Version
+		deviceToUpdate.Version = *params.Version
 	}
 	if params.PollerResourcePlugin != nil {
-		deviceB.PollerResourcePlugin = *params.PollerResourcePlugin
+		deviceToUpdate.PollerResourcePlugin = *params.PollerResourcePlugin
 	}
 	if params.PollerProviderPlugin != nil {
-		deviceB.PollerProviderPlugin = *params.PollerProviderPlugin
+		deviceToUpdate.PollerProviderPlugin = *params.PollerProviderPlugin
+	}
+	if params.LastReboot != nil {
+		deviceToUpdate.LastReboot = params.LastReboot
+	}
+	if params.LastSeen != nil {
+		deviceToUpdate.LastSeen = params.LastSeen
 	}
 
-	changes := getChanges(deviceA, deviceB)
+	if params.NetworkRegion != nil {
+		deviceToUpdate.NetworkRegion = *params.NetworkRegion
+	}
+
+	changes := getChanges(deviceA, deviceToUpdate)
 	if len(changes) > 0 {
-		deviceB, err = d.repo.Upsert(ctx, deviceB)
+
+		deviceToUpdate, err = d.repo.Upsert(ctx, deviceToUpdate)
+
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +179,7 @@ func (d *device) Update(ctx context.Context, params *devicepb.UpdateParameters) 
 				return nil, err
 			}
 		}
-		return deviceB, nil
+		return deviceToUpdate, nil
 	} else {
 		return deviceA, nil
 	}
@@ -161,9 +202,6 @@ func (d *device) Delete(ctx context.Context, params *devicepb.DeleteParameters) 
 }
 
 func (d *device) ListChanges(ctx context.Context, params *devicepb.ListChangesParameters) (*devicepb.ListChangesResponse, error) {
-	if params.Limit == 0 {
-		params.Limit = 100
-	}
 	c, err := d.repo.ListChanges(ctx, params)
 	if err != nil {
 		return nil, err
@@ -225,4 +263,28 @@ func inStringArray(s string, a []string) bool {
 		}
 	}
 	return false
+}
+
+func (d *device) AddEvent(ctx context.Context, event *devicepb.Event) (*devicepb.Event, error) {
+	if event.DeviceId == "" {
+		return nil, ErrDeviceNotFound
+	}
+
+	return d.repo.AddEvent(ctx, event)
+}
+
+func (d *device) GetEventByID(ctx context.Context, params *devicepb.GetEventByIDParameters) (*devicepb.Event, error) {
+	return d.repo.GetEventByID(ctx, params.Id)
+}
+
+// returns a list of events (default 100)
+func (d *device) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) (*devicepb.ListEventsResponse, error) {
+
+	events, err := d.repo.ListEvents(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return &devicepb.ListEventsResponse{
+		Events: events,
+	}, nil
 }
