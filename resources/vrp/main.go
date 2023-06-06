@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -480,14 +481,24 @@ func (d *VRPDriver) GetRunningConfig(ctx context.Context, req *proto.GetRunningC
 			if len(t.Terminal.Payload) == 0 {
 				return nil, fmt.Errorf("no payload returned from terminal task")
 			}
-
 			payload := t.Terminal.Payload[0]
+			payload.Data = cleanConfig(payload.Data)
+
 			return &proto.GetRunningConfigResponse{
 				Config: payload.Data,
 			}, nil
 		}
 	}
 	return nil, fmt.Errorf("could not get running config, unknown error")
+}
+
+func cleanConfig(conf string) string {
+	var lines []string = regexp.MustCompile("\r?\n").Split(conf, -1)
+	if len(lines) > 2 {
+		// Remove first and last line
+		lines = lines[1 : len(lines)-1]
+	}
+	return strings.Join(lines, "\n")
 }
 
 // handshakeConfigs are used to just do a basic handshake between

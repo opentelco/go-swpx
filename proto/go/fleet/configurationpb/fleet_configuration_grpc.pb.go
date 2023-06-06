@@ -27,7 +27,11 @@ type ConfigurationServiceClient interface {
 	GetByID(ctx context.Context, in *GetByIDParameters, opts ...grpc.CallOption) (*Configuration, error)
 	// Compare compares the configuration of a device with the configuration in the database and returns the changes
 	// if no specific configuration is specified the latest configuration is used to compare with
+	// changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
 	Compare(ctx context.Context, in *CompareParameters, opts ...grpc.CallOption) (*CompareResponse, error)
+	// Diff creates a diff between two configurations (strings) and returns the changes
+	// changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
+	Diff(ctx context.Context, in *DiffParameters, opts ...grpc.CallOption) (*DiffResponse, error)
 	// List lists all configurations for a device
 	List(ctx context.Context, in *ListParameters, opts ...grpc.CallOption) (*ListResponse, error)
 	// Create a device configuration in the fleet (this is used to store the configuration of a device)
@@ -56,6 +60,15 @@ func (c *configurationServiceClient) GetByID(ctx context.Context, in *GetByIDPar
 func (c *configurationServiceClient) Compare(ctx context.Context, in *CompareParameters, opts ...grpc.CallOption) (*CompareResponse, error) {
 	out := new(CompareResponse)
 	err := c.cc.Invoke(ctx, "/fleet.configuration.ConfigurationService/Compare", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configurationServiceClient) Diff(ctx context.Context, in *DiffParameters, opts ...grpc.CallOption) (*DiffResponse, error) {
+	out := new(DiffResponse)
+	err := c.cc.Invoke(ctx, "/fleet.configuration.ConfigurationService/Diff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +110,11 @@ type ConfigurationServiceServer interface {
 	GetByID(context.Context, *GetByIDParameters) (*Configuration, error)
 	// Compare compares the configuration of a device with the configuration in the database and returns the changes
 	// if no specific configuration is specified the latest configuration is used to compare with
+	// changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
 	Compare(context.Context, *CompareParameters) (*CompareResponse, error)
+	// Diff creates a diff between two configurations (strings) and returns the changes
+	// changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
+	Diff(context.Context, *DiffParameters) (*DiffResponse, error)
 	// List lists all configurations for a device
 	List(context.Context, *ListParameters) (*ListResponse, error)
 	// Create a device configuration in the fleet (this is used to store the configuration of a device)
@@ -116,6 +133,9 @@ func (UnimplementedConfigurationServiceServer) GetByID(context.Context, *GetByID
 }
 func (UnimplementedConfigurationServiceServer) Compare(context.Context, *CompareParameters) (*CompareResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Compare not implemented")
+}
+func (UnimplementedConfigurationServiceServer) Diff(context.Context, *DiffParameters) (*DiffResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Diff not implemented")
 }
 func (UnimplementedConfigurationServiceServer) List(context.Context, *ListParameters) (*ListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
@@ -171,6 +191,24 @@ func _ConfigurationService_Compare_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigurationServiceServer).Compare(ctx, req.(*CompareParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConfigurationService_Diff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiffParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigurationServiceServer).Diff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.configuration.ConfigurationService/Diff",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigurationServiceServer).Diff(ctx, req.(*DiffParameters))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -243,6 +281,10 @@ var ConfigurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Compare",
 			Handler:    _ConfigurationService_Compare_Handler,
+		},
+		{
+			MethodName: "Diff",
+			Handler:    _ConfigurationService_Diff_Handler,
 		},
 		{
 			MethodName: "List",

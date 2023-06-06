@@ -35,7 +35,12 @@ service ConfigurationService {
 
     // Compare compares the configuration of a device with the configuration in the database and returns the changes
     // if no specific configuration is specified the latest configuration is used to compare with
+    // changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
     rpc Compare(CompareParameters) returns (CompareResponse) {}
+
+    // Diff creates a diff between two configurations (strings) and returns the changes
+    // changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
+    rpc Diff(DiffParameters) returns (DiffResponse) {}
 
     // List lists all configurations for a device
     rpc List(ListParameters) returns (ListResponse) {}
@@ -59,11 +64,17 @@ message Configuration {
     // the configuration as a string
     string configuration = 3;
 
-    // the timestamp when the configuration was created (fetched from the device)
-    google.protobuf.Timestamp created = 4;
+    // changes in unified format
+    // https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
+    string changes = 4;
 
-    // the hash of the config (used to compare configs)
-    string hash = 5;
+
+    // the checksum of the config (used to compare configs)
+    string checksum = 5;
+
+    // the timestamp when the configuration was created (fetched from the device)
+    google.protobuf.Timestamp created = 6;
+
 }
 
 message GetByIDParameters {
@@ -71,15 +82,12 @@ message GetByIDParameters {
     string id = 1;
 }
 message CompareParameters {
-    // the id of the device to compare the configuration for
-    string device_id = 1;
-
     // the id of the configuration to compare to
-    string configuration_id_a = 2;
+    string configuration_a_id = 1;
 
     // the id of the configuration to compare with
     // if this is not specified the latest configuration before the specified configuration is used
-    string configuration_id_b = 3;
+    string configuration_b_id = 2;
 }
 
 message ListParameters {
@@ -98,9 +106,12 @@ message CreateParameters {
     // the configuration as a string
     string configuration = 2;
 
-    // the hash of the config (used to compare configs) this is optional
+    // changes in unified format
+    string changes = 3;
+
+    // the checksum of the config (used to compare configs) this is optional
     // and if not specified it will be calculated from the configuration
-    string hash = 3;
+    string checksum = 4;
 }
 
 message DeleteParameters {
@@ -112,17 +123,14 @@ message DeleteParameters {
 }
 
 message CompareResponse {
-    // the id of the device to compare the configuration for
-    string device_id = 1;
-
     // the id of the configuration to compare to
-    string configuration_id_a = 2;
+    string configuration_a_id = 1;
 
     // the id of the configuration to compare with
-    string configuration_id_b = 3;
+    string configuration_b_id = 2;
 
     // the diff between the configurations
-    repeated string diffs = 4;
+    string changes = 3;
 }
 
 message ListResponse {
@@ -131,4 +139,19 @@ message ListResponse {
 
     // the configurations for the device
     repeated Configuration configurations = 2;
+}
+
+
+message DiffParameters {
+    // the configuration to compare to
+    string configuration_a = 1;
+
+    // the configuration to compare with
+    string configuration_b = 2;
+}
+
+message DiffResponse {
+    // the diff between the configurations
+    string changes = 1;
+
 }

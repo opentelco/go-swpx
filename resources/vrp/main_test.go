@@ -24,11 +24,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 
 	"git.liero.se/opentelco/go-dnc/models/pb/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"git.liero.se/opentelco/go-swpx/config"
+	"github.com/stretchr/testify/assert"
 
 	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 )
@@ -70,4 +73,13 @@ func (m MockClient) Close() error {
 }
 
 func TestInterfaceDescriptionIndexParser(t *testing.T) {
+}
+
+func Test_ParseConfig(t *testing.T) {
+	f, err := os.ReadFile("tests/vrp_config.cfg")
+	assert.NoError(t, err)
+
+	strConf := string(f)
+	fmt.Println(cleanConfig(strConf))
+
 }

@@ -270,7 +270,7 @@ func (f *fleet) CollectConfig(ctx context.Context, params *fleetpb.CollectConfig
 
 		return nil, fmt.Errorf("could not collect config: %w", err)
 	}
-	hash, err := configuration.Hash(res.Config)
+	checksum, err := configuration.Hash(res.Config)
 	if err != nil {
 		return nil, fmt.Errorf("could not hash config: %w", err)
 	}
@@ -282,9 +282,10 @@ func (f *fleet) CollectConfig(ctx context.Context, params *fleetpb.CollectConfig
 	if err != nil {
 		f.logger.Warn("could not list configs on device", "err", err)
 	}
+	var diffs string
 	if len(configResult.Configurations) > 0 {
-		f.logger.Debug("comparing config hashes", "old", configResult.Configurations[0].Hash, "new", hash)
-		if configResult.Configurations[0].Hash == hash {
+		f.logger.Debug("comparing config checksum", "old", configResult.Configurations[0].Checksum, "new", checksum)
+		if configResult.Configurations[0].Checksum == checksum {
 			if _, err := f.device.AddEvent(ctx, &devicepb.Event{
 				DeviceId: dev.Id,
 				Type:     devicepb.Event_DEVICE,
@@ -294,14 +295,25 @@ func (f *fleet) CollectConfig(ctx context.Context, params *fleetpb.CollectConfig
 			}); err != nil {
 				f.logger.Warn("could not create event on device", "err", err)
 			}
+
 			return configResult.Configurations[0], nil
+		}
+
+		changes, err := f.config.Diff(ctx, &configurationpb.DiffParameters{
+			ConfigurationA: configResult.Configurations[0].Configuration,
+			ConfigurationB: res.Config,
+		})
+		diffs = changes.Changes
+		if err != nil {
+			return nil, fmt.Errorf("could not diff configs: %w", err)
 		}
 	}
 
 	config, err := f.config.Create(ctx, &configurationpb.CreateParameters{
 		DeviceId:      dev.Id,
 		Configuration: res.Config,
-		Hash:          hash,
+		Checksum:      checksum,
+		Changes:       diffs,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not create config: %w", err)
