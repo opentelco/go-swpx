@@ -34,7 +34,7 @@ service FleetService {
     // DiscoverDevice discovers a device in the network, creates the device with the information provided
     // by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
     // NOTE: hostname OR management_ip must be set
-    rpc DiscoverDevice(fleet.device.CreateParameters) returns (fleet.device.Device) {}
+    rpc DiscoverDevice(DiscoverDeviceParameters) returns (fleet.device.Device) {}
 
     // CollectDevice collects information about the device from the network (with the help of the poller)
     // and returns the device with the updated information
@@ -51,9 +51,23 @@ service FleetService {
 message CollectDeviceParameters {
     // the id of the device to collect information for
     string device_id = 1;
+
+    // blocking is used to indicate if the call should block until the device is collected
+    bool blocking = 2;
 }
 
 message CollectConfigParameters {
     // the id of the device to collect the configuration for
     string device_id = 1;
+
+    // blocking is used to indicate if the call should block until the configuration is collected
+    bool blocking = 2;
+}
+
+
+message DiscoverDeviceParameters {
+    fleet.device.CreateParameters create_device_params = 1;
+    // blocking is used to indicate if the call should block until the device is discovered
+    bool blocking = 2;
+
 }

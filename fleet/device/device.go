@@ -113,6 +113,14 @@ func (d *device) Create(ctx context.Context, params *devicepb.CreateParameters) 
 		device.NetworkRegion = *params.NetworkRegion
 	}
 
+	if params.State != nil {
+		device.State = *params.State
+	}
+
+	if params.Status != nil {
+		device.Status = *params.Status
+	}
+
 	return d.repo.Upsert(ctx, device)
 }
 
@@ -163,6 +171,13 @@ func (d *device) Update(ctx context.Context, params *devicepb.UpdateParameters) 
 
 	if params.NetworkRegion != nil {
 		deviceToUpdate.NetworkRegion = *params.NetworkRegion
+	}
+	if params.State != nil {
+		deviceToUpdate.State = *params.State
+	}
+
+	if params.Status != nil {
+		deviceToUpdate.Status = *params.Status
 	}
 
 	changes := getChanges(deviceA, deviceToUpdate)

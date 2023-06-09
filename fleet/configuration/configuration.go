@@ -50,8 +50,10 @@ func (c *config) Compare(ctx context.Context, params *configurationpb.ComparePar
 	}
 
 	resp, err := c.Diff(ctx, &configurationpb.DiffParameters{
-		ConfigurationA: cfga.Configuration,
-		ConfigurationB: cfgb.Configuration,
+		ConfigurationA:   cfga.Configuration,
+		ConfigurationAId: &cfga.Id,
+		ConfigurationB:   cfgb.Configuration,
+		ConfigurationBId: &cfgb.Id,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not create diff between configs: %w", err)
@@ -68,8 +70,19 @@ func (c *config) Compare(ctx context.Context, params *configurationpb.ComparePar
 // Diff creates a diff between two configurations (strings) and returns the changes
 // changes are returned in unified format https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
 func (c *config) Diff(ctx context.Context, params *configurationpb.DiffParameters) (*configurationpb.DiffResponse, error) {
+
+	var prevConfigName string = "previous"
+	var newConfigName string = "new"
+	if params.ConfigurationAId != nil {
+		prevConfigName = fmt.Sprintf("previous: %s", *params.ConfigurationAId)
+	}
+
+	if params.ConfigurationBId != nil {
+		newConfigName = fmt.Sprintf("new: %s", *params.ConfigurationBId)
+	}
+
 	edits := myers.ComputeEdits(span.URIFromPath("device-config.cfg"), params.ConfigurationA, params.ConfigurationB)
-	diff := fmt.Sprint(gotextdiff.ToUnified("previous-config", "new-config", params.ConfigurationA, edits))
+	diff := fmt.Sprint(gotextdiff.ToUnified(prevConfigName, newConfigName, params.ConfigurationA, edits))
 	return &configurationpb.DiffResponse{
 		Changes: diff,
 	}, nil

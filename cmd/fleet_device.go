@@ -24,6 +24,7 @@ func init() {
 	createDeviceCmd.Flags().String("poller-resource-plugin", "", "resource plugin to use when polling the device (VRP, CTC, etc)")
 	fleetDeviceCmd.AddCommand(createDeviceCmd)
 
+	discoverAndCreateDeviceCmd.Flags().Bool("non-blocking", false, "wait for the device to be discovered")
 	discoverAndCreateDeviceCmd.Flags().String("host", "", "the hostname of the device")
 	discoverAndCreateDeviceCmd.Flags().String("domain", "", "domain hostname of the device")
 	discoverAndCreateDeviceCmd.Flags().String("management-ip", "", "management ip of the device")
@@ -126,24 +127,49 @@ var discoverAndCreateDeviceCmd = &cobra.Command{
 		networkRegion, _ := cmd.Flags().GetString("network-region")
 		pollerProviderPlugin, _ := cmd.Flags().GetString("poller-provider-plugin")
 		pollerResourcePlugin, _ := cmd.Flags().GetString("poller-resource-plugin")
+		nonBlocking, _ := cmd.Flags().GetBool("non-blocking")
 
 		fleetClient, err := getFleetClient(cmd)
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
+		params := &devicepb.CreateParameters{}
+		if host != "" {
+			params.Hostname = &host
+		}
 
-		dev, err := fleetClient.DiscoverDevice(cmd.Context(), &devicepb.CreateParameters{
-			Hostname:             &host,
-			Domain:               &domain,
-			ManagementIp:         &managementIp,
-			SerialNumber:         &serial,
-			NetworkRegion:        &networkRegion,
-			Model:                &model,
-			Version:              &version,
-			PollerProviderPlugin: &pollerProviderPlugin,
-			PollerResourcePlugin: &pollerResourcePlugin,
+		if domain != "" {
+			params.Domain = &domain
+		}
+		if managementIp != "" {
+			params.ManagementIp = &managementIp
+		}
+		if serial != "" {
+			params.SerialNumber = &serial
+		}
+		if networkRegion != "" {
+			params.NetworkRegion = &networkRegion
+		}
+		if model != "" {
+			params.Model = &model
+		}
+		if version != "" {
+			params.Version = &version
+		}
+		if pollerProviderPlugin != "" {
+			params.PollerProviderPlugin = &pollerProviderPlugin
+		}
+		if pollerResourcePlugin != "" {
+			params.PollerResourcePlugin = &pollerResourcePlugin
+		}
+
+		cmd.Printf("discover device, blocking: %v\n", !nonBlocking)
+		dev, err := fleetClient.DiscoverDevice(cmd.Context(), &fleetpb.DiscoverDeviceParameters{
+			CreateDeviceParams: params,
+			Blocking:           !nonBlocking,
 		})
+
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)

@@ -50,7 +50,7 @@ func (f *grpcServer) DeleteDevice(ctx context.Context, params *devicepb.DeletePa
 	return f.fleet.DeleteDevice(ctx, params)
 }
 
-func (f *grpcServer) DiscoverDevice(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
+func (f *grpcServer) DiscoverDevice(ctx context.Context, params *fleetpb.DiscoverDeviceParameters) (*devicepb.Device, error) {
 	res, err := f.fleet.DiscoverDevice(ctx, params)
 	if err != nil {
 		return nil, errHandler(err)

@@ -62,20 +62,45 @@ message Device {
     // switch poller provider to use for this device
     string poller_provider_plugin = 10;
 
+    // the state of the device, the current condition of the device
+    // used to determine if the device should be polled or not
+    enum State {
+        DEVICE_STATE_NEW = 0;
+        // the device is active and collection should be done
+        DEVICE_STATE_ACTIVE = 1;
+
+        // the device is inactive and collection should not be done
+        DEVICE_STATE_INACTIVE = 2;
+    }
+    // the state of the device
+    State state = 11;
+
+    // the status of the device, the current reachability of the device
+    // basically the status of the last action done on the device
+    enum Status {
+        DEVICE_STATUS_NEW = 0;
+        // the device could not be reached when polled, discovered or collected
+        DEVICE_STATUS_UNREACHABLE = 1;
+        // the device could be reached when polled, discovered or collected
+        DEVICE_STATUS_REACHABLE = 2;
+    }
+
+    // the status of the device
+    Status status = 12;
+
     // the last time the device was seen
-    google.protobuf.Timestamp last_seen = 11;
+    google.protobuf.Timestamp last_seen = 13;
 
     // the time the device was created
-    google.protobuf.Timestamp created = 12;
+    google.protobuf.Timestamp created = 14;
 
     // the time the device was updated
-    google.protobuf.Timestamp updated = 13;
+    google.protobuf.Timestamp updated = 15;
 
     // the time the device was updated
-    google.protobuf.Timestamp deleted = 14;
+    google.protobuf.Timestamp deleted = 16;
 
-    google.protobuf.Timestamp last_reboot = 15;
-
+    google.protobuf.Timestamp last_reboot = 17;
 }
 
 message Change {
@@ -185,10 +210,17 @@ message CreateParameters {
     optional string poller_resource_plugin = 10;
 
     // the last time the device was seen by collect or discovery
-    optional google.protobuf.Timestamp  last_seen = 11;
+    optional google.protobuf.Timestamp last_seen = 11;
 
     // the last time the device was rebooted (known by the poller)
-    optional google.protobuf.Timestamp  last_reboot = 12;
+    optional google.protobuf.Timestamp last_reboot = 12;
+
+    // the state of the device
+    optional Device.State state = 13;
+
+    // the status of the device, the current reachability of the device
+    // basically the status of the last action done on the device
+    optional Device.Status status = 14;
 }
 
 message UpdateParameters {
@@ -228,11 +260,17 @@ message UpdateParameters {
     optional string sysname = 11;
 
     // the last time the device was seen by collect or discovery
-    optional google.protobuf.Timestamp  last_seen = 12;
+    optional google.protobuf.Timestamp last_seen = 12;
 
     // the last time the device was rebooted (known by the poller)
-    optional google.protobuf.Timestamp  last_reboot = 13;
+    optional google.protobuf.Timestamp last_reboot = 13;
 
+    // the state of the device
+    optional Device.State state = 14;
+
+    // the status of the device, the current reachability of the device
+    // basically the status of the last action done on the device
+    optional Device.Status status = 15;
 }
 message DeleteParameters {
     // the id of the device to delete
@@ -247,7 +285,6 @@ message ListResponse {
 message ListChangesParameters {
     // the id of the device to get changes for
     string device_id = 1;
-
 }
 message ListChangesResponse {
     // the changes that matched the search
@@ -259,11 +296,9 @@ message GetChangeByIDParameters {
     string id = 1;
 }
 
-
 message ListEventsParameters {
     // the id of the device to get Events for
     string device_id = 1;
-
 }
 message ListEventsResponse {
     // the Events that matched the search

@@ -12,11 +12,11 @@ import (
 	"git.liero.se/opentelco/go-swpx/core/api"
 	"git.liero.se/opentelco/go-swpx/core/worker"
 	"git.liero.se/opentelco/go-swpx/database"
-	"git.liero.se/opentelco/go-swpx/fleet"
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	configRepo "git.liero.se/opentelco/go-swpx/fleet/configuration/repo"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
+	"git.liero.se/opentelco/go-swpx/fleet/fleet"
 	corepb "git.liero.se/opentelco/go-swpx/proto/go/core"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
@@ -110,7 +110,11 @@ var StartCmd = &cobra.Command{
 
 		deviceService := device.New(drepo, logger)
 		configService := configuration.New(crepo, logger)
-		fleetService := fleet.New(deviceService, configService, poller, logger)
+		fleetService, err := fleet.New(deviceService, configService, poller, tc, logger)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
 
 		c, err := core.New(&appConfig, mongoClient, logger)
 		if err != nil {

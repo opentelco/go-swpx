@@ -3,6 +3,7 @@ package cmd
 import (
 	"time"
 
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"github.com/spf13/cobra"
@@ -45,4 +46,14 @@ func getFleetClient(cmd *cobra.Command) (fleetpb.FleetServiceClient, error) {
 		return nil, err
 	}
 	return fleetpb.NewFleetServiceClient(conn), nil
+}
+
+func getConfigClient(cmd *cobra.Command) (configurationpb.ConfigurationServiceClient, error) {
+
+	addr, _ := cmd.Flags().GetString("fleet-addr")
+	conn, err := grpc.Dial(addr, grpc.WithTimeout(5*time.Second), grpc.WithBlock(), grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	return configurationpb.NewConfigurationServiceClient(conn), nil
 }

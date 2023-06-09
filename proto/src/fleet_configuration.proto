@@ -146,8 +146,14 @@ message DiffParameters {
     // the configuration to compare to
     string configuration_a = 1;
 
+    // id to show in the diff response (previous: configuration_a_id)
+    optional string configuration_a_id = 2;
+
     // the configuration to compare with
-    string configuration_b = 2;
+    string configuration_b = 3;
+
+    // id to show in the diff response (new: configuration_b_id)
+    optional string configuration_b_id = 4;
 }
 
 message DiffResponse {

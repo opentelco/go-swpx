@@ -15,11 +15,12 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.16.1
+	github.com/hexops/gotextdiff v1.0.3
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/spf13/cobra v1.6.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	go.mongodb.org/mongo-driver v1.11.3
 	go.temporal.io/sdk v1.21.1
 	go.vxfiber.dev/proto-go v0.0.0-20230503202934-214a9bca03ca
@@ -58,7 +59,6 @@ require (
 	github.com/hashicorp/vault/api v1.9.0 // indirect
 	github.com/hashicorp/vault/api/auth/approle v0.4.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
-	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
