@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ func init() {
 	discoverAndCreateDeviceCmd.Flags().String("model", "", "model of the device")
 	discoverAndCreateDeviceCmd.Flags().String("version", "", "what version the device is running")
 	discoverAndCreateDeviceCmd.Flags().String("network-region", "", "network region of the device,used by the poller to determine which network to use")
-	discoverAndCreateDeviceCmd.Flags().String("poller-provider-plugin", "default_provider", "default provider for the device")
+	discoverAndCreateDeviceCmd.Flags().String("poller-provider-plugin", "default", "default provider for the device")
 	discoverAndCreateDeviceCmd.Flags().String("poller-resource-plugin", "", "resource plugin to use when polling the device (VRP, CTC, etc)")
 	fleetDeviceCmd.AddCommand(discoverAndCreateDeviceCmd)
 
@@ -50,11 +51,16 @@ func init() {
 
 	fleetDeviceCmd.AddCommand(deleteDeviceCmd)
 
+	collectDeviceConfig.Flags().Bool("non-blocking", false, "wait for the collection to be completed")
 	fleetDeviceCmd.AddCommand(collectDeviceConfig)
 
+	collectDeviceCmd.Flags().Bool("non-blocking", false, "wait for the collection to be completed")
 	fleetDeviceCmd.AddCommand(collectDeviceCmd)
 
 	fleetDeviceCmd.AddCommand(listDeviceEventsCmd)
+
+	deviceConfigCmd.Flags().BoolP("diff-only", "d", false, "show diff")
+	fleetDeviceCmd.AddCommand(deviceConfigCmd)
 
 	// list
 	listDeviceCmd.Flags().String("search", "", "serach for devices by hostname or serial number")
@@ -363,9 +369,10 @@ var collectDeviceConfig = &cobra.Command{
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
-
+		nonBlocking, _ := cmd.Flags().GetBool("non-blocking")
 		dev, err := fleetClient.CollectConfig(cmd.Context(), &fleetpb.CollectConfigParameters{
 			DeviceId: deviceId,
+			Blocking: !nonBlocking,
 		})
 		if err != nil {
 			cmd.PrintErr(err)
@@ -389,14 +396,67 @@ var collectDeviceCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		nonBlocking, _ := cmd.Flags().GetBool("non-blocking")
 		dev, err := fleetClient.CollectDevice(cmd.Context(), &fleetpb.CollectDeviceParameters{
 			DeviceId: deviceId,
+			Blocking: !nonBlocking,
 		})
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
 		fmt.Println(prettyPrintJSON(dev))
+
+	},
+}
+
+var deviceConfigCmd = &cobra.Command{
+	Use:   "config [deviceId]",
+	Short: "display the last config for a device",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		deviceId := args[0]
+
+		fleetClient, err := getConfigClient(cmd)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		var one int64 = 1
+		cfgs, err := fleetClient.List(cmd.Context(), &configurationpb.ListParameters{
+			DeviceId: deviceId,
+			Limit:    &one,
+		})
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+		if cfgs.Configurations == nil || len(cfgs.Configurations) == 0 {
+			fmt.Println("no config found for device: ", deviceId)
+			return
+		}
+		cfg := cfgs.Configurations[0]
+
+		onlyDiff, _ := cmd.Flags().GetBool("diff-only")
+		if onlyDiff {
+			cmd.Printf(`
+Id: %s	Checksum: %s
+Changes:
+%s
+			`, cfg.Id, cfg.Checksum, cfg.Changes)
+			return
+		} else {
+			cmd.Printf(`
+---- Config ----
+%s
+-----------------------
+Id: %s	Checksum: %s
+Changes:
+%s
+`, cfg.Configuration, cfg.Id, cfg.Checksum, cfg.Changes)
+		}
 
 	},
 }

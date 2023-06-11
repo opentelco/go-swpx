@@ -30,17 +30,8 @@ func CollectDeviceWorkflow(ctx workflow.Context, params *fleetpb.CollectDevicePa
 		if err := addEventCollectFailed(ctx, device.Id, "no respose from device"); err != nil {
 			return nil, err
 		}
-	}
-	if discoverResponse == nil || discoverResponse.NetworkElement == nil {
-		if _, err := setDeviceUnreachable(ctx, device.Id); err != nil {
-			return nil, err
-		}
 
-		if err := addEventCollectFailed(ctx, device.Id, "no data from device"); err != nil {
-			return nil, err
-		}
-
-		return nil, fmt.Errorf("failed to collect device: %w", err)
+		return nil, err
 	}
 
 	// success
@@ -75,7 +66,8 @@ func CollectDeviceWorkflow(ctx workflow.Context, params *fleetpb.CollectDevicePa
 
 	}
 
-	if _, err := updateDevice(ctx, updateParams); err != nil {
+	device, err = updateDevice(ctx, updateParams)
+	if err != nil {
 		return nil, err
 	}
 
@@ -83,5 +75,41 @@ func CollectDeviceWorkflow(ctx workflow.Context, params *fleetpb.CollectDevicePa
 		return nil, err
 	}
 
-	return nil, nil
+	return device, nil
+}
+
+func addEventCollectFailed(ctx workflow.Context, deviceId string, reason string) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: thirty,
+		WaitForCancellation: false,
+	})
+	evt := devicepb.Event{
+		DeviceId: deviceId,
+		Type:     devicepb.Event_DEVICE,
+		Message:  fmt.Sprintf("failed to collect device: %s", reason),
+		Action:   devicepb.Event_COLLECT_DEVICE,
+		Outcome:  devicepb.Event_FAILURE,
+	}
+	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
+		return fmt.Errorf("failed to add 'collection failed' event to device: %w", err)
+	}
+	return nil
+}
+
+func addEventCollectSuccess(ctx workflow.Context, deviceId string) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: thirty,
+		WaitForCancellation: false,
+	})
+	evt := devicepb.Event{
+		DeviceId: deviceId,
+		Type:     devicepb.Event_DEVICE,
+		Message:  "device collected successfully",
+		Action:   devicepb.Event_COLLECT_DEVICE,
+		Outcome:  devicepb.Event_SUCCESS,
+	}
+	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
+		return fmt.Errorf("failed to add 'collection success' event to device: %w", err)
+	}
+	return nil
 }

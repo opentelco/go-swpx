@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/workflows"
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
@@ -107,102 +106,26 @@ func (f *fleet) CollectConfig(ctx context.Context, params *fleetpb.CollectConfig
 	if dev.PollerResourcePlugin == "" {
 		return nil, fmt.Errorf("no poller plugin defined for device %s", dev.Id)
 	}
-
-	var target string
-	if dev.ManagementIp != "" {
-		target = dev.ManagementIp
-	} else {
-		target = dev.Hostname
-	}
-
-	res, err := f.poller.CollectConfig(ctx, &core.CollectConfigRequest{
-		Settings: &core.Settings{
-			ProviderPlugin: []string{dev.PollerProviderPlugin},
-			ResourcePlugin: dev.PollerResourcePlugin,
-			Timeout:        "60s",
-			TqChannel:      core.Settings_CHANNEL_PRIMARY,
-			Priority:       core.Settings_DEFAULT,
+	wf, err := f.temporalClient.ExecuteWorkflow(
+		ctx,
+		client.StartWorkflowOptions{
+			TaskQueue: TaskQueue,
 		},
-		Session: &core.SessionRequest{
-			Hostname:      target,
-			NetworkRegion: dev.NetworkRegion,
-		},
-	})
+		workflows.CollectConfigWorkflow,
+		params,
+	)
 	if err != nil {
-		err = fmt.Errorf("could not collect config: %w", err)
-
-		if _, err := f.device.AddEvent(ctx, &devicepb.Event{
-			DeviceId: dev.Id,
-			Type:     devicepb.Event_DEVICE,
-			Message:  err.Error(),
-			Action:   devicepb.Event_COLLECT_CONFIG,
-			Outcome:  devicepb.Event_FAILURE,
-		}); err != nil {
-			f.logger.Warn("could not create event on device", "err", err)
+		return nil, fmt.Errorf("could not start collect config workflow: %w", err)
+	}
+	if params.Blocking {
+		var config configurationpb.Configuration
+		if err := wf.Get(ctx, &config); err != nil {
+			return nil, fmt.Errorf("could not get collect config result: %w", err)
 		}
-
-		return nil, fmt.Errorf("could not collect config: %w", err)
+		return &config, nil
 	}
-	checksum, err := configuration.Hash(res.Config)
-	if err != nil {
-		return nil, fmt.Errorf("could not hash config: %w", err)
-	}
+	return &configurationpb.Configuration{}, nil
 
-	// determine if config has changed since last collection
-	configResult, err := f.config.List(ctx, &configurationpb.ListParameters{
-		DeviceId: dev.Id,
-	})
-	if err != nil {
-		f.logger.Warn("could not list configs on device", "err", err)
-	}
-	var diffs string
-	if len(configResult.Configurations) > 0 {
-		f.logger.Debug("comparing config checksum", "old", configResult.Configurations[0].Checksum, "new", checksum)
-		if configResult.Configurations[0].Checksum == checksum {
-			if _, err := f.device.AddEvent(ctx, &devicepb.Event{
-				DeviceId: dev.Id,
-				Type:     devicepb.Event_DEVICE,
-				Message:  "config has not changed since last collection, not storing",
-				Action:   devicepb.Event_COLLECT_CONFIG,
-				Outcome:  devicepb.Event_SUCCESS,
-			}); err != nil {
-				f.logger.Warn("could not create event on device", "err", err)
-			}
-
-			return configResult.Configurations[0], nil
-		}
-
-		changes, err := f.config.Diff(ctx, &configurationpb.DiffParameters{
-			ConfigurationA:   configResult.Configurations[0].Configuration,
-			ConfigurationAId: &configResult.Configurations[0].Id,
-			ConfigurationB:   res.Config,
-		})
-		diffs = changes.Changes
-		if err != nil {
-			return nil, fmt.Errorf("could not diff configs: %w", err)
-		}
-	}
-
-	config, err := f.config.Create(ctx, &configurationpb.CreateParameters{
-		DeviceId:      dev.Id,
-		Configuration: res.Config,
-		Checksum:      checksum,
-		Changes:       diffs,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("could not create config: %w", err)
-	}
-
-	if _, err := f.device.AddEvent(ctx, &devicepb.Event{
-		DeviceId: dev.Id,
-		Type:     devicepb.Event_DEVICE,
-		Message:  "collected configuration for device through the poller",
-		Action:   devicepb.Event_COLLECT_CONFIG,
-		Outcome:  devicepb.Event_SUCCESS,
-	}); err != nil {
-		f.logger.Warn("could not create event on device", "err", err)
-	}
-	return config, nil
 }
 
 // DeleteDevice deletes the device, its configuration and all changes related to the device

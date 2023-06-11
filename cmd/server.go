@@ -10,7 +10,6 @@ import (
 	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/core"
 	"git.liero.se/opentelco/go-swpx/core/api"
-	"git.liero.se/opentelco/go-swpx/core/worker"
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	configRepo "git.liero.se/opentelco/go-swpx/fleet/configuration/repo"
@@ -118,13 +117,6 @@ var StartCmd = &cobra.Command{
 
 		c, err := core.New(&appConfig, mongoClient, logger)
 		if err != nil {
-			cmd.PrintErr(err)
-			os.Exit(1)
-		}
-
-		// setup and start the temporal worker
-		w := worker.New(tc, appConfig.Temporal.TaskQueue, c, logger)
-		if err := w.Start(); err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}

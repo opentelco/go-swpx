@@ -6,6 +6,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
+	"github.com/gogo/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -64,8 +65,8 @@ func errHandler(err error) error {
 	}
 	switch err {
 	case ErrNotImplemented:
-		return grpc.Errorf(codes.Unimplemented, err.Error())
+		return status.Errorf(codes.Unimplemented, err.Error())
 	default:
-		return grpc.Errorf(codes.Internal, err.Error())
+		return status.Errorf(codes.Internal, err.Error())
 	}
 }

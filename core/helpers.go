@@ -22,7 +22,7 @@ func (c *Core) selectProviders(ctx context.Context, settings *pb_core.Settings) 
 		}
 
 	} else {
-		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
+		c.logger.Debug("request has no selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
 		if provider, ok := c.providers[c.config.Request.DefaultProvider]; ok {
 			selectedProviders = append(selectedProviders, provider)
 		}

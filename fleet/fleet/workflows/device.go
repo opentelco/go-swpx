@@ -35,42 +35,6 @@ func getDeviceById(ctx workflow.Context, deviceId string) (*devicepb.Device, err
 
 }
 
-func addEventCollectFailed(ctx workflow.Context, deviceId string, reason string) error {
-	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: thirty,
-		WaitForCancellation: false,
-	})
-	evt := devicepb.Event{
-		DeviceId: deviceId,
-		Type:     devicepb.Event_DEVICE,
-		Message:  fmt.Sprintf("failed to collect device: %s", reason),
-		Action:   devicepb.Event_COLLECT_DEVICE,
-		Outcome:  devicepb.Event_FAILURE,
-	}
-	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
-		return fmt.Errorf("failed to add 'collection failed' event to device: %w", err)
-	}
-	return nil
-}
-
-func addEventCollectSuccess(ctx workflow.Context, deviceId string) error {
-	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: thirty,
-		WaitForCancellation: false,
-	})
-	evt := devicepb.Event{
-		DeviceId: deviceId,
-		Type:     devicepb.Event_DEVICE,
-		Message:  "device collected successfully",
-		Action:   devicepb.Event_COLLECT_DEVICE,
-		Outcome:  devicepb.Event_SUCCESS,
-	}
-	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
-		return fmt.Errorf("failed to add 'collection success' event to device: %w", err)
-	}
-	return nil
-}
-
 func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*core.DiscoverResponse, error) {
 	var target string
 	if device.ManagementIp != "" {

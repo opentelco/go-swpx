@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
@@ -42,6 +43,18 @@ func (a *Activities) DiscoverWithPoller(ctx context.Context, params *core.Discov
 	return d, nil
 }
 
+func (a *Activities) CollectConfigWithPoller(ctx context.Context, params *core.CollectConfigRequest) (*core.CollectConfigResponse, error) {
+	resp, err := a.poller.CollectConfig(ctx, params)
+	if err != nil {
+		return nil, temporal.NewNonRetryableApplicationError("could not complete config collection with poller", ErrTypeConfigCollectionFailed, err)
+	}
+	if resp == nil {
+		return nil, temporal.NewNonRetryableApplicationError("no data from poller", ErrTypeConfigCollectionFailed, errors.New("no config data from poller"))
+	}
+	return resp, nil
+
+}
+
 func (a *Activities) CreateDevice(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
 	return a.device.Create(ctx, params)
 }
@@ -75,4 +88,24 @@ func (a *Activities) UpdateDevice(ctx context.Context, params *devicepb.UpdatePa
 		return nil, temporal.NewNonRetryableApplicationError("device not found", ErrTypeDeviceNotFound, err)
 	}
 	return dev, err
+}
+
+func (a *Activities) GetConfigurationByID(ctx context.Context, id string) (*configurationpb.Configuration, error) {
+	c, err := a.config.GetByID(ctx, &configurationpb.GetByIDParameters{Id: id})
+	if errors.Is(err, configuration.ErrConfigurationNotFound) {
+		return nil, temporal.NewNonRetryableApplicationError("configuration not found", ErrTypeConfigNotFound, err)
+	}
+	return c, err
+}
+
+func (a *Activities) CreateConfiguration(ctx context.Context, params *configurationpb.CreateParameters) (*configurationpb.Configuration, error) {
+	return a.config.Create(ctx, params)
+}
+
+func (a *Activities) ListConfigs(ctx context.Context, params *configurationpb.ListParameters) (*configurationpb.ListResponse, error) {
+	return a.config.List(ctx, params)
+}
+
+func (a *Activities) DiffConfigs(ctx context.Context, params *configurationpb.DiffParameters) (*configurationpb.DiffResponse, error) {
+	return a.config.Diff(ctx, params)
 }

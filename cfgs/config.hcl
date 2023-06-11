@@ -5,7 +5,7 @@ grpc_addr = ":1338"
 request {
   default_request_timeout   = "90s"
   default_task_queue_prefix = "VX_SE1"
-  default_provider          = "vx"
+  default_provider          = "default"
   default_cache_ttl         = "30s"
 }
 
