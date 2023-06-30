@@ -3,14 +3,19 @@ package activities
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
+	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
 	"git.liero.se/opentelco/go-swpx/proto/go/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"github.com/hashicorp/go-hclog"
+	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Activities struct {
@@ -18,14 +23,16 @@ type Activities struct {
 	device devicepb.DeviceServiceServer
 	config configurationpb.ConfigurationServiceServer
 	poller core.CoreServiceClient
+	fleet  fleetpb.FleetServiceServer
 }
 
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller core.CoreServiceClient, logger hclog.Logger) *Activities {
+func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, fleet fleetpb.FleetServiceServer, poller core.CoreServiceClient, logger hclog.Logger) *Activities {
 
 	return &Activities{
 		device: device,
 		config: config,
 		poller: poller,
+		fleet:  fleet,
 		logger: logger.Named("fleet"),
 	}
 }
@@ -108,4 +115,190 @@ func (a *Activities) ListConfigs(ctx context.Context, params *configurationpb.Li
 
 func (a *Activities) DiffConfigs(ctx context.Context, params *configurationpb.DiffParameters) (*configurationpb.DiffResponse, error) {
 	return a.config.Diff(ctx, params)
+}
+
+func (a *Activities) ListDevices(ctx context.Context, params *devicepb.ListParameters) (*devicepb.ListResponse, error) {
+	return a.device.List(ctx, params)
+}
+
+func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
+	var hasFiringSchedule = true
+	var scheduleType = devicepb.Device_Schedule_COLLECT_DEVICE
+	var limit int64 = 100
+	var keepGoing = true
+	result := make(chan struct{})
+
+	// heartbeat for the activity
+	go func() {
+		devicesCollected := 0
+		for {
+			select {
+			case <-result:
+				devicesCollected += 1
+				activity.RecordHeartbeat(ctx, devicesCollected)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	for keepGoing {
+
+		res, err := a.device.List(ctx, &devicepb.ListParameters{
+			HasFiringSchedule: &hasFiringSchedule,
+			ScheduleType:      &scheduleType,
+			Limit:             &limit,
+		})
+		if err != nil {
+			return err
+		}
+		// stop if we have no devices
+		if len(res.Devices) == 0 {
+			keepGoing = false
+		}
+
+		wg := sync.WaitGroup{}
+		for _, d := range res.Devices {
+			wg.Add(1)
+
+			go func(d *devicepb.Device) {
+				defer wg.Done()
+
+				s := utils.GetDeviceScheduleByType(d, devicepb.Device_Schedule_COLLECT_DEVICE)
+				_, err := a.fleet.CollectConfig(ctx, &fleetpb.CollectConfigParameters{
+					DeviceId: d.Id,
+					Blocking: true,
+				})
+				if err != nil {
+					a.logger.Warn("could not collect config", "device", d.Id, "error", err)
+					s.FailedCount += 1
+				} else {
+					s.FailedCount = 0
+				}
+
+				s.LastRun = timestamppb.Now()
+
+				// if we have too many failures, deactivate the schedule
+				if s.FailedCount >= device.MaxScheduleFailures {
+					s.Active = false
+					s.FailedCount = 0
+
+					// update schedule
+					if _, err := a.device.SetSchedule(ctx, &devicepb.SetScheduleParameters{
+						DeviceId: d.Id,
+						Schedule: s,
+					}); err != nil {
+						a.logger.Error("could not deactivate schedule", "error", err)
+					}
+
+					if _, err := a.device.AddEvent(ctx, &devicepb.Event{
+						DeviceId: d.Id,
+						Type:     devicepb.Event_DEVICE,
+						Message:  "device schedule deactivated due to too many failures",
+						Action:   devicepb.Event_COLLECT_CONFIG,
+						Outcome:  devicepb.Event_FAILURE,
+					}); err != nil {
+						a.logger.Error("could not add event about deactivate device schedule", "error", err)
+					}
+				} else { // no failures, update schedule and continue
+
+					// update schedule
+					if _, err := a.device.SetSchedule(ctx, &devicepb.SetScheduleParameters{
+						DeviceId: d.Id,
+						Schedule: s,
+					}); err != nil {
+						a.logger.Error("could not deactivate schedule", "error", err)
+					}
+				}
+
+				result <- struct{}{}
+
+			}(d)
+
+		}
+
+		wg.Wait()
+	}
+
+	return nil
+
+}
+
+// CollectDevices is used in the schedule workflow to collect information from devices
+// that have a firing schedule of type COLLECT_DEVICE
+func (a *Activities) CollectDevices(ctx context.Context) error {
+	var hasFiringSchedule = true
+	var scheduleType = devicepb.Device_Schedule_COLLECT_DEVICE
+	var limit int64 = 100
+	var keepGoing = true
+	result := make(chan struct{})
+
+	// heartbeat for the activity
+	go func() {
+		devicesCollected := 0
+		for {
+			select {
+			case <-result:
+				devicesCollected += 1
+				activity.RecordHeartbeat(ctx, devicesCollected)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	for keepGoing {
+
+		res, err := a.device.List(ctx, &devicepb.ListParameters{
+			HasFiringSchedule: &hasFiringSchedule,
+			ScheduleType:      &scheduleType,
+			Limit:             &limit,
+		})
+		if err != nil {
+			return err
+		}
+		// stop if we have no devices
+		if len(res.Devices) == 0 {
+			keepGoing = false
+			continue
+		}
+
+		wg := sync.WaitGroup{}
+		for _, d := range res.Devices {
+			wg.Add(1)
+
+			go func(d *devicepb.Device) {
+				defer wg.Done()
+				s := utils.GetDeviceScheduleByType(d, devicepb.Device_Schedule_COLLECT_DEVICE)
+
+				_, err := a.fleet.CollectDevice(ctx, &fleetpb.CollectDeviceParameters{
+					DeviceId: d.Id,
+					Blocking: true,
+				})
+
+				if err != nil {
+					a.logger.Warn("could not collect device", "device", d.Id, "error", err)
+					s.FailedCount += 1
+				} else {
+					s.FailedCount = 0
+				}
+
+				s.LastRun = timestamppb.Now()
+				if _, err := a.device.SetSchedule(ctx, &devicepb.SetScheduleParameters{
+					DeviceId: d.Id,
+					Schedule: s,
+				}); err != nil {
+					a.logger.Error("could not update schedule (collect device)", "error", err)
+				}
+				result <- struct{}{}
+
+			}(d)
+
+		}
+
+		wg.Wait()
+	}
+
+	return nil
+
 }

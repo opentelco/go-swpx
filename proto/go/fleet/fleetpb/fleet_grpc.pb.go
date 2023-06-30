@@ -28,6 +28,9 @@ type FleetServiceClient interface {
 	// DiscoverDevice discovers a device in the network, creates the device with the information provided
 	// by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
 	// NOTE: hostname OR management_ip must be set
+	// Creating a device will append the default schedles to the device.
+	// - CollectDevice every hour
+	// - CollectConfig every 24 hours
 	DiscoverDevice(ctx context.Context, in *DiscoverDeviceParameters, opts ...grpc.CallOption) (*devicepb.Device, error)
 	// CollectDevice collects information about the device from the network (with the help of the poller)
 	// and returns the device with the updated information
@@ -90,6 +93,9 @@ type FleetServiceServer interface {
 	// DiscoverDevice discovers a device in the network, creates the device with the information provided
 	// by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
 	// NOTE: hostname OR management_ip must be set
+	// Creating a device will append the default schedles to the device.
+	// - CollectDevice every hour
+	// - CollectConfig every 24 hours
 	DiscoverDevice(context.Context, *DiscoverDeviceParameters) (*devicepb.Device, error)
 	// CollectDevice collects information about the device from the network (with the help of the poller)
 	// and returns the device with the updated information

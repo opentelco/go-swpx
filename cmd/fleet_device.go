@@ -7,6 +7,8 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -247,6 +249,7 @@ var listDeviceCmd = &cobra.Command{
 	Use:   "list",
 	Short: "list devices",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		search, err := cmd.Flags().GetString("search")
 		if err != nil {
 			cmd.PrintErr(err)
@@ -260,15 +263,30 @@ var listDeviceCmd = &cobra.Command{
 		}
 
 		res, err := fleetDeviceClient.List(cmd.Context(), &devicepb.ListParameters{
-			Search: search,
+			Search: &search,
 		})
 
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
-		for _, dev := range res.Devices {
-			fmt.Println(prettyPrintJSON(dev))
+
+		items := make([]list.Item, len(res.Devices))
+		for i, dev := range res.Devices {
+			items[i] = item{
+				title: dev.Hostname,
+				desc:  dev.ManagementIp,
+			}
+		}
+
+		m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+		m.list.Title = "Devices"
+
+		p := tea.NewProgram(m, tea.WithAltScreen())
+
+		if _, err := p.Run(); err != nil {
+			fmt.Println("Error running program:", err)
+			os.Exit(1)
 		}
 
 	},

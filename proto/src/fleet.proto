@@ -34,6 +34,9 @@ service FleetService {
     // DiscoverDevice discovers a device in the network, creates the device with the information provided
     // by the poller in the discovery. (e.g. sysname, ip address, mac address, etc)
     // NOTE: hostname OR management_ip must be set
+    // Creating a device will append the default schedles to the device.
+    // - CollectDevice every hour
+    // - CollectConfig every 24 hours
     rpc DiscoverDevice(DiscoverDeviceParameters) returns (fleet.device.Device) {}
 
     // CollectDevice collects information about the device from the network (with the help of the poller)

@@ -29,6 +29,10 @@ func New(device devicepb.DeviceServiceServer, config configurationpb.Configurati
 		return nil, err
 	}
 
+	if err := f.startSchedules(); err != nil {
+		return nil, err
+	}
+
 	return f, nil
 }
 
@@ -142,4 +146,44 @@ func (f *fleet) DeleteDevice(ctx context.Context, params *devicepb.DeleteParamet
 
 	return &emptypb.Empty{}, nil
 
+}
+
+func (f *fleet) startSchedules() error {
+
+	workflowOptions := client.StartWorkflowOptions{
+		ID:           "schedule.collect-config",
+		CronSchedule: "*/5 * * * *",
+		TaskQueue:    TaskQueue,
+	}
+
+	wf, err := f.temporalClient.ExecuteWorkflow(
+		context.Background(),
+		workflowOptions,
+		workflows.CollectConfigScheduleWorkflow,
+	)
+	if err != nil {
+		return fmt.Errorf("could not start cron workflow CollectConfigScheduleWorkflow: %w", err)
+	}
+
+	f.logger.Info("cron workflow started", "workflowID", wf.GetID(), "runID", wf.GetRunID(), "workflow", "CollectConfigScheduleWorkflow")
+
+	/// start cron workflow for collect device
+	workflowOptions = client.StartWorkflowOptions{
+		ID:           "schedule.collect-device",
+		CronSchedule: "*/5 * * * *",
+		TaskQueue:    TaskQueue,
+	}
+
+	wf, err = f.temporalClient.ExecuteWorkflow(
+		context.Background(),
+		workflowOptions,
+		workflows.CollectDeviceScheduleWorkflow,
+	)
+	if err != nil {
+		return fmt.Errorf("could not start cron workflow CollectDeviceScheduleWorkflow: %w", err)
+	}
+
+	f.logger.Info("cron workflow started", "workflowID", wf.GetID(), "runID", wf.GetRunID(), "workflow", "CollectDeviceScheduleWorkflow")
+
+	return nil
 }

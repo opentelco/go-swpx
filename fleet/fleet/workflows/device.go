@@ -45,7 +45,7 @@ func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*core.Discover
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
 		RetryPolicy: &temporal.RetryPolicy{
-			MaximumAttempts:        2,
+			MaximumAttempts:        1,
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
 		},
 	})
@@ -77,4 +77,17 @@ func updateDevice(ctx workflow.Context, params *devicepb.UpdateParameters) (*dev
 		return nil, fmt.Errorf("failed to update device: %w", err)
 	}
 	return &updatedDevice, nil
+}
+
+func listDevices(ctx workflow.Context, params *devicepb.ListParameters) ([]*devicepb.Device, error) {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: sixty,
+		WaitForCancellation: false,
+	})
+	var resp devicepb.ListResponse
+	if err := workflow.ExecuteActivity(ctx, act.ListDevices, params).Get(ctx, &resp); err != nil {
+		return nil, fmt.Errorf("failed to collect device: %w", err)
+	}
+	return resp.Devices, nil
+
 }

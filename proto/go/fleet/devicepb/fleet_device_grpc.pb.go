@@ -30,6 +30,9 @@ type DeviceServiceClient interface {
 	List(ctx context.Context, in *ListParameters, opts ...grpc.CallOption) (*ListResponse, error)
 	// Create a device in the fleet
 	// note: if device needs to be discovered use the FleetService instead
+	// Creating a device will append the default schedles to the device.
+	// - CollectDevice every hour
+	// - CollectConfig every 24 hours
 	Create(ctx context.Context, in *CreateParameters, opts ...grpc.CallOption) (*Device, error)
 	// Update a device in the fleet (this is used to update the device with new information)
 	Update(ctx context.Context, in *UpdateParameters, opts ...grpc.CallOption) (*Device, error)
@@ -46,6 +49,8 @@ type DeviceServiceClient interface {
 	GetEventByID(ctx context.Context, in *GetEventByIDParameters, opts ...grpc.CallOption) (*Event, error)
 	// returns a list of events (default 100)
 	ListEvents(ctx context.Context, in *ListEventsParameters, opts ...grpc.CallOption) (*ListEventsResponse, error)
+	// uspert a schedule for a device, the schedule is unuqie by type
+	SetSchedule(ctx context.Context, in *SetScheduleParameters, opts ...grpc.CallOption) (*Device, error)
 }
 
 type deviceServiceClient struct {
@@ -146,6 +151,15 @@ func (c *deviceServiceClient) ListEvents(ctx context.Context, in *ListEventsPara
 	return out, nil
 }
 
+func (c *deviceServiceClient) SetSchedule(ctx context.Context, in *SetScheduleParameters, opts ...grpc.CallOption) (*Device, error) {
+	out := new(Device)
+	err := c.cc.Invoke(ctx, "/fleet.device.DeviceService/SetSchedule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeviceServiceServer is the server API for DeviceService service.
 // All implementations must embed UnimplementedDeviceServiceServer
 // for forward compatibility
@@ -157,6 +171,9 @@ type DeviceServiceServer interface {
 	List(context.Context, *ListParameters) (*ListResponse, error)
 	// Create a device in the fleet
 	// note: if device needs to be discovered use the FleetService instead
+	// Creating a device will append the default schedles to the device.
+	// - CollectDevice every hour
+	// - CollectConfig every 24 hours
 	Create(context.Context, *CreateParameters) (*Device, error)
 	// Update a device in the fleet (this is used to update the device with new information)
 	Update(context.Context, *UpdateParameters) (*Device, error)
@@ -173,6 +190,8 @@ type DeviceServiceServer interface {
 	GetEventByID(context.Context, *GetEventByIDParameters) (*Event, error)
 	// returns a list of events (default 100)
 	ListEvents(context.Context, *ListEventsParameters) (*ListEventsResponse, error)
+	// uspert a schedule for a device, the schedule is unuqie by type
+	SetSchedule(context.Context, *SetScheduleParameters) (*Device, error)
 	mustEmbedUnimplementedDeviceServiceServer()
 }
 
@@ -209,6 +228,9 @@ func (UnimplementedDeviceServiceServer) GetEventByID(context.Context, *GetEventB
 }
 func (UnimplementedDeviceServiceServer) ListEvents(context.Context, *ListEventsParameters) (*ListEventsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEvents not implemented")
+}
+func (UnimplementedDeviceServiceServer) SetSchedule(context.Context, *SetScheduleParameters) (*Device, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetSchedule not implemented")
 }
 func (UnimplementedDeviceServiceServer) mustEmbedUnimplementedDeviceServiceServer() {}
 
@@ -403,6 +425,24 @@ func _DeviceService_ListEvents_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeviceService_SetSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetScheduleParameters)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceServiceServer).SetSchedule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.device.DeviceService/SetSchedule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceServiceServer).SetSchedule(ctx, req.(*SetScheduleParameters))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DeviceService_ServiceDesc is the grpc.ServiceDesc for DeviceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -449,6 +489,10 @@ var DeviceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListEvents",
 			Handler:    _DeviceService_ListEvents_Handler,
+		},
+		{
+			MethodName: "SetSchedule",
+			Handler:    _DeviceService_SetSchedule_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

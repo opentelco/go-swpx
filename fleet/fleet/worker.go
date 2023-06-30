@@ -29,7 +29,19 @@ func (f *fleet) newWorker() worker.Worker {
 			Name: "fleet.collectDevice",
 		})
 
-	act := activities.New(f.device, f.config, f.poller, f.logger)
+	w.RegisterWorkflowWithOptions(
+		workflows.CollectConfigScheduleWorkflow,
+		workflow.RegisterOptions{
+			Name: "fleet.schedule.collectConfig",
+		})
+
+	w.RegisterWorkflowWithOptions(
+		workflows.CollectDeviceScheduleWorkflow,
+		workflow.RegisterOptions{
+			Name: "fleet.schedule.collectDevice",
+		})
+
+	act := activities.New(f.device, f.config, f, f.poller, f.logger)
 	w.RegisterActivity(act)
 	return w
 }

@@ -31,6 +31,11 @@ var automatedOkList = []string{
 	"only-for-migration-a3",
 	"only-for-migration-a4",
 	"only-for-migration-a5",
+	"only-for-migration-a6",
+	"only-for-migration-a7",
+	"only-for-migration-a8",
+	"only-for-migration-a9",
+	"only-for-migration-a10",
 }
 
 func (s *coreGrpcImpl) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (*pb_core.DiscoverResponse, error) {

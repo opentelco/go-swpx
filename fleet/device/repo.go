@@ -27,4 +27,7 @@ type Repository interface {
 
 	// delete all changes for a specific device (used when deleting a device)
 	DeleteChangersByDeviceID(ctx context.Context, id string) error
+
+	// Upsert a schedule on a device
+	UpsertSchedule(ctx context.Context, deviceId string, schedule *devicepb.Device_Schedule) (*devicepb.Device, error)
 }

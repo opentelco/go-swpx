@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"time"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -16,6 +19,20 @@ import (
 const (
 	pollerDefaultProvider = "default"
 	pollerDefaultResource = "generic"
+	MaxScheduleFailures   = 3
+)
+
+var (
+	defaultScheduleCollectDevice = &devicepb.Device_Schedule{
+		Interval: durationpb.New(time.Hour * 1),
+		Type:     devicepb.Device_Schedule_COLLECT_DEVICE,
+		Active:   true,
+	}
+	defaultScheduleCollectConfig = &devicepb.Device_Schedule{
+		Interval: durationpb.New(time.Hour * 24),
+		Type:     devicepb.Device_Schedule_COLLECT_CONFIG,
+		Active:   true,
+	}
 )
 
 var pj = protojson.MarshalOptions{
@@ -61,7 +78,10 @@ func (d *device) List(ctx context.Context, params *devicepb.ListParameters) (*de
 // Create a device in the fleet
 func (d *device) Create(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
 
-	device := &devicepb.Device{}
+	device := &devicepb.Device{
+		// add the default schedules
+		Schedules: []*devicepb.Device_Schedule{defaultScheduleCollectConfig, defaultScheduleCollectDevice},
+	}
 	if params.Hostname == nil && params.ManagementIp == nil {
 		return nil, ErrHostnameOrManagementIpRequired
 	}
@@ -244,14 +264,16 @@ func getChanges(a, b *devicepb.Device) []*devicepb.Change {
 		if inStringArray(k, skipFields) {
 			continue
 		}
-		if v != bmap[k] {
-			changes = append(changes, &devicepb.Change{
-				DeviceId: a.Id,
-				Field:    k,
-				OldValue: toString(v),
-				NewValue: toString(bmap[k]),
-				Created:  timestamppb.Now(),
-			})
+		if vk, ok := bmap[k]; !ok {
+			if reflect.DeepEqual(v, vk) {
+				changes = append(changes, &devicepb.Change{
+					DeviceId: a.Id,
+					Field:    k,
+					OldValue: toString(v),
+					NewValue: toString(bmap[k]),
+					Created:  timestamppb.Now(),
+				})
+			}
 		}
 	}
 	return changes
@@ -302,4 +324,31 @@ func (d *device) ListEvents(ctx context.Context, params *devicepb.ListEventsPara
 	return &devicepb.ListEventsResponse{
 		Events: events,
 	}, nil
+}
+
+func (d *device) SetSchedule(ctx context.Context, params *devicepb.SetScheduleParameters) (*devicepb.Device, error) {
+	_, err := d.GetByID(ctx, &devicepb.GetByIDParameters{Id: params.DeviceId})
+	if err != nil {
+		return nil, err
+	}
+
+	if params.Schedule == nil {
+		return nil, ErrInvalidArgumentScheduleNotSet
+	}
+
+	if params.Schedule.Type == devicepb.Device_Schedule_SCHEDULE_TYPE_NOT_SET {
+		return nil, ErrInvalidArgumentScheduleTypeNotSet
+	}
+
+	if params.Schedule.Interval.Seconds < 120 {
+		return nil, ErrInvalidArgumentScheduleIntervalTooShort
+	}
+
+	dev, err := d.repo.UpsertSchedule(ctx, params.DeviceId, params.Schedule)
+	if err != nil {
+		return nil, err
+	}
+
+	return dev, nil
+
 }

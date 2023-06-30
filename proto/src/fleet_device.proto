@@ -26,6 +26,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 package fleet.device;
 
@@ -88,18 +89,45 @@ message Device {
     // the status of the device
     Status status = 12;
 
-    // the last time the device was seen
-    google.protobuf.Timestamp last_seen = 13;
+    message Schedule {
+        // duration between each poll
+        // minimum of 120 seconds (2 minutes)
+        google.protobuf.Duration interval = 1;
 
-    // the time the device was created
-    google.protobuf.Timestamp created = 14;
+        enum Type {
+            SCHEDULE_TYPE_NOT_SET = 0;
+            COLLECT_DEVICE        = 1;
+            COLLECT_CONFIG        = 2;
+        }
 
-    // the time the device was updated
-    google.protobuf.Timestamp updated = 15;
+        // the type of schedule
+        Type type = 2;
 
-    // the time the device was updated
-    google.protobuf.Timestamp deleted = 16;
+        // the last time the schedule was run (if it has been run)
+        google.protobuf.Timestamp last_run = 3;
 
+        // if the schedule is active or not (if it should be run)
+        bool active = 4;
+
+        // the number of times the schedule has failed to run
+        // if the schedule has failed more than 3 times it will be disabled. To unlock
+        // the schedule it needs to be manually enabled again and setting failed count to 0
+        int64 failed_count = 5;
+    }
+
+    // the schedules for the device (polling, collection etc)
+    repeated Schedule schedules = 13;
+
+    // the last time the device was seen by the fleet
+    google.protobuf.Timestamp last_seen = 14;
+
+    // the time the device was created in the fleet database
+    google.protobuf.Timestamp created = 15;
+
+    // the time the device was updated in the database
+    google.protobuf.Timestamp updated = 16;
+
+    // last known time when the device was rebooted (uptime from snmp)
     google.protobuf.Timestamp last_reboot = 17;
 }
 
@@ -133,6 +161,9 @@ service DeviceService {
 
     // Create a device in the fleet
     // note: if device needs to be discovered use the FleetService instead
+    // Creating a device will append the default schedles to the device.
+    // - CollectDevice every hour
+    // - CollectConfig every 24 hours
     rpc Create(CreateParameters) returns (Device) {}
 
     // Update a device in the fleet (this is used to update the device with new information)
@@ -156,6 +187,9 @@ service DeviceService {
 
     // returns a list of events (default 100)
     rpc ListEvents(ListEventsParameters) returns (ListEventsResponse) {}
+
+    // uspert a schedule for a device, the schedule is unuqie by type
+    rpc SetSchedule(SetScheduleParameters) returns (Device) {}
 }
 
 message GetByIDParameters {
@@ -165,12 +199,25 @@ message GetByIDParameters {
 
 message ListParameters {
     // hostname of the device (exact match)
-    string hostname = 1;
+    optional string hostname = 1;
     // management ip of the device (exact match)
-    string management_ip = 2;
+    optional string management_ip = 2;
 
     // free text search for hostname and management_ip
-    string search = 3;
+    optional string search = 3;
+
+    // has schedule to be run in the next 10 secs, the device also needs to be in the active state
+    // or it will not be returned (default false)
+    optional bool has_firing_schedule = 4;
+
+    // one of the schedule types to filter on (default all)
+    optional Device.Schedule.Type schedule_type = 5;
+
+    // defaults to 50 devices if not set
+    optional int64 limit = 6;
+
+    // offset to start from (default 0)
+    optional int64 offset = 7;
 }
 
 message CreateParameters {
@@ -345,4 +392,11 @@ message Event {
 
     // the timestamp when the event was created
     google.protobuf.Timestamp created = 7;
+}
+
+message SetScheduleParameters {
+    // the id of the device to upsert the schedule for
+    string device_id = 1;
+    // the schedule to upsert
+    Device.Schedule schedule = 2;
 }

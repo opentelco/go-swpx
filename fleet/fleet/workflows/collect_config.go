@@ -97,7 +97,7 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*core.C
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
 		RetryPolicy: &temporal.RetryPolicy{
-			MaximumAttempts:        2,
+			MaximumAttempts:        1,
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
 		},
 	})
@@ -110,7 +110,7 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*core.C
 			ResourcePlugin: device.PollerResourcePlugin,
 			ProviderPlugin: []string{device.PollerProviderPlugin},
 			RecreateIndex:  false,
-			Timeout:        "60s",
+			Timeout:        "90s",
 			TqChannel:      core.Settings_CHANNEL_PRIMARY,
 			Priority:       core.Settings_DEFAULT,
 		},
