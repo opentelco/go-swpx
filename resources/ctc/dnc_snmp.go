@@ -37,6 +37,7 @@ func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: request.NetworkRegion,
 		Session: &transport.Session{
 			Target: request.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -82,6 +83,7 @@ func createAllVRPTransceiverMsg(request *proto.Request, conf *config.ResourceVRP
 	}
 
 	message := &transport.Message{
+		NetworkRegion: request.NetworkRegion,
 		Session: &transport.Session{
 			Target: request.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -122,6 +124,7 @@ func createLogicalPortIndex(req *proto.Request, conf *config.ResourceVRP) *trans
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -167,6 +170,7 @@ func createTaskSystemInfo(req *proto.Request, conf *config.ResourceVRP) *transpo
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -212,6 +216,7 @@ func createAllPortsMsg(req *proto.Request, conf *config.ResourceVRP) *transport.
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -256,6 +261,7 @@ func createSinglePortMsg(index int64, req *proto.Request, conf *config.ResourceV
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -295,6 +301,7 @@ func createSinglePortMsgShort(index int64, req *proto.Request, conf *config.Reso
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),
@@ -345,6 +352,7 @@ func createMsg(req *proto.Request, conf *config.ResourceCTC) *transport.Message 
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Type:   transport.Type_SNMP,

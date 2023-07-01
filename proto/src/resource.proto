@@ -27,98 +27,97 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
 import "network_element.proto";
 import "google/protobuf/empty.proto";
 
-
 package resource;
 
-
 message VersionResponse {
-  string version = 1;
+    string version = 1;
 }
-
 
 message Status {
-  bool error = 1;
-  int32 code = 2;
-  string type = 3;
-  string message = 4;
+    bool error     = 1;
+    int32 code     = 2;
+    string type    = 3;
+    string message = 4;
 }
-
 
 // PortIndexEntity is a entity that is used to map the port index to the description
 // this is used both for the physical port and the logical port
 message PortIndexEntity {
-  int64 index = 1;
-  string description = 2;
-  string alias = 3;
+    int64 index        = 1;
+    string description = 2;
+    string alias       = 3;
 }
 
 // PortIndex is a map of the port index to the description
 message PortIndex {
-  map<string, PortIndexEntity> ports = 1;
+    map<string, PortIndexEntity> ports = 1;
 }
 
 message Request {
-  // hostname or ip address
-  string hostname = 1;
+    // hostname or ip address
+    string hostname = 1;
 
-  // port name (e.g. GigabitEthernet0/0/1 )
-  string port = 2;
+    // port name (e.g. GigabitEthernet0/0/1 )
+    string port = 2;
 
-  // the number of interfaces discovered on the port
-  // this is used to bulk get with by setting the "repition" to the number of interfaces
-  int32 num_interfaces = 3;
+    // the number of interfaces discovered on the port
+    // this is used to bulk get with by setting the "repition" to the number of interfaces
+    int32 num_interfaces = 3;
 
-  int64 physical_port_index = 4;
-  int64 logical_port_index = 5;
+    int64 physical_port_index = 4;
+    int64 logical_port_index  = 5;
 
-  // should be a string we can parse to a duration
-  // used to set the EOL timeout for requests
-  string timeout = 6;
+    // should be a string we can parse to a duration
+    // used to set the EOL timeout for requests
+    string timeout = 6;
+
+    // network regions passed down in from the SessionReqest.NetworkRegion
+    string network_region = 7;
 }
 
 service Resource {
-  // Get the version of the network element
-  rpc Version(google.protobuf.Empty) returns (VersionResponse);
+    // Get the version of the network element
+    rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
-  // discover the device, type version and other basic information about the device
-  rpc Discover(Request) returns (networkelement.Element);
+    // discover the device, type version and other basic information about the device
+    rpc Discover(Request) returns (networkelement.Element);
 
-  // Map the interfaces with ifIndex and description
-  rpc MapInterface(Request) returns (PortIndex);
+    // Map the interfaces with ifIndex and description
+    rpc MapInterface(Request) returns (PortIndex);
 
-  // Map the interace description and the environemnt index
-  rpc MapEntityPhysical(Request) returns (PortIndex);
+    // Map the interace description and the environemnt index
+    rpc MapEntityPhysical(Request) returns (PortIndex);
 
+    rpc BasicPortInformation(Request) returns (networkelement.Element);
 
-  rpc BasicPortInformation(Request) returns (networkelement.Element);
+    // Get technical information about a port
+    rpc TechnicalPortInformation(Request) returns (networkelement.Element);
 
-  // Get technical information about a port
-  rpc TechnicalPortInformation(Request) returns (networkelement.Element);
+    // Get technical information about all ports TODO: rename
+    rpc AllPortInformation(Request) returns (networkelement.Element);
 
-  // Get technical information about all ports TODO: rename
-  rpc AllPortInformation(Request) returns (networkelement.Element);
+    // Get transceiver information about a interface
+    rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
 
+    // Get transceiver information about all interfaces
+    rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
 
-  // Get transceiver information about a interface
-  rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
-
-  // Get transceiver information about all interfaces
-  rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
-
-
-  // Get the running config and return it
-  rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);
+    // Get the running config and return it
+    rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);
 }
 
 message GetRunningConfigParameters {
-  // hostname or ip address
-  string hostname = 1;
+    // hostname or ip address
+    string hostname = 1;
 
-  // should be a string we can parse to a duration
-  // used to set the EOL timeout for requests
-  string timeout = 3;
+    // should be a string we can parse to a duration
+    // used to set the EOL timeout for requests
+    string timeout = 2;
+
+    // network regions passed down in from the SessionReqest.NetworkRegion
+    string network_region = 3;
 }
 
 message GetRunningConfigResponse {
-  string config = 1;
+    string config = 1;
 }

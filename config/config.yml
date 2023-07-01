@@ -1,9 +1,6 @@
 default_provider: "vx"
 dnc_server_addr: "localhost:1339"
 
-request:
-  default_tq_prefix: "VX_SE2"
-
 
 snmp:
   # community: xWTyZ9nA158ktJF2

@@ -220,9 +220,10 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 
 	var resp pb_core.PollResponse
 	req := proto.Request{
-		Hostname: msg.Session.Hostname,
-		Port:     msg.Session.Port,
-		Timeout:  msg.Settings.Timeout,
+		NetworkRegion: msg.Session.NetworkRegion,
+		Hostname:      msg.Session.Hostname,
+		Port:          msg.Session.Port,
+		Timeout:       msg.Settings.Timeout,
 	}
 
 	var (

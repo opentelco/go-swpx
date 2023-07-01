@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.20
 
 require (
-	git.liero.se/opentelco/go-dnc v1.0.6-0.20230303202849-12ca914b04fe
+	git.liero.se/opentelco/go-dnc v1.0.6-0.20230624210643-42859dcc812a
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/charmbracelet/bubbles v0.16.1
@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tryvium-travels/memongo v0.9.0
 	go.mongodb.org/mongo-driver v1.11.4
-	go.temporal.io/sdk v1.21.1
+	go.temporal.io/sdk v1.21.2
 	go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6
 	go.vxfiber.dev/vx-bouncer v1.5.19
 	google.golang.org/grpc v1.56.1
@@ -105,7 +105,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
-	go.temporal.io/api v1.18.1 // indirect
+	go.temporal.io/api v1.18.2-0.20230324225508-f2c7ab685b44 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/net v0.11.0 // indirect

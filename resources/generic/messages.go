@@ -44,6 +44,7 @@ func createTaskSystemInfo(req *proto.Request, conf *config.Snmp) *transport.Mess
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Port),

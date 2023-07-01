@@ -39,6 +39,7 @@ func createCTCSSHInterfaceTask(req *proto.Request, conf *config.ResourceCTC) *tr
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(sshConf.Port),
@@ -79,6 +80,7 @@ func createCTCDiscoveryMsg(req *proto.Request, conf *config.ResourceCTC) *transp
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),

@@ -58,6 +58,7 @@ func createTaskGetPortStats(index int64, req *proto.Request, conf *config.Resour
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),

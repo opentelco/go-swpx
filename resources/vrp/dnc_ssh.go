@@ -36,6 +36,7 @@ func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(sshConf.Port),
@@ -76,6 +77,7 @@ func createCollectConfigMsg(req *proto.GetRunningConfigParameters, conf *config.
 	}
 
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(sshConf.Port),

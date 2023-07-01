@@ -6,9 +6,6 @@ type RequestConfig struct {
 	// DefaultRequestTimeout is the default timeout to use when no timeout is specified in the request
 	DefaultRequestTimeout Duration `hcl:"default_request_timeout"`
 
-	// DefaultTaskQueuePrefix is the default prefix to use when no prefix is specified in the request
-	DefaultTaskQueuePrefix string `hcl:"default_task_queue_prefix"`
-
 	// DefaultProvider is the default provider to use when no provider is specified in the request
 	DefaultProvider string `hcl:"default_provider,optional"`
 

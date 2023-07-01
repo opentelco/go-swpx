@@ -45,6 +45,7 @@ func createVRPTransceiverMsg(req *proto.Request, conf *config.ResourceVRP) *tran
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: req.NetworkRegion,
 		Session: &transport.Session{
 			Target: req.Hostname,
 			Port:   int32(conf.Snmp.Port),

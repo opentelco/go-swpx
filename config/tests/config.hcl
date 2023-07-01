@@ -27,7 +27,6 @@ switchpoller {
 
   request {
     default_request_timeout = "10s"
-    default_task_queue_prefix = "VX_SE2"
     default_provider = "vx"
     default_cache_ttl = "5m"
   }

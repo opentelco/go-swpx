@@ -28,7 +28,6 @@ import (
 	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/dispatcher"
 	"git.liero.se/opentelco/go-dnc/models/pb/transport"
 	"git.liero.se/opentelco/go-swpx/config"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +44,7 @@ func TestMapInterface(t *testing.T) {
 	}
 
 	req := &proto.Request{
-		Hostname: "någon-host",
+		Hostname: "some-host",
 		Port:     "GigabitEthernet0/0/1",
 	}
 
@@ -58,10 +57,6 @@ func TestMapInterface(t *testing.T) {
 }
 
 type MockClient struct{}
-
-func (m MockClient) Ping() (*dispatcher.PingReply, error) {
-	return &dispatcher.PingReply{}, nil
-}
 
 func (m MockClient) Put(ctx context.Context, msg *transport.Message) (*transport.Message, error) {
 

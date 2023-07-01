@@ -133,12 +133,12 @@ func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.Sess
 	d, err := region.deviceClient.Get(ctx, params)
 	if err != nil {
 		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err, "region", region.region)
-		return nil, nil
+		return nil, err
 	}
 
 	if len(d.Devices) == 0 {
 		p.logger.Warn("could not find device in OSS", "hostname", params.Hostname, "region", region.region)
-		return nil, nil
+		return nil, fmt.Errorf("could not find device in provider inventory system")
 	}
 
 	resp := &provider.ResolveResourcePluginResponse{}
