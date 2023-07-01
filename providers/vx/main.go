@@ -102,9 +102,8 @@ func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.Sess
 	}
 
 	if isIp == nil {
-		domain := fmt.Sprintf(".%s", region.domain)
-		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
-		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
+		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", region.domain)
+		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, region.domain)
 	}
 
 	p.logger.Named("pre.ResolveSessionRequest").Debug("processing request in", "changes", countChanges)
@@ -132,8 +131,13 @@ func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.Sess
 		Hostname: HostFromFQDN(request.Hostname),
 	}
 	d, err := region.deviceClient.Get(ctx, params)
-	if err != nil || len(d.Devices) == 0 {
-		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
+	if err != nil {
+		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err, "region", region.region)
+		return nil, nil
+	}
+
+	if len(d.Devices) == 0 {
+		p.logger.Warn("could not find device in OSS", "hostname", params.Hostname, "region", region.region)
 		return nil, nil
 	}
 
