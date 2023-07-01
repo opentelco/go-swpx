@@ -383,7 +383,7 @@ func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientErro
 }
 
 func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
-	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port)
+	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "region", req.NetworkRegion)
 	errs := make([]*networkelement.TransientError, 0)
 
 	var msgs []*transport.Message
