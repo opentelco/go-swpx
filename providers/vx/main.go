@@ -92,7 +92,6 @@ func (p *Provider) ProcessPollResponse(ctx context.Context, request *core.PollRe
 }
 
 func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
-	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
 	isIp := net.ParseIP(request.Hostname)
@@ -106,14 +105,12 @@ func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.Sess
 		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, region.domain)
 	}
 
-	p.logger.Named("pre.ResolveSessionRequest").Debug("processing request in", "changes", countChanges)
 	return request, nil
 
 }
 
 func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
 	ctx = sdk.WithToken(ctx, p.appToken)
-	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
 	region := p.parseRegion(request.NetworkRegion)
@@ -148,13 +145,10 @@ func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.Sess
 	case "HUAWEI":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "vrp")
 		resp.ResourcePlugin = "vrp"
-		countChanges++
 	case "CTC", "VXFIBER":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "ctc")
 		resp.ResourcePlugin = "ctc"
-		countChanges++
 	}
-	p.logger.Named("pre.ResolveResourcePlugin").Debug("processing request in", "changes", countChanges)
 	return resp, nil
 }
 

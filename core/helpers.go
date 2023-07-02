@@ -38,11 +38,7 @@ func (c *Core) providerGenericPreProccessing(ctx context.Context, session *pb_co
 	for _, provider := range selectedProviders {
 		var err error
 		pname, _ := provider.Name()
-		c.logger.Info("pre-process request with provider", "provider", pname)
-		session, err = provider.ResolveSessionRequest(ctx, session)
-		if err != nil {
-			return err
-		}
+		c.logger.Info("pre-process request", "provider-plugin", pname)
 
 		if settings.ResourcePlugin == "" {
 			rp, err := provider.ResolveResourcePlugin(ctx, session)
@@ -53,6 +49,12 @@ func (c *Core) providerGenericPreProccessing(ctx context.Context, session *pb_co
 				settings.ResourcePlugin = rp.ResourcePlugin
 			}
 		}
+
+		s, err := provider.ResolveSessionRequest(ctx, session)
+		if err != nil {
+			return err
+		}
+		session = s
 
 	}
 
