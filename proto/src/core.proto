@@ -22,7 +22,7 @@
 
 syntax = "proto3";
 package core;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/core";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/corepb";
 
 import "network_element.proto";
 import "google/protobuf/empty.proto";

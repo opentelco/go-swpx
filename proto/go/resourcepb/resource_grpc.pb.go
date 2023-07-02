@@ -4,11 +4,11 @@
 // - protoc             v4.23.2
 // source: resource.proto
 
-package resource
+package resourcepb
 
 import (
 	context "context"
-	networkelement "git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -27,20 +27,20 @@ type ResourceClient interface {
 	// Get the version of the network element
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	// discover the device, type version and other basic information about the device
-	Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error)
 	// Map the interfaces with ifIndex and description
 	MapInterface(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error)
 	// Map the interace description and the environemnt index
 	MapEntityPhysical(ctx context.Context, in *Request, opts ...grpc.CallOption) (*PortIndex, error)
-	BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error)
 	// Get technical information about a port
-	TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error)
 	// Get technical information about all ports TODO: rename
-	AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error)
+	AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error)
 	// Get transceiver information about a interface
-	GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Transceiver, error)
 	// Get transceiver information about all interfaces
-	GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceivers, error)
+	GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Transceivers, error)
 	// Get the running config and return it
 	GetRunningConfig(ctx context.Context, in *GetRunningConfigParameters, opts ...grpc.CallOption) (*GetRunningConfigResponse, error)
 }
@@ -62,8 +62,8 @@ func (c *resourceClient) Version(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
-func (c *resourceClient) Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
-	out := new(networkelement.Element)
+func (c *resourceClient) Discover(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error) {
+	out := new(networkelementpb.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/Discover", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -89,8 +89,8 @@ func (c *resourceClient) MapEntityPhysical(ctx context.Context, in *Request, opt
 	return out, nil
 }
 
-func (c *resourceClient) BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
-	out := new(networkelement.Element)
+func (c *resourceClient) BasicPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error) {
+	out := new(networkelementpb.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/BasicPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -98,8 +98,8 @@ func (c *resourceClient) BasicPortInformation(ctx context.Context, in *Request, 
 	return out, nil
 }
 
-func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
-	out := new(networkelement.Element)
+func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error) {
+	out := new(networkelementpb.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/TechnicalPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -107,8 +107,8 @@ func (c *resourceClient) TechnicalPortInformation(ctx context.Context, in *Reque
 	return out, nil
 }
 
-func (c *resourceClient) AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Element, error) {
-	out := new(networkelement.Element)
+func (c *resourceClient) AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Element, error) {
+	out := new(networkelementpb.Element)
 	err := c.cc.Invoke(ctx, "/resource.Resource/AllPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -116,8 +116,8 @@ func (c *resourceClient) AllPortInformation(ctx context.Context, in *Request, op
 	return out, nil
 }
 
-func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceiver, error) {
-	out := new(networkelement.Transceiver)
+func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Transceiver, error) {
+	out := new(networkelementpb.Transceiver)
 	err := c.cc.Invoke(ctx, "/resource.Resource/GetTransceiverInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -125,8 +125,8 @@ func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Requ
 	return out, nil
 }
 
-func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelement.Transceivers, error) {
-	out := new(networkelement.Transceivers)
+func (c *resourceClient) GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Transceivers, error) {
+	out := new(networkelementpb.Transceivers)
 	err := c.cc.Invoke(ctx, "/resource.Resource/GetAllTransceiverInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -150,20 +150,20 @@ type ResourceServer interface {
 	// Get the version of the network element
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
 	// discover the device, type version and other basic information about the device
-	Discover(context.Context, *Request) (*networkelement.Element, error)
+	Discover(context.Context, *Request) (*networkelementpb.Element, error)
 	// Map the interfaces with ifIndex and description
 	MapInterface(context.Context, *Request) (*PortIndex, error)
 	// Map the interace description and the environemnt index
 	MapEntityPhysical(context.Context, *Request) (*PortIndex, error)
-	BasicPortInformation(context.Context, *Request) (*networkelement.Element, error)
+	BasicPortInformation(context.Context, *Request) (*networkelementpb.Element, error)
 	// Get technical information about a port
-	TechnicalPortInformation(context.Context, *Request) (*networkelement.Element, error)
+	TechnicalPortInformation(context.Context, *Request) (*networkelementpb.Element, error)
 	// Get technical information about all ports TODO: rename
-	AllPortInformation(context.Context, *Request) (*networkelement.Element, error)
+	AllPortInformation(context.Context, *Request) (*networkelementpb.Element, error)
 	// Get transceiver information about a interface
-	GetTransceiverInformation(context.Context, *Request) (*networkelement.Transceiver, error)
+	GetTransceiverInformation(context.Context, *Request) (*networkelementpb.Transceiver, error)
 	// Get transceiver information about all interfaces
-	GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error)
+	GetAllTransceiverInformation(context.Context, *Request) (*networkelementpb.Transceivers, error)
 	// Get the running config and return it
 	GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error)
 	mustEmbedUnimplementedResourceServer()
@@ -176,7 +176,7 @@ type UnimplementedResourceServer struct {
 func (UnimplementedResourceServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (UnimplementedResourceServer) Discover(context.Context, *Request) (*networkelement.Element, error) {
+func (UnimplementedResourceServer) Discover(context.Context, *Request) (*networkelementpb.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
 }
 func (UnimplementedResourceServer) MapInterface(context.Context, *Request) (*PortIndex, error) {
@@ -185,19 +185,19 @@ func (UnimplementedResourceServer) MapInterface(context.Context, *Request) (*Por
 func (UnimplementedResourceServer) MapEntityPhysical(context.Context, *Request) (*PortIndex, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MapEntityPhysical not implemented")
 }
-func (UnimplementedResourceServer) BasicPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+func (UnimplementedResourceServer) BasicPortInformation(context.Context, *Request) (*networkelementpb.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
 }
-func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *Request) (*networkelementpb.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TechnicalPortInformation not implemented")
 }
-func (UnimplementedResourceServer) AllPortInformation(context.Context, *Request) (*networkelement.Element, error) {
+func (UnimplementedResourceServer) AllPortInformation(context.Context, *Request) (*networkelementpb.Element, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllPortInformation not implemented")
 }
-func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *Request) (*networkelement.Transceiver, error) {
+func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *Request) (*networkelementpb.Transceiver, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTransceiverInformation not implemented")
 }
-func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context, *Request) (*networkelement.Transceivers, error) {
+func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context, *Request) (*networkelementpb.Transceivers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllTransceiverInformation not implemented")
 }
 func (UnimplementedResourceServer) GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error) {

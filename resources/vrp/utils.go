@@ -5,13 +5,20 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/metric"
-	"git.liero.se/opentelco/go-dnc/models/pb/snmpc"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	"git.liero.se/opentelco/go-dnc/models/pb/metricpb"
+	"git.liero.se/opentelco/go-dnc/models/pb/sharedpb"
+	"git.liero.se/opentelco/go-dnc/models/pb/snmpcpb"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
+	"git.liero.se/opentelco/go-swpx/config"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/araddon/dateparse"
 	"github.com/hashicorp/go-hclog"
+	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,7 +37,7 @@ type discoveryItem struct {
 	highSpeed   int
 }
 
-func populateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap map[int]*discoveryItem) {
+func populateDiscoveryMap(logger hclog.Logger, task *snmpcpb.Task, discoveryMap map[int]*discoveryItem) {
 	for _, m := range task.Metrics {
 		index, _ := strconv.Atoi(reFindIndexinOID.FindString(m.Oid))
 		switch m.GetName() {
@@ -148,7 +155,7 @@ func populateDiscoveryMap(logger hclog.Logger, task *snmpc.Task, discoveryMap ma
 	}
 }
 
-func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.Interface) {
+func getIfXEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Interface) {
 
 	i, _ := strconv.Atoi(m.GetValue())
 	switch {
@@ -176,7 +183,7 @@ func getIfXEntryInformation(m *metric.Metric, elementInterface *networkelement.I
 
 }
 
-func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
+func getSystemInformation(m *metricpb.Metric, ne *networkelementpb.Element) {
 	switch m.Oid {
 	case oids.SysContact:
 		ne.Contact = m.GetValue()
@@ -193,16 +200,16 @@ func getSystemInformation(m *metric.Metric, ne *networkelement.Element) {
 	}
 }
 
-func itemToInterface(v *discoveryItem) *networkelement.Interface {
-	iface := &networkelement.Interface{
+func itemToInterface(v *discoveryItem) *networkelementpb.Interface {
+	iface := &networkelementpb.Interface{
 		AggregatedId:      "",
 		Index:             int64(v.Index),
 		Alias:             v.Alias,
 		Description:       v.Descr,
 		Hwaddress:         v.physAddress,
-		Type:              networkelement.InterfaceType(v.ifType),
-		AdminStatus:       networkelement.InterfaceStatus(v.adminStatus),
-		OperationalStatus: networkelement.InterfaceStatus(v.operStatus),
+		Type:              networkelementpb.InterfaceType(v.ifType),
+		AdminStatus:       networkelementpb.InterfaceStatus(v.adminStatus),
+		OperationalStatus: networkelementpb.InterfaceStatus(v.operStatus),
 		LastChanged:       v.lastChange,
 		Speed:             int64(v.highSpeed),
 		Mtu:               int64(v.mtu),
@@ -219,4 +226,38 @@ func convertToDb(uw int64) float64 {
 		return -40
 	}
 	return f
+}
+
+func createSSHMessage(req *resourcepb.Request, conf *config.Transport) *transportpb.Message {
+	return &transportpb.Message{
+		Session: &transportpb.Session{
+			NetworkRegion: req.NetworkRegion,
+			Target:        req.Hostname,
+			Port:          int32(conf.Port),
+			Type:          transportpb.Type_SSH,
+		},
+		Task:     &transportpb.Task{},
+		Id:       ksuid.New().String(),
+		Source:   VERSION.String(),
+		Status:   sharedpb.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(shared.ValidateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
+	}
+
+}
+func createSnmpMessage(req *resourcepb.Request, conf *config.ResourceCTC) *transportpb.Message {
+	return &transportpb.Message{
+		Session: &transportpb.Session{
+			NetworkRegion: req.NetworkRegion,
+			Target:        req.Hostname,
+			Type:          transportpb.Type_SNMP,
+		},
+		Task:     &transportpb.Task{},
+		Id:       ksuid.New().String(),
+		Source:   VERSION.String(),
+		Status:   sharedpb.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(shared.ValidateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
+	}
+
 }

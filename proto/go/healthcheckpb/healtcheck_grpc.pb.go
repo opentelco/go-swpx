@@ -4,7 +4,7 @@
 // - protoc             v4.23.2
 // source: healtcheck.proto
 
-package healthcheck
+package healthcheckpb
 
 import (
 	context "context"

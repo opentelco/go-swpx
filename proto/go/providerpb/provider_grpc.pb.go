@@ -4,11 +4,11 @@
 // - protoc             v4.23.2
 // source: provider.proto
 
-package provider
+package providerpb
 
 import (
 	context "context"
-	core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	corepb "git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -28,14 +28,14 @@ type ProviderClient interface {
 	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	// PRE.1 Always called first in the chain of Provider RPCs
 	// Resolve any hostname and or port in the session request
-	ResolveSessionRequest(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*core.SessionRequest, error)
+	ResolveSessionRequest(ctx context.Context, in *corepb.SessionRequest, opts ...grpc.CallOption) (*corepb.SessionRequest, error)
 	// PRE.2 Called second in the chain of Provider RPCs
 	// From the resolved session request, resolve the resource plugin to be used
 	// This is only called if the settings.resource_plugin is empty
-	ResolveResourcePlugin(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error)
+	ResolveResourcePlugin(ctx context.Context, in *corepb.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error)
 	// POST.1 Called in the end after returning any response to the client
 	// Process the Poll response with the provider's own logic
-	ProcessPollResponse(ctx context.Context, in *core.PollResponse, opts ...grpc.CallOption) (*core.PollResponse, error)
+	ProcessPollResponse(ctx context.Context, in *corepb.PollResponse, opts ...grpc.CallOption) (*corepb.PollResponse, error)
 }
 
 type providerClient struct {
@@ -64,8 +64,8 @@ func (c *providerClient) Version(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
-func (c *providerClient) ResolveSessionRequest(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*core.SessionRequest, error) {
-	out := new(core.SessionRequest)
+func (c *providerClient) ResolveSessionRequest(ctx context.Context, in *corepb.SessionRequest, opts ...grpc.CallOption) (*corepb.SessionRequest, error) {
+	out := new(corepb.SessionRequest)
 	err := c.cc.Invoke(ctx, "/provider.Provider/ResolveSessionRequest", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (c *providerClient) ResolveSessionRequest(ctx context.Context, in *core.Ses
 	return out, nil
 }
 
-func (c *providerClient) ResolveResourcePlugin(ctx context.Context, in *core.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error) {
+func (c *providerClient) ResolveResourcePlugin(ctx context.Context, in *corepb.SessionRequest, opts ...grpc.CallOption) (*ResolveResourcePluginResponse, error) {
 	out := new(ResolveResourcePluginResponse)
 	err := c.cc.Invoke(ctx, "/provider.Provider/ResolveResourcePlugin", in, out, opts...)
 	if err != nil {
@@ -82,8 +82,8 @@ func (c *providerClient) ResolveResourcePlugin(ctx context.Context, in *core.Ses
 	return out, nil
 }
 
-func (c *providerClient) ProcessPollResponse(ctx context.Context, in *core.PollResponse, opts ...grpc.CallOption) (*core.PollResponse, error) {
-	out := new(core.PollResponse)
+func (c *providerClient) ProcessPollResponse(ctx context.Context, in *corepb.PollResponse, opts ...grpc.CallOption) (*corepb.PollResponse, error) {
+	out := new(corepb.PollResponse)
 	err := c.cc.Invoke(ctx, "/provider.Provider/ProcessPollResponse", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -99,14 +99,14 @@ type ProviderServer interface {
 	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
 	// PRE.1 Always called first in the chain of Provider RPCs
 	// Resolve any hostname and or port in the session request
-	ResolveSessionRequest(context.Context, *core.SessionRequest) (*core.SessionRequest, error)
+	ResolveSessionRequest(context.Context, *corepb.SessionRequest) (*corepb.SessionRequest, error)
 	// PRE.2 Called second in the chain of Provider RPCs
 	// From the resolved session request, resolve the resource plugin to be used
 	// This is only called if the settings.resource_plugin is empty
-	ResolveResourcePlugin(context.Context, *core.SessionRequest) (*ResolveResourcePluginResponse, error)
+	ResolveResourcePlugin(context.Context, *corepb.SessionRequest) (*ResolveResourcePluginResponse, error)
 	// POST.1 Called in the end after returning any response to the client
 	// Process the Poll response with the provider's own logic
-	ProcessPollResponse(context.Context, *core.PollResponse) (*core.PollResponse, error)
+	ProcessPollResponse(context.Context, *corepb.PollResponse) (*corepb.PollResponse, error)
 	mustEmbedUnimplementedProviderServer()
 }
 
@@ -120,13 +120,13 @@ func (UnimplementedProviderServer) Name(context.Context, *emptypb.Empty) (*NameR
 func (UnimplementedProviderServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (UnimplementedProviderServer) ResolveSessionRequest(context.Context, *core.SessionRequest) (*core.SessionRequest, error) {
+func (UnimplementedProviderServer) ResolveSessionRequest(context.Context, *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResolveSessionRequest not implemented")
 }
-func (UnimplementedProviderServer) ResolveResourcePlugin(context.Context, *core.SessionRequest) (*ResolveResourcePluginResponse, error) {
+func (UnimplementedProviderServer) ResolveResourcePlugin(context.Context, *corepb.SessionRequest) (*ResolveResourcePluginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResolveResourcePlugin not implemented")
 }
-func (UnimplementedProviderServer) ProcessPollResponse(context.Context, *core.PollResponse) (*core.PollResponse, error) {
+func (UnimplementedProviderServer) ProcessPollResponse(context.Context, *corepb.PollResponse) (*corepb.PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessPollResponse not implemented")
 }
 func (UnimplementedProviderServer) mustEmbedUnimplementedProviderServer() {}
@@ -179,7 +179,7 @@ func _Provider_Version_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Provider_ResolveSessionRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(core.SessionRequest)
+	in := new(corepb.SessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -191,13 +191,13 @@ func _Provider_ResolveSessionRequest_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/provider.Provider/ResolveSessionRequest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).ResolveSessionRequest(ctx, req.(*core.SessionRequest))
+		return srv.(ProviderServer).ResolveSessionRequest(ctx, req.(*corepb.SessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_ResolveResourcePlugin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(core.SessionRequest)
+	in := new(corepb.SessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -209,13 +209,13 @@ func _Provider_ResolveResourcePlugin_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/provider.Provider/ResolveResourcePlugin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).ResolveResourcePlugin(ctx, req.(*core.SessionRequest))
+		return srv.(ProviderServer).ResolveResourcePlugin(ctx, req.(*corepb.SessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_ProcessPollResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(core.PollResponse)
+	in := new(corepb.PollResponse)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func _Provider_ProcessPollResponse_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/provider.Provider/ProcessPollResponse",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServer).ProcessPollResponse(ctx, req.(*core.PollResponse))
+		return srv.(ProviderServer).ProcessPollResponse(ctx, req.(*corepb.PollResponse))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -8,7 +8,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"github.com/araddon/dateparse"
 	"go.temporal.io/sdk/temporal"
@@ -54,17 +54,17 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
 		},
 	})
-	var discoverResponse core.DiscoverResponse
-	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &core.DiscoverRequest{
-		Session: &core.SessionRequest{
+	var discoverResponse corepb.DiscoverResponse
+	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &corepb.DiscoverRequest{
+		Session: &corepb.SessionRequest{
 			Hostname: target,
 		},
-		Settings: &core.Settings{
+		Settings: &corepb.Settings{
 			ResourcePlugin: "generic",
 			RecreateIndex:  false,
 			Timeout:        "15s",
-			TqChannel:      core.Settings_CHANNEL_PRIMARY,
-			Priority:       core.Settings_DEFAULT,
+			TqChannel:      corepb.Settings_CHANNEL_PRIMARY,
+			Priority:       corepb.Settings_DEFAULT,
 		},
 	}).Get(ctx, &discoverResponse); err != nil {
 		return nil, fmt.Errorf("failed to discover device: %w", err)

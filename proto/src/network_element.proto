@@ -27,7 +27,7 @@ import "google/protobuf/timestamp.proto";
 import "traffic_policy.proto";
 import "analysis.proto";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelement";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb";
 
 message Element {
   string hostname = 1;

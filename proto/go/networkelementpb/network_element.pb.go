@@ -25,11 +25,11 @@
 // 	protoc        v4.23.2
 // source: network_element.proto
 
-package networkelement
+package networkelementpb
 
 import (
-	analysis "git.liero.se/opentelco/go-swpx/proto/go/analysis"
-	traffic_policy "git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
+	analysispb "git.liero.se/opentelco/go-swpx/proto/go/analysispb"
+	trafficpolicypb "git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -1716,7 +1716,7 @@ type InterfaceStatistics struct {
 	Output *InterfaceStatisticsOutput `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty" bson:"output"`
 	Resets int64                      `protobuf:"varint,3,opt,name=resets,proto3" json:"resets,omitempty" bson:"resets"`
 	// Analysis of interface statistics
-	Analysis []*analysis.Analysis `protobuf:"bytes,4,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
+	Analysis []*analysispb.Analysis `protobuf:"bytes,4,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *InterfaceStatistics) Reset() {
@@ -1772,7 +1772,7 @@ func (x *InterfaceStatistics) GetResets() int64 {
 	return 0
 }
 
-func (x *InterfaceStatistics) GetAnalysis() []*analysis.Analysis {
+func (x *InterfaceStatistics) GetAnalysis() []*analysispb.Analysis {
 	if x != nil {
 		return x.Analysis
 	}
@@ -1784,31 +1784,31 @@ type Interface struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AggregatedId            string                                  `protobuf:"bytes,1,opt,name=aggregated_id,json=aggregatedId,proto3" json:"aggregated_id,omitempty" bson:"aggregated_id"`
-	Index                   int64                                   `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty" bson:"index"`            // snmp index
-	Alias                   string                                  `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty" bson:"alias"`             // Vendor specific alias of interface. GigabitEthernt ...
-	Description             string                                  `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty" bson:"description"` // configured description
-	Hwaddress               string                                  `protobuf:"bytes,5,opt,name=hwaddress,proto3" json:"hwaddress,omitempty" bson:"hwaddress"`
-	Type                    InterfaceType                           `protobuf:"varint,6,opt,name=type,proto3,enum=networkelement.InterfaceType" json:"type,omitempty" bson:"type"`
-	AdminStatus             InterfaceStatus                         `protobuf:"varint,7,opt,name=admin_status,json=adminStatus,proto3,enum=networkelement.InterfaceStatus" json:"admin_status,omitempty" bson:"admin_status"`                   // the desired state of the interface
-	OperationalStatus       InterfaceStatus                         `protobuf:"varint,8,opt,name=operational_status,json=operationalStatus,proto3,enum=networkelement.InterfaceStatus" json:"operational_status,omitempty" bson:"operational_status"` // the current state of the interface
-	LastChanged             *timestamppb.Timestamp                  `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty" bson:"last_changed"`
-	Speed                   int64                                   `protobuf:"varint,11,opt,name=speed,proto3" json:"speed,omitempty" bson:"speed"`
-	Duplex                  string                                  `protobuf:"bytes,12,opt,name=duplex,proto3" json:"duplex,omitempty" bson:"duplex"`
-	Mtu                     int64                                   `protobuf:"varint,13,opt,name=mtu,proto3" json:"mtu,omitempty" bson:"mtu"`
-	Stats                   *InterfaceStatistics                    `protobuf:"bytes,14,opt,name=stats,proto3" json:"stats,omitempty" bson:"stats"`
-	Transceiver             *Transceiver                            `protobuf:"bytes,15,opt,name=transceiver,proto3" json:"transceiver,omitempty" bson:"transceiver"`
-	Neighbor                *Neighbor                               `protobuf:"bytes,16,opt,name=neighbor,proto3" json:"neighbor,omitempty" bson:"neighbor"`
-	MacAddressTable         []*MACEntry                             `protobuf:"bytes,17,rep,name=mac_address_table,json=macAddressTable,proto3" json:"mac_address_table,omitempty" bson:"mac_address_table"`
-	DhcpTable               []*DHCPEntry                            `protobuf:"bytes,18,rep,name=dhcp_table,json=dhcpTable,proto3" json:"dhcp_table,omitempty" bson:"dhcp_table"`
-	Config                  string                                  `protobuf:"bytes,19,opt,name=config,proto3" json:"config,omitempty" bson:"config"` // text blob of current config
-	InterfaceStatus         int64                                   `protobuf:"varint,20,opt,name=interface_status,json=interfaceStatus,proto3" json:"interface_status,omitempty" bson:"interface_status"`
-	ConfiguredTrafficPolicy *traffic_policy.ConfiguredTrafficPolicy `protobuf:"bytes,21,opt,name=configuredTrafficPolicy,proto3" json:"configuredTrafficPolicy,omitempty" bson:"configuredTrafficPolicy"`
-	Qos                     *traffic_policy.QOS                     `protobuf:"bytes,22,opt,name=qos,proto3" json:"qos,omitempty" bson:"qos"`
+	AggregatedId            string                                   `protobuf:"bytes,1,opt,name=aggregated_id,json=aggregatedId,proto3" json:"aggregated_id,omitempty" bson:"aggregated_id"`
+	Index                   int64                                    `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty" bson:"index"`            // snmp index
+	Alias                   string                                   `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty" bson:"alias"`             // Vendor specific alias of interface. GigabitEthernt ...
+	Description             string                                   `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty" bson:"description"` // configured description
+	Hwaddress               string                                   `protobuf:"bytes,5,opt,name=hwaddress,proto3" json:"hwaddress,omitempty" bson:"hwaddress"`
+	Type                    InterfaceType                            `protobuf:"varint,6,opt,name=type,proto3,enum=networkelement.InterfaceType" json:"type,omitempty" bson:"type"`
+	AdminStatus             InterfaceStatus                          `protobuf:"varint,7,opt,name=admin_status,json=adminStatus,proto3,enum=networkelement.InterfaceStatus" json:"admin_status,omitempty" bson:"admin_status"`                   // the desired state of the interface
+	OperationalStatus       InterfaceStatus                          `protobuf:"varint,8,opt,name=operational_status,json=operationalStatus,proto3,enum=networkelement.InterfaceStatus" json:"operational_status,omitempty" bson:"operational_status"` // the current state of the interface
+	LastChanged             *timestamppb.Timestamp                   `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty" bson:"last_changed"`
+	Speed                   int64                                    `protobuf:"varint,11,opt,name=speed,proto3" json:"speed,omitempty" bson:"speed"`
+	Duplex                  string                                   `protobuf:"bytes,12,opt,name=duplex,proto3" json:"duplex,omitempty" bson:"duplex"`
+	Mtu                     int64                                    `protobuf:"varint,13,opt,name=mtu,proto3" json:"mtu,omitempty" bson:"mtu"`
+	Stats                   *InterfaceStatistics                     `protobuf:"bytes,14,opt,name=stats,proto3" json:"stats,omitempty" bson:"stats"`
+	Transceiver             *Transceiver                             `protobuf:"bytes,15,opt,name=transceiver,proto3" json:"transceiver,omitempty" bson:"transceiver"`
+	Neighbor                *Neighbor                                `protobuf:"bytes,16,opt,name=neighbor,proto3" json:"neighbor,omitempty" bson:"neighbor"`
+	MacAddressTable         []*MACEntry                              `protobuf:"bytes,17,rep,name=mac_address_table,json=macAddressTable,proto3" json:"mac_address_table,omitempty" bson:"mac_address_table"`
+	DhcpTable               []*DHCPEntry                             `protobuf:"bytes,18,rep,name=dhcp_table,json=dhcpTable,proto3" json:"dhcp_table,omitempty" bson:"dhcp_table"`
+	Config                  string                                   `protobuf:"bytes,19,opt,name=config,proto3" json:"config,omitempty" bson:"config"` // text blob of current config
+	InterfaceStatus         int64                                    `protobuf:"varint,20,opt,name=interface_status,json=interfaceStatus,proto3" json:"interface_status,omitempty" bson:"interface_status"`
+	ConfiguredTrafficPolicy *trafficpolicypb.ConfiguredTrafficPolicy `protobuf:"bytes,21,opt,name=configuredTrafficPolicy,proto3" json:"configuredTrafficPolicy,omitempty" bson:"configuredTrafficPolicy"`
+	Qos                     *trafficpolicypb.QOS                     `protobuf:"bytes,22,opt,name=qos,proto3" json:"qos,omitempty" bson:"qos"`
 	// provider can fill this in based on collected data
 	ConnectedSdd *Element `protobuf:"bytes,23,opt,name=connected_sdd,json=connectedSdd,proto3" json:"connected_sdd,omitempty" bson:"connected_sdd"` // connected service demarcation device
 	// Analysis of interface health
-	Analysis []*analysis.Analysis `protobuf:"bytes,24,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
+	Analysis []*analysispb.Analysis `protobuf:"bytes,24,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *Interface) Reset() {
@@ -1976,14 +1976,14 @@ func (x *Interface) GetInterfaceStatus() int64 {
 	return 0
 }
 
-func (x *Interface) GetConfiguredTrafficPolicy() *traffic_policy.ConfiguredTrafficPolicy {
+func (x *Interface) GetConfiguredTrafficPolicy() *trafficpolicypb.ConfiguredTrafficPolicy {
 	if x != nil {
 		return x.ConfiguredTrafficPolicy
 	}
 	return nil
 }
 
-func (x *Interface) GetQos() *traffic_policy.QOS {
+func (x *Interface) GetQos() *trafficpolicypb.QOS {
 	if x != nil {
 		return x.Qos
 	}
@@ -1997,7 +1997,7 @@ func (x *Interface) GetConnectedSdd() *Element {
 	return nil
 }
 
-func (x *Interface) GetAnalysis() []*analysis.Analysis {
+func (x *Interface) GetAnalysis() []*analysispb.Analysis {
 	if x != nil {
 		return x.Analysis
 	}
@@ -2162,7 +2162,7 @@ type Transceiver struct {
 	PartNumber        string                   `protobuf:"bytes,9,opt,name=part_number,json=partNumber,proto3" json:"part_number,omitempty" bson:"part_number"`
 	ManufacturingDate string                   `protobuf:"bytes,10,opt,name=manufacturing_date,json=manufacturingDate,proto3" json:"manufacturing_date,omitempty" bson:"manufacturing_date"`
 	Stats             []*TransceiverStatistics `protobuf:"bytes,11,rep,name=stats,proto3" json:"stats,omitempty" bson:"stats"`
-	Analysis          []*analysis.Analysis     `protobuf:"bytes,12,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
+	Analysis          []*analysispb.Analysis   `protobuf:"bytes,12,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *Transceiver) Reset() {
@@ -2274,7 +2274,7 @@ func (x *Transceiver) GetStats() []*TransceiverStatistics {
 	return nil
 }
 
-func (x *Transceiver) GetAnalysis() []*analysis.Analysis {
+func (x *Transceiver) GetAnalysis() []*analysispb.Analysis {
 	if x != nil {
 		return x.Analysis
 	}
@@ -3335,11 +3335,11 @@ var file_network_element_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x4f, 0x6e, 0x75, 0x10, 0x8e, 0x02, 0x12, 0x17, 0x0a, 0x12, 0x61, 0x6c, 0x75, 0x47,
 	0x70, 0x6f, 0x6e, 0x50, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x55, 0x6e, 0x69, 0x10, 0x8f,
 	0x02, 0x12, 0x12, 0x0a, 0x0d, 0x76, 0x6d, 0x77, 0x61, 0x72, 0x65, 0x4e, 0x69, 0x63, 0x54, 0x65,
-	0x61, 0x6d, 0x10, 0x90, 0x02, 0x42, 0x38, 0x5a, 0x36, 0x67, 0x69, 0x74, 0x2e, 0x6c, 0x69, 0x65,
+	0x61, 0x6d, 0x10, 0x90, 0x02, 0x42, 0x3a, 0x5a, 0x38, 0x67, 0x69, 0x74, 0x2e, 0x6c, 0x69, 0x65,
 	0x72, 0x6f, 0x2e, 0x73, 0x65, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x74, 0x65, 0x6c, 0x63, 0x6f, 0x2f,
 	0x67, 0x6f, 0x2d, 0x73, 0x77, 0x70, 0x78, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
-	0x2f, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2f, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x70,
+	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3357,31 +3357,31 @@ func file_network_element_proto_rawDescGZIP() []byte {
 var file_network_element_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_network_element_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_network_element_proto_goTypes = []interface{}{
-	(ModuleType)(0),                                // 0: networkelement.ModuleType
-	(InterfaceStatus)(0),                           // 1: networkelement.InterfaceStatus
-	(InterfaceType)(0),                             // 2: networkelement.InterfaceType
-	(TransientError_Level)(0),                      // 3: networkelement.TransientError.Level
-	(*Element)(nil),                                // 4: networkelement.Element
-	(*TransientErrors)(nil),                        // 5: networkelement.TransientErrors
-	(*TransientError)(nil),                         // 6: networkelement.TransientError
-	(*Module)(nil),                                 // 7: networkelement.Module
-	(*InterfaceStatisticsInput)(nil),               // 8: networkelement.InterfaceStatisticsInput
-	(*InterfaceStatisticsOutput)(nil),              // 9: networkelement.InterfaceStatisticsOutput
-	(*InterfaceStatistics)(nil),                    // 10: networkelement.InterfaceStatistics
-	(*Interface)(nil),                              // 11: networkelement.Interface
-	(*AggregatedInterface)(nil),                    // 12: networkelement.AggregatedInterface
-	(*Transceivers)(nil),                           // 13: networkelement.Transceivers
-	(*Transceiver)(nil),                            // 14: networkelement.Transceiver
-	(*TransceiverStatistics)(nil),                  // 15: networkelement.TransceiverStatistics
-	(*Neighbor)(nil),                               // 16: networkelement.Neighbor
-	(*MACEntry)(nil),                               // 17: networkelement.MACEntry
-	(*DHCPEntry)(nil),                              // 18: networkelement.DHCPEntry
-	(*InterfaceMetrics)(nil),                       // 19: networkelement.InterfaceMetrics
-	(*PhysicalPortInformation)(nil),                // 20: networkelement.PhysicalPortInformation
-	(*analysis.Analysis)(nil),                      // 21: analysis.Analysis
-	(*timestamppb.Timestamp)(nil),                  // 22: google.protobuf.Timestamp
-	(*traffic_policy.ConfiguredTrafficPolicy)(nil), // 23: traffic_policy.ConfiguredTrafficPolicy
-	(*traffic_policy.QOS)(nil),                     // 24: traffic_policy.QOS
+	(ModuleType)(0),                                 // 0: networkelement.ModuleType
+	(InterfaceStatus)(0),                            // 1: networkelement.InterfaceStatus
+	(InterfaceType)(0),                              // 2: networkelement.InterfaceType
+	(TransientError_Level)(0),                       // 3: networkelement.TransientError.Level
+	(*Element)(nil),                                 // 4: networkelement.Element
+	(*TransientErrors)(nil),                         // 5: networkelement.TransientErrors
+	(*TransientError)(nil),                          // 6: networkelement.TransientError
+	(*Module)(nil),                                  // 7: networkelement.Module
+	(*InterfaceStatisticsInput)(nil),                // 8: networkelement.InterfaceStatisticsInput
+	(*InterfaceStatisticsOutput)(nil),               // 9: networkelement.InterfaceStatisticsOutput
+	(*InterfaceStatistics)(nil),                     // 10: networkelement.InterfaceStatistics
+	(*Interface)(nil),                               // 11: networkelement.Interface
+	(*AggregatedInterface)(nil),                     // 12: networkelement.AggregatedInterface
+	(*Transceivers)(nil),                            // 13: networkelement.Transceivers
+	(*Transceiver)(nil),                             // 14: networkelement.Transceiver
+	(*TransceiverStatistics)(nil),                   // 15: networkelement.TransceiverStatistics
+	(*Neighbor)(nil),                                // 16: networkelement.Neighbor
+	(*MACEntry)(nil),                                // 17: networkelement.MACEntry
+	(*DHCPEntry)(nil),                               // 18: networkelement.DHCPEntry
+	(*InterfaceMetrics)(nil),                        // 19: networkelement.InterfaceMetrics
+	(*PhysicalPortInformation)(nil),                 // 20: networkelement.PhysicalPortInformation
+	(*analysispb.Analysis)(nil),                     // 21: analysis.Analysis
+	(*timestamppb.Timestamp)(nil),                   // 22: google.protobuf.Timestamp
+	(*trafficpolicypb.ConfiguredTrafficPolicy)(nil), // 23: traffic_policy.ConfiguredTrafficPolicy
+	(*trafficpolicypb.QOS)(nil),                     // 24: traffic_policy.QOS
 }
 var file_network_element_proto_depIdxs = []int32{
 	11, // 0: networkelement.Element.interfaces:type_name -> networkelement.Interface

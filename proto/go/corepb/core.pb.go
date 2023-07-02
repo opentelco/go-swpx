@@ -25,10 +25,10 @@
 // 	protoc        v4.23.2
 // source: core.proto
 
-package core
+package corepb
 
 import (
-	networkelement "git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -530,11 +530,11 @@ type PollResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NetworkElement  *networkelement.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
-	PhysicalPort    string                  `protobuf:"bytes,3,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty" bson:"physical_port"`
-	Error           *Error                  `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty" bson:"error"`
-	RequestAccessId string                  `protobuf:"bytes,5,opt,name=request_access_id,json=requestAccessId,proto3" json:"request_access_id,omitempty" bson:"request_access_id"`
-	ExecutionTime   string                  `protobuf:"bytes,6,opt,name=execution_time,json=executionTime,proto3" json:"execution_time,omitempty" bson:"execution_time"`
+	NetworkElement  *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
+	PhysicalPort    string                    `protobuf:"bytes,3,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty" bson:"physical_port"`
+	Error           *Error                    `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty" bson:"error"`
+	RequestAccessId string                    `protobuf:"bytes,5,opt,name=request_access_id,json=requestAccessId,proto3" json:"request_access_id,omitempty" bson:"request_access_id"`
+	ExecutionTime   string                    `protobuf:"bytes,6,opt,name=execution_time,json=executionTime,proto3" json:"execution_time,omitempty" bson:"execution_time"`
 }
 
 func (x *PollResponse) Reset() {
@@ -569,7 +569,7 @@ func (*PollResponse) Descriptor() ([]byte, []int) {
 	return file_core_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *PollResponse) GetNetworkElement() *networkelement.Element {
+func (x *PollResponse) GetNetworkElement() *networkelementpb.Element {
 	if x != nil {
 		return x.NetworkElement
 	}
@@ -667,7 +667,7 @@ type DiscoverResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NetworkElement *networkelement.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
+	NetworkElement *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
 }
 
 func (x *DiscoverResponse) Reset() {
@@ -702,7 +702,7 @@ func (*DiscoverResponse) Descriptor() ([]byte, []int) {
 	return file_core_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *DiscoverResponse) GetNetworkElement() *networkelement.Element {
+func (x *DiscoverResponse) GetNetworkElement() *networkelementpb.Element {
 	if x != nil {
 		return x.NetworkElement
 	}
@@ -1315,11 +1315,11 @@ var file_core_proto_rawDesc = []byte{
 	0x73, 0x73, 0x12, 0x1a, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x64,
 	0x65, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b,
 	0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x41, 0x63, 0x63,
-	0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x2e, 0x5a, 0x2c, 0x67,
+	0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x30, 0x5a, 0x2e, 0x67,
 	0x69, 0x74, 0x2e, 0x6c, 0x69, 0x65, 0x72, 0x6f, 0x2e, 0x73, 0x65, 0x2f, 0x6f, 0x70, 0x65, 0x6e,
 	0x74, 0x65, 0x6c, 0x63, 0x6f, 0x2f, 0x67, 0x6f, 0x2d, 0x73, 0x77, 0x70, 0x78, 0x2f, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1337,28 +1337,28 @@ func file_core_proto_rawDescGZIP() []byte {
 var file_core_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_core_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_core_proto_goTypes = []interface{}{
-	(Settings_Channel)(0),          // 0: core.Settings.Channel
-	(Settings_Priority)(0),         // 1: core.Settings.Priority
-	(PollRequest_Type)(0),          // 2: core.PollRequest.Type
-	(*Error)(nil),                  // 3: core.Error
-	(*Settings)(nil),               // 4: core.Settings
-	(*SessionRequest)(nil),         // 5: core.SessionRequest
-	(*PollRequest)(nil),            // 6: core.PollRequest
-	(*PollResponse)(nil),           // 7: core.PollResponse
-	(*DiscoverRequest)(nil),        // 8: core.DiscoverRequest
-	(*DiscoverResponse)(nil),       // 9: core.DiscoverResponse
-	(*CommandRequest)(nil),         // 10: core.CommandRequest
-	(*CommandResponse)(nil),        // 11: core.CommandResponse
-	(*InformationResponse)(nil),    // 12: core.InformationResponse
-	(*ProvideCPERequest)(nil),      // 13: core.ProvideCPERequest
-	(*ProvideCPEResponse)(nil),     // 14: core.ProvideCPEResponse
-	(*ProvideAccessRequest)(nil),   // 15: core.ProvideAccessRequest
-	(*ProvideAccessResponse)(nil),  // 16: core.ProvideAccessResponse
-	(*CollectConfigRequest)(nil),   // 17: core.CollectConfigRequest
-	(*ConfigChange)(nil),           // 18: core.ConfigChange
-	(*CollectConfigResponse)(nil),  // 19: core.CollectConfigResponse
-	(*networkelement.Element)(nil), // 20: networkelement.Element
-	(*emptypb.Empty)(nil),          // 21: google.protobuf.Empty
+	(Settings_Channel)(0),            // 0: core.Settings.Channel
+	(Settings_Priority)(0),           // 1: core.Settings.Priority
+	(PollRequest_Type)(0),            // 2: core.PollRequest.Type
+	(*Error)(nil),                    // 3: core.Error
+	(*Settings)(nil),                 // 4: core.Settings
+	(*SessionRequest)(nil),           // 5: core.SessionRequest
+	(*PollRequest)(nil),              // 6: core.PollRequest
+	(*PollResponse)(nil),             // 7: core.PollResponse
+	(*DiscoverRequest)(nil),          // 8: core.DiscoverRequest
+	(*DiscoverResponse)(nil),         // 9: core.DiscoverResponse
+	(*CommandRequest)(nil),           // 10: core.CommandRequest
+	(*CommandResponse)(nil),          // 11: core.CommandResponse
+	(*InformationResponse)(nil),      // 12: core.InformationResponse
+	(*ProvideCPERequest)(nil),        // 13: core.ProvideCPERequest
+	(*ProvideCPEResponse)(nil),       // 14: core.ProvideCPEResponse
+	(*ProvideAccessRequest)(nil),     // 15: core.ProvideAccessRequest
+	(*ProvideAccessResponse)(nil),    // 16: core.ProvideAccessResponse
+	(*CollectConfigRequest)(nil),     // 17: core.CollectConfigRequest
+	(*ConfigChange)(nil),             // 18: core.ConfigChange
+	(*CollectConfigResponse)(nil),    // 19: core.CollectConfigResponse
+	(*networkelementpb.Element)(nil), // 20: networkelement.Element
+	(*emptypb.Empty)(nil),            // 21: google.protobuf.Empty
 }
 var file_core_proto_depIdxs = []int32{
 	0,  // 0: core.Settings.tq_channel:type_name -> core.Settings.Channel

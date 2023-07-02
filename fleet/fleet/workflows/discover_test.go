@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	"github.com/stretchr/testify/mock"
 	"go.temporal.io/sdk/workflow"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -25,21 +25,21 @@ func (t *unitTestSuite) TestDiscoverWorkflowParamsHost() {
 		NetworkRegion: &[]string{"ABC"}[0],
 	}
 
-	discoverWithPollerParams := &core.DiscoverRequest{
-		Session: &core.SessionRequest{
+	discoverWithPollerParams := &corepb.DiscoverRequest{
+		Session: &corepb.SessionRequest{
 			Hostname: "host-a1",
 		},
-		Settings: &core.Settings{
+		Settings: &corepb.Settings{
 			ResourcePlugin: "generic",
 			RecreateIndex:  false,
 			Timeout:        "30s",
-			TqChannel:      core.Settings_CHANNEL_PRIMARY,
-			Priority:       core.Settings_DEFAULT,
+			TqChannel:      corepb.Settings_CHANNEL_PRIMARY,
+			Priority:       corepb.Settings_DEFAULT,
 		},
 	}
 
-	discoverWithPollerResp := &core.DiscoverResponse{
-		NetworkElement: &networkelement.Element{
+	discoverWithPollerResp := &corepb.DiscoverResponse{
+		NetworkElement: &networkelementpb.Element{
 			Sysname:      "host-a1",
 			Version:      "1.0.0",
 			SnmpObjectId: "1.0.0.0.232.23132.2.0",
@@ -51,7 +51,7 @@ func (t *unitTestSuite) TestDiscoverWorkflowParamsHost() {
 	createDeviceParams := &devicepb.CreateParameters{
 		Hostname: &[]string{"host-a1"}[0],
 		Sysname:  &discoverWithPollerResp.NetworkElement.Sysname,
-		// Model:         &discoverWithPollerResp.NetworkElement.SnmpObjectId,
+		// Model:         &discoverWithPollerResp.NetworkElementpb.SnmpObjectId,
 		Version:       &discoverWithPollerResp.NetworkElement.Version,
 		NetworkRegion: params.NetworkRegion,
 		LastSeen:      timestamppb.New(testTime),

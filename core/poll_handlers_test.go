@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"testing"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 )
 
 func Test_RequestResolver(t *testing.T) {
 
-	req := &pb_core.PollRequest{
-		Session: &pb_core.SessionRequest{
+	req := &corepb.PollRequest{
+		Session: &corepb.SessionRequest{
 			Hostname:      "hostname-a1",
 			Port:          "Port1",
 			NetworkRegion: "VX_DE1",
 		},
-		Settings: &pb_core.Settings{
+		Settings: &corepb.Settings{
 			ProviderPlugin: []string{"vx"},
 			ResourcePlugin: "",
 		},
-		Type: pb_core.PollRequest_GET_BASIC_INFO,
+		Type: corepb.PollRequest_GET_BASIC_INFO,
 	}
 
 	test_x(req.Session)
@@ -28,7 +28,7 @@ func Test_RequestResolver(t *testing.T) {
 
 }
 
-func test_x(sess *pb_core.SessionRequest) {
+func test_x(sess *corepb.SessionRequest) {
 	sess.Hostname = "hostname-a1-proccessed"
 	sess.Port = "Port1-processed"
 	sess.NetworkRegion = "VX_DE1-processed"

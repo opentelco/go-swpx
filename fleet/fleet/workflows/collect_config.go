@@ -5,7 +5,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
@@ -87,7 +87,7 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 	return storedConfig, nil
 }
 
-func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*core.CollectConfigResponse, error) {
+func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*corepb.CollectConfigResponse, error) {
 	var target string
 	if device.ManagementIp != "" {
 		target = device.ManagementIp
@@ -101,18 +101,18 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*core.C
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
 		},
 	})
-	var configResponse core.CollectConfigResponse
-	if err := workflow.ExecuteActivity(ctx, act.CollectConfigWithPoller, &core.CollectConfigRequest{
-		Session: &core.SessionRequest{
+	var configResponse corepb.CollectConfigResponse
+	if err := workflow.ExecuteActivity(ctx, act.CollectConfigWithPoller, &corepb.CollectConfigRequest{
+		Session: &corepb.SessionRequest{
 			Hostname: target,
 		},
-		Settings: &core.Settings{
+		Settings: &corepb.Settings{
 			ResourcePlugin: device.PollerResourcePlugin,
 			ProviderPlugin: []string{device.PollerProviderPlugin},
 			RecreateIndex:  false,
 			Timeout:        "90s",
-			TqChannel:      core.Settings_CHANNEL_PRIMARY,
-			Priority:       core.Settings_DEFAULT,
+			TqChannel:      corepb.Settings_CHANNEL_PRIMARY,
+			Priority:       corepb.Settings_DEFAULT,
 		},
 	}).Get(ctx, &configResponse); err != nil {
 		return nil, fmt.Errorf("failed to discover device: %w", err)

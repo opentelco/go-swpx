@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 )
 
-func (c *Core) CollectConfig(ctx context.Context, request *core.CollectConfigRequest) (*core.CollectConfigResponse, error) {
+func (c *Core) CollectConfig(ctx context.Context, request *corepb.CollectConfigRequest) (*corepb.CollectConfigResponse, error) {
 
 	selectedProviders, err := c.selectProviders(ctx, request.Settings)
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *Core) CollectConfig(ctx context.Context, request *core.CollectConfigReq
 		return nil, NewError("selected resource plugin is missing/does not exist", ErrCodeInvalidResource)
 	}
 
-	resp, err := plugin.GetRunningConfig(ctx, &resource.GetRunningConfigParameters{
+	resp, err := plugin.GetRunningConfig(ctx, &resourcepb.GetRunningConfigParameters{
 		Hostname: request.Session.Hostname,
 		Timeout:  request.Session.Hostname,
 	})
@@ -54,9 +54,9 @@ func (c *Core) CollectConfig(ctx context.Context, request *core.CollectConfigReq
 	}
 
 	// compare with stored config from database
-	return &core.CollectConfigResponse{
+	return &corepb.CollectConfigResponse{
 		Config:  resp.Config,
-		Changes: []*core.ConfigChange{},
+		Changes: []*corepb.ConfigChange{},
 	}, nil
 
 }

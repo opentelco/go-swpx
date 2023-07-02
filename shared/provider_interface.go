@@ -29,8 +29,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
 )
 
 // Provider is the interface that we're exposing as a Provider plugin.
@@ -39,17 +39,17 @@ type Provider interface {
 	Version() (string, error)
 
 	// Process the request before it hits the main functions  in the Core
-	ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error)
+	ResolveSessionRequest(ctx context.Context, request *corepb.SessionRequest) (*corepb.SessionRequest, error)
 
 	// Process the network element after data has been collected
-	ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error)
+	ProcessPollResponse(ctx context.Context, resp *corepb.PollResponse) (*corepb.PollResponse, error)
 
-	ResolveResourcePlugin(ctx context.Context, request *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error)
+	ResolveResourcePlugin(ctx context.Context, request *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error)
 }
 
 // Here is an implementation that talks over GRPC
 type ProviderGRPCClient struct {
-	client proto.ProviderClient
+	client providerpb.ProviderClient
 }
 
 func (p *ProviderGRPCClient) Name() (string, error) {
@@ -65,43 +65,43 @@ func (p *ProviderGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
-func (p *ProviderGRPCClient) ResolveSessionRequest(ctx context.Context, req *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {
+func (p *ProviderGRPCClient) ResolveSessionRequest(ctx context.Context, req *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	return p.client.ResolveSessionRequest(ctx, req)
 }
 
-func (p *ProviderGRPCClient) ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error) {
+func (p *ProviderGRPCClient) ProcessPollResponse(ctx context.Context, resp *corepb.PollResponse) (*corepb.PollResponse, error) {
 	return p.client.ProcessPollResponse(ctx, resp)
 }
 
-func (p *ProviderGRPCClient) ResolveResourcePlugin(ctx context.Context, req *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error) {
+func (p *ProviderGRPCClient) ResolveResourcePlugin(ctx context.Context, req *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
 	return p.client.ResolveResourcePlugin(ctx, req)
 }
 
 // ProviderGRPCServer is the RPC server that ProviderPRC talks to, conforming to the requirements of net/rpc
 type ProviderGRPCServer struct {
-	proto.UnimplementedProviderServer
+	providerpb.UnimplementedProviderServer
 	Impl Provider
 }
 
-func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *emptypb.Empty) (*proto.NameResponse, error) {
+func (rpc *ProviderGRPCServer) Name(ctx context.Context, _ *emptypb.Empty) (*providerpb.NameResponse, error) {
 	res, err := rpc.Impl.Name()
-	return &proto.NameResponse{Name: res}, err
+	return &providerpb.NameResponse{Name: res}, err
 }
 
-func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*proto.VersionResponse, error) {
+func (rpc *ProviderGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*providerpb.VersionResponse, error) {
 	res, err := rpc.Impl.Version()
-	return &proto.VersionResponse{Version: res}, err
+	return &providerpb.VersionResponse{Version: res}, err
 }
 
-func (rpc *ProviderGRPCServer) ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {
+func (rpc *ProviderGRPCServer) ResolveSessionRequest(ctx context.Context, request *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	return rpc.Impl.ResolveSessionRequest(ctx, request)
 }
 
-func (rpc *ProviderGRPCServer) ProcessPollResponse(ctx context.Context, resp *pb_core.PollResponse) (*pb_core.PollResponse, error) {
+func (rpc *ProviderGRPCServer) ProcessPollResponse(ctx context.Context, resp *corepb.PollResponse) (*corepb.PollResponse, error) {
 	return rpc.Impl.ProcessPollResponse(ctx, resp)
 }
 
-func (rpc *ProviderGRPCServer) ResolveResourcePlugin(ctx context.Context, req *pb_core.SessionRequest) (*proto.ResolveResourcePluginResponse, error) {
+func (rpc *ProviderGRPCServer) ResolveResourcePlugin(ctx context.Context, req *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
 	return rpc.Impl.ResolveResourcePlugin(ctx, req)
 }
 
@@ -114,10 +114,10 @@ type ProviderPlugin struct {
 }
 
 func (p *ProviderPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterProviderServer(s, &ProviderGRPCServer{Impl: p.Impl})
+	providerpb.RegisterProviderServer(s, &ProviderGRPCServer{Impl: p.Impl})
 	return nil
 }
 
 func (p *ProviderPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
-	return &ProviderGRPCClient{client: proto.NewProviderClient(c)}, nil
+	return &ProviderGRPCClient{client: providerpb.NewProviderClient(c)}, nil
 }

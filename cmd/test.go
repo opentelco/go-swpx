@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	pb "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -89,25 +89,25 @@ var TestBulkCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := pb.NewCoreServiceClient(conn)
+		swpx := corepb.NewCoreServiceClient(conn)
 		wg := &sync.WaitGroup{}
 		startTime := time.Now()
 
 		for i := start; i <= stop; i++ {
 			wg.Add(1)
 
-			p := func(i int) *pb.PollResponse {
+			p := func(i int) *corepb.PollResponse {
 				defer wg.Done()
-				resp, err := swpx.Poll(cmd.Context(), &pb.PollRequest{
-					Settings: &pb.Settings{
+				resp, err := swpx.Poll(cmd.Context(), &corepb.PollRequest{
+					Settings: &corepb.Settings{
 						ProviderPlugin: providers,
 						ResourcePlugin: resource,
 						RecreateIndex:  false,
 						Timeout:        ttlString,
 						CacheTtl:       "0s",
 					},
-					Type: pb.PollRequest_GET_BASIC_INFO,
-					Session: &pb.SessionRequest{
+					Type: corepb.PollRequest_GET_BASIC_INFO,
+					Session: &corepb.SessionRequest{
 						Hostname: target,
 						Port:     fmt.Sprintf("%s%d", portName, i),
 					},
@@ -160,15 +160,15 @@ var collectConfigCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := pb.NewCoreServiceClient(conn)
+		swpx := corepb.NewCoreServiceClient(conn)
 
-		resp, err := swpx.CollectConfig(cmd.Context(), &pb.CollectConfigRequest{
-			Settings: &pb.Settings{
+		resp, err := swpx.CollectConfig(cmd.Context(), &corepb.CollectConfigRequest{
+			Settings: &corepb.Settings{
 				ProviderPlugin: providers,
 				ResourcePlugin: resource,
 				Timeout:        ttlString,
 			},
-			Session: &pb.SessionRequest{
+			Session: &corepb.SessionRequest{
 				Hostname: target,
 			},
 		})
@@ -208,15 +208,15 @@ var discoverCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := pb.NewCoreServiceClient(conn)
+		swpx := corepb.NewCoreServiceClient(conn)
 
-		resp, err := swpx.Discover(cmd.Context(), &pb.DiscoverRequest{
-			Settings: &pb.Settings{
+		resp, err := swpx.Discover(cmd.Context(), &corepb.DiscoverRequest{
+			Settings: &corepb.Settings{
 				ProviderPlugin: providers,
 				ResourcePlugin: resource,
 				Timeout:        ttlString,
 			},
-			Session: &pb.SessionRequest{
+			Session: &corepb.SessionRequest{
 				Hostname: target,
 			},
 		})

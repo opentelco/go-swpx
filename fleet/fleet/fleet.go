@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/workflows"
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
@@ -15,7 +15,7 @@ import (
 )
 
 // Create a new fleet service and start the Temporal worker for the fleet service
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller core.CoreServiceClient, tc client.Client, logger hclog.Logger) (fleetpb.FleetServiceServer, error) {
+func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller corepb.CoreServiceClient, tc client.Client, logger hclog.Logger) (fleetpb.FleetServiceServer, error) {
 	f := &fleet{
 		device:         device,
 		config:         config,
@@ -40,7 +40,7 @@ type fleet struct {
 	logger hclog.Logger
 	device devicepb.DeviceServiceServer
 	config configurationpb.ConfigurationServiceServer
-	poller core.CoreServiceClient
+	poller corepb.CoreServiceClient
 
 	temporalClient client.Client
 

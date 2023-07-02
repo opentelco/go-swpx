@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 )
 
 // Discover will do basic discovery of a device and return basic info about it
 // This can be used with any resource plugin but is not guaranteed to work with all.
 // prefered way is to use the generic plugin to for all discovery. For best result no
 // providers should be selected either as it could lead to unexpected results.
-func (c *Core) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (*pb_core.DiscoverResponse, error) {
+func (c *Core) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*corepb.DiscoverResponse, error) {
 
 	selectedProviders, err := c.selectProviders(ctx, request.Settings)
 	if err != nil {
@@ -45,7 +44,7 @@ func (c *Core) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (
 		return nil, NewError("selected resource plugin is missing/does not exist", ErrCodeInvalidResource)
 	}
 
-	resp, err := plugin.Discover(ctx, &resource.Request{
+	resp, err := plugin.Discover(ctx, &resourcepb.Request{
 		NetworkRegion: request.Session.NetworkRegion,
 		Hostname:      request.Session.Hostname,
 		Timeout:       request.Session.Hostname,
@@ -55,7 +54,7 @@ func (c *Core) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (
 	}
 
 	// compare with stored config from database
-	return &core.DiscoverResponse{
+	return &corepb.DiscoverResponse{
 		NetworkElement: resp,
 	}, nil
 

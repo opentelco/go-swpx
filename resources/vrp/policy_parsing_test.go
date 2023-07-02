@@ -1,8 +1,9 @@
 package main
 
 import (
-	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
 	"testing"
+
+	"git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb"
 )
 
 func Test_ParsePolicyShaping(t *testing.T) {
@@ -284,7 +285,7 @@ func Test_ParsePolicyStatistics(t *testing.T) {
 ---------------------------------------------------------------------
 <liero-test-a1>`
 
-	policy := &traffic_policy.ConfiguredTrafficPolicy{}
+	policy := &trafficpolicypb.ConfiguredTrafficPolicy{}
 	err := parsePolicyStatistics(policy, data)
 
 	if err != nil {

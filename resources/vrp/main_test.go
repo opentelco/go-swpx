@@ -28,11 +28,10 @@ import (
 	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 	"git.liero.se/opentelco/go-swpx/config"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"github.com/stretchr/testify/assert"
-
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
 )
 
 func TestMapInterface(t *testing.T) {
@@ -43,7 +42,7 @@ func TestMapInterface(t *testing.T) {
 		conf:   &config.ResourceVRP{},
 	}
 
-	req := &proto.Request{
+	req := &resourcepb.Request{
 		Hostname: "some-host",
 		Port:     "GigabitEthernet0/0/1",
 	}
@@ -58,9 +57,9 @@ func TestMapInterface(t *testing.T) {
 
 type MockClient struct{}
 
-func (m MockClient) Put(ctx context.Context, msg *transport.Message) (*transport.Message, error) {
+func (m MockClient) Put(ctx context.Context, msg *transportpb.Message) (*transportpb.Message, error) {
 
-	return &transport.Message{}, nil
+	return &transportpb.Message{}, nil
 }
 
 func (m MockClient) Close() error {

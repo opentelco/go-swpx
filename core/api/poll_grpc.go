@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"git.liero.se/opentelco/go-swpx/core"
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 )
 
 type coreGrpcImpl struct {
@@ -19,7 +19,7 @@ type coreGrpcImpl struct {
 	grpc   *grpc.Server
 	logger hclog.Logger
 
-	pb_core.UnimplementedCoreServiceServer
+	corepb.UnimplementedCoreServiceServer
 }
 
 var automatedOkList = []string{
@@ -38,16 +38,16 @@ var automatedOkList = []string{
 	"only-for-migration-a10",
 }
 
-func (s *coreGrpcImpl) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (*pb_core.DiscoverResponse, error) {
+func (s *coreGrpcImpl) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*corepb.DiscoverResponse, error) {
 	return s.core.Discover(ctx, request)
 }
 
 // Request to SWP-core
-func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
+func (s *coreGrpcImpl) Poll(ctx context.Context, request *corepb.PollRequest) (*corepb.PollResponse, error) {
 
 	start := time.Now()
-	if request.Type == pb_core.PollRequest_NOT_SET {
-		request.Type = pb_core.PollRequest_GET_TECHNICAL_INFO
+	if request.Type == corepb.PollRequest_NOT_SET {
+		request.Type = corepb.PollRequest_GET_TECHNICAL_INFO
 	}
 
 	if request.Session.NetworkRegion == "" {
@@ -77,15 +77,15 @@ func In(hostname string, list ...string) bool {
 	return false
 }
 
-func (s *coreGrpcImpl) CollectConfig(ctx context.Context, request *pb_core.CollectConfigRequest) (*pb_core.CollectConfigResponse, error) {
+func (s *coreGrpcImpl) CollectConfig(ctx context.Context, request *corepb.CollectConfigRequest) (*corepb.CollectConfigResponse, error) {
 	return s.core.CollectConfig(ctx, request)
 }
 
-func (s *coreGrpcImpl) Command(ctx context.Context, request *pb_core.CommandRequest) (*pb_core.CommandResponse, error) {
+func (s *coreGrpcImpl) Command(ctx context.Context, request *corepb.CommandRequest) (*corepb.CommandResponse, error) {
 	panic("implement me")
 }
 
-func (s *coreGrpcImpl) Information(ctx context.Context, request *emptypb.Empty) (*pb_core.InformationResponse, error) {
+func (s *coreGrpcImpl) Information(ctx context.Context, request *emptypb.Empty) (*corepb.InformationResponse, error) {
 	panic("implement me")
 }
 
@@ -94,5 +94,5 @@ func NewGrpc(core *core.Core, srv *grpc.Server, logger hclog.Logger) {
 		core:   core,
 		logger: logger,
 	}
-	pb_core.RegisterCoreServiceServer(srv, instance)
+	corepb.RegisterCoreServiceServer(srv, instance)
 }

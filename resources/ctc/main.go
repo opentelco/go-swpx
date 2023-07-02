@@ -10,8 +10,8 @@ import (
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/hashicorp/go-hclog"
@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 )
 
 var VERSION *version.Version
@@ -56,15 +56,15 @@ func (d *driver) Version() (string, error) {
 
 // TechnicalPortInformation Gets all the technical information for a Port
 // from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-func (d *driver) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
-func (d *driver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
+func (d *driver) logAndAppend(err error, errs []*networkelementpb.TransientError, command string) []*networkelementpb.TransientError {
 	d.logger.Error("log and append error from dnc", "error", err.Error())
-	errs = append(errs, &networkelement.TransientError{
+	errs = append(errs, &networkelementpb.TransientError{
 		Message: err.Error(),
-		Level:   networkelement.TransientError_WARN,
+		Level:   networkelementpb.TransientError_WARN,
 		Cause:   command,
 	})
 
@@ -72,11 +72,11 @@ func (d *driver) logAndAppend(err error, errs []*networkelement.TransientError, 
 }
 
 // BasicPortInformation
-func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
 	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "index", req.LogicalPortIndex)
-	errs := make([]*networkelement.TransientError, 0)
+	errs := make([]*networkelementpb.TransientError, 0)
 
-	var msgs []*transport.Message
+	var msgs []*transportpb.Message
 	if req.LogicalPortIndex != 0 {
 		msgs = append(msgs, createSinglePortMsgShort(req.LogicalPortIndex, req, d.conf))
 		// msgs = append(msgs, createTaskGetPortStats(el.InterfaceIndex, el, conf))
@@ -86,14 +86,14 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (
 
 	msgs = append(msgs, createCTCSSHInterfaceTask(req, d.conf))
 
-	ne := &networkelement.Element{}
+	ne := &networkelementpb.Element{}
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelement.Interface{
-		Stats: &networkelement.InterfaceStatistics{
-			Input:  &networkelement.InterfaceStatisticsInput{},
-			Output: &networkelement.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Interface{
+		Stats: &networkelementpb.InterfaceStatistics{
+			Input:  &networkelementpb.InterfaceStatisticsInput{},
+			Output: &networkelementpb.InterfaceStatisticsOutput{},
 		},
 	}
 	for _, msg := range msgs {
@@ -104,7 +104,7 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (
 		}
 
 		switch task := reply.Task.Task.(type) {
-		case *transport.Task_Snmpc:
+		case *transportpb.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -126,7 +126,7 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (
 				}
 			}
 
-		case *transport.Task_Terminal:
+		case *transportpb.Task_Terminal:
 			if reply.Error != "" {
 				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
 				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Terminal.Payload[0].Command)
@@ -146,21 +146,21 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *proto.Request) (
 	// }
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
+	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
 // AllPortInformation
-func (d *driver) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *driver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
 // MapInterface Map interfaces (IF-MIB) from device with the swpx model
-func (d *driver) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+func (d *driver) MapInterface(ctx context.Context, req *resourcepb.Request) (*resourcepb.PortIndex, error) {
 	d.logger.Info("determine what index and name this interface has", "host", req.Hostname, "port", req.Port)
-	var msg *transport.Message
+	var msg *transportpb.Message
 	discoveryMap := make(map[int]*discoveryItem)
-	var interfaces = make(map[string]*proto.PortIndexEntity)
+	var interfaces = make(map[string]*resourcepb.PortIndexEntity)
 
 	msg = createCTCDiscoveryMsg(req, d.conf)
 	msg, err := d.dnc.Put(ctx, msg)
@@ -170,13 +170,13 @@ func (d *driver) MapInterface(ctx context.Context, req *proto.Request) (*proto.P
 	}
 
 	switch task := msg.Task.Task.(type) {
-	case *transport.Task_Snmpc:
+	case *transportpb.Task_Snmpc:
 		d.logger.Debug("the msg returns from dnc", "status", msg.Status.String(), "completed", msg.Completed.String(), "execution_time", msg.ExecutionTime.AsDuration().String(), "size", len(task.Snmpc.Metrics))
 
 		populateDiscoveryMap(d.logger, task.Snmpc, discoveryMap)
 
 		for _, v := range discoveryMap {
-			interfaces[v.Descr] = &proto.PortIndexEntity{
+			interfaces[v.Descr] = &resourcepb.PortIndexEntity{
 				Index:       v.Index,
 				Description: v.Descr,
 				Alias:       v.Alias,
@@ -184,27 +184,27 @@ func (d *driver) MapInterface(ctx context.Context, req *proto.Request) (*proto.P
 		}
 	}
 
-	return &proto.PortIndex{Ports: interfaces}, nil
+	return &resourcepb.PortIndex{Ports: interfaces}, nil
 }
 
 // MapEntityPhysical Map interfcaes from Envirnment MIB to the swpx model
 // Find matching OID for port
-func (d *driver) MapEntityPhysical(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+func (d *driver) MapEntityPhysical(ctx context.Context, req *resourcepb.Request) (*resourcepb.PortIndex, error) {
 	return nil, status.Error(codes.Unimplemented, "MapEntityPhysical is unimplemented")
 }
 
 // GetTransceiverInformation Get SFP (transceiver) information
-func (d *driver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
+func (d *driver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
 	return nil, status.Error(codes.Unimplemented, "GetTransceiverInformation is unimplemented")
 }
 
 // GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceivers, error) {
+func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error) {
 	return nil, status.Error(codes.Unimplemented, "GetAllTransceiverInformation is unimplemented")
 }
 
-func (d *driver) Discover(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
-	return &networkelement.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
+func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+	return &networkelementpb.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
 func main() {
@@ -248,18 +248,6 @@ func main() {
 	})
 }
 
-func (d *driver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+func (d *driver) GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error) {
 	return nil, nil
-}
-
-func validateEOLTimeout(req *proto.Request, defaultDuration time.Duration) time.Duration {
-	dur, _ := time.ParseDuration(req.Timeout)
-
-	if dur.Seconds() == 0 {
-		dur = defaultDuration
-
-	}
-
-	return dur
-
 }

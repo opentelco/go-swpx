@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"git.liero.se/opentelco/go-swpx/core"
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 )
 
 var (
@@ -107,11 +107,11 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set the Type
-	t := pb_core.PollRequest_Type_value[data.Type]
-	pbType := pb_core.PollRequest_Type(t)
+	t := corepb.PollRequest_Type_value[data.Type]
+	pbType := corepb.PollRequest_Type(t)
 
-	if pbType == pb_core.PollRequest_NOT_SET {
-		pbType = pb_core.PollRequest_GET_TECHNICAL_INFO
+	if pbType == corepb.PollRequest_NOT_SET {
+		pbType = corepb.PollRequest_GET_TECHNICAL_INFO
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), data.Timeout.Duration)
@@ -122,15 +122,15 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request := &pb_core.PollRequest{
-		Settings: &pb_core.Settings{
+	request := &corepb.PollRequest{
+		Settings: &corepb.Settings{
 			ProviderPlugin: data.Provider,
 			ResourcePlugin: data.Driver,
 			RecreateIndex:  data.RecreateIndex,
 			Timeout:        data.Timeout.String(),
 			CacheTtl:       data.CacheTTL.String(),
 		},
-		Session: &pb_core.SessionRequest{
+		Session: &corepb.SessionRequest{
 			NetworkRegion: data.NetworkRegion,
 			AccessId:      data.AccessId, // if set Hostname and port might be overwritten by the provider plugin.PreHandler()
 			Hostname:      data.Hostname,

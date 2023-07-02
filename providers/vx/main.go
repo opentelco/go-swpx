@@ -42,8 +42,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -86,12 +86,12 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) ProcessPollResponse(ctx context.Context, request *core.PollResponse) (*core.PollResponse, error) {
+func (p *Provider) ProcessPollResponse(ctx context.Context, request *corepb.PollResponse) (*corepb.PollResponse, error) {
 	p.logger.Named("post.ProcessPollResponse").Debug("processing response", "changes", 0)
 	return request, nil
 }
 
-func (p *Provider) ResolveSessionRequest(ctx context.Context, sess *core.SessionRequest) (*core.SessionRequest, error) {
+func (p *Provider) ResolveSessionRequest(ctx context.Context, sess *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
 	isIp := net.ParseIP(sess.Hostname)
@@ -109,7 +109,7 @@ func (p *Provider) ResolveSessionRequest(ctx context.Context, sess *core.Session
 
 }
 
-func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
 	ctx = sdk.WithToken(ctx, p.appToken)
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
@@ -138,7 +138,7 @@ func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.Sess
 		return nil, fmt.Errorf("could not find device in provider inventory system")
 	}
 
-	resp := &provider.ResolveResourcePluginResponse{}
+	resp := &providerpb.ResolveResourcePluginResponse{}
 
 	host := d.Devices[0]
 	switch strings.ToUpper(host.Vendor) {

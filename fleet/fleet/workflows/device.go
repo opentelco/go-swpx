@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -35,7 +35,7 @@ func getDeviceById(ctx workflow.Context, deviceId string) (*devicepb.Device, err
 
 }
 
-func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*core.DiscoverResponse, error) {
+func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*corepb.DiscoverResponse, error) {
 	var target string
 	if device.ManagementIp != "" {
 		target = device.ManagementIp
@@ -49,17 +49,17 @@ func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*core.Discover
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
 		},
 	})
-	var discoverResponse core.DiscoverResponse
-	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &core.DiscoverRequest{
-		Session: &core.SessionRequest{
+	var discoverResponse corepb.DiscoverResponse
+	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &corepb.DiscoverRequest{
+		Session: &corepb.SessionRequest{
 			Hostname: target,
 		},
-		Settings: &core.Settings{
+		Settings: &corepb.Settings{
 			ResourcePlugin: "generic", // todo: make this configurable?
 			RecreateIndex:  false,
 			Timeout:        "15s",
-			TqChannel:      core.Settings_CHANNEL_PRIMARY,
-			Priority:       core.Settings_DEFAULT,
+			TqChannel:      corepb.Settings_CHANNEL_PRIMARY,
+			Priority:       corepb.Settings_DEFAULT,
 		},
 	}).Get(ctx, &discoverResponse); err != nil {
 		return nil, fmt.Errorf("failed to discover device: %w", err)

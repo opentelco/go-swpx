@@ -4,7 +4,7 @@
 // - protoc             v4.23.2
 // source: core.proto
 
-package core
+package corepb
 
 import (
 	context "context"

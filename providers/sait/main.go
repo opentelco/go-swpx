@@ -32,9 +32,9 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -72,7 +72,7 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) ProcessPollResponse(ctx context.Context, r *core.PollResponse) (*core.PollResponse, error) {
+func (p *Provider) ProcessPollResponse(ctx context.Context, r *corepb.PollResponse) (*corepb.PollResponse, error) {
 	changes := 0
 	if r.NetworkElement == nil {
 		p.logger.Warn("network element is empt ")
@@ -82,7 +82,7 @@ func (p *Provider) ProcessPollResponse(ctx context.Context, r *core.PollResponse
 		for _, d := range i.DhcpTable {
 			if d.Vlan == SDD_VLAN {
 				p.logger.Debug("found SDD on interface", "interface", i.Description, "sdd-ipAddr", d.IpAddress, "sdd-mac", d.HardwareAddress)
-				r.NetworkElement.Interfaces[ri].ConnectedSdd = &networkelement.Element{BridgeMacAddress: d.HardwareAddress, Hostname: d.IpAddress}
+				r.NetworkElement.Interfaces[ri].ConnectedSdd = &networkelementpb.Element{BridgeMacAddress: d.HardwareAddress, Hostname: d.IpAddress}
 				changes++
 			}
 		}
@@ -94,7 +94,7 @@ func (p *Provider) ProcessPollResponse(ctx context.Context, r *core.PollResponse
 	return r, nil
 }
 
-func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
+func (p *Provider) ResolveSessionRequest(ctx context.Context, request *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	p.logger.Named("pre-handler").Debug("processing request")
 
 	if request.AccessId != "" {
@@ -112,8 +112,8 @@ func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.Sess
 
 	return request, nil
 }
-func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
-	resp := &provider.ResolveResourcePluginResponse{}
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
+	resp := &providerpb.ResolveResourcePluginResponse{}
 
 	if request.AccessId != "" {
 		access, ok := translationMap[request.AccessId]

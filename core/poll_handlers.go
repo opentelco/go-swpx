@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"git.liero.se/opentelco/go-swpx/shared"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
+func (c *Core) doPollRequest(ctx context.Context, request *corepb.PollRequest) (*corepb.PollResponse, error) {
 
-	response := &pb_core.PollResponse{}
+	response := &corepb.PollResponse{}
 
 	selectedProviders, err := c.selectProviders(ctx, request.Settings)
 	if err != nil {
 		return nil, err
 	}
 	if len(selectedProviders) == 0 {
-		response.Error = &pb_core.Error{Message: "the provider is missing/does not exist", Code: ErrCodeInvalidProvider}
+		response.Error = &corepb.Error{Message: "the provider is missing/does not exist", Code: ErrCodeInvalidProvider}
 		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
@@ -47,7 +47,7 @@ func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) 
 	plugin := c.resources[request.Settings.ResourcePlugin]
 	if plugin == nil {
 		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)
-		response.Error = &pb_core.Error{
+		response.Error = &corepb.Error{
 			Message: "selected driver is missing/does not exist",
 			Code:    ErrCodeInvalidResource,
 		}
@@ -56,7 +56,7 @@ func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) 
 
 	// implementation of different requests that SWP-X can handle right now
 	switch request.Type {
-	case pb_core.PollRequest_GET_BASIC_INFO:
+	case corepb.PollRequest_GET_BASIC_INFO:
 
 		if request.Session.Port != "" {
 			response, err = c.handleGetBasicInformationPort(ctx, request, plugin)
@@ -72,7 +72,7 @@ func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) 
 
 		}
 
-	case pb_core.PollRequest_GET_TECHNICAL_INFO:
+	case corepb.PollRequest_GET_TECHNICAL_INFO:
 
 		if request.Session.Port != "" {
 			err := c.handleGetTechnicalInformationPort(request, response, plugin)
@@ -98,7 +98,7 @@ func (c *Core) doPollRequest(ctx context.Context, request *pb_core.PollRequest) 
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) getTechnicalInformationElement(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
+func (c *Core) getTechnicalInformationElement(msg *corepb.PollRequest, resp *corepb.PollResponse, plugin shared.Resource) error {
 
 	// req := &resource.Request{
 	// 	Port:     "",
@@ -139,13 +139,13 @@ func (c *Core) getTechnicalInformationElement(msg *pb_core.PollRequest, resp *pb
 }
 
 // handleGetTechnicalInformationPort gets information related to the selected interface
-func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
-	// protoConf := shared.Conf2proto(conf)
-	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
+func (c *Core) handleGetTechnicalInformationPort(msg *corepb.PollRequest, resp *corepb.PollResponse, plugin shared.Resource) error {
+	// resourcepbConf := shared.Conf2resourcepb(conf)
+	// resourcepbConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	// req := &resource.NetworkElement{
 	// 	Hostname:  msg.Hostname,
 	// 	Interface: msg.Port,
-	// 	Conf:      protoConf,
+	// 	Conf:      resourcepbConf,
 	// }
 
 	// var mapInterfaceResponse *resource.NetworkElementInterfaces
@@ -168,7 +168,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp 
 	// 	c.logger.Info("run mapEntity to get physical entity index on device")
 	// 	if physPortResponse, err = plugin.MapEntityPhysical(msg.ctx, req); err != nil {
 	// 		c.logger.Error("error running MapEntityPhysical", "err", err.Error())
-	// 		resp.Error = &pb_core.Error{
+	// 		resp.Error = &corepb.Error{
 	// 			Message: err.Error(),
 	// 			Code:    ErrInvalidPort,
 	// 		}
@@ -182,7 +182,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp 
 
 	// 	if mapInterfaceResponse, err = plugin.MapInterface(msg.ctx, req); err != nil {
 	// 		c.logger.Error("error running map interface", "err", err.Error())
-	// 		resp.Error = &pb_core.Error{
+	// 		resp.Error = &corepb.Error{
 	// 			Message: err.Error(),
 	// 			Code:    ErrInvalidPort,
 	// 		}
@@ -207,7 +207,7 @@ func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp 
 	// //if the return is 0 something went wrong
 	// if req.InterfaceIndex == 0 {
 	// 	c.logger.Error("error running map interface", "err", "index is zero")
-	// 	resp.Error = &pb_core.Error{
+	// 	resp.Error = &corepb.Error{
 	// 		Message: "interface index returned zero",
 	// 		Code:    ErrInvalidPort,
 	// 	}
@@ -227,10 +227,10 @@ func (c *Core) handleGetTechnicalInformationPort(msg *pb_core.PollRequest, resp 
 }
 
 // handleGetBasicInformationPort gets information related to the selected interface
-func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.PollRequest, plugin shared.Resource) (*pb_core.PollResponse, error) {
+func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *corepb.PollRequest, plugin shared.Resource) (*corepb.PollResponse, error) {
 
-	var resp pb_core.PollResponse
-	req := proto.Request{
+	var resp corepb.PollResponse
+	req := resourcepb.Request{
 		NetworkRegion: msg.Session.NetworkRegion,
 		Hostname:      msg.Session.Hostname,
 		Port:          msg.Session.Port,
@@ -238,7 +238,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 	}
 
 	var (
-		mapInterfaceResponse *proto.PortIndex
+		mapInterfaceResponse *resourcepb.PortIndex
 		cachedInterface      *CachedInterface
 		err                  error
 	)
@@ -271,7 +271,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 				c.logger.Error("warn MapEntityPhysical is not implemented, skipping", "err", err.Error())
 			} else {
 				c.logger.Error("error running MapEntityPhysical", "err", err.Error())
-				resp.Error = &pb_core.Error{
+				resp.Error = &corepb.Error{
 					Message: fmt.Sprintf("could not run MapEntityPhyiscal: %s", err.Error()),
 					Code:    ErrCodeInvalidPort,
 				}
@@ -295,7 +295,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 
 		if mapInterfaceResponse, err = plugin.MapInterface(ctx, &req); err != nil {
 			c.logger.Error("error running map interface", "err", err.Error())
-			resp.Error = &pb_core.Error{
+			resp.Error = &corepb.Error{
 				Message: fmt.Sprintf("could not run MapInterface: %s", err.Error()),
 				Code:    ErrCodeInvalidPort,
 			}
@@ -316,7 +316,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 
 	} else if err != nil {
 
-		resp.Error = &pb_core.Error{
+		resp.Error = &corepb.Error{
 			Message: fmt.Sprintf("could handle request: %s", err.Error()),
 			Code:    ErrCodeUnknownError,
 		}
@@ -328,7 +328,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 	//if the return is 0 something went wrong
 	if req.LogicalPortIndex == 0 {
 		c.logger.Error("error running map interface", "err", "index is zero")
-		resp.Error = &pb_core.Error{
+		resp.Error = &corepb.Error{
 			Message: "interface index returned zero",
 			Code:    ErrCodeInvalidPort,
 		}
@@ -348,13 +348,13 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *pb_core.P
 }
 
 // handleGetTechnicalInformationElement gets full information of an Element
-func (c *Core) handleGetPasicInformationElement(msg *pb_core.PollRequest, resp *pb_core.PollResponse, plugin shared.Resource) error {
-	// protoConf := shared.Conf2proto(conf)
-	// protoConf.Request = c.createRequestConfig(msg, conf) // set deadline
+func (c *Core) handleGetPasicInformationElement(msg *corepb.PollRequest, resp *corepb.PollResponse, plugin shared.Resource) error {
+	// resourcepbConf := shared.Conf2resourcepb(conf)
+	// resourcepbConf.Request = c.createRequestConfig(msg, conf) // set deadline
 	// req := &resource.NetworkElement{
 	// 	Interface: "",
 	// 	Hostname:  msg.Hostname,
-	// 	Conf:      protoConf,
+	// 	Conf:      resourcepbConf,
 	// }
 
 	// physPortResponse, err := plugin.MapEntityPhysical(msg.ctx, req)

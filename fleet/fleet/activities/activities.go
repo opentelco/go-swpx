@@ -8,7 +8,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
@@ -22,11 +22,11 @@ type Activities struct {
 	logger hclog.Logger
 	device devicepb.DeviceServiceServer
 	config configurationpb.ConfigurationServiceServer
-	poller core.CoreServiceClient
+	poller corepb.CoreServiceClient
 	fleet  fleetpb.FleetServiceServer
 }
 
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, fleet fleetpb.FleetServiceServer, poller core.CoreServiceClient, logger hclog.Logger) *Activities {
+func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, fleet fleetpb.FleetServiceServer, poller corepb.CoreServiceClient, logger hclog.Logger) *Activities {
 
 	return &Activities{
 		device: device,
@@ -38,7 +38,7 @@ func New(device devicepb.DeviceServiceServer, config configurationpb.Configurati
 }
 
 // DiscoverWithPoller is an activity that discovers a device using the switch poller. If the requests fails or returns nil an non retryable error is returned.
-func (a *Activities) DiscoverWithPoller(ctx context.Context, params *core.DiscoverRequest) (*core.DiscoverResponse, error) {
+func (a *Activities) DiscoverWithPoller(ctx context.Context, params *corepb.DiscoverRequest) (*corepb.DiscoverResponse, error) {
 	d, err := a.poller.Discover(ctx, params)
 	if err != nil {
 		return nil, temporal.NewNonRetryableApplicationError("could not complete discovery with poller", ErrTypeDiscoveryFailed, err)
@@ -50,7 +50,7 @@ func (a *Activities) DiscoverWithPoller(ctx context.Context, params *core.Discov
 	return d, nil
 }
 
-func (a *Activities) CollectConfigWithPoller(ctx context.Context, params *core.CollectConfigRequest) (*core.CollectConfigResponse, error) {
+func (a *Activities) CollectConfigWithPoller(ctx context.Context, params *corepb.CollectConfigRequest) (*corepb.CollectConfigResponse, error) {
 	resp, err := a.poller.CollectConfig(ctx, params)
 	if err != nil {
 		return nil, temporal.NewNonRetryableApplicationError("could not complete config collection with poller", ErrTypeConfigCollectionFailed, err)

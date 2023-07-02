@@ -16,7 +16,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet"
-	corepb "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 	"go.temporal.io/sdk/client"

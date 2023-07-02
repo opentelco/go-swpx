@@ -25,10 +25,10 @@
 // 	protoc        v4.23.2
 // source: resource.proto
 
-package resource
+package resourcepb
 
 import (
-	networkelement "git.liero.se/opentelco/go-swpx/proto/go/networkelement"
+	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -593,11 +593,11 @@ var file_resource_proto_rawDesc = []byte{
 	0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x50, 0x61, 0x72, 0x61,
 	0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x1a, 0x22, 0x2e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
 	0x65, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x32, 0x5a, 0x30, 0x67, 0x69,
+	0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x34, 0x5a, 0x32, 0x67, 0x69,
 	0x74, 0x2e, 0x6c, 0x69, 0x65, 0x72, 0x6f, 0x2e, 0x73, 0x65, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x74,
 	0x65, 0x6c, 0x63, 0x6f, 0x2f, 0x67, 0x6f, 0x2d, 0x73, 0x77, 0x70, 0x78, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x2f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x70, 0x62,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -614,18 +614,18 @@ func file_resource_proto_rawDescGZIP() []byte {
 
 var file_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_resource_proto_goTypes = []interface{}{
-	(*VersionResponse)(nil),             // 0: resource.VersionResponse
-	(*Status)(nil),                      // 1: resource.Status
-	(*PortIndexEntity)(nil),             // 2: resource.PortIndexEntity
-	(*PortIndex)(nil),                   // 3: resource.PortIndex
-	(*Request)(nil),                     // 4: resource.Request
-	(*GetRunningConfigParameters)(nil),  // 5: resource.GetRunningConfigParameters
-	(*GetRunningConfigResponse)(nil),    // 6: resource.GetRunningConfigResponse
-	nil,                                 // 7: resource.PortIndex.PortsEntry
-	(*emptypb.Empty)(nil),               // 8: google.protobuf.Empty
-	(*networkelement.Element)(nil),      // 9: networkelement.Element
-	(*networkelement.Transceiver)(nil),  // 10: networkelement.Transceiver
-	(*networkelement.Transceivers)(nil), // 11: networkelement.Transceivers
+	(*VersionResponse)(nil),               // 0: resource.VersionResponse
+	(*Status)(nil),                        // 1: resource.Status
+	(*PortIndexEntity)(nil),               // 2: resource.PortIndexEntity
+	(*PortIndex)(nil),                     // 3: resource.PortIndex
+	(*Request)(nil),                       // 4: resource.Request
+	(*GetRunningConfigParameters)(nil),    // 5: resource.GetRunningConfigParameters
+	(*GetRunningConfigResponse)(nil),      // 6: resource.GetRunningConfigResponse
+	nil,                                   // 7: resource.PortIndex.PortsEntry
+	(*emptypb.Empty)(nil),                 // 8: google.protobuf.Empty
+	(*networkelementpb.Element)(nil),      // 9: networkelement.Element
+	(*networkelementpb.Transceiver)(nil),  // 10: networkelement.Transceiver
+	(*networkelementpb.Transceivers)(nil), // 11: networkelement.Transceivers
 }
 var file_resource_proto_depIdxs = []int32{
 	7,  // 0: resource.PortIndex.ports:type_name -> resource.PortIndex.PortsEntry
