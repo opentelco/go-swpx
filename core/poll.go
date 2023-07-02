@@ -33,6 +33,17 @@ import (
 // PollNetworkElement sends the request!
 func (c *Core) PollNetworkElement(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
 
+	c.logger.Debug("polling network element",
+		"hostname", request.Session.Hostname,
+		"port", request.Session.Port,
+		"accessId", request.Session.AccessId,
+		"type", request.Type,
+		"region", request.Session.NetworkRegion,
+		"recreateIndex", request.Settings.RecreateIndex,
+		"cacheTTL", request.Settings.CacheTtl,
+		"timeout", request.Settings.Timeout,
+	)
+
 	cacheTTLduration, _ := time.ParseDuration(request.Settings.CacheTtl)
 
 	if !request.Settings.RecreateIndex && cacheTTLduration != 0 {

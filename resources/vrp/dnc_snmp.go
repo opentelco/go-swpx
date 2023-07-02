@@ -37,6 +37,7 @@ func createPhysicalPortIndex(request *proto.Request, conf *config.ResourceVRP) *
 
 	// task.Parameters = params
 	message := &transport.Message{
+		NetworkRegion: request.NetworkRegion,
 		Session: &transport.Session{
 			Target: request.Hostname,
 			Port:   int32(conf.Snmp.Port),
