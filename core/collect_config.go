@@ -26,6 +26,11 @@ func (c *Core) CollectConfig(ctx context.Context, request *core.CollectConfigReq
 		return nil, fmt.Errorf("failed to pre-proccess request: %w", err)
 	}
 
+	c.logger.Debug("request processed",
+		"hostname", request.Session.Hostname,
+		"resource-plugin", request.Settings.ResourcePlugin,
+	)
+
 	// select resource-plugin to send the requests to
 	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)
 
