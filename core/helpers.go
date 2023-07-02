@@ -53,8 +53,10 @@ func (c *Core) providerGenericPreProccessing(ctx context.Context, session *pb_co
 		s, err := provider.ResolveSessionRequest(ctx, session)
 		if err != nil {
 			return err
+		} else {
+			session = s
+			c.logger.Debug("session resolved", "session", session)
 		}
-		session = s
 
 	}
 

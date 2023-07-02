@@ -20,7 +20,7 @@ mongodb-cache "interface" {
 }
 
 
-blacklist_provider = ["vx"]
+blacklist_provider = []
 
 mongodb {
   addr    = "localhost"

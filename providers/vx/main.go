@@ -91,21 +91,21 @@ func (p *Provider) ProcessPollResponse(ctx context.Context, request *core.PollRe
 	return request, nil
 }
 
-func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
+func (p *Provider) ResolveSessionRequest(ctx context.Context, sess *core.SessionRequest) (*core.SessionRequest, error) {
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
-	isIp := net.ParseIP(request.Hostname)
-	region := p.parseRegion(request.NetworkRegion)
+	isIp := net.ParseIP(sess.Hostname)
+	region := p.parseRegion(sess.NetworkRegion)
 	if region == nil {
-		return request, fmt.Errorf("could not parse region from network region '%s'", request.NetworkRegion)
+		return sess, fmt.Errorf("could not parse region from network region '%s'", sess.NetworkRegion)
 	}
 
 	if isIp == nil {
-		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", region.domain)
-		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, region.domain)
+		p.logger.Info("appending domain to hostname", "hostname", sess.Hostname, "domain", region.domain)
+		sess.Hostname = fmt.Sprintf("%s%s", sess.Hostname, region.domain)
 	}
 
-	return request, nil
+	return sess, nil
 
 }
 
@@ -197,7 +197,7 @@ func main() {
 		DisableTime: true,
 	})
 	if err := setupEnv(); err != nil {
-		fmt.Println(err)
+		logger.Error("could not setup env", "error", err)
 		os.Exit(1)
 	}
 
