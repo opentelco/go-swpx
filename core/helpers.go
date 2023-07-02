@@ -31,36 +31,30 @@ func (c *Core) selectProviders(ctx context.Context, settings *pb_core.Settings) 
 	return selectedProviders, nil
 }
 
-// providerPreProccessing pre-process the request with the selected providers
-// writes any changes to the settings/session parameters (as they are pointers)
-func (c *Core) providerGenericPreProccessing(ctx context.Context, session *pb_core.SessionRequest, settings *pb_core.Settings, selectedProviders []shared.Provider) error {
-	// check if a providers are selected in the request
+func (c *Core) resolveResourcePlugin(ctx context.Context, sess *pb_core.SessionRequest, selectedProviders []shared.Provider) (string, error) {
 	for _, provider := range selectedProviders {
-		var err error
-		pname, _ := provider.Name()
-		c.logger.Info("pre-process request", "provider-plugin", pname)
-
-		if settings.ResourcePlugin == "" {
-			rp, err := provider.ResolveResourcePlugin(ctx, session)
-			if err != nil {
-				return err
-			}
-			if rp != nil {
-				settings.ResourcePlugin = rp.ResourcePlugin
-			}
-		}
-
-		s, err := provider.ResolveSessionRequest(ctx, session)
+		rp, err := provider.ResolveResourcePlugin(ctx, sess)
 		if err != nil {
-			return err
-		} else {
-			session = s
-			c.logger.Debug("session resolved", "session", session)
+			return "", err
 		}
-
+		if rp != nil {
+			return rp.ResourcePlugin, nil
+		}
 	}
+	return "", nil
+}
 
-	return nil
+func (c *Core) resolveSession(ctx context.Context, sess *pb_core.SessionRequest, selectedProviders []shared.Provider) (*pb_core.SessionRequest, error) {
+	for _, provider := range selectedProviders {
+		s, err := provider.ResolveSessionRequest(ctx, sess)
+		if err != nil {
+			return sess, err
+		}
+		if s != nil {
+			return s, nil
+		}
+	}
+	return sess, nil
 }
 
 // providerPostProcess post-process the response with the selected providers

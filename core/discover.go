@@ -20,11 +20,22 @@ func (c *Core) Discover(ctx context.Context, request *pb_core.DiscoverRequest) (
 		return nil, err
 	}
 
-	// pre-process the request with the selected providers
-	err = c.providerGenericPreProccessing(ctx, request.Session, request.Settings, selectedProviders)
-	if err != nil {
-		return nil, fmt.Errorf("failed to pre-proccess request: %w", err)
+	if request.Settings.ResourcePlugin == "" {
+		request.Settings.ResourcePlugin, err = c.resolveResourcePlugin(ctx, request.Session, selectedProviders)
+		if err != nil {
+			return nil, fmt.Errorf("could not resolve resource plugin: %w", err)
+		}
 	}
+
+	request.Session, err = c.resolveSession(ctx, request.Session, selectedProviders)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve resource session request: %w", err)
+	}
+
+	c.logger.Debug("request processed",
+		"hostname", request.Session.Hostname,
+		"resource-plugin", request.Settings.ResourcePlugin,
+	)
 
 	// select resource-plugin to send the requests to
 	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)

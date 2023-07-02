@@ -216,7 +216,7 @@ func (c *Core) LoadProviderPlugins(availableProviders map[string]*plugin.Client)
 		if err == nil {
 			provider, ok := raw.(shared.Provider)
 			if !ok || provider == nil {
-				return fmt.Errorf("failed to load provider plugin: %s", name, "provider", provider, "ok", ok)
+				return fmt.Errorf("failed to load provider plugin: %s, provider: %s", name, provider)
 			}
 
 			// get information about the provider to use on request

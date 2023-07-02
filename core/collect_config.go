@@ -20,10 +20,16 @@ func (c *Core) CollectConfig(ctx context.Context, request *core.CollectConfigReq
 		return nil, NewError("no providers selected or selected not found", ErrCodeInvalidProvider)
 	}
 
-	// pre-process the request with the selected providers
-	err = c.providerGenericPreProccessing(ctx, request.Session, request.Settings, selectedProviders)
+	if request.Settings.ResourcePlugin == "" {
+		request.Settings.ResourcePlugin, err = c.resolveResourcePlugin(ctx, request.Session, selectedProviders)
+		if err != nil {
+			return nil, fmt.Errorf("could not resolve resource plugin: %w", err)
+		}
+	}
+
+	request.Session, err = c.resolveSession(ctx, request.Session, selectedProviders)
 	if err != nil {
-		return nil, fmt.Errorf("failed to pre-proccess request: %w", err)
+		return nil, fmt.Errorf("could not resolve resource session request: %w", err)
 	}
 
 	c.logger.Debug("request processed",
