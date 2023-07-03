@@ -251,6 +251,7 @@ func createSnmpMessage(req *resourcepb.Request, conf *config.ResourceCTC) *trans
 			NetworkRegion: req.NetworkRegion,
 			Target:        req.Hostname,
 			Type:          transportpb.Type_SNMP,
+			Port:          int32(conf.Snmp.Port),
 		},
 		Task:     &transportpb.Task{},
 		Id:       ksuid.New().String(),

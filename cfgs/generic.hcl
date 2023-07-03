@@ -11,7 +11,7 @@ snmp "v2c" {
 }
 
 transport "telnet" {
-  port = 22
+  port = 23
   screen_length = "screen-length 0 temporary"
   default_prompt = "\\n([<\\[]|)(\\S+)[>#\\]](\\s|)$"
   default_errors = ""
