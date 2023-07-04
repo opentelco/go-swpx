@@ -104,7 +104,8 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*corepb
 	var configResponse corepb.CollectConfigResponse
 	if err := workflow.ExecuteActivity(ctx, act.CollectConfigWithPoller, &corepb.CollectConfigRequest{
 		Session: &corepb.SessionRequest{
-			Hostname: target,
+			Hostname:      target,
+			NetworkRegion: device.NetworkRegion,
 		},
 		Settings: &corepb.Settings{
 			ResourcePlugin: device.PollerResourcePlugin,

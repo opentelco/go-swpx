@@ -57,7 +57,8 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 	var discoverResponse corepb.DiscoverResponse
 	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &corepb.DiscoverRequest{
 		Session: &corepb.SessionRequest{
-			Hostname: target,
+			Hostname:      target,
+			NetworkRegion: *params.NetworkRegion,
 		},
 		Settings: &corepb.Settings{
 			ResourcePlugin: "generic",

@@ -52,7 +52,8 @@ func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*corepb.Discov
 	var discoverResponse corepb.DiscoverResponse
 	if err := workflow.ExecuteActivity(ctx, act.DiscoverWithPoller, &corepb.DiscoverRequest{
 		Session: &corepb.SessionRequest{
-			Hostname: target,
+			Hostname:      target,
+			NetworkRegion: device.NetworkRegion,
 		},
 		Settings: &corepb.Settings{
 			ResourcePlugin: "generic", // todo: make this configurable?
