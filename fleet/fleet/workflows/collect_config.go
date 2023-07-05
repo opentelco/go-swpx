@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"fmt"
+	"time"
 
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
@@ -95,7 +96,7 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*corepb
 		target = device.Hostname
 	}
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: thirty,
+		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
 			MaximumAttempts:        1,
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
