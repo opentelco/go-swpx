@@ -47,7 +47,7 @@ func (c *Core) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*
 	resp, err := plugin.Discover(ctx, &resourcepb.Request{
 		NetworkRegion: request.Session.NetworkRegion,
 		Hostname:      request.Session.Hostname,
-		Timeout:       request.Session.Hostname,
+		Timeout:       request.Settings.Timeout,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get running config: %w", err)

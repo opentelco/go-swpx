@@ -47,7 +47,7 @@ func (c *Core) CollectConfig(ctx context.Context, request *corepb.CollectConfigR
 
 	resp, err := plugin.GetRunningConfig(ctx, &resourcepb.GetRunningConfigParameters{
 		Hostname:      request.Session.Hostname,
-		Timeout:       request.Session.Hostname,
+		Timeout:       request.Settings.Timeout,
 		NetworkRegion: request.Session.NetworkRegion,
 	})
 	if err != nil {
