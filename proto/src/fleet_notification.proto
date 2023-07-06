@@ -44,6 +44,7 @@ message Notification {
 
 service NotificationService {
     rpc GetByID(GetByIDRequest) returns (Notification) {}
+    // list unread notifications by  default, use filter to show all notifications
     rpc List(ListRequest) returns (ListResponse) {}
     rpc Create(CreateRequest) returns (Notification) {}
     rpc Delete(DeleteRequest) returns (DeleteResponse) {}
@@ -64,7 +65,8 @@ message ListRequest {
         NO_LIST_REQUEST_FILTER = 0;
         RESOURCE_TYPE_DEVICE   = 1;
         RESOURCE_TYPE_CONFIG   = 2;
-        LIST_READ              = 3;
+        // include read notifications and unread notifications
+        INCLUDE_READ           = 3;
     }
 
     // how many notifications to return (default 10)

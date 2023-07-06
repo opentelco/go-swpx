@@ -60,14 +60,16 @@ func (r *repo) GetByID(ctx context.Context, id string) (*notificationpb.Notifica
 // List returns a list of notifications
 func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*notificationpb.ListResponse, error) {
 
-	var filter = bson.M{}
+	var filter = bson.M{
+		"read": false,
+	}
 
 	for _, f := range params.Filter {
 		// all filters are OR filters
 		switch f {
-		case notificationpb.ListRequest_LIST_READ:
-			// filter by read true, only
-			filter["read"] = true
+		case notificationpb.ListRequest_INCLUDE_READ:
+			// filter by read true and false
+			delete(filter, "read")
 
 		case notificationpb.ListRequest_RESOURCE_TYPE_CONFIG:
 			// filter by resource type

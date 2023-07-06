@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationServiceClient interface {
 	GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Notification, error)
+	// list unread notifications by  default, use filter to show all notifications
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*Notification, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
@@ -87,6 +88,7 @@ func (c *notificationServiceClient) MarkAsRead(ctx context.Context, in *MarkAsRe
 // for forward compatibility
 type NotificationServiceServer interface {
 	GetByID(context.Context, *GetByIDRequest) (*Notification, error)
+	// list unread notifications by  default, use filter to show all notifications
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	Create(context.Context, *CreateRequest) (*Notification, error)
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
