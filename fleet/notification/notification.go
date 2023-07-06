@@ -10,8 +10,9 @@ import (
 
 func New(repo Repository, temporalClient client.Client, logger hclog.Logger) (notificationpb.NotificationServiceServer, error) {
 	n := &notificationImpl{
-		repo:   repo,
-		logger: logger.Named("fleet-notitification"),
+		temporalClient: temporalClient,
+		repo:           repo,
+		logger:         logger.Named("fleet-notitification"),
 	}
 	w := n.newWorker()
 	err := w.Start()
