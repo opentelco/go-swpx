@@ -44,8 +44,8 @@ var listNotificationsCmd = &cobra.Command{
 
 		params := &notificationpb.ListRequest{}
 
-		if !includeread {
-			params.Filter = []notificationpb.ListRequest_Filter{notificationpb.ListRequest_LIST_READ}
+		if includeread {
+			params.Filter = []notificationpb.ListRequest_Filter{notificationpb.ListRequest_INCLUDE_READ}
 		}
 
 		res, err := notificationClient.List(cmd.Context(), params)
