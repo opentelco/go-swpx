@@ -8,8 +8,11 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
+	"git.liero.se/opentelco/go-swpx/fleet/notification"
+	na "git.liero.se/opentelco/go-swpx/fleet/notification/activities"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/araddon/dateparse"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -21,6 +24,7 @@ var safeNow = func(ctx workflow.Context) time.Time {
 }
 
 var act = &activities.Activities{}
+var notificationActivities = &na.Activities{}
 
 var (
 	// dont overwrite theese variables, they are used as pointers in the workflows
@@ -68,6 +72,11 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 			Priority:       corepb.Settings_DEFAULT,
 		},
 	}).Get(ctx, &discoverResponse); err != nil {
+		// add a notification about failure
+		if _, err := addNotification(ctx, notification.NewDeviceCouldNotBeDiscovered(target, err.Error())); err != nil {
+			return nil, err
+		}
+
 		return nil, fmt.Errorf("failed to discover device: %w", err)
 	}
 
@@ -138,6 +147,10 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 		return nil, fmt.Errorf("failed to create device event: %w", err)
 	}
 
+	if _, err := addNotification(ctx, notification.NewDeviceDiscovered(device.Id, device.Hostname)); err != nil {
+		return nil, err
+	}
+
 	return &device, nil
 }
 
@@ -170,4 +183,15 @@ func resolveTarget(params *devicepb.CreateParameters) (string, error) {
 		return "", fmt.Errorf("could not determine target")
 	}
 	return target, nil
+}
+
+func addNotification(ctx workflow.Context, params *notificationpb.CreateRequest) (*notificationpb.Notification, error) {
+	ctx = na.ActivityOptionsNewNotification(ctx)
+	var n notificationpb.Notification
+	if err := workflow.ExecuteActivity(ctx,
+		notificationActivities.NewNotification, params,
+	).Get(ctx, &n); err != nil {
+		workflow.GetLogger(ctx).Error("failed to add notification", "err", err)
+	}
+	return &n, nil
 }

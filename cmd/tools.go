@@ -6,6 +6,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,6 +37,15 @@ func getDeviceClient(cmd *cobra.Command) (devicepb.DeviceServiceClient, error) {
 		return nil, err
 	}
 	return devicepb.NewDeviceServiceClient(conn), nil
+}
+
+func getNotificationClient(cmd *cobra.Command) (notificationpb.NotificationServiceClient, error) {
+	addr, _ := cmd.Flags().GetString("fleet-addr")
+	conn, err := grpc.Dial(addr, grpc.WithTimeout(5*time.Second), grpc.WithBlock(), grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	return notificationpb.NewNotificationServiceClient(conn), nil
 }
 
 func getFleetClient(cmd *cobra.Command) (fleetpb.FleetServiceClient, error) {

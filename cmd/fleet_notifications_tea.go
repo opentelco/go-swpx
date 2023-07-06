@@ -3,30 +3,27 @@ package cmd
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
-
-type item struct {
-	title, desc string
+type notificationItem struct {
+	id, title, desc string
 }
 
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i notificationItem) Title() string       { return i.title }
+func (i notificationItem) Description() string { return i.desc }
+func (i notificationItem) FilterValue() string { return i.title }
 
-type model struct {
+type notificationModel struct {
 	list list.Model
 	// choice is the item that was selected by the user
-	choice *item
+	choice *notificationItem
 }
 
-func (m model) Init() tea.Cmd {
+func (m notificationModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m notificationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
@@ -34,7 +31,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			i, ok := m.list.SelectedItem().(item)
+			i, ok := m.list.SelectedItem().(notificationItem)
 			if ok {
 				m.choice = &i
 			}
@@ -50,9 +47,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
+func (m notificationModel) View() string {
 	if m.choice != nil {
-		return m.choice.title
+		return m.choice.desc
 	}
 	return docStyle.Render(m.list.View())
 }

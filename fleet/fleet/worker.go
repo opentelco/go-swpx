@@ -41,7 +41,7 @@ func (f *fleet) newWorker() worker.Worker {
 			Name: "fleet.schedule.collectDevice",
 		})
 
-	act := activities.New(f.device, f.config, f, f.poller, f.logger)
+	act := activities.New(f.device, f.config, f, f.poller, f.notifications, f.logger)
 	w.RegisterActivity(act)
 	return w
 }

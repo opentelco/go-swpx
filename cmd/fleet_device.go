@@ -65,7 +65,6 @@ func init() {
 	fleetDeviceCmd.AddCommand(deviceConfigCmd)
 
 	// list
-	listDeviceCmd.Flags().String("search", "", "serach for devices by hostname or serial number")
 	fleetDeviceCmd.AddCommand(listDeviceCmd)
 
 	fleetRootCmd.AddCommand(fleetDeviceCmd)
@@ -246,14 +245,13 @@ var updateDeviceCmd = &cobra.Command{
 }
 
 var listDeviceCmd = &cobra.Command{
-	Use:   "list",
-	Short: "list devices",
+	Use:   "list [search]]",
+	Short: "list devices, optionally filtered by search",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		search, err := cmd.Flags().GetString("search")
-		if err != nil {
-			cmd.PrintErr(err)
-			os.Exit(1)
+		var search string
+		if len(args) > 0 {
+			search = args[0]
 		}
 
 		fleetDeviceClient, err := getDeviceClient(cmd)
@@ -273,13 +271,14 @@ var listDeviceCmd = &cobra.Command{
 
 		items := make([]list.Item, len(res.Devices))
 		for i, dev := range res.Devices {
-			items[i] = item{
+			items[i] = deviceItem{
 				title: dev.Hostname,
 				desc:  dev.ManagementIp,
+				id:    dev.Id,
 			}
 		}
 
-		m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+		m := deviceModel{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
 		m.list.Title = "Devices"
 
 		p := tea.NewProgram(m, tea.WithAltScreen())

@@ -8,10 +8,12 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
+	"git.liero.se/opentelco/go-swpx/fleet/notification"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/hashicorp/go-hclog"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
@@ -19,21 +21,23 @@ import (
 )
 
 type Activities struct {
-	logger hclog.Logger
-	device devicepb.DeviceServiceServer
-	config configurationpb.ConfigurationServiceServer
-	poller corepb.CoreServiceClient
-	fleet  fleetpb.FleetServiceServer
+	logger       hclog.Logger
+	device       devicepb.DeviceServiceServer
+	config       configurationpb.ConfigurationServiceServer
+	poller       corepb.CoreServiceClient
+	fleet        fleetpb.FleetServiceServer
+	notification notificationpb.NotificationServiceServer
 }
 
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, fleet fleetpb.FleetServiceServer, poller corepb.CoreServiceClient, logger hclog.Logger) *Activities {
+func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, fleet fleetpb.FleetServiceServer, poller corepb.CoreServiceClient, notification notificationpb.NotificationServiceServer, logger hclog.Logger) *Activities {
 
 	return &Activities{
-		device: device,
-		config: config,
-		poller: poller,
-		fleet:  fleet,
-		logger: logger.Named("fleet"),
+		device:       device,
+		config:       config,
+		poller:       poller,
+		fleet:        fleet,
+		notification: notification,
+		logger:       logger.Named("fleet"),
 	}
 }
 
@@ -200,6 +204,11 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 					}); err != nil {
 						a.logger.Error("could not add event about deactivate device schedule", "error", err)
 					}
+
+					if _, err := a.notification.Create(ctx, notification.NewDeviceConfigScheduleCancelled(d.Id, d.Hostname)); err != nil {
+						a.logger.Error("could not create notification", "error", err)
+					}
+
 				} else { // no failures, update schedule and continue
 
 					// update schedule

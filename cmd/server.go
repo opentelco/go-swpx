@@ -16,6 +16,8 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet"
+	"git.liero.se/opentelco/go-swpx/fleet/notification"
+	notificationRepo "git.liero.se/opentelco/go-swpx/fleet/notification/repo"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
@@ -90,13 +92,19 @@ var StartCmd = &cobra.Command{
 
 		drepo, err := deviceRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
 		if err != nil {
-			cmd.PrintErr(err)
+			cmd.PrintErr("could not create device repo:", err)
 			os.Exit(1)
 		}
 
 		crepo, err := configRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
 		if err != nil {
-			cmd.PrintErr(err)
+			cmd.PrintErr("could not create config repo:", err)
+			os.Exit(1)
+		}
+
+		nrepo, err := notificationRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
+		if err != nil {
+			cmd.PrintErr("could not create notification repo:", err)
 			os.Exit(1)
 		}
 
@@ -109,9 +117,14 @@ var StartCmd = &cobra.Command{
 
 		deviceService := device.New(drepo, logger)
 		configService := configuration.New(crepo, logger)
-		fleetService, err := fleet.New(deviceService, configService, poller, tc, logger)
+		notificationService, err := notification.New(nrepo, tc, logger)
 		if err != nil {
-			cmd.PrintErr(err)
+			cmd.PrintErr("could not create notification service:", err)
+			os.Exit(1)
+		}
+		fleetService, err := fleet.New(deviceService, notificationService, configService, poller, tc, logger)
+		if err != nil {
+			cmd.PrintErr("could not create fleet service:", err)
 			os.Exit(1)
 		}
 

@@ -3,6 +3,7 @@ package workflows
 import (
 	"fmt"
 
+	"git.liero.se/opentelco/go-swpx/fleet/notification"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"github.com/araddon/dateparse"
@@ -28,6 +29,10 @@ func CollectDeviceWorkflow(ctx workflow.Context, params *fleetpb.CollectDevicePa
 			return nil, err
 		}
 		if err := addEventCollectFailed(ctx, device.Id, "no respose from device"); err != nil {
+			return nil, err
+		}
+		// add a notification about failure
+		if _, err := addNotification(ctx, notification.NewDeviceCollectionFailed(device.Id, device.Hostname, err.Error())); err != nil {
 			return nil, err
 		}
 

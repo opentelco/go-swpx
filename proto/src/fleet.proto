@@ -67,10 +67,12 @@ message CollectConfigParameters {
     bool blocking = 2;
 }
 
-
 message DiscoverDeviceParameters {
     fleet.device.CreateParameters create_device_params = 1;
     // blocking is used to indicate if the call should block until the device is discovered
     bool blocking = 2;
+}
 
+enum TaskQueue {
+    TASK_QUEUE_FLEET = 0;
 }

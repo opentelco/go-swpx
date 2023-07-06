@@ -9,13 +9,14 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/hashicorp/go-hclog"
 	"go.temporal.io/sdk/client"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Create a new fleet service and start the Temporal worker for the fleet service
-func New(device devicepb.DeviceServiceServer, config configurationpb.ConfigurationServiceServer, poller corepb.CoreServiceClient, tc client.Client, logger hclog.Logger) (fleetpb.FleetServiceServer, error) {
+func New(device devicepb.DeviceServiceServer, notifications notificationpb.NotificationServiceServer, config configurationpb.ConfigurationServiceServer, poller corepb.CoreServiceClient, tc client.Client, logger hclog.Logger) (fleetpb.FleetServiceServer, error) {
 	f := &fleet{
 		device:         device,
 		config:         config,
@@ -37,10 +38,11 @@ func New(device devicepb.DeviceServiceServer, config configurationpb.Configurati
 }
 
 type fleet struct {
-	logger hclog.Logger
-	device devicepb.DeviceServiceServer
-	config configurationpb.ConfigurationServiceServer
-	poller corepb.CoreServiceClient
+	logger        hclog.Logger
+	device        devicepb.DeviceServiceServer
+	config        configurationpb.ConfigurationServiceServer
+	poller        corepb.CoreServiceClient
+	notifications notificationpb.NotificationServiceServer
 
 	temporalClient client.Client
 

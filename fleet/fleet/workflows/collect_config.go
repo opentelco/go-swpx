@@ -6,6 +6,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
+	"git.liero.se/opentelco/go-swpx/fleet/notification"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
@@ -32,6 +33,11 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 			return nil, err
 		}
 		if err := addEventCollectConfigFailed(ctx, device.Id, "no respose from device"); err != nil {
+			return nil, err
+		}
+
+		if _, err := addNotification(ctx,
+			notification.NewDeviceConfigurationCollectionFailed(device.Id, device.Hostname, err.Error())); err != nil {
 			return nil, err
 		}
 
