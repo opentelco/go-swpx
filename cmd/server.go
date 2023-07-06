@@ -164,6 +164,7 @@ var StartCmd = &cobra.Command{
 		fleet.NewGRPC(fleetService, grpcServer)
 		device.NewGRPC(deviceService, grpcServer)
 		configuration.NewGRPC(configService, grpcServer)
+		notification.NewGRPC(notificationService, grpcServer)
 
 		go func() {
 			err = grpcServer.Serve(lis)
