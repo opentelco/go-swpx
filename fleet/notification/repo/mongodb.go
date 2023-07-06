@@ -66,11 +66,9 @@ func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*n
 		// all filters are OR filters
 		switch f {
 		case notificationpb.ListRequest_LIST_READ:
-			// filter by read status
-			filter["$or"] = []bson.M{
-				{"read": true},
-				{"read": false},
-			}
+			// filter by read true, only
+			filter["read"] = true
+
 		case notificationpb.ListRequest_RESOURCE_TYPE_CONFIG:
 			// filter by resource type
 			filter["$or"] = []bson.M{

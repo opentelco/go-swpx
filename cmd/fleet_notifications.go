@@ -12,6 +12,8 @@ import (
 
 func init() {
 
+	listNotificationsCmd.Flags().BoolP("include-read", "r", false, "include read notifications")
+
 	fleetNotificationsCmd.AddCommand(listNotificationsCmd)
 
 	fleetRootCmd.AddCommand(fleetNotificationsCmd)
@@ -32,13 +34,21 @@ var listNotificationsCmd = &cobra.Command{
 	Short: "list notifications",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fleetDeviceClient, err := getNotificationClient(cmd)
+		includeread, _ := cmd.Flags().GetBool("include-read")
+
+		notificationClient, err := getNotificationClient(cmd)
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
 
-		res, err := fleetDeviceClient.List(cmd.Context(), &notificationpb.ListRequest{})
+		params := &notificationpb.ListRequest{}
+
+		if !includeread {
+			params.Filter = []notificationpb.ListRequest_Filter{notificationpb.ListRequest_LIST_READ}
+		}
+
+		res, err := notificationClient.List(cmd.Context(), params)
 
 		if err != nil {
 			cmd.PrintErr(err)
@@ -51,10 +61,12 @@ var listNotificationsCmd = &cobra.Command{
 				title: n.Title,
 				desc:  n.Message,
 				id:    n.Id,
+				read:  n.Read,
 			}
 		}
 
-		m := notificationModel{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+		m := notificationModel{
+			list: list.New(items, list.NewDefaultDelegate(), 200, 0), notification: notificationClient}
 		m.list.Title = "Notifications"
 
 		p := tea.NewProgram(m, tea.WithAltScreen())
