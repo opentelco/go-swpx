@@ -272,9 +272,10 @@ var listDeviceCmd = &cobra.Command{
 		items := make([]list.Item, len(res.Devices))
 		for i, dev := range res.Devices {
 			items[i] = deviceItem{
-				title: dev.Hostname,
-				desc:  dev.ManagementIp,
-				id:    dev.Id,
+				title:         dev.Hostname,
+				desc:          dev.ManagementIp,
+				id:            dev.Id,
+				networkRegion: dev.NetworkRegion,
 			}
 		}
 

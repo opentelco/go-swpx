@@ -468,7 +468,7 @@ func (d *VRPDriver) GetRunningConfig(ctx context.Context, req *resourcepb.GetRun
 	d.logger.Info("running get running config", "host", req.Hostname)
 	reply, err := d.dnc.Put(ctx, createCollectConfigMsg(req, d.conf))
 	if err != nil {
-		return nil, fmt.Errorf("could not complete BasicTechnicalPortInformation: %w", err)
+		return nil, fmt.Errorf("could not complete getRunningconfig: %w", err)
 	}
 	switch task := reply.Task.Task.(type) {
 	case *transportpb.Task_Terminal:

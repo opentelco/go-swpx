@@ -93,10 +93,12 @@ func (m notificationModel) View() string {
 			Background(lipgloss.Color("#7D56F4")).
 			PaddingTop(1).
 			PaddingLeft(1).
+			PaddingBottom(1).
 			Width(100)
 		var body = lipgloss.NewStyle().
 			PaddingTop(1).
 			PaddingLeft(1).
+			PaddingBottom(1).
 			Width(100)
 
 		msg := fmt.Sprintf("%s\n%s\n\n%s", header.Render(m.choice.title), body.Render(m.choice.desc), colorFg("Notification marked as read", "244"))

@@ -7,7 +7,7 @@ import (
 )
 
 func NewDeviceCouldNotBeDiscovered(identifier, reason string) *notificationpb.CreateRequest {
-	msg := fmt.Sprintf("The device with ID: %s could not be discovered. Please check the device and try again. Reason:,%s", identifier, reason)
+	msg := fmt.Sprintf("The device %s could not be discovered. Please check the device and try again. Reason:,%s", identifier, reason)
 	return &notificationpb.CreateRequest{
 		Title:        fmt.Sprintf("Device %s could not be discovered", identifier),
 		ResourceType: notificationpb.Notification_RESOURCE_TYPE_DEVICE,
@@ -16,7 +16,7 @@ func NewDeviceCouldNotBeDiscovered(identifier, reason string) *notificationpb.Cr
 }
 
 func NewDeviceDiscovered(deviceId, identifier string) *notificationpb.CreateRequest {
-	msg := fmt.Sprintf("The device with ID: %s has been discovered", identifier)
+	msg := fmt.Sprintf("The device (%s) with ID: %s has been discovered", identifier, deviceId)
 	return &notificationpb.CreateRequest{
 		Title:        fmt.Sprintf("Device %s discovered", identifier),
 		ResourceId:   deviceId,
@@ -26,7 +26,7 @@ func NewDeviceDiscovered(deviceId, identifier string) *notificationpb.CreateRequ
 }
 
 func NewDeviceConfigurationCollectionFailed(deviceId, identifier, reason string) *notificationpb.CreateRequest {
-	msg := fmt.Sprintf("Failed to collect configuration for device (%s) with ID: %s. Reason: %s  ", identifier, deviceId, reason)
+	msg := fmt.Sprintf("Failed to collect configuration for device %s with ID: %s. Reason: %s  ", identifier, deviceId, reason)
 	return &notificationpb.CreateRequest{
 		Title:        fmt.Sprintf("Failed to collect config for %s", identifier),
 		ResourceId:   deviceId,
@@ -36,7 +36,7 @@ func NewDeviceConfigurationCollectionFailed(deviceId, identifier, reason string)
 }
 
 func NewDeviceCollectionFailed(deviceId, identifier, reason string) *notificationpb.CreateRequest {
-	msg := fmt.Sprintf("Failed to collect device (%s) with ID: %s, Reason: %s  ", identifier, deviceId, reason)
+	msg := fmt.Sprintf("Failed to collect device %s with ID: %s, Reason: %s  ", identifier, deviceId, reason)
 	return &notificationpb.CreateRequest{
 		Title:        fmt.Sprintf("Failed to collect device: %s", identifier),
 		ResourceId:   deviceId,

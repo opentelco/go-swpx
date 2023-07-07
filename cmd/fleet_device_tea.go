@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -12,9 +14,12 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 type deviceItem struct {
 	id, title, desc string
+	networkRegion   string
 }
 
-func (i deviceItem) Title() string       { return i.title }
+func (i deviceItem) Title() string {
+	return fmt.Sprintf("%s (%s)", i.title, i.networkRegion)
+}
 func (i deviceItem) Description() string { return i.desc }
 func (i deviceItem) FilterValue() string { return i.title }
 
