@@ -1,59 +1,47 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/muesli/termenv"
 )
 
-type notificationItem struct {
+type stanzaItem struct {
 	id, title, desc string
-	read            bool
+	applied         bool
 }
 
-func colorFg(val, color string) string {
-	return termenv.String(val).Foreground(term.Color(color)).String()
-}
-
-func colorBg(val, color string) string {
-	return termenv.String(val).Background(term.Color(color)).String()
-}
-
-func (i notificationItem) Title() string {
-	if !i.read {
+func (i stanzaItem) Title() string {
+	if i.applied {
 		i.title = "🟢 " + i.title
 		return colorFg(i.title, "32")
-	} else {
-		i.title = "⚪ " + i.title
 	}
 
 	return i.title
 }
 
-func (i notificationItem) Description() string {
+func (i stanzaItem) Description() string {
 	return i.desc
 }
-func (i notificationItem) FilterValue() string { return i.title }
+func (i stanzaItem) FilterValue() string { return i.title }
 
-type notificationModel struct {
+type stanzaModel struct {
 	list list.Model
 	// choice is the item that was selected by the user
-	choice *notificationItem
+	choice *stanzaItem
 
-	notification notificationpb.NotificationServiceClient
+	service stanzapb.StanzaServiceClient
 }
 
-func (m notificationModel) Init() tea.Cmd {
+func (m stanzaModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m notificationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m stanzaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case *tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height)
@@ -67,7 +55,7 @@ func (m notificationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter", tea.KeyRight.String():
-			i, ok := m.list.SelectedItem().(notificationItem)
+			i, ok := m.list.SelectedItem().(stanzaItem)
 			if ok {
 				m.choice = &i
 			}
@@ -83,11 +71,8 @@ func (m notificationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m notificationModel) View() string {
+func (m stanzaModel) View() string {
 	if m.choice != nil {
-		if !m.choice.read {
-			m.notification.MarkAsRead(context.Background(), &notificationpb.MarkAsReadRequest{Ids: []string{m.choice.id}})
-		}
 
 		var header = lipgloss.NewStyle().
 			Bold(true).
@@ -103,7 +88,7 @@ func (m notificationModel) View() string {
 			PaddingBottom(1).
 			Width(100)
 
-		msg := fmt.Sprintf("%s\n%s\n\n%s", header.Render(m.choice.title), body.Render(m.choice.desc), colorFg("Notification marked as read", "244"))
+		msg := fmt.Sprintf("%s\n%s\n\n", header.Render(m.choice.title), body.Render(m.choice.desc))
 
 		return wordwrap.String(msg, 100)
 	}

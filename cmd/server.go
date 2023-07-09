@@ -18,6 +18,9 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/fleet"
 	"git.liero.se/opentelco/go-swpx/fleet/notification"
 	notificationRepo "git.liero.se/opentelco/go-swpx/fleet/notification/repo"
+
+	"git.liero.se/opentelco/go-swpx/fleet/stanza"
+	stanzaRepo "git.liero.se/opentelco/go-swpx/fleet/stanza/repo"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
@@ -108,6 +111,12 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		stanzaRepo, err := stanzaRepo.New(mongoClient, appConfig.MongoServer.Database, logger)
+		if err != nil {
+			cmd.PrintErr("could not create stanza repo:", err)
+			os.Exit(1)
+		}
+
 		cc, err := grpc.Dial(appConfig.GrpcAddr, grpc.WithInsecure())
 		if err != nil {
 			cmd.PrintErr(err)
@@ -122,6 +131,13 @@ var StartCmd = &cobra.Command{
 			cmd.PrintErr("could not create notification service:", err)
 			os.Exit(1)
 		}
+
+		stanzaService, err := stanza.New(stanzaRepo, tc, logger)
+		if err != nil {
+			cmd.PrintErr("could not create stanza service:", err)
+			os.Exit(1)
+		}
+
 		fleetService, err := fleet.New(deviceService, notificationService, configService, poller, tc, logger)
 		if err != nil {
 			cmd.PrintErr("could not create fleet service:", err)
@@ -165,6 +181,7 @@ var StartCmd = &cobra.Command{
 		device.NewGRPC(deviceService, grpcServer)
 		configuration.NewGRPC(configService, grpcServer)
 		notification.NewGRPC(notificationService, grpcServer)
+		stanza.NewGRPC(stanzaService, grpcServer)
 
 		go func() {
 			err = grpcServer.Serve(lis)

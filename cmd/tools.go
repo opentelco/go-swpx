@@ -7,6 +7,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -46,6 +47,15 @@ func getNotificationClient(cmd *cobra.Command) (notificationpb.NotificationServi
 		return nil, err
 	}
 	return notificationpb.NewNotificationServiceClient(conn), nil
+}
+
+func getStanzaClient(cmd *cobra.Command) (stanzapb.StanzaServiceClient, error) {
+	addr, _ := cmd.Flags().GetString("fleet-addr")
+	conn, err := grpc.Dial(addr, grpc.WithTimeout(5*time.Second), grpc.WithBlock(), grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	return stanzapb.NewStanzaServiceClient(conn), nil
 }
 
 func getFleetClient(cmd *cobra.Command) (fleetpb.FleetServiceClient, error) {
