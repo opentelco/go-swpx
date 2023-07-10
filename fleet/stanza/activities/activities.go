@@ -24,3 +24,7 @@ func ActivityOptionsNewNotification(ctx workflow.Context) workflow.Context {
 		WaitForCancellation: false,
 	})
 }
+
+func (a *Activities) Dummy() error {
+	return nil
+}
