@@ -48,7 +48,7 @@ type NameResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (x *NameResponse) Reset() {
@@ -95,7 +95,7 @@ type VersionResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty" bson:"version"`
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 }
 
 func (x *VersionResponse) Reset() {
@@ -142,7 +142,7 @@ type ResolveResourcePluginResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ResourcePlugin string `protobuf:"bytes,1,opt,name=resource_plugin,json=resourcePlugin,proto3" json:"resource_plugin,omitempty" bson:"resource_plugin"`
+	ResourcePlugin string `protobuf:"bytes,1,opt,name=resource_plugin,json=resourcePlugin,proto3" json:"resource_plugin,omitempty"`
 }
 
 func (x *ResolveResourcePluginResponse) Reset() {

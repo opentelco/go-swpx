@@ -48,7 +48,7 @@ type VersionResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty" bson:"version"`
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 }
 
 func (x *VersionResponse) Reset() {
@@ -95,10 +95,10 @@ type Status struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Error   bool   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty" bson:"error"`
-	Code    int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty" bson:"code"`
-	Type    string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty" bson:"type"`
-	Message string `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
+	Error   bool   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
+	Code    int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	Type    string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Message string `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
 }
 
 func (x *Status) Reset() {
@@ -168,9 +168,9 @@ type PortIndexEntity struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Index       int64  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty" bson:"index"`
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" bson:"description"`
-	Alias       string `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty" bson:"alias"`
+	Index       int64  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Alias       string `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty"`
 }
 
 func (x *PortIndexEntity) Reset() {
@@ -232,7 +232,7 @@ type PortIndex struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Ports map[string]*PortIndexEntity `protobuf:"bytes,1,rep,name=ports,proto3" json:"ports,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3" bson:"ports" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Ports map[string]*PortIndexEntity `protobuf:"bytes,1,rep,name=ports,proto3" json:"ports,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *PortIndex) Reset() {
@@ -280,19 +280,19 @@ type Request struct {
 	unknownFields protoimpl.UnknownFields
 
 	// hostname or ip address
-	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
+	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	// port name (e.g. GigabitEthernet0/0/1 )
-	Port string `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty" bson:"port"`
+	Port string `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
 	// the number of interfaces discovered on the port
 	// this is used to bulk get with by setting the "repition" to the number of interfaces
-	NumInterfaces     int32 `protobuf:"varint,3,opt,name=num_interfaces,json=numInterfaces,proto3" json:"num_interfaces,omitempty" bson:"num_interfaces"`
-	PhysicalPortIndex int64 `protobuf:"varint,4,opt,name=physical_port_index,json=physicalPortIndex,proto3" json:"physical_port_index,omitempty" bson:"physical_port_index"`
-	LogicalPortIndex  int64 `protobuf:"varint,5,opt,name=logical_port_index,json=logicalPortIndex,proto3" json:"logical_port_index,omitempty" bson:"logical_port_index"`
+	NumInterfaces     int32 `protobuf:"varint,3,opt,name=num_interfaces,json=numInterfaces,proto3" json:"num_interfaces,omitempty"`
+	PhysicalPortIndex int64 `protobuf:"varint,4,opt,name=physical_port_index,json=physicalPortIndex,proto3" json:"physical_port_index,omitempty"`
+	LogicalPortIndex  int64 `protobuf:"varint,5,opt,name=logical_port_index,json=logicalPortIndex,proto3" json:"logical_port_index,omitempty"`
 	// should be a string we can parse to a duration
 	// used to set the EOL timeout for requests
-	Timeout string `protobuf:"bytes,6,opt,name=timeout,proto3" json:"timeout,omitempty" bson:"timeout"`
+	Timeout string `protobuf:"bytes,6,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	// network regions passed down in from the SessionReqest.NetworkRegion
-	NetworkRegion string `protobuf:"bytes,7,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion string `protobuf:"bytes,7,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty"`
 }
 
 func (x *Request) Reset() {
@@ -382,12 +382,12 @@ type GetRunningConfigParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// hostname or ip address
-	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
+	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	// should be a string we can parse to a duration
 	// used to set the EOL timeout for requests
-	Timeout string `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty" bson:"timeout"`
+	Timeout string `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	// network regions passed down in from the SessionReqest.NetworkRegion
-	NetworkRegion string `protobuf:"bytes,3,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion string `protobuf:"bytes,3,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty"`
 }
 
 func (x *GetRunningConfigParameters) Reset() {
@@ -448,7 +448,7 @@ type GetRunningConfigResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Config string `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty" bson:"config"`
+	Config string `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (x *GetRunningConfigResponse) Reset() {

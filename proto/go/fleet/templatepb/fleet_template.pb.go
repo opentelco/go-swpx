@@ -49,16 +49,16 @@ type Template struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id for the specific created template
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the name of the template e.g 'Huawei S5720 Access Template'
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// description of the template e.g  'The Huawei S5720 acces template should we
 	// used for access devices in the network'
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty" bson:"description"`
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// template contains the actual template
-	Template string `protobuf:"bytes,4,opt,name=template,proto3" json:"template,omitempty" bson:"template"`
+	Template string `protobuf:"bytes,4,opt,name=template,proto3" json:"template,omitempty"`
 	// the timestamp when the template was first created
-	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty" bson:"created"`
+	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty"`
 }
 
 func (x *Template) Reset() {
@@ -134,7 +134,7 @@ type GetByIDParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the template to get
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetByIDParameters) Reset() {
@@ -181,9 +181,9 @@ type ListParameters struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name   *string `protobuf:"bytes,1,opt,name=name,proto3,oneof" json:"name,omitempty" bson:"name"`
-	Limit  *int64  `protobuf:"varint,2,opt,name=limit,proto3,oneof" json:"limit,omitempty" bson:"limit"`
-	Offset *int64  `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty" bson:"offset"`
+	Name   *string `protobuf:"bytes,1,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	Limit  *int64  `protobuf:"varint,2,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
+	Offset *int64  `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
 }
 
 func (x *ListParameters) Reset() {
@@ -245,11 +245,11 @@ type CreateParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// name of the templatem cannot be empty
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// description of the template,
-	Description *string `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty" bson:"description"`
+	Description *string `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	// the actual template
-	Template string `protobuf:"bytes,3,opt,name=template,proto3" json:"template,omitempty" bson:"template"`
+	Template string `protobuf:"bytes,3,opt,name=template,proto3" json:"template,omitempty"`
 }
 
 func (x *CreateParameters) Reset() {
@@ -311,7 +311,7 @@ type DeleteParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device configuration to delete
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *DeleteParameters) Reset() {
@@ -359,7 +359,7 @@ type ListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the found templates
-	Templates []*Template `protobuf:"bytes,1,rep,name=templates,proto3" json:"templates,omitempty" bson:"templates"`
+	Templates []*Template `protobuf:"bytes,1,rep,name=templates,proto3" json:"templates,omitempty"`
 }
 
 func (x *ListResponse) Reset() {

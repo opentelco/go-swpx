@@ -46,8 +46,8 @@ type Payload struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty" bson:"password"`
+	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
 func (x *Payload) Reset() {
@@ -101,7 +101,7 @@ type LookupResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	OriginId string `protobuf:"bytes,1,opt,name=origin_id,json=originId,proto3" json:"origin_id,omitempty" bson:"origin_id"`
+	OriginId string `protobuf:"bytes,1,opt,name=origin_id,json=originId,proto3" json:"origin_id,omitempty"`
 }
 
 func (x *LookupResponse) Reset() {
@@ -148,7 +148,7 @@ type LookupRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	OriginId string `protobuf:"bytes,1,opt,name=origin_id,json=originId,proto3" json:"origin_id,omitempty" bson:"origin_id"`
+	OriginId string `protobuf:"bytes,1,opt,name=origin_id,json=originId,proto3" json:"origin_id,omitempty"`
 }
 
 func (x *LookupRequest) Reset() {

@@ -142,23 +142,23 @@ type Stanza struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// name of the configuration snippet e.g "enable-ssh"
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// description of the configuration snippet e.g "Enable SSH on the device"
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty" bson:"description"`
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// the content of the configuration snippet the actual configuration that will be applied to the device
-	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty" bson:"content"`
+	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	// if the configuration content cannot be applied, what should be run to revert the configuration
-	RevertContent string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3" json:"revert_content,omitempty" bson:"revert_content"`
+	RevertContent string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3" json:"revert_content,omitempty"`
 	// the type of device this stanza is applicable to
-	DeviceType string                 `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty" bson:"device_type"`
-	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty" bson:"updated_at"`
+	DeviceType string                 `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
+	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// applied_at is the time when the stanza was applied to a device (if it has been applied)
-	AppliedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=applied_at,json=appliedAt,proto3,oneof" json:"applied_at,omitempty" bson:"applied_at"`
+	AppliedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=applied_at,json=appliedAt,proto3,oneof" json:"applied_at,omitempty"`
 	// the id of the device this stanza is applied to (if it has been applied)
-	DeviceId *string `protobuf:"bytes,10,opt,name=device_id,json=deviceId,proto3,oneof" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId *string `protobuf:"bytes,10,opt,name=device_id,json=deviceId,proto3,oneof" json:"device_id,omitempty"`
 }
 
 func (x *Stanza) Reset() {
@@ -269,15 +269,15 @@ type CreateRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// name of the configuration snippet e.g "enable-ssh"
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// description of the configuration snippet e.g "Enable SSH on the device"
-	Description *string `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty" bson:"description"`
+	Description *string `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	// the content of the configuration snippet the actual configuration that will be applied to the device
-	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty" bson:"content"`
+	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	// if the configuration content cannot be applied, what should be run to revert the configuration
-	RevertContent *string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3,oneof" json:"revert_content,omitempty" bson:"revert_content"`
+	RevertContent *string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3,oneof" json:"revert_content,omitempty"`
 	// the type of device this stanza is applicable to
-	DeviceType string `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty" bson:"device_type"`
+	DeviceType string `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
 }
 
 func (x *CreateRequest) Reset() {
@@ -353,7 +353,7 @@ type GetByIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetByIDRequest) Reset() {
@@ -401,13 +401,13 @@ type ListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the type of device this stanza is applicable to
-	DeviceType *string              `protobuf:"bytes,1,opt,name=device_type,json=deviceType,proto3,oneof" json:"device_type,omitempty" bson:"device_type"`
-	DeviceId   *string              `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3,oneof" json:"device_id,omitempty" bson:"device_id"`
-	Filters    []ListRequest_Filter `protobuf:"varint,3,rep,packed,name=filters,proto3,enum=fleet.stanza.ListRequest_Filter" json:"filters,omitempty" bson:"filters"`
+	DeviceType *string              `protobuf:"bytes,1,opt,name=device_type,json=deviceType,proto3,oneof" json:"device_type,omitempty"`
+	DeviceId   *string              `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3,oneof" json:"device_id,omitempty"`
+	Filters    []ListRequest_Filter `protobuf:"varint,3,rep,packed,name=filters,proto3,enum=fleet.stanza.ListRequest_Filter" json:"filters,omitempty"`
 	// the maximum number of stanzas to return
-	Limit *int64 `protobuf:"varint,4,opt,name=limit,proto3,oneof" json:"limit,omitempty" bson:"limit"`
+	Limit *int64 `protobuf:"varint,4,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
 	// the offset to start from when returning stanzas
-	Offset *int64 `protobuf:"varint,5,opt,name=offset,proto3,oneof" json:"offset,omitempty" bson:"offset"`
+	Offset *int64 `protobuf:"varint,5,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
 }
 
 func (x *ListRequest) Reset() {
@@ -482,8 +482,8 @@ type ListResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Stanzas []*Stanza `protobuf:"bytes,1,rep,name=stanzas,proto3" json:"stanzas,omitempty" bson:"stanzas"`
-	Total   int64     `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty" bson:"total"`
+	Stanzas []*Stanza `protobuf:"bytes,1,rep,name=stanzas,proto3" json:"stanzas,omitempty"`
+	Total   int64     `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 }
 
 func (x *ListResponse) Reset() {
@@ -538,17 +538,17 @@ type UpdateRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza to be updated
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// name of the configuration snippet e.g "enable-ssh"
-	Name *string `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty" bson:"name"`
+	Name *string `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
 	// description of the configuration snippet e.g "Enable SSH on the device"
-	Description *string `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty" bson:"description"`
+	Description *string `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	// the content of the configuration snippet the actual configuration that will be applied to the device
-	Content *string `protobuf:"bytes,4,opt,name=content,proto3,oneof" json:"content,omitempty" bson:"content"`
+	Content *string `protobuf:"bytes,4,opt,name=content,proto3,oneof" json:"content,omitempty"`
 	// if the configuration content cannot be applied, what should be run to revert the configuration
-	RevertContent *string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3,oneof" json:"revert_content,omitempty" bson:"revert_content"`
+	RevertContent *string `protobuf:"bytes,5,opt,name=revert_content,json=revertContent,proto3,oneof" json:"revert_content,omitempty"`
 	// the type of device this stanza is applicable to
-	DeviceType *string `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3,oneof" json:"device_type,omitempty" bson:"device_type"`
+	DeviceType *string `protobuf:"bytes,6,opt,name=device_type,json=deviceType,proto3,oneof" json:"device_type,omitempty"`
 }
 
 func (x *UpdateRequest) Reset() {
@@ -632,7 +632,7 @@ type DeleteRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza to be deleted
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *DeleteRequest) Reset() {
@@ -680,11 +680,11 @@ type ApplyRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza to be applied
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the id of the device to apply the stanza to
-	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// should the apply block until the apply is done
-	Blocking bool `protobuf:"varint,3,opt,name=blocking,proto3" json:"blocking,omitempty" bson:"blocking"`
+	Blocking bool `protobuf:"varint,3,opt,name=blocking,proto3" json:"blocking,omitempty"`
 }
 
 func (x *ApplyRequest) Reset() {
@@ -746,7 +746,7 @@ type ApplyResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the applied stanza
-	Stanza *Stanza `protobuf:"bytes,1,opt,name=stanza,proto3" json:"stanza,omitempty" bson:"stanza"`
+	Stanza *Stanza `protobuf:"bytes,1,opt,name=stanza,proto3" json:"stanza,omitempty"`
 }
 
 func (x *ApplyResponse) Reset() {
@@ -794,7 +794,7 @@ type RevertResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the reverted stanza
-	Stanza *Stanza `protobuf:"bytes,1,opt,name=stanza,proto3" json:"stanza,omitempty" bson:"stanza"`
+	Stanza *Stanza `protobuf:"bytes,1,opt,name=stanza,proto3" json:"stanza,omitempty"`
 }
 
 func (x *RevertResponse) Reset() {
@@ -842,7 +842,7 @@ type RevertRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the stanza to be reverted
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *RevertRequest) Reset() {

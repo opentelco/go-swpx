@@ -404,41 +404,41 @@ type Device struct {
 	unknownFields protoimpl.UnknownFields
 
 	// id of the device
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the hostname of the device
-	Hostname string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
+	Hostname string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	// the domain of the device
-	Domain string `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty" bson:"domain"`
+	Domain string `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty"`
 	// the primary management ip of the device
-	ManagementIp string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3" json:"management_ip,omitempty" bson:"management_ip"`
+	ManagementIp string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3" json:"management_ip,omitempty"`
 	// the serial number of the device
-	SerialNumber string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty" bson:"serial_number"`
+	SerialNumber string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty"`
 	// the model of the device, e.g Huawei S6720-54C-EI-48S-AC
-	Model string `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty" bson:"model"`
+	Model string `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
 	// the version of the device, e.g V200R019C10SPC500
-	Version string `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty" bson:"version"`
+	Version string `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
 	// the network region of the device, this is used to match segmentation of the network
 	// and tell the Distributed Network Client (go-dnc) which worker to use for polling the device
 	// must match the configuration of the go-dnc
-	NetworkRegion string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty"`
 	// switch poller resource plugin to use for this device
-	PollerResourcePlugin string `protobuf:"bytes,9,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3" json:"poller_resource_plugin,omitempty" bson:"poller_resource_plugin"`
+	PollerResourcePlugin string `protobuf:"bytes,9,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3" json:"poller_resource_plugin,omitempty"`
 	// switch poller provider to use for this device
-	PollerProviderPlugin string `protobuf:"bytes,10,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3" json:"poller_provider_plugin,omitempty" bson:"poller_provider_plugin"`
+	PollerProviderPlugin string `protobuf:"bytes,10,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3" json:"poller_provider_plugin,omitempty"`
 	// the state of the device
-	State Device_State `protobuf:"varint,11,opt,name=state,proto3,enum=fleet.device.Device_State" json:"state,omitempty" bson:"state"`
+	State Device_State `protobuf:"varint,11,opt,name=state,proto3,enum=fleet.device.Device_State" json:"state,omitempty"`
 	// the status of the device
-	Status Device_Status `protobuf:"varint,12,opt,name=status,proto3,enum=fleet.device.Device_Status" json:"status,omitempty" bson:"status"`
+	Status Device_Status `protobuf:"varint,12,opt,name=status,proto3,enum=fleet.device.Device_Status" json:"status,omitempty"`
 	// the schedules for the device (polling, collection etc)
-	Schedules []*Device_Schedule `protobuf:"bytes,13,rep,name=schedules,proto3" json:"schedules,omitempty" bson:"schedules"`
+	Schedules []*Device_Schedule `protobuf:"bytes,13,rep,name=schedules,proto3" json:"schedules,omitempty"`
 	// the last time the device was seen by the fleet
-	LastSeen *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty" bson:"last_seen"`
+	LastSeen *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
 	// the time the device was created in the fleet database
-	Created *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created,proto3" json:"created,omitempty" bson:"created"`
+	Created *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created,proto3" json:"created,omitempty"`
 	// the time the device was updated in the database
-	Updated *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated,proto3" json:"updated,omitempty" bson:"updated"`
+	Updated *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated,proto3" json:"updated,omitempty"`
 	// last known time when the device was rebooted (uptime from snmp)
-	LastReboot *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=last_reboot,json=lastReboot,proto3" json:"last_reboot,omitempty" bson:"last_reboot"`
+	LastReboot *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=last_reboot,json=lastReboot,proto3" json:"last_reboot,omitempty"`
 }
 
 func (x *Device) Reset() {
@@ -598,17 +598,17 @@ type Change struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the change
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the id of the device
-	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// the field that was changed
-	Field string `protobuf:"bytes,3,opt,name=field,proto3" json:"field,omitempty" bson:"field"`
+	Field string `protobuf:"bytes,3,opt,name=field,proto3" json:"field,omitempty"`
 	// the old value of the field
-	OldValue string `protobuf:"bytes,4,opt,name=old_value,json=oldValue,proto3" json:"old_value,omitempty" bson:"old_value"`
+	OldValue string `protobuf:"bytes,4,opt,name=old_value,json=oldValue,proto3" json:"old_value,omitempty"`
 	// the new value of the field
-	NewValue string `protobuf:"bytes,5,opt,name=new_value,json=newValue,proto3" json:"new_value,omitempty" bson:"new_value"`
+	NewValue string `protobuf:"bytes,5,opt,name=new_value,json=newValue,proto3" json:"new_value,omitempty"`
 	// the timestamp when the changes was created
-	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty" bson:"created"`
+	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty"`
 }
 
 func (x *Change) Reset() {
@@ -691,7 +691,7 @@ type GetByIDParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to get
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetByIDParameters) Reset() {
@@ -739,20 +739,20 @@ type ListParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// hostname of the device (exact match)
-	Hostname *string `protobuf:"bytes,1,opt,name=hostname,proto3,oneof" json:"hostname,omitempty" bson:"hostname"`
+	Hostname *string `protobuf:"bytes,1,opt,name=hostname,proto3,oneof" json:"hostname,omitempty"`
 	// management ip of the device (exact match)
-	ManagementIp *string `protobuf:"bytes,2,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty" bson:"management_ip"`
+	ManagementIp *string `protobuf:"bytes,2,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty"`
 	// free text search for hostname and management_ip
-	Search *string `protobuf:"bytes,3,opt,name=search,proto3,oneof" json:"search,omitempty" bson:"search"`
+	Search *string `protobuf:"bytes,3,opt,name=search,proto3,oneof" json:"search,omitempty"`
 	// has schedule to be run in the next 10 secs, the device also needs to be in the active state
 	// or it will not be returned (default false)
-	HasFiringSchedule *bool `protobuf:"varint,4,opt,name=has_firing_schedule,json=hasFiringSchedule,proto3,oneof" json:"has_firing_schedule,omitempty" bson:"has_firing_schedule"`
+	HasFiringSchedule *bool `protobuf:"varint,4,opt,name=has_firing_schedule,json=hasFiringSchedule,proto3,oneof" json:"has_firing_schedule,omitempty"`
 	// one of the schedule types to filter on (default all)
-	ScheduleType *Device_Schedule_Type `protobuf:"varint,5,opt,name=schedule_type,json=scheduleType,proto3,enum=fleet.device.Device_Schedule_Type,oneof" json:"schedule_type,omitempty" bson:"schedule_type"`
+	ScheduleType *Device_Schedule_Type `protobuf:"varint,5,opt,name=schedule_type,json=scheduleType,proto3,enum=fleet.device.Device_Schedule_Type,oneof" json:"schedule_type,omitempty"`
 	// defaults to 50 devices if not set
-	Limit *int64 `protobuf:"varint,6,opt,name=limit,proto3,oneof" json:"limit,omitempty" bson:"limit"`
+	Limit *int64 `protobuf:"varint,6,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
 	// offset to start from (default 0)
-	Offset *int64 `protobuf:"varint,7,opt,name=offset,proto3,oneof" json:"offset,omitempty" bson:"offset"`
+	Offset *int64 `protobuf:"varint,7,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
 }
 
 func (x *ListParameters) Reset() {
@@ -844,37 +844,37 @@ type CreateParameters struct {
 	// the hostname of the device (switch-a1) this is the DNS name of the device
 	// and could differ from the system name of the device
 	// NOTE: hostname OR management_ip must be set
-	Hostname *string `protobuf:"bytes,1,opt,name=hostname,proto3,oneof" json:"hostname,omitempty" bson:"hostname"`
+	Hostname *string `protobuf:"bytes,1,opt,name=hostname,proto3,oneof" json:"hostname,omitempty"`
 	// sysname of the device (switch-a1)
 	// the name set in the configuration of the device and will be set on discovery
-	Sysname *string `protobuf:"bytes,2,opt,name=sysname,proto3,oneof" json:"sysname,omitempty" bson:"sysname"`
+	Sysname *string `protobuf:"bytes,2,opt,name=sysname,proto3,oneof" json:"sysname,omitempty"`
 	// the domain of the device (net.liero.se)
-	Domain *string `protobuf:"bytes,3,opt,name=domain,proto3,oneof" json:"domain,omitempty" bson:"domain"`
+	Domain *string `protobuf:"bytes,3,opt,name=domain,proto3,oneof" json:"domain,omitempty"`
 	// the primary management ip of the device (172.22.13.3)
 	// NOTE: hostname OR management_ip must be set
-	ManagementIp *string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty" bson:"management_ip"`
+	ManagementIp *string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty"`
 	// the serial number of the device (210235T0A2000001)
-	SerialNumber *string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3,oneof" json:"serial_number,omitempty" bson:"serial_number"`
+	SerialNumber *string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3,oneof" json:"serial_number,omitempty"`
 	// model of the device (Huawei S6720-54C-EI-48S-AC)
-	Model *string `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty" bson:"model"`
+	Model *string `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty"`
 	// version of the device (V200R019C10SPC500)
-	Version *string `protobuf:"bytes,7,opt,name=version,proto3,oneof" json:"version,omitempty" bson:"version"`
+	Version *string `protobuf:"bytes,7,opt,name=version,proto3,oneof" json:"version,omitempty"`
 	// the network region of the device, this is used to match segmentation of the network
 	// must match the configuration of the Distributed Network Client (go-dnc)
-	NetworkRegion *string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3,oneof" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion *string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3,oneof" json:"network_region,omitempty"`
 	// provider plugin to use for this device, e.g. default_provider, vx etc
-	PollerProviderPlugin *string `protobuf:"bytes,9,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3,oneof" json:"poller_provider_plugin,omitempty" bson:"poller_provider_plugin"`
+	PollerProviderPlugin *string `protobuf:"bytes,9,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3,oneof" json:"poller_provider_plugin,omitempty"`
 	// switch poller resource plugin to use for this device, vrp, ios, junos etc
-	PollerResourcePlugin *string `protobuf:"bytes,10,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3,oneof" json:"poller_resource_plugin,omitempty" bson:"poller_resource_plugin"`
+	PollerResourcePlugin *string `protobuf:"bytes,10,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3,oneof" json:"poller_resource_plugin,omitempty"`
 	// the last time the device was seen by collect or discovery
-	LastSeen *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_seen,json=lastSeen,proto3,oneof" json:"last_seen,omitempty" bson:"last_seen"`
+	LastSeen *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_seen,json=lastSeen,proto3,oneof" json:"last_seen,omitempty"`
 	// the last time the device was rebooted (known by the poller)
-	LastReboot *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=last_reboot,json=lastReboot,proto3,oneof" json:"last_reboot,omitempty" bson:"last_reboot"`
+	LastReboot *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=last_reboot,json=lastReboot,proto3,oneof" json:"last_reboot,omitempty"`
 	// the state of the device
-	State *Device_State `protobuf:"varint,13,opt,name=state,proto3,enum=fleet.device.Device_State,oneof" json:"state,omitempty" bson:"state"`
+	State *Device_State `protobuf:"varint,13,opt,name=state,proto3,enum=fleet.device.Device_State,oneof" json:"state,omitempty"`
 	// the status of the device, the current reachability of the device
 	// basically the status of the last action done on the device
-	Status *Device_Status `protobuf:"varint,14,opt,name=status,proto3,enum=fleet.device.Device_Status,oneof" json:"status,omitempty" bson:"status"`
+	Status *Device_Status `protobuf:"varint,14,opt,name=status,proto3,enum=fleet.device.Device_Status,oneof" json:"status,omitempty"`
 }
 
 func (x *CreateParameters) Reset() {
@@ -1013,38 +1013,38 @@ type UpdateParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to update
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the hostname of the device (switch-a1)
-	Hostname *string `protobuf:"bytes,2,opt,name=hostname,proto3,oneof" json:"hostname,omitempty" bson:"hostname"`
+	Hostname *string `protobuf:"bytes,2,opt,name=hostname,proto3,oneof" json:"hostname,omitempty"`
 	// the domain of the device (net.liero.se)
-	Domain *string `protobuf:"bytes,3,opt,name=domain,proto3,oneof" json:"domain,omitempty" bson:"domain"`
+	Domain *string `protobuf:"bytes,3,opt,name=domain,proto3,oneof" json:"domain,omitempty"`
 	// the primary management ip of the device (
-	ManagementIp *string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty" bson:"management_ip"`
+	ManagementIp *string `protobuf:"bytes,4,opt,name=management_ip,json=managementIp,proto3,oneof" json:"management_ip,omitempty"`
 	// the serial number of the device (210235T0A2000001)
-	SerialNumber *string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3,oneof" json:"serial_number,omitempty" bson:"serial_number"`
+	SerialNumber *string `protobuf:"bytes,5,opt,name=serial_number,json=serialNumber,proto3,oneof" json:"serial_number,omitempty"`
 	// model of the device (Huawei S6720-54C-EI-48S-AC)
-	Model *string `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty" bson:"model"`
+	Model *string `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty"`
 	// version of the device (V200R019C10SPC500)
-	Version *string `protobuf:"bytes,7,opt,name=version,proto3,oneof" json:"version,omitempty" bson:"version"`
+	Version *string `protobuf:"bytes,7,opt,name=version,proto3,oneof" json:"version,omitempty"`
 	// the network region of the device, this is used to match segmentation of the network
 	// must match the configuration of the Distributed Network Client (go-dnc)
-	NetworkRegion *string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3,oneof" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion *string `protobuf:"bytes,8,opt,name=network_region,json=networkRegion,proto3,oneof" json:"network_region,omitempty"`
 	// provider plugin to use for this device, e.g. default_provider, vx etc
-	PollerProviderPlugin *string `protobuf:"bytes,9,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3,oneof" json:"poller_provider_plugin,omitempty" bson:"poller_provider_plugin"`
+	PollerProviderPlugin *string `protobuf:"bytes,9,opt,name=poller_provider_plugin,json=pollerProviderPlugin,proto3,oneof" json:"poller_provider_plugin,omitempty"`
 	// switch poller resource plugin to use for this device, vrp, ios, junos etc
-	PollerResourcePlugin *string `protobuf:"bytes,10,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3,oneof" json:"poller_resource_plugin,omitempty" bson:"poller_resource_plugin"`
+	PollerResourcePlugin *string `protobuf:"bytes,10,opt,name=poller_resource_plugin,json=pollerResourcePlugin,proto3,oneof" json:"poller_resource_plugin,omitempty"`
 	// sysname of the device (switch-a1)
 	// the name set in the configuration of the device and will be set on discovery
-	Sysname *string `protobuf:"bytes,11,opt,name=sysname,proto3,oneof" json:"sysname,omitempty" bson:"sysname"`
+	Sysname *string `protobuf:"bytes,11,opt,name=sysname,proto3,oneof" json:"sysname,omitempty"`
 	// the last time the device was seen by collect or discovery
-	LastSeen *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=last_seen,json=lastSeen,proto3,oneof" json:"last_seen,omitempty" bson:"last_seen"`
+	LastSeen *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=last_seen,json=lastSeen,proto3,oneof" json:"last_seen,omitempty"`
 	// the last time the device was rebooted (known by the poller)
-	LastReboot *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=last_reboot,json=lastReboot,proto3,oneof" json:"last_reboot,omitempty" bson:"last_reboot"`
+	LastReboot *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=last_reboot,json=lastReboot,proto3,oneof" json:"last_reboot,omitempty"`
 	// the state of the device
-	State *Device_State `protobuf:"varint,14,opt,name=state,proto3,enum=fleet.device.Device_State,oneof" json:"state,omitempty" bson:"state"`
+	State *Device_State `protobuf:"varint,14,opt,name=state,proto3,enum=fleet.device.Device_State,oneof" json:"state,omitempty"`
 	// the status of the device, the current reachability of the device
 	// basically the status of the last action done on the device
-	Status *Device_Status `protobuf:"varint,15,opt,name=status,proto3,enum=fleet.device.Device_Status,oneof" json:"status,omitempty" bson:"status"`
+	Status *Device_Status `protobuf:"varint,15,opt,name=status,proto3,enum=fleet.device.Device_Status,oneof" json:"status,omitempty"`
 }
 
 func (x *UpdateParameters) Reset() {
@@ -1190,7 +1190,7 @@ type DeleteParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to delete
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *DeleteParameters) Reset() {
@@ -1238,7 +1238,7 @@ type ListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the devices that matched the search
-	Devices []*Device `protobuf:"bytes,1,rep,name=devices,proto3" json:"devices,omitempty" bson:"devices"`
+	Devices []*Device `protobuf:"bytes,1,rep,name=devices,proto3" json:"devices,omitempty"`
 }
 
 func (x *ListResponse) Reset() {
@@ -1286,7 +1286,7 @@ type ListChangesParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to get changes for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 }
 
 func (x *ListChangesParameters) Reset() {
@@ -1334,7 +1334,7 @@ type ListChangesResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the changes that matched the search
-	Changes []*Change `protobuf:"bytes,1,rep,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
+	Changes []*Change `protobuf:"bytes,1,rep,name=changes,proto3" json:"changes,omitempty"`
 }
 
 func (x *ListChangesResponse) Reset() {
@@ -1382,7 +1382,7 @@ type GetChangeByIDParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the change to get
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetChangeByIDParameters) Reset() {
@@ -1430,7 +1430,7 @@ type ListEventsParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to get Events for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 }
 
 func (x *ListEventsParameters) Reset() {
@@ -1478,7 +1478,7 @@ type ListEventsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the Events that matched the search
-	Events []*Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty" bson:"events"`
+	Events []*Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 }
 
 func (x *ListEventsResponse) Reset() {
@@ -1526,7 +1526,7 @@ type GetEventByIDParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the change to get
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetEventByIDParameters) Reset() {
@@ -1573,15 +1573,15 @@ type Event struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the device related to the event
-	DeviceId string        `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
-	Type     Event_Type    `protobuf:"varint,3,opt,name=type,proto3,enum=fleet.device.Event_Type" json:"type,omitempty" bson:"type"`
-	Message  string        `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
-	Action   Event_Action  `protobuf:"varint,5,opt,name=action,proto3,enum=fleet.device.Event_Action" json:"action,omitempty" bson:"action"`
-	Outcome  Event_Outcome `protobuf:"varint,6,opt,name=outcome,proto3,enum=fleet.device.Event_Outcome" json:"outcome,omitempty" bson:"outcome"`
+	DeviceId string        `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	Type     Event_Type    `protobuf:"varint,3,opt,name=type,proto3,enum=fleet.device.Event_Type" json:"type,omitempty"`
+	Message  string        `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
+	Action   Event_Action  `protobuf:"varint,5,opt,name=action,proto3,enum=fleet.device.Event_Action" json:"action,omitempty"`
+	Outcome  Event_Outcome `protobuf:"varint,6,opt,name=outcome,proto3,enum=fleet.device.Event_Outcome" json:"outcome,omitempty"`
 	// the timestamp when the event was created
-	Created *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created,proto3" json:"created,omitempty" bson:"created"`
+	Created *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created,proto3" json:"created,omitempty"`
 }
 
 func (x *Event) Reset() {
@@ -1671,9 +1671,9 @@ type SetScheduleParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to upsert the schedule for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// the schedule to upsert
-	Schedule *Device_Schedule `protobuf:"bytes,2,opt,name=schedule,proto3" json:"schedule,omitempty" bson:"schedule"`
+	Schedule *Device_Schedule `protobuf:"bytes,2,opt,name=schedule,proto3" json:"schedule,omitempty"`
 }
 
 func (x *SetScheduleParameters) Reset() {
@@ -1729,17 +1729,17 @@ type Device_Schedule struct {
 
 	// duration between each poll
 	// minimum of 120 seconds (2 minutes)
-	Interval *durationpb.Duration `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval,omitempty" bson:"interval"`
+	Interval *durationpb.Duration `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval,omitempty"`
 	// the type of schedule
-	Type Device_Schedule_Type `protobuf:"varint,2,opt,name=type,proto3,enum=fleet.device.Device_Schedule_Type" json:"type,omitempty" bson:"type"`
+	Type Device_Schedule_Type `protobuf:"varint,2,opt,name=type,proto3,enum=fleet.device.Device_Schedule_Type" json:"type,omitempty"`
 	// the last time the schedule was run (if it has been run)
-	LastRun *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_run,json=lastRun,proto3" json:"last_run,omitempty" bson:"last_run"`
+	LastRun *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_run,json=lastRun,proto3" json:"last_run,omitempty"`
 	// if the schedule is active or not (if it should be run)
-	Active bool `protobuf:"varint,4,opt,name=active,proto3" json:"active,omitempty" bson:"active"`
+	Active bool `protobuf:"varint,4,opt,name=active,proto3" json:"active,omitempty"`
 	// the number of times the schedule has failed to run
 	// if the schedule has failed more than 3 times it will be disabled. To unlock
 	// the schedule it needs to be manually enabled again and setting failed count to 0
-	FailedCount int64 `protobuf:"varint,5,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty" bson:"failed_count"`
+	FailedCount int64 `protobuf:"varint,5,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty"`
 }
 
 func (x *Device_Schedule) Reset() {

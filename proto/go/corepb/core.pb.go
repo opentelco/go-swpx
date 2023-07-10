@@ -220,8 +220,8 @@ type Error struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
-	Code    int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty" bson:"code"`
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Code    int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
 }
 
 func (x *Error) Reset() {
@@ -276,23 +276,23 @@ type Settings struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProviderPlugin []string `protobuf:"bytes,1,rep,name=provider_plugin,json=providerPlugin,proto3" json:"provider_plugin,omitempty" bson:"provider_plugin"`
-	ResourcePlugin string   `protobuf:"bytes,2,opt,name=resource_plugin,json=resourcePlugin,proto3" json:"resource_plugin,omitempty" bson:"resource_plugin"`
+	ProviderPlugin []string `protobuf:"bytes,1,rep,name=provider_plugin,json=providerPlugin,proto3" json:"provider_plugin,omitempty"`
+	ResourcePlugin string   `protobuf:"bytes,2,opt,name=resource_plugin,json=resourcePlugin,proto3" json:"resource_plugin,omitempty"`
 	// recreate_index will recreate the index for the resource through snmp
 	// this is useful if the index is not correct or if the resource is not
 	// parsed correctly, changes of virtual interfaces could cause a change of index
-	RecreateIndex bool `protobuf:"varint,3,opt,name=recreate_index,json=recreateIndex,proto3" json:"recreate_index,omitempty" bson:"recreate_index"`
+	RecreateIndex bool `protobuf:"varint,3,opt,name=recreate_index,json=recreateIndex,proto3" json:"recreate_index,omitempty"`
 	// timout for the request, after the timeout the request will be aborted server side
 	// any request sent down to the network will be skipped as the ttl is set as Deadline on
 	// the request
-	Timeout string `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty" bson:"timeout"`
+	Timeout string `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	// how long should the cache be valid
-	CacheTtl string `protobuf:"bytes,6,opt,name=cache_ttl,json=cacheTtl,proto3" json:"cache_ttl,omitempty" bson:"cache_ttl"`
+	CacheTtl string `protobuf:"bytes,6,opt,name=cache_ttl,json=cacheTtl,proto3" json:"cache_ttl,omitempty"`
 	// tq_channel can be used to spread traffic load on different channels
-	TqChannel Settings_Channel `protobuf:"varint,7,opt,name=tq_channel,json=tqChannel,proto3,enum=core.Settings_Channel" json:"tq_channel,omitempty" bson:"tq_channel"`
+	TqChannel Settings_Channel `protobuf:"varint,7,opt,name=tq_channel,json=tqChannel,proto3,enum=core.Settings_Channel" json:"tq_channel,omitempty"`
 	// priority of the request, the DNC will try to prioritize the requests based on this
 	// if it has several requests to process in the queue
-	Priority Settings_Priority `protobuf:"varint,9,opt,name=priority,proto3,enum=core.Settings_Priority" json:"priority,omitempty" bson:"priority"`
+	Priority Settings_Priority `protobuf:"varint,9,opt,name=priority,proto3,enum=core.Settings_Priority" json:"priority,omitempty"`
 }
 
 func (x *Settings) Reset() {
@@ -385,14 +385,14 @@ type SessionRequest struct {
 	// used to locate the resource by a provider plugin
 	// the provider plugin should look up the access_id in the database and populate the hostname and port fields
 	// if the access_id is not found the provider plugin should return an error with code 404
-	AccessId string `protobuf:"bytes,1,opt,name=access_id,json=accessId,proto3" json:"access_id,omitempty" bson:"access_id"`
+	AccessId string `protobuf:"bytes,1,opt,name=access_id,json=accessId,proto3" json:"access_id,omitempty"`
 	// hostname and port are used to locate the resource by a resource plugin
-	Hostname string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
-	Port     string `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty" bson:"port"`
+	Hostname string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Port     string `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty"`
 	// network_region is used to send the request to the right pollers
 	// each poller group is separted by network_regions and contacts the network
 	// elements in that region.
-	NetworkRegion string `protobuf:"bytes,4,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty" bson:"network_region"`
+	NetworkRegion string `protobuf:"bytes,4,opt,name=network_region,json=networkRegion,proto3" json:"network_region,omitempty"`
 }
 
 func (x *SessionRequest) Reset() {
@@ -467,9 +467,9 @@ type PollRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Session  *SessionRequest  `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty" bson:"session"`
-	Settings *Settings        `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitempty" bson:"settings"`
-	Type     PollRequest_Type `protobuf:"varint,3,opt,name=type,proto3,enum=core.PollRequest_Type" json:"type,omitempty" bson:"type"`
+	Session  *SessionRequest  `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
+	Settings *Settings        `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitempty"`
+	Type     PollRequest_Type `protobuf:"varint,3,opt,name=type,proto3,enum=core.PollRequest_Type" json:"type,omitempty"`
 }
 
 func (x *PollRequest) Reset() {
@@ -530,11 +530,11 @@ type PollResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NetworkElement  *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
-	PhysicalPort    string                    `protobuf:"bytes,3,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty" bson:"physical_port"`
-	Error           *Error                    `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty" bson:"error"`
-	RequestAccessId string                    `protobuf:"bytes,5,opt,name=request_access_id,json=requestAccessId,proto3" json:"request_access_id,omitempty" bson:"request_access_id"`
-	ExecutionTime   string                    `protobuf:"bytes,6,opt,name=execution_time,json=executionTime,proto3" json:"execution_time,omitempty" bson:"execution_time"`
+	NetworkElement  *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty"`
+	PhysicalPort    string                    `protobuf:"bytes,3,opt,name=physical_port,json=physicalPort,proto3" json:"physical_port,omitempty"`
+	Error           *Error                    `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	RequestAccessId string                    `protobuf:"bytes,5,opt,name=request_access_id,json=requestAccessId,proto3" json:"request_access_id,omitempty"`
+	ExecutionTime   string                    `protobuf:"bytes,6,opt,name=execution_time,json=executionTime,proto3" json:"execution_time,omitempty"`
 }
 
 func (x *PollResponse) Reset() {
@@ -611,9 +611,9 @@ type DiscoverRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// session is used to locate the network element
-	Session *SessionRequest `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty" bson:"session"`
+	Session *SessionRequest `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
 	// settings is used to configure the request
-	Settings *Settings `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitempty" bson:"settings"`
+	Settings *Settings `protobuf:"bytes,2,opt,name=settings,proto3" json:"settings,omitempty"`
 }
 
 func (x *DiscoverRequest) Reset() {
@@ -667,7 +667,7 @@ type DiscoverResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NetworkElement *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty" bson:"network_element"`
+	NetworkElement *networkelementpb.Element `protobuf:"bytes,2,opt,name=network_element,json=networkElement,proto3" json:"network_element,omitempty"`
 }
 
 func (x *DiscoverResponse) Reset() {
@@ -980,8 +980,8 @@ type CollectConfigRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Settings *Settings       `protobuf:"bytes,1,opt,name=settings,proto3" json:"settings,omitempty" bson:"settings"`
-	Session  *SessionRequest `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty" bson:"session"`
+	Settings *Settings       `protobuf:"bytes,1,opt,name=settings,proto3" json:"settings,omitempty"`
+	Session  *SessionRequest `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
 }
 
 func (x *CollectConfigRequest) Reset() {
@@ -1035,9 +1035,9 @@ type ConfigChange struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Path     string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty" bson:"path"`
-	OldValue string `protobuf:"bytes,2,opt,name=old_value,json=oldValue,proto3" json:"old_value,omitempty" bson:"old_value"`
-	NewValue string `protobuf:"bytes,3,opt,name=new_value,json=newValue,proto3" json:"new_value,omitempty" bson:"new_value"`
+	Path     string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	OldValue string `protobuf:"bytes,2,opt,name=old_value,json=oldValue,proto3" json:"old_value,omitempty"`
+	NewValue string `protobuf:"bytes,3,opt,name=new_value,json=newValue,proto3" json:"new_value,omitempty"`
 }
 
 func (x *ConfigChange) Reset() {
@@ -1098,9 +1098,9 @@ type CollectConfigResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Config  string          `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty" bson:"config"`
-	Changes []*ConfigChange `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
-	Error   *Error          `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty" bson:"error"`
+	Config  string          `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Changes []*ConfigChange `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty"`
+	Error   *Error          `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (x *CollectConfigResponse) Reset() {

@@ -51,18 +51,18 @@ type Configuration struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id for the specific created config
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// the id of the device this configuration is for
-	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,2,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// the configuration as a string
-	Configuration string `protobuf:"bytes,3,opt,name=configuration,proto3" json:"configuration,omitempty" bson:"configuration"`
+	Configuration string `protobuf:"bytes,3,opt,name=configuration,proto3" json:"configuration,omitempty"`
 	// changes in unified format
 	// https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
-	Changes string `protobuf:"bytes,4,opt,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
+	Changes string `protobuf:"bytes,4,opt,name=changes,proto3" json:"changes,omitempty"`
 	// the checksum of the config (used to compare configs)
-	Checksum string `protobuf:"bytes,5,opt,name=checksum,proto3" json:"checksum,omitempty" bson:"checksum"`
+	Checksum string `protobuf:"bytes,5,opt,name=checksum,proto3" json:"checksum,omitempty"`
 	// the timestamp when the configuration was created (fetched from the device)
-	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty" bson:"created"`
+	Created *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created,proto3" json:"created,omitempty"`
 }
 
 func (x *Configuration) Reset() {
@@ -145,7 +145,7 @@ type GetByIDParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device configuration to get
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *GetByIDParameters) Reset() {
@@ -193,10 +193,10 @@ type CompareParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the configuration to compare to
-	ConfigurationAId string `protobuf:"bytes,1,opt,name=configuration_a_id,json=configurationAId,proto3" json:"configuration_a_id,omitempty" bson:"configuration_a_id"`
+	ConfigurationAId string `protobuf:"bytes,1,opt,name=configuration_a_id,json=configurationAId,proto3" json:"configuration_a_id,omitempty"`
 	// the id of the configuration to compare with
 	// if this is not specified the latest configuration before the specified configuration is used
-	ConfigurationBId string `protobuf:"bytes,2,opt,name=configuration_b_id,json=configurationBId,proto3" json:"configuration_b_id,omitempty" bson:"configuration_b_id"`
+	ConfigurationBId string `protobuf:"bytes,2,opt,name=configuration_b_id,json=configurationBId,proto3" json:"configuration_b_id,omitempty"`
 }
 
 func (x *CompareParameters) Reset() {
@@ -251,9 +251,9 @@ type ListParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to list the configurations for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
-	Limit    *int64 `protobuf:"varint,3,opt,name=limit,proto3,oneof" json:"limit,omitempty" bson:"limit"`
-	Offset   *int64 `protobuf:"varint,4,opt,name=offset,proto3,oneof" json:"offset,omitempty" bson:"offset"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	Limit    *int64 `protobuf:"varint,3,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
+	Offset   *int64 `protobuf:"varint,4,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
 }
 
 func (x *ListParameters) Reset() {
@@ -315,14 +315,14 @@ type CreateParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to create the configuration for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// the configuration as a string
-	Configuration string `protobuf:"bytes,2,opt,name=configuration,proto3" json:"configuration,omitempty" bson:"configuration"`
+	Configuration string `protobuf:"bytes,2,opt,name=configuration,proto3" json:"configuration,omitempty"`
 	// changes in unified format
-	Changes string `protobuf:"bytes,3,opt,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
+	Changes string `protobuf:"bytes,3,opt,name=changes,proto3" json:"changes,omitempty"`
 	// the checksum of the config (used to compare configs) this is optional
 	// and if not specified it will be calculated from the configuration
-	Checksum string `protobuf:"bytes,4,opt,name=checksum,proto3" json:"checksum,omitempty" bson:"checksum"`
+	Checksum string `protobuf:"bytes,4,opt,name=checksum,proto3" json:"checksum,omitempty"`
 }
 
 func (x *CreateParameters) Reset() {
@@ -391,9 +391,9 @@ type DeleteParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device configuration to delete
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// device_id is the id of the device to delete the configuration for
-	DevceId string `protobuf:"bytes,2,opt,name=devce_id,json=devceId,proto3" json:"devce_id,omitempty" bson:"devce_id"`
+	DevceId string `protobuf:"bytes,2,opt,name=devce_id,json=devceId,proto3" json:"devce_id,omitempty"`
 }
 
 func (x *DeleteParameters) Reset() {
@@ -448,11 +448,11 @@ type CompareResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the configuration to compare to
-	ConfigurationAId string `protobuf:"bytes,1,opt,name=configuration_a_id,json=configurationAId,proto3" json:"configuration_a_id,omitempty" bson:"configuration_a_id"`
+	ConfigurationAId string `protobuf:"bytes,1,opt,name=configuration_a_id,json=configurationAId,proto3" json:"configuration_a_id,omitempty"`
 	// the id of the configuration to compare with
-	ConfigurationBId string `protobuf:"bytes,2,opt,name=configuration_b_id,json=configurationBId,proto3" json:"configuration_b_id,omitempty" bson:"configuration_b_id"`
+	ConfigurationBId string `protobuf:"bytes,2,opt,name=configuration_b_id,json=configurationBId,proto3" json:"configuration_b_id,omitempty"`
 	// the diff between the configurations
-	Changes string `protobuf:"bytes,3,opt,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
+	Changes string `protobuf:"bytes,3,opt,name=changes,proto3" json:"changes,omitempty"`
 }
 
 func (x *CompareResponse) Reset() {
@@ -514,9 +514,9 @@ type ListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to list the configurations for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// the configurations for the device
-	Configurations []*Configuration `protobuf:"bytes,2,rep,name=configurations,proto3" json:"configurations,omitempty" bson:"configurations"`
+	Configurations []*Configuration `protobuf:"bytes,2,rep,name=configurations,proto3" json:"configurations,omitempty"`
 }
 
 func (x *ListResponse) Reset() {
@@ -571,13 +571,13 @@ type DiffParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the configuration to compare to
-	ConfigurationA string `protobuf:"bytes,1,opt,name=configuration_a,json=configurationA,proto3" json:"configuration_a,omitempty" bson:"configuration_a"`
+	ConfigurationA string `protobuf:"bytes,1,opt,name=configuration_a,json=configurationA,proto3" json:"configuration_a,omitempty"`
 	// id to show in the diff response (previous: configuration_a_id)
-	ConfigurationAId *string `protobuf:"bytes,2,opt,name=configuration_a_id,json=configurationAId,proto3,oneof" json:"configuration_a_id,omitempty" bson:"configuration_a_id"`
+	ConfigurationAId *string `protobuf:"bytes,2,opt,name=configuration_a_id,json=configurationAId,proto3,oneof" json:"configuration_a_id,omitempty"`
 	// the configuration to compare with
-	ConfigurationB string `protobuf:"bytes,3,opt,name=configuration_b,json=configurationB,proto3" json:"configuration_b,omitempty" bson:"configuration_b"`
+	ConfigurationB string `protobuf:"bytes,3,opt,name=configuration_b,json=configurationB,proto3" json:"configuration_b,omitempty"`
 	// id to show in the diff response (new: configuration_b_id)
-	ConfigurationBId *string `protobuf:"bytes,4,opt,name=configuration_b_id,json=configurationBId,proto3,oneof" json:"configuration_b_id,omitempty" bson:"configuration_b_id"`
+	ConfigurationBId *string `protobuf:"bytes,4,opt,name=configuration_b_id,json=configurationBId,proto3,oneof" json:"configuration_b_id,omitempty"`
 }
 
 func (x *DiffParameters) Reset() {
@@ -646,7 +646,7 @@ type DiffResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the diff between the configurations
-	Changes string `protobuf:"bytes,1,opt,name=changes,proto3" json:"changes,omitempty" bson:"changes"`
+	Changes string `protobuf:"bytes,1,opt,name=changes,proto3" json:"changes,omitempty"`
 }
 
 func (x *DiffResponse) Reset() {
