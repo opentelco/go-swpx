@@ -10,7 +10,6 @@ import (
 
 func (n *stanzaImpl) newWorker() worker.Worker {
 	w := worker.New(n.temporalClient, stanzapb.TaskQueue_TASK_QUEUE_FLEET_STANZA.String(), worker.Options{})
-
 	w.RegisterWorkflowWithOptions(
 		workflows.ApplyStanzaWorkflow,
 		workflow.RegisterOptions{

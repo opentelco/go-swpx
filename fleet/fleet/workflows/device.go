@@ -7,6 +7,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
@@ -16,6 +17,7 @@ var devAct = &device.Activities{}
 
 func setDeviceUnreachable(ctx workflow.Context, deviceId string) (*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: sixty,
 		WaitForCancellation: false,
 	})
@@ -28,6 +30,7 @@ func setDeviceUnreachable(ctx workflow.Context, deviceId string) (*devicepb.Devi
 
 func getDeviceById(ctx workflow.Context, deviceId string) (*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: sixty,
 		WaitForCancellation: false,
 	})
@@ -48,6 +51,7 @@ func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*corepb.Discov
 	}
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		RetryPolicy: &temporal.RetryPolicy{
 			MaximumAttempts:        1,
 			NonRetryableErrorTypes: []string{activities.ErrTypeDiscoveryFailed},
@@ -74,6 +78,7 @@ func runDiscovery(ctx workflow.Context, device *devicepb.Device) (*corepb.Discov
 
 func updateDevice(ctx workflow.Context, params *devicepb.UpdateParameters) (*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -86,6 +91,7 @@ func updateDevice(ctx workflow.Context, params *devicepb.UpdateParameters) (*dev
 
 func listDevices(ctx workflow.Context, params *devicepb.ListParameters) ([]*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: sixty,
 		WaitForCancellation: false,
 	})

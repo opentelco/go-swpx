@@ -13,6 +13,7 @@ var devAct = device.Activities{}
 
 func getDeviceById(ctx workflow.Context, deviceId string) (*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: time.Second * 60,
 		WaitForCancellation: false,
 	})

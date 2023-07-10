@@ -54,7 +54,7 @@ func (f *fleet) DiscoverDevice(ctx context.Context, params *fleetpb.DiscoverDevi
 	wf, err := f.temporalClient.ExecuteWorkflow(
 		ctx,
 		client.StartWorkflowOptions{
-			TaskQueue: TaskQueue,
+			TaskQueue: fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		},
 		workflows.DiscoverWorkflow,
 		params.CreateDeviceParams,
@@ -83,7 +83,7 @@ func (f *fleet) CollectDevice(ctx context.Context, params *fleetpb.CollectDevice
 	wf, err := f.temporalClient.ExecuteWorkflow(
 		ctx,
 		client.StartWorkflowOptions{
-			TaskQueue: TaskQueue,
+			TaskQueue: fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		},
 		workflows.CollectDeviceWorkflow,
 		params,
@@ -115,7 +115,7 @@ func (f *fleet) CollectConfig(ctx context.Context, params *fleetpb.CollectConfig
 	wf, err := f.temporalClient.ExecuteWorkflow(
 		ctx,
 		client.StartWorkflowOptions{
-			TaskQueue: TaskQueue,
+			TaskQueue: fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		},
 		workflows.CollectConfigWorkflow,
 		params,
@@ -155,7 +155,7 @@ func (f *fleet) startSchedules() error {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:           "schedule.collect-config",
 		CronSchedule: "*/5 * * * *",
-		TaskQueue:    TaskQueue,
+		TaskQueue:    fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 	}
 
 	wf, err := f.temporalClient.ExecuteWorkflow(
@@ -173,7 +173,7 @@ func (f *fleet) startSchedules() error {
 	workflowOptions = client.StartWorkflowOptions{
 		ID:           "schedule.collect-device",
 		CronSchedule: "*/5 * * * *",
-		TaskQueue:    TaskQueue,
+		TaskQueue:    fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 	}
 
 	wf, err = f.temporalClient.ExecuteWorkflow(

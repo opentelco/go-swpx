@@ -87,6 +87,7 @@ func addEventCollectFailed(ctx workflow.Context, deviceId string, reason string)
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 	})
 	evt := devicepb.Event{
 		DeviceId: deviceId,
@@ -105,6 +106,7 @@ func addEventCollectSuccess(ctx workflow.Context, deviceId string) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 	})
 	evt := devicepb.Event{
 		DeviceId: deviceId,

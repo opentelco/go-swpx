@@ -3,14 +3,13 @@ package fleet
 import (
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/workflows"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
 )
 
-const TaskQueue = "FLEET"
-
 func (f *fleet) newWorker() worker.Worker {
-	w := worker.New(f.temporalClient, TaskQueue, worker.Options{})
+	w := worker.New(f.temporalClient, fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(), worker.Options{})
 
 	w.RegisterWorkflowWithOptions(
 		workflows.CollectConfigWorkflow,

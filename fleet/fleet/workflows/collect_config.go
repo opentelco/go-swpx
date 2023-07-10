@@ -102,6 +102,7 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*corepb
 		target = device.Hostname
 	}
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		StartToCloseTimeout: time.Minute * 2,
 		RetryPolicy: &temporal.RetryPolicy{
 			MaximumAttempts:        1,
@@ -131,6 +132,7 @@ func runConfigCollection(ctx workflow.Context, device *devicepb.Device) (*corepb
 
 func addEventCollectConfigFailed(ctx workflow.Context, deviceId string, reason string) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -149,6 +151,7 @@ func addEventCollectConfigFailed(ctx workflow.Context, deviceId string, reason s
 
 func addEventCollectConfigSuccess(ctx workflow.Context, deviceId string) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -167,6 +170,7 @@ func addEventCollectConfigSuccess(ctx workflow.Context, deviceId string) error {
 
 func addEventCollectConfigNoChanges(ctx workflow.Context, deviceId string) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -185,6 +189,7 @@ func addEventCollectConfigNoChanges(ctx workflow.Context, deviceId string) error
 
 func listConfigs(ctx workflow.Context, params *configurationpb.ListParameters) (*configurationpb.ListResponse, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -197,6 +202,7 @@ func listConfigs(ctx workflow.Context, params *configurationpb.ListParameters) (
 
 func diffConfigs(ctx workflow.Context, params *configurationpb.DiffParameters) (*configurationpb.DiffResponse, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -209,6 +215,7 @@ func diffConfigs(ctx workflow.Context, params *configurationpb.DiffParameters) (
 
 func storeConfig(ctx workflow.Context, params *configurationpb.CreateParameters) (*configurationpb.Configuration, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})

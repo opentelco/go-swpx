@@ -12,6 +12,7 @@ import (
 	na "git.liero.se/opentelco/go-swpx/fleet/notification/activities"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/araddon/dateparse"
 	"go.temporal.io/sdk/temporal"
@@ -52,6 +53,7 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 	// activity options
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: thirty,
+		TaskQueue:           fleetpb.TaskQueue_TASK_QUEUE_FLEET.String(),
 		WaitForCancellation: false,
 		RetryPolicy: &temporal.RetryPolicy{
 			MaximumAttempts:        2,
@@ -120,6 +122,7 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 
 	// parameters are set, create the device in the database
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})
@@ -130,6 +133,7 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 
 	// create an event for the device creation
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
 		StartToCloseTimeout: thirty,
 		WaitForCancellation: false,
 	})

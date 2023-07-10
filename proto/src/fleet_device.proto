@@ -400,3 +400,9 @@ message SetScheduleParameters {
     // the schedule to upsert
     Device.Schedule schedule = 2;
 }
+
+
+
+enum TaskQueue {
+    TASK_QUEUE_FLEET_DEVICE = 0;
+}
