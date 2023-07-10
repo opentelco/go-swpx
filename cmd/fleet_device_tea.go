@@ -6,6 +6,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 )
@@ -80,10 +81,20 @@ func (m deviceModel) View() string {
 }
 
 func renderDevice(i *deviceItem) string {
-	msg := fmt.Sprintf(`%s
+	in := fmt.Sprintf(`# %s (ID: %s)
 
-Schedule:
+## Description
+
 %s
-	`, i.Title(), i.dev.Schedules)
-	return msg
+
+## Schedules
+
+%s
+	`, i.title, i.id, i.desc, i.dev.Schedules)
+	out, err := glamour.Render(in, "dark")
+	if err != nil {
+		panic(err)
+	}
+	return out
+
 }

@@ -11,8 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const TaskQueue = "STANZA"
-
 func New(repo Repository, temporalClient client.Client, logger hclog.Logger) (stanzapb.StanzaServiceServer, error) {
 	n := &stanzaImpl{
 		temporalClient: temporalClient,
@@ -84,7 +82,7 @@ func (s *stanzaImpl) Apply(ctx context.Context, params *stanzapb.ApplyRequest) (
 	wf, err := s.temporalClient.ExecuteWorkflow(
 		ctx,
 		client.StartWorkflowOptions{
-			TaskQueue: TaskQueue,
+			TaskQueue: stanzapb.TaskQueue_TASK_QUEUE_FLEET_STANZA.String(),
 		},
 		workflows.ApplyStanzaWorkflow,
 		params.DeviceId,

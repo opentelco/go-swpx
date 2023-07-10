@@ -21,10 +21,25 @@ func init() {
 	// offset
 	listStanzaCmd.Flags().Int("offset", 0, "offset")
 
+	createStanzaCmd.Flags().String("name", "", "the name of the stanza, e.g 'set hostname to foo'")
+	_ = createStanzaCmd.MarkFlagRequired("name")
+
+	createStanzaCmd.Flags().String("description", "", "the description of the stanza")
+	createStanzaCmd.Flags().String("device-type", "", "device type")
+	createStanzaCmd.Flags().String("content", "", "content of the stanza, e.g 'sysname foo'")
+	_ = createStanzaCmd.MarkFlagRequired("content")
+
+	createStanzaCmd.Flags().String("revert-content", "", "revert-content of the stanza, e.g 'sysname old'")
+
+	applyStanzaCmd.Flags().StringP("device-id", "d", "", "device id")
+	applyStanzaCmd.MarkFlagRequired("device-id")
+	applyStanzaCmd.Flags().Bool("non-blocking", false, "blocking")
+
 	fleetStanzaRootCmd.AddCommand(listStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(getStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(deleteStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(createStanzaCmd)
+	fleetStanzaRootCmd.AddCommand(applyStanzaCmd)
 
 	fleetRootCmd.AddCommand(fleetStanzaRootCmd)
 
@@ -193,5 +208,37 @@ var deleteStanzaCmd = &cobra.Command{
 
 		fmt.Println(res)
 
+	},
+}
+
+// apply stanza
+var applyStanzaCmd = &cobra.Command{
+	Use:   "apply [id]",
+	Short: "apply stanza",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		deviceId, _ := cmd.Flags().GetString("device-id")
+		nonBlocking, _ := cmd.Flags().GetBool("non-blocking")
+
+		id := args[0]
+		stanzaClient, err := getStanzaClient(cmd)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		applyRes, err := stanzaClient.Apply(cmd.Context(), &stanzapb.ApplyRequest{
+			Id:       id,
+			DeviceId: deviceId,
+			Blocking: !nonBlocking,
+		})
+
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		fmt.Println(applyRes)
 	},
 }

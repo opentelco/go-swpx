@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/charmbracelet/glamour"
+
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/termenv"
 )
@@ -89,23 +90,18 @@ func (m notificationModel) View() string {
 			m.notification.MarkAsRead(context.Background(), &notificationpb.MarkAsReadRequest{Ids: []string{m.choice.id}})
 		}
 
-		var header = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color("#7D56F4")).
-			PaddingTop(1).
-			PaddingLeft(1).
-			PaddingBottom(1).
-			Width(100)
-		var body = lipgloss.NewStyle().
-			PaddingTop(1).
-			PaddingLeft(1).
-			PaddingBottom(1).
-			Width(100)
+		in := fmt.Sprintf(`# %s (ID: %s)
 
-		msg := fmt.Sprintf("%s\n%s\n\n%s", header.Render(m.choice.title), body.Render(m.choice.desc), colorFg("Notification marked as read", "244"))
+## Description
 
-		return wordwrap.String(msg, 100)
+%s
+`, m.choice.Title(), m.choice.id, m.choice.desc)
+
+		out, err := glamour.Render(in, "dark")
+		if err != nil {
+			panic(err)
+		}
+		return wordwrap.String(out, 100)
 	}
 
 	return docStyle.Render(m.list.View())

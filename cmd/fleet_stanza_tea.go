@@ -16,6 +16,7 @@ type stanzaItem struct {
 }
 
 func (i stanzaItem) Title() string {
+
 	if i.applied {
 		i.title = "🟢 " + i.title
 		return colorFg(i.title, "32")
@@ -73,7 +74,7 @@ func (m stanzaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m stanzaModel) View() string {
 	if m.choice != nil {
-
+		title := m.choice.title + " (id: " + m.choice.id + ")"
 		var header = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#FAFAFA")).
@@ -88,7 +89,7 @@ func (m stanzaModel) View() string {
 			PaddingBottom(1).
 			Width(100)
 
-		msg := fmt.Sprintf("%s\n%s\n\n", header.Render(m.choice.title), body.Render(m.choice.desc))
+		msg := fmt.Sprintf("%s\n%s\n\n", header.Render(title), body.Render(m.choice.desc))
 
 		return wordwrap.String(msg, 100)
 	}
