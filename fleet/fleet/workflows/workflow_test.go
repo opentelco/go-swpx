@@ -3,12 +3,14 @@ package workflows
 import (
 	"testing"
 
+	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
 )
 
 var testAct = activities.Activities{}
+var testDevAct = device.Activities{}
 
 type unitTestSuite struct {
 	suite.Suite

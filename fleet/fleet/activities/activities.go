@@ -66,41 +66,6 @@ func (a *Activities) CollectConfigWithPoller(ctx context.Context, params *corepb
 
 }
 
-func (a *Activities) CreateDevice(ctx context.Context, params *devicepb.CreateParameters) (*devicepb.Device, error) {
-	return a.device.Create(ctx, params)
-}
-
-func (a *Activities) AddDeviceEvent(ctx context.Context, event *devicepb.Event) (*devicepb.Event, error) {
-	return a.device.AddEvent(ctx, event)
-}
-
-func (a *Activities) GetDeviceByID(ctx context.Context, id string) (*devicepb.Device, error) {
-	dev, err := a.device.GetByID(ctx, &devicepb.GetByIDParameters{Id: id})
-	if errors.Is(err, device.ErrDeviceNotFound) {
-		return nil, temporal.NewNonRetryableApplicationError("device not found", ErrTypeDeviceNotFound, err)
-	}
-	return dev, err
-}
-
-func (a *Activities) SetDeviceUnreachable(ctx context.Context, id string) (*devicepb.Device, error) {
-	dev, err := a.device.Update(ctx, &devicepb.UpdateParameters{
-		Id:     id,
-		Status: &[]devicepb.Device_Status{devicepb.Device_DEVICE_STATUS_UNREACHABLE}[0],
-	})
-	if errors.Is(err, device.ErrDeviceNotFound) {
-		return nil, temporal.NewNonRetryableApplicationError("device not found", ErrTypeDeviceNotFound, err)
-	}
-	return dev, err
-}
-
-func (a *Activities) UpdateDevice(ctx context.Context, params *devicepb.UpdateParameters) (*devicepb.Device, error) {
-	dev, err := a.device.Update(ctx, params)
-	if errors.Is(err, device.ErrDeviceNotFound) {
-		return nil, temporal.NewNonRetryableApplicationError("device not found", ErrTypeDeviceNotFound, err)
-	}
-	return dev, err
-}
-
 func (a *Activities) GetConfigurationByID(ctx context.Context, id string) (*configurationpb.Configuration, error) {
 	c, err := a.config.GetByID(ctx, &configurationpb.GetByIDParameters{Id: id})
 	if errors.Is(err, configuration.ErrConfigurationNotFound) {
@@ -119,10 +84,6 @@ func (a *Activities) ListConfigs(ctx context.Context, params *configurationpb.Li
 
 func (a *Activities) DiffConfigs(ctx context.Context, params *configurationpb.DiffParameters) (*configurationpb.DiffResponse, error) {
 	return a.config.Diff(ctx, params)
-}
-
-func (a *Activities) ListDevices(ctx context.Context, params *devicepb.ListParameters) (*devicepb.ListResponse, error) {
-	return a.device.List(ctx, params)
 }
 
 func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {

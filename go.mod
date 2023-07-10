@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.20
 
 require (
-	git.liero.se/opentelco/go-dnc v1.0.7-0.20230702220539-8ad7fd74a0ea
+	git.liero.se/opentelco/go-dnc v1.0.7-0.20230710072431-c854eef4a2d4
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/charmbracelet/bubbles v0.16.1
@@ -20,6 +20,8 @@ require (
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/mitchellh/hashstructure/v2 v2.0.2
+	github.com/muesli/reflow v0.3.0
+	github.com/muesli/termenv v0.15.2
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/spf13/cobra v1.7.0
@@ -90,8 +92,6 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect

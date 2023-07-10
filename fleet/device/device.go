@@ -9,6 +9,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"github.com/hashicorp/go-hclog"
+	"go.temporal.io/sdk/client"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -43,16 +44,26 @@ var pj = protojson.MarshalOptions{
 	EmitUnpopulated: true,
 }
 
-func New(repo Repository, logger hclog.Logger) devicepb.DeviceServiceServer {
-	return &device{
-		repo:   repo,
-		logger: logger.Named("fleet"),
+func New(repo Repository, temporalClient client.Client, logger hclog.Logger) (devicepb.DeviceServiceServer, error) {
+	impl := &device{
+		repo:           repo,
+		temporalClient: temporalClient,
+		logger:         logger.Named("fleet-device"),
 	}
+
+	w := impl.newWorker()
+	err := w.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return impl, nil
 }
 
 type device struct {
-	repo   Repository
-	logger hclog.Logger
+	repo           Repository
+	temporalClient client.Client
+	logger         hclog.Logger
 
 	devicepb.UnimplementedDeviceServiceServer
 }

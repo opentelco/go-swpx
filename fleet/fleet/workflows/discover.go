@@ -124,7 +124,7 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 		WaitForCancellation: false,
 	})
 	var device devicepb.Device
-	if err := workflow.ExecuteActivity(ctx, act.CreateDevice, params).Get(ctx, &device); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.CreateDevice, params).Get(ctx, &device); err != nil {
 		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
@@ -136,7 +136,7 @@ func DiscoverWorkflow(ctx workflow.Context, params *devicepb.CreateParameters) (
 
 	var event devicepb.Event
 	// returns event but we are not interested in it
-	err = workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &devicepb.Event{
+	err = workflow.ExecuteActivity(ctx, devAct.AddDeviceEvent, &devicepb.Event{
 		DeviceId: device.Id,
 		Type:     devicepb.Event_DEVICE,
 		Message:  "device was created by discovery",

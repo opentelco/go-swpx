@@ -3,12 +3,16 @@ package workflows
 import (
 	"fmt"
 
+	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
+
+var devAct = &device.Activities{}
 
 func setDeviceUnreachable(ctx workflow.Context, deviceId string) (*devicepb.Device, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
@@ -16,7 +20,7 @@ func setDeviceUnreachable(ctx workflow.Context, deviceId string) (*devicepb.Devi
 		WaitForCancellation: false,
 	})
 	var device devicepb.Device
-	if err := workflow.ExecuteActivity(ctx, act.SetDeviceUnreachable, deviceId).Get(ctx, &device); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.SetDeviceUnreachable, deviceId).Get(ctx, &device); err != nil {
 		return nil, fmt.Errorf("failed to set device unreachable: %w", err)
 	}
 	return &device, nil
@@ -28,7 +32,7 @@ func getDeviceById(ctx workflow.Context, deviceId string) (*devicepb.Device, err
 		WaitForCancellation: false,
 	})
 	var device devicepb.Device
-	if err := workflow.ExecuteActivity(ctx, act.GetDeviceByID, deviceId).Get(ctx, &device); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.GetDeviceByID, deviceId).Get(ctx, &device); err != nil {
 		return nil, fmt.Errorf("failed to collect device: %w", err)
 	}
 	return &device, nil
@@ -74,7 +78,7 @@ func updateDevice(ctx workflow.Context, params *devicepb.UpdateParameters) (*dev
 		WaitForCancellation: false,
 	})
 	var updatedDevice devicepb.Device
-	if err := workflow.ExecuteActivity(ctx, act.UpdateDevice, params).Get(ctx, &updatedDevice); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.UpdateDevice, params).Get(ctx, &updatedDevice); err != nil {
 		return nil, fmt.Errorf("failed to update device: %w", err)
 	}
 	return &updatedDevice, nil
@@ -86,7 +90,7 @@ func listDevices(ctx workflow.Context, params *devicepb.ListParameters) ([]*devi
 		WaitForCancellation: false,
 	})
 	var resp devicepb.ListResponse
-	if err := workflow.ExecuteActivity(ctx, act.ListDevices, params).Get(ctx, &resp); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.ListDevices, params).Get(ctx, &resp); err != nil {
 		return nil, fmt.Errorf("failed to collect device: %w", err)
 	}
 	return resp.Devices, nil

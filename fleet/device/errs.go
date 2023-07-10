@@ -15,3 +15,7 @@ var (
 	ErrInvalidArgumentScheduleTypeNotSet       = errors.New("invalid argument: schedule type not set")
 	ErrInvalidArgumentScheduleIntervalTooShort = errors.New("invalid argument: schedule interval too short")
 )
+
+var (
+	ErrTypeDeviceNotFound = "DEVICE_NOT_FOUND"
+)

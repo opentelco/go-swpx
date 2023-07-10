@@ -95,7 +95,7 @@ func addEventCollectFailed(ctx workflow.Context, deviceId string, reason string)
 		Action:   devicepb.Event_COLLECT_DEVICE,
 		Outcome:  devicepb.Event_FAILURE,
 	}
-	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
 		return fmt.Errorf("failed to add 'collection failed' event to device: %w", err)
 	}
 	return nil
@@ -113,7 +113,7 @@ func addEventCollectSuccess(ctx workflow.Context, deviceId string) error {
 		Action:   devicepb.Event_COLLECT_DEVICE,
 		Outcome:  devicepb.Event_SUCCESS,
 	}
-	if err := workflow.ExecuteActivity(ctx, act.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
+	if err := workflow.ExecuteActivity(ctx, devAct.AddDeviceEvent, &evt).Get(ctx, &evt); err != nil {
 		return fmt.Errorf("failed to add 'collection success' event to device: %w", err)
 	}
 	return nil

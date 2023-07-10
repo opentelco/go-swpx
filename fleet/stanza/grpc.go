@@ -56,7 +56,23 @@ func (g *grpcImpl) Delete(ctx context.Context, params *stanzapb.DeleteRequest) (
 		return nil, errHandler(err)
 	}
 	return res, nil
+}
 
+func (g *grpcImpl) Apply(ctx context.Context, params *stanzapb.ApplyRequest) (*stanzapb.ApplyResponse, error) {
+	res, err := g.stanzaService.Apply(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+
+}
+
+func (g *grpcImpl) Revert(ctx context.Context, params *stanzapb.RevertRequest) (*stanzapb.RevertResponse, error) {
+	res, err := g.stanzaService.Revert(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
 }
 
 func errHandler(err error) error {

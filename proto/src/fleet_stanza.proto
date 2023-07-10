@@ -167,6 +167,9 @@ message ApplyRequest {
 
     // the id of the device to apply the stanza to
     string device_id = 2;
+
+    // should the apply block until the apply is done
+    bool blocking = 3;
 }
 
 message ApplyResponse {

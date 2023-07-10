@@ -124,7 +124,12 @@ var StartCmd = &cobra.Command{
 		}
 		poller := corepb.NewCoreServiceClient(cc)
 
-		deviceService := device.New(drepo, logger)
+		deviceService, err := device.New(drepo, tc, logger)
+		if err != nil {
+			cmd.PrintErr("could not create device service:", err)
+			os.Exit(1)
+		}
+
 		configService := configuration.New(crepo, logger)
 		notificationService, err := notification.New(nrepo, tc, logger)
 		if err != nil {

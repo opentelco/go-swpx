@@ -60,8 +60,8 @@ func (t *unitTestSuite) TestDiscoverWorkflowParamsHost() {
 		Status:        &statusReachable,
 	}
 	returnDevice := &devicepb.Device{Id: "1234"}
-	env.OnActivity(testAct.CreateDevice, mock.Anything, createDeviceParams).Return(returnDevice, nil).Once()
-	env.OnActivity(testAct.AddDeviceEvent, mock.Anything, &devicepb.Event{
+	env.OnActivity(testDevAct.CreateDevice, mock.Anything, createDeviceParams).Return(returnDevice, nil).Once()
+	env.OnActivity(testDevAct.AddDeviceEvent, mock.Anything, &devicepb.Event{
 		DeviceId: returnDevice.Id,
 		Type:     devicepb.Event_DEVICE,
 		Message:  "device was created by discovery",
