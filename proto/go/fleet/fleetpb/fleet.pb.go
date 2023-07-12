@@ -93,9 +93,9 @@ type CollectDeviceParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to collect information for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
 	// blocking is used to indicate if the call should block until the device is collected
-	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty"`
+	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty" bson:"blocking"`
 }
 
 func (x *CollectDeviceParameters) Reset() {
@@ -150,9 +150,9 @@ type CollectConfigParameters struct {
 	unknownFields protoimpl.UnknownFields
 
 	// the id of the device to collect the configuration for
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty" bson:"device_id"`
 	// blocking is used to indicate if the call should block until the configuration is collected
-	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty"`
+	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty" bson:"blocking"`
 }
 
 func (x *CollectConfigParameters) Reset() {
@@ -206,9 +206,9 @@ type DiscoverDeviceParameters struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CreateDeviceParams *devicepb.CreateParameters `protobuf:"bytes,1,opt,name=create_device_params,json=createDeviceParams,proto3" json:"create_device_params,omitempty"`
+	CreateDeviceParams *devicepb.CreateParameters `protobuf:"bytes,1,opt,name=create_device_params,json=createDeviceParams,proto3" json:"create_device_params,omitempty" bson:"create_device_params"`
 	// blocking is used to indicate if the call should block until the device is discovered
-	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty"`
+	Blocking bool `protobuf:"varint,2,opt,name=blocking,proto3" json:"blocking,omitempty" bson:"blocking"`
 }
 
 func (x *DiscoverDeviceParameters) Reset() {

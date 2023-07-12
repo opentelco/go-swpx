@@ -177,22 +177,22 @@ type Notification struct {
 	unknownFields protoimpl.UnknownFields
 
 	// The ID of the notification
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
 	// The title of the notification
 	// (e.g. "Device 1234 is not reachable")
-	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty" bson:"title"`
 	// The ID of the device
-	ResourceId string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	ResourceId string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty" bson:"resource_id"`
 	// the resource type of the notification (e.g. device, config)
 	// used to identify the resource_id (e.g. device_id, config_id)
-	ResourceType Notification_ResourceType `protobuf:"varint,4,opt,name=resource_type,json=resourceType,proto3,enum=notificationpb.Notification_ResourceType" json:"resource_type,omitempty"`
+	ResourceType Notification_ResourceType `protobuf:"varint,4,opt,name=resource_type,json=resourceType,proto3,enum=notificationpb.Notification_ResourceType" json:"resource_type,omitempty" bson:"resource_type"`
 	// The timestamp of the notification
-	Timestamp *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 	// The message of the notification e.g "Device 1234 is not reachable since 2020-01-01 12:00:00 UTC,
 	// last seen 2020-01-01 11:00:00 UTC, last config update 2020-01-01 10:00:00 UTC"
-	Message string `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
+	Message string `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
 	// used to mark the notification as read
-	Read bool `protobuf:"varint,7,opt,name=read,proto3" json:"read,omitempty"`
+	Read bool `protobuf:"varint,7,opt,name=read,proto3" json:"read,omitempty" bson:"read"`
 }
 
 func (x *Notification) Reset() {
@@ -281,7 +281,7 @@ type GetByIDRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
 }
 
 func (x *GetByIDRequest) Reset() {
@@ -328,13 +328,13 @@ type ListRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ResourceIds []string             `protobuf:"bytes,1,rep,name=resource_ids,json=resourceIds,proto3" json:"resource_ids,omitempty"`
-	Ids         []string             `protobuf:"bytes,2,rep,name=ids,proto3" json:"ids,omitempty"`
-	Filter      []ListRequest_Filter `protobuf:"varint,3,rep,packed,name=filter,proto3,enum=notificationpb.ListRequest_Filter" json:"filter,omitempty"`
+	ResourceIds []string             `protobuf:"bytes,1,rep,name=resource_ids,json=resourceIds,proto3" json:"resource_ids,omitempty" bson:"resource_ids"`
+	Ids         []string             `protobuf:"bytes,2,rep,name=ids,proto3" json:"ids,omitempty" bson:"ids"`
+	Filter      []ListRequest_Filter `protobuf:"varint,3,rep,packed,name=filter,proto3,enum=notificationpb.ListRequest_Filter" json:"filter,omitempty" bson:"filter"`
 	// how many notifications to return (default 10)
-	Limit *int64 `protobuf:"varint,4,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
+	Limit *int64 `protobuf:"varint,4,opt,name=limit,proto3,oneof" json:"limit,omitempty" bson:"limit"`
 	// offset to start from (default 0)
-	Offset *int64 `protobuf:"varint,5,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
+	Offset *int64 `protobuf:"varint,5,opt,name=offset,proto3,oneof" json:"offset,omitempty" bson:"offset"`
 }
 
 func (x *ListRequest) Reset() {
@@ -409,7 +409,7 @@ type ListResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Notifications []*Notification `protobuf:"bytes,1,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	Notifications []*Notification `protobuf:"bytes,1,rep,name=notifications,proto3" json:"notifications,omitempty" bson:"notifications"`
 }
 
 func (x *ListResponse) Reset() {
@@ -458,15 +458,15 @@ type CreateRequest struct {
 
 	// The title of the notification
 	// (e.g. "Device 1234 is not reachable")
-	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty" bson:"title"`
 	// The ID of the device
-	ResourceId string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	ResourceId string `protobuf:"bytes,3,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty" bson:"resource_id"`
 	// the resource type of the notification (e.g. device, config)
 	// used to identify the resource_id (e.g. device_id, config_id)
-	ResourceType Notification_ResourceType `protobuf:"varint,4,opt,name=resource_type,json=resourceType,proto3,enum=notificationpb.Notification_ResourceType" json:"resource_type,omitempty"`
+	ResourceType Notification_ResourceType `protobuf:"varint,4,opt,name=resource_type,json=resourceType,proto3,enum=notificationpb.Notification_ResourceType" json:"resource_type,omitempty" bson:"resource_type"`
 	// The message of the notification e.g "Device 1234 is not reachable since 2020-01-01 12:00:00 UTC,
 	// last seen 2020-01-01 11:00:00 UTC, last config update 2020-01-01 10:00:00 UTC"
-	Message *string `protobuf:"bytes,6,opt,name=message,proto3,oneof" json:"message,omitempty"`
+	Message *string `protobuf:"bytes,6,opt,name=message,proto3,oneof" json:"message,omitempty" bson:"message"`
 }
 
 func (x *CreateRequest) Reset() {
@@ -534,7 +534,7 @@ type DeleteRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
 }
 
 func (x *DeleteRequest) Reset() {
@@ -581,7 +581,7 @@ type DeleteResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
 }
 
 func (x *DeleteResponse) Reset() {
@@ -628,7 +628,7 @@ type MarkAsReadRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Ids []string `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
+	Ids []string `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty" bson:"ids"`
 }
 
 func (x *MarkAsReadRequest) Reset() {
@@ -675,7 +675,7 @@ type MarkAsReadResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Notifications []*Notification `protobuf:"bytes,1,rep,name=notifications,proto3" json:"notifications,omitempty"`
+	Notifications []*Notification `protobuf:"bytes,1,rep,name=notifications,proto3" json:"notifications,omitempty" bson:"notifications"`
 }
 
 func (x *MarkAsReadResponse) Reset() {

@@ -1070,23 +1070,23 @@ type Element struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Hostname             string                 `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	Version              string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	SoftwareVersion      string                 `protobuf:"bytes,3,opt,name=software_version,json=softwareVersion,proto3" json:"software_version,omitempty"`
-	SnmpObjectId         string                 `protobuf:"bytes,4,opt,name=snmp_object_id,json=snmpObjectId,proto3" json:"snmp_object_id,omitempty"`
-	InterfaceIndex       int32                  `protobuf:"varint,5,opt,name=interface_index,json=interfaceIndex,proto3" json:"interface_index,omitempty"`
-	Virtual              bool                   `protobuf:"varint,6,opt,name=virtual,proto3" json:"virtual,omitempty"`
-	Uptime               string                 `protobuf:"bytes,7,opt,name=uptime,proto3" json:"uptime,omitempty"`
-	Contact              string                 `protobuf:"bytes,8,opt,name=contact,proto3" json:"contact,omitempty"`
-	Sysname              string                 `protobuf:"bytes,9,opt,name=sysname,proto3" json:"sysname,omitempty"`
-	Location             string                 `protobuf:"bytes,10,opt,name=location,proto3" json:"location,omitempty"`
-	BridgeMacAddress     string                 `protobuf:"bytes,11,opt,name=bridge_mac_address,json=bridgeMacAddress,proto3" json:"bridge_mac_address,omitempty"`
-	Interfaces           []*Interface           `protobuf:"bytes,12,rep,name=interfaces,proto3" json:"interfaces,omitempty"`
-	AggregatedInterfaces []*AggregatedInterface `protobuf:"bytes,13,rep,name=aggregated_interfaces,json=aggregatedInterfaces,proto3" json:"aggregated_interfaces,omitempty"`
-	Modules              []*Module              `protobuf:"bytes,14,rep,name=modules,proto3" json:"modules,omitempty"`
-	Driver               string                 `protobuf:"bytes,15,opt,name=driver,proto3" json:"driver,omitempty"`
-	TransientErrors      *TransientErrors       `protobuf:"bytes,16,opt,name=transient_errors,json=transientErrors,proto3" json:"transient_errors,omitempty"` // bool virtual = 16;
-	LastChanged          string                 `protobuf:"bytes,17,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty"`
+	Hostname             string                 `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty" bson:"hostname"`
+	Version              string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty" bson:"version"`
+	SoftwareVersion      string                 `protobuf:"bytes,3,opt,name=software_version,json=softwareVersion,proto3" json:"software_version,omitempty" bson:"software_version"`
+	SnmpObjectId         string                 `protobuf:"bytes,4,opt,name=snmp_object_id,json=snmpObjectId,proto3" json:"snmp_object_id,omitempty" bson:"snmp_object_id"`
+	InterfaceIndex       int32                  `protobuf:"varint,5,opt,name=interface_index,json=interfaceIndex,proto3" json:"interface_index,omitempty" bson:"interface_index"`
+	Virtual              bool                   `protobuf:"varint,6,opt,name=virtual,proto3" json:"virtual,omitempty" bson:"virtual"`
+	Uptime               string                 `protobuf:"bytes,7,opt,name=uptime,proto3" json:"uptime,omitempty" bson:"uptime"`
+	Contact              string                 `protobuf:"bytes,8,opt,name=contact,proto3" json:"contact,omitempty" bson:"contact"`
+	Sysname              string                 `protobuf:"bytes,9,opt,name=sysname,proto3" json:"sysname,omitempty" bson:"sysname"`
+	Location             string                 `protobuf:"bytes,10,opt,name=location,proto3" json:"location,omitempty" bson:"location"`
+	BridgeMacAddress     string                 `protobuf:"bytes,11,opt,name=bridge_mac_address,json=bridgeMacAddress,proto3" json:"bridge_mac_address,omitempty" bson:"bridge_mac_address"`
+	Interfaces           []*Interface           `protobuf:"bytes,12,rep,name=interfaces,proto3" json:"interfaces,omitempty" bson:"interfaces"`
+	AggregatedInterfaces []*AggregatedInterface `protobuf:"bytes,13,rep,name=aggregated_interfaces,json=aggregatedInterfaces,proto3" json:"aggregated_interfaces,omitempty" bson:"aggregated_interfaces"`
+	Modules              []*Module              `protobuf:"bytes,14,rep,name=modules,proto3" json:"modules,omitempty" bson:"modules"`
+	Driver               string                 `protobuf:"bytes,15,opt,name=driver,proto3" json:"driver,omitempty" bson:"driver"`
+	TransientErrors      *TransientErrors       `protobuf:"bytes,16,opt,name=transient_errors,json=transientErrors,proto3" json:"transient_errors,omitempty" bson:"transient_errors"` // bool virtual = 16;
+	LastChanged          string                 `protobuf:"bytes,17,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty" bson:"last_changed"`
 }
 
 func (x *Element) Reset() {
@@ -1245,7 +1245,7 @@ type TransientErrors struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Errors []*TransientError `protobuf:"bytes,1,rep,name=errors,proto3" json:"errors,omitempty"`
+	Errors []*TransientError `protobuf:"bytes,1,rep,name=errors,proto3" json:"errors,omitempty" bson:"errors"`
 }
 
 func (x *TransientErrors) Reset() {
@@ -1292,10 +1292,10 @@ type TransientError struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Code    int32                `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message string               `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Cause   string               `protobuf:"bytes,3,opt,name=cause,proto3" json:"cause,omitempty"`
-	Level   TransientError_Level `protobuf:"varint,4,opt,name=level,proto3,enum=networkelement.TransientError_Level" json:"level,omitempty"`
+	Code    int32                `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty" bson:"code"`
+	Message string               `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
+	Cause   string               `protobuf:"bytes,3,opt,name=cause,proto3" json:"cause,omitempty" bson:"cause"`
+	Level   TransientError_Level `protobuf:"varint,4,opt,name=level,proto3,enum=networkelement.TransientError_Level" json:"level,omitempty" bson:"level"`
 }
 
 func (x *TransientError) Reset() {
@@ -1363,20 +1363,20 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id           int32      `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Slot         int32      `protobuf:"varint,2,opt,name=slot,proto3" json:"slot,omitempty"`
-	Name         string     `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`               // short version of description
-	Description  string     `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"` // vendor or manufacturer description
-	Type         ModuleType `protobuf:"varint,5,opt,name=type,proto3,enum=networkelement.ModuleType" json:"type,omitempty"`
-	SerialNumber string     `protobuf:"bytes,6,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty"`
-	BoardType    string     `protobuf:"bytes,7,opt,name=board_type,json=boardType,proto3" json:"board_type,omitempty"`
-	Bom          string     `protobuf:"bytes,8,opt,name=bom,proto3" json:"bom,omitempty"`
-	CleiCode     string     `protobuf:"bytes,9,opt,name=clei_code,json=cleiCode,proto3" json:"clei_code,omitempty"`
-	IssueNumber  string     `protobuf:"bytes,10,opt,name=issue_number,json=issueNumber,proto3" json:"issue_number,omitempty"`
-	MacAddress   string     `protobuf:"bytes,11,opt,name=mac_address,json=macAddress,proto3" json:"mac_address,omitempty"`
-	Item         string     `protobuf:"bytes,12,opt,name=item,proto3" json:"item,omitempty"`
-	Manufactured string     `protobuf:"bytes,13,opt,name=manufactured,proto3" json:"manufactured,omitempty"`
-	VendorName   string     `protobuf:"bytes,14,opt,name=vendor_name,json=vendorName,proto3" json:"vendor_name,omitempty"`
+	Id           int32      `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	Slot         int32      `protobuf:"varint,2,opt,name=slot,proto3" json:"slot,omitempty" bson:"slot"`
+	Name         string     `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty" bson:"name"`               // short version of description
+	Description  string     `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty" bson:"description"` // vendor or manufacturer description
+	Type         ModuleType `protobuf:"varint,5,opt,name=type,proto3,enum=networkelement.ModuleType" json:"type,omitempty" bson:"type"`
+	SerialNumber string     `protobuf:"bytes,6,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty" bson:"serial_number"`
+	BoardType    string     `protobuf:"bytes,7,opt,name=board_type,json=boardType,proto3" json:"board_type,omitempty" bson:"board_type"`
+	Bom          string     `protobuf:"bytes,8,opt,name=bom,proto3" json:"bom,omitempty" bson:"bom"`
+	CleiCode     string     `protobuf:"bytes,9,opt,name=clei_code,json=cleiCode,proto3" json:"clei_code,omitempty" bson:"clei_code"`
+	IssueNumber  string     `protobuf:"bytes,10,opt,name=issue_number,json=issueNumber,proto3" json:"issue_number,omitempty" bson:"issue_number"`
+	MacAddress   string     `protobuf:"bytes,11,opt,name=mac_address,json=macAddress,proto3" json:"mac_address,omitempty" bson:"mac_address"`
+	Item         string     `protobuf:"bytes,12,opt,name=item,proto3" json:"item,omitempty" bson:"item"`
+	Manufactured string     `protobuf:"bytes,13,opt,name=manufactured,proto3" json:"manufactured,omitempty" bson:"manufactured"`
+	VendorName   string     `protobuf:"bytes,14,opt,name=vendor_name,json=vendorName,proto3" json:"vendor_name,omitempty" bson:"vendor_name"`
 }
 
 func (x *Module) Reset() {
@@ -1514,14 +1514,14 @@ type InterfaceStatisticsInput struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Packets   int64 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
-	Bytes     int64 `protobuf:"varint,2,opt,name=bytes,proto3" json:"bytes,omitempty"`
-	Unicast   int64 `protobuf:"varint,3,opt,name=unicast,proto3" json:"unicast,omitempty"`
-	Broadcast int64 `protobuf:"varint,4,opt,name=broadcast,proto3" json:"broadcast,omitempty"`
-	Multicast int64 `protobuf:"varint,5,opt,name=multicast,proto3" json:"multicast,omitempty"`
-	Pauses    int64 `protobuf:"varint,6,opt,name=pauses,proto3" json:"pauses,omitempty"`
-	Errors    int64 `protobuf:"varint,7,opt,name=errors,proto3" json:"errors,omitempty"`
-	CrcErrors int64 `protobuf:"varint,8,opt,name=crc_errors,json=crcErrors,proto3" json:"crc_errors,omitempty"`
+	Packets   int64 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty" bson:"packets"`
+	Bytes     int64 `protobuf:"varint,2,opt,name=bytes,proto3" json:"bytes,omitempty" bson:"bytes"`
+	Unicast   int64 `protobuf:"varint,3,opt,name=unicast,proto3" json:"unicast,omitempty" bson:"unicast"`
+	Broadcast int64 `protobuf:"varint,4,opt,name=broadcast,proto3" json:"broadcast,omitempty" bson:"broadcast"`
+	Multicast int64 `protobuf:"varint,5,opt,name=multicast,proto3" json:"multicast,omitempty" bson:"multicast"`
+	Pauses    int64 `protobuf:"varint,6,opt,name=pauses,proto3" json:"pauses,omitempty" bson:"pauses"`
+	Errors    int64 `protobuf:"varint,7,opt,name=errors,proto3" json:"errors,omitempty" bson:"errors"`
+	CrcErrors int64 `protobuf:"varint,8,opt,name=crc_errors,json=crcErrors,proto3" json:"crc_errors,omitempty" bson:"crc_errors"`
 }
 
 func (x *InterfaceStatisticsInput) Reset() {
@@ -1617,13 +1617,13 @@ type InterfaceStatisticsOutput struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Packets   int64 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
-	Bytes     int64 `protobuf:"varint,2,opt,name=bytes,proto3" json:"bytes,omitempty"`
-	Unicast   int64 `protobuf:"varint,3,opt,name=unicast,proto3" json:"unicast,omitempty"`
-	Broadcast int64 `protobuf:"varint,4,opt,name=broadcast,proto3" json:"broadcast,omitempty"`
-	Multicast int64 `protobuf:"varint,5,opt,name=multicast,proto3" json:"multicast,omitempty"`
-	Pauses    int64 `protobuf:"varint,6,opt,name=pauses,proto3" json:"pauses,omitempty"`
-	Errors    int64 `protobuf:"varint,7,opt,name=errors,proto3" json:"errors,omitempty"`
+	Packets   int64 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty" bson:"packets"`
+	Bytes     int64 `protobuf:"varint,2,opt,name=bytes,proto3" json:"bytes,omitempty" bson:"bytes"`
+	Unicast   int64 `protobuf:"varint,3,opt,name=unicast,proto3" json:"unicast,omitempty" bson:"unicast"`
+	Broadcast int64 `protobuf:"varint,4,opt,name=broadcast,proto3" json:"broadcast,omitempty" bson:"broadcast"`
+	Multicast int64 `protobuf:"varint,5,opt,name=multicast,proto3" json:"multicast,omitempty" bson:"multicast"`
+	Pauses    int64 `protobuf:"varint,6,opt,name=pauses,proto3" json:"pauses,omitempty" bson:"pauses"`
+	Errors    int64 `protobuf:"varint,7,opt,name=errors,proto3" json:"errors,omitempty" bson:"errors"`
 }
 
 func (x *InterfaceStatisticsOutput) Reset() {
@@ -1712,11 +1712,11 @@ type InterfaceStatistics struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Input  *InterfaceStatisticsInput  `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty"`
-	Output *InterfaceStatisticsOutput `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty"`
-	Resets int64                      `protobuf:"varint,3,opt,name=resets,proto3" json:"resets,omitempty"`
+	Input  *InterfaceStatisticsInput  `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty" bson:"input"`
+	Output *InterfaceStatisticsOutput `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty" bson:"output"`
+	Resets int64                      `protobuf:"varint,3,opt,name=resets,proto3" json:"resets,omitempty" bson:"resets"`
 	// Analysis of interface statistics
-	Analysis []*analysispb.Analysis `protobuf:"bytes,4,rep,name=analysis,proto3" json:"analysis,omitempty"`
+	Analysis []*analysispb.Analysis `protobuf:"bytes,4,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *InterfaceStatistics) Reset() {
@@ -1784,31 +1784,31 @@ type Interface struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AggregatedId            string                                   `protobuf:"bytes,1,opt,name=aggregated_id,json=aggregatedId,proto3" json:"aggregated_id,omitempty"`
-	Index                   int64                                    `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`            // snmp index
-	Alias                   string                                   `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty"`             // Vendor specific alias of interface. GigabitEthernt ...
-	Description             string                                   `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"` // configured description
-	Hwaddress               string                                   `protobuf:"bytes,5,opt,name=hwaddress,proto3" json:"hwaddress,omitempty"`
-	Type                    InterfaceType                            `protobuf:"varint,6,opt,name=type,proto3,enum=networkelement.InterfaceType" json:"type,omitempty"`
-	AdminStatus             InterfaceStatus                          `protobuf:"varint,7,opt,name=admin_status,json=adminStatus,proto3,enum=networkelement.InterfaceStatus" json:"admin_status,omitempty"`                   // the desired state of the interface
-	OperationalStatus       InterfaceStatus                          `protobuf:"varint,8,opt,name=operational_status,json=operationalStatus,proto3,enum=networkelement.InterfaceStatus" json:"operational_status,omitempty"` // the current state of the interface
-	LastChanged             *timestamppb.Timestamp                   `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty"`
-	Speed                   int64                                    `protobuf:"varint,11,opt,name=speed,proto3" json:"speed,omitempty"`
-	Duplex                  string                                   `protobuf:"bytes,12,opt,name=duplex,proto3" json:"duplex,omitempty"`
-	Mtu                     int64                                    `protobuf:"varint,13,opt,name=mtu,proto3" json:"mtu,omitempty"`
-	Stats                   *InterfaceStatistics                     `protobuf:"bytes,14,opt,name=stats,proto3" json:"stats,omitempty"`
-	Transceiver             *Transceiver                             `protobuf:"bytes,15,opt,name=transceiver,proto3" json:"transceiver,omitempty"`
-	Neighbor                *Neighbor                                `protobuf:"bytes,16,opt,name=neighbor,proto3" json:"neighbor,omitempty"`
-	MacAddressTable         []*MACEntry                              `protobuf:"bytes,17,rep,name=mac_address_table,json=macAddressTable,proto3" json:"mac_address_table,omitempty"`
-	DhcpTable               []*DHCPEntry                             `protobuf:"bytes,18,rep,name=dhcp_table,json=dhcpTable,proto3" json:"dhcp_table,omitempty"`
-	Config                  string                                   `protobuf:"bytes,19,opt,name=config,proto3" json:"config,omitempty"` // text blob of current config
-	InterfaceStatus         int64                                    `protobuf:"varint,20,opt,name=interface_status,json=interfaceStatus,proto3" json:"interface_status,omitempty"`
-	ConfiguredTrafficPolicy *trafficpolicypb.ConfiguredTrafficPolicy `protobuf:"bytes,21,opt,name=configuredTrafficPolicy,proto3" json:"configuredTrafficPolicy,omitempty"`
-	Qos                     *trafficpolicypb.QOS                     `protobuf:"bytes,22,opt,name=qos,proto3" json:"qos,omitempty"`
+	AggregatedId            string                                   `protobuf:"bytes,1,opt,name=aggregated_id,json=aggregatedId,proto3" json:"aggregated_id,omitempty" bson:"aggregated_id"`
+	Index                   int64                                    `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty" bson:"index"`            // snmp index
+	Alias                   string                                   `protobuf:"bytes,3,opt,name=alias,proto3" json:"alias,omitempty" bson:"alias"`             // Vendor specific alias of interface. GigabitEthernt ...
+	Description             string                                   `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty" bson:"description"` // configured description
+	Hwaddress               string                                   `protobuf:"bytes,5,opt,name=hwaddress,proto3" json:"hwaddress,omitempty" bson:"hwaddress"`
+	Type                    InterfaceType                            `protobuf:"varint,6,opt,name=type,proto3,enum=networkelement.InterfaceType" json:"type,omitempty" bson:"type"`
+	AdminStatus             InterfaceStatus                          `protobuf:"varint,7,opt,name=admin_status,json=adminStatus,proto3,enum=networkelement.InterfaceStatus" json:"admin_status,omitempty" bson:"admin_status"`                   // the desired state of the interface
+	OperationalStatus       InterfaceStatus                          `protobuf:"varint,8,opt,name=operational_status,json=operationalStatus,proto3,enum=networkelement.InterfaceStatus" json:"operational_status,omitempty" bson:"operational_status"` // the current state of the interface
+	LastChanged             *timestamppb.Timestamp                   `protobuf:"bytes,9,opt,name=last_changed,json=lastChanged,proto3" json:"last_changed,omitempty" bson:"last_changed"`
+	Speed                   int64                                    `protobuf:"varint,11,opt,name=speed,proto3" json:"speed,omitempty" bson:"speed"`
+	Duplex                  string                                   `protobuf:"bytes,12,opt,name=duplex,proto3" json:"duplex,omitempty" bson:"duplex"`
+	Mtu                     int64                                    `protobuf:"varint,13,opt,name=mtu,proto3" json:"mtu,omitempty" bson:"mtu"`
+	Stats                   *InterfaceStatistics                     `protobuf:"bytes,14,opt,name=stats,proto3" json:"stats,omitempty" bson:"stats"`
+	Transceiver             *Transceiver                             `protobuf:"bytes,15,opt,name=transceiver,proto3" json:"transceiver,omitempty" bson:"transceiver"`
+	Neighbor                *Neighbor                                `protobuf:"bytes,16,opt,name=neighbor,proto3" json:"neighbor,omitempty" bson:"neighbor"`
+	MacAddressTable         []*MACEntry                              `protobuf:"bytes,17,rep,name=mac_address_table,json=macAddressTable,proto3" json:"mac_address_table,omitempty" bson:"mac_address_table"`
+	DhcpTable               []*DHCPEntry                             `protobuf:"bytes,18,rep,name=dhcp_table,json=dhcpTable,proto3" json:"dhcp_table,omitempty" bson:"dhcp_table"`
+	Config                  string                                   `protobuf:"bytes,19,opt,name=config,proto3" json:"config,omitempty" bson:"config"` // text blob of current config
+	InterfaceStatus         int64                                    `protobuf:"varint,20,opt,name=interface_status,json=interfaceStatus,proto3" json:"interface_status,omitempty" bson:"interface_status"`
+	ConfiguredTrafficPolicy *trafficpolicypb.ConfiguredTrafficPolicy `protobuf:"bytes,21,opt,name=configuredTrafficPolicy,proto3" json:"configuredTrafficPolicy,omitempty" bson:"configuredTrafficPolicy"`
+	Qos                     *trafficpolicypb.QOS                     `protobuf:"bytes,22,opt,name=qos,proto3" json:"qos,omitempty" bson:"qos"`
 	// provider can fill this in based on collected data
-	ConnectedSdd *Element `protobuf:"bytes,23,opt,name=connected_sdd,json=connectedSdd,proto3" json:"connected_sdd,omitempty"` // connected service demarcation device
+	ConnectedSdd *Element `protobuf:"bytes,23,opt,name=connected_sdd,json=connectedSdd,proto3" json:"connected_sdd,omitempty" bson:"connected_sdd"` // connected service demarcation device
 	// Analysis of interface health
-	Analysis []*analysispb.Analysis `protobuf:"bytes,24,rep,name=analysis,proto3" json:"analysis,omitempty"`
+	Analysis []*analysispb.Analysis `protobuf:"bytes,24,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *Interface) Reset() {
@@ -2009,13 +2009,13 @@ type AggregatedInterface struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Priority   int64        `protobuf:"varint,1,opt,name=priority,proto3" json:"priority,omitempty"`
-	Mode       string       `protobuf:"bytes,2,opt,name=mode,proto3" json:"mode,omitempty"`
-	Type       string       `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	OperKey    string       `protobuf:"bytes,4,opt,name=oper_key,json=operKey,proto3" json:"oper_key,omitempty"`
-	Status     string       `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	Timestamp  string       `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Interfaces []*Interface `protobuf:"bytes,7,rep,name=interfaces,proto3" json:"interfaces,omitempty"`
+	Priority   int64        `protobuf:"varint,1,opt,name=priority,proto3" json:"priority,omitempty" bson:"priority"`
+	Mode       string       `protobuf:"bytes,2,opt,name=mode,proto3" json:"mode,omitempty" bson:"mode"`
+	Type       string       `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty" bson:"type"`
+	OperKey    string       `protobuf:"bytes,4,opt,name=oper_key,json=operKey,proto3" json:"oper_key,omitempty" bson:"oper_key"`
+	Status     string       `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty" bson:"status"`
+	Timestamp  string       `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
+	Interfaces []*Interface `protobuf:"bytes,7,rep,name=interfaces,proto3" json:"interfaces,omitempty" bson:"interfaces"`
 }
 
 func (x *AggregatedInterface) Reset() {
@@ -2104,7 +2104,7 @@ type Transceivers struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Transceivers []*Transceiver `protobuf:"bytes,1,rep,name=transceivers,proto3" json:"transceivers,omitempty"`
+	Transceivers []*Transceiver `protobuf:"bytes,1,rep,name=transceivers,proto3" json:"transceivers,omitempty" bson:"transceivers"`
 }
 
 func (x *Transceivers) Reset() {
@@ -2151,18 +2151,18 @@ type Transceiver struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PhysicalPortIndex int64                    `protobuf:"varint,1,opt,name=physical_port_index,json=physicalPortIndex,proto3" json:"physical_port_index,omitempty"`
-	ConnectorType     string                   `protobuf:"bytes,2,opt,name=connector_type,json=connectorType,proto3" json:"connector_type,omitempty"`
-	Ddm               bool                     `protobuf:"varint,3,opt,name=ddm,proto3" json:"ddm,omitempty"`
-	Vendor            string                   `protobuf:"bytes,4,opt,name=vendor,proto3" json:"vendor,omitempty"`
-	Type              string                   `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
-	TransferDistance  string                   `protobuf:"bytes,6,opt,name=transfer_distance,json=transferDistance,proto3" json:"transfer_distance,omitempty"`
-	Wavelength        string                   `protobuf:"bytes,7,opt,name=wavelength,proto3" json:"wavelength,omitempty"`
-	SerialNumber      string                   `protobuf:"bytes,8,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty"`
-	PartNumber        string                   `protobuf:"bytes,9,opt,name=part_number,json=partNumber,proto3" json:"part_number,omitempty"`
-	ManufacturingDate string                   `protobuf:"bytes,10,opt,name=manufacturing_date,json=manufacturingDate,proto3" json:"manufacturing_date,omitempty"`
-	Stats             []*TransceiverStatistics `protobuf:"bytes,11,rep,name=stats,proto3" json:"stats,omitempty"`
-	Analysis          []*analysispb.Analysis   `protobuf:"bytes,12,rep,name=analysis,proto3" json:"analysis,omitempty"`
+	PhysicalPortIndex int64                    `protobuf:"varint,1,opt,name=physical_port_index,json=physicalPortIndex,proto3" json:"physical_port_index,omitempty" bson:"physical_port_index"`
+	ConnectorType     string                   `protobuf:"bytes,2,opt,name=connector_type,json=connectorType,proto3" json:"connector_type,omitempty" bson:"connector_type"`
+	Ddm               bool                     `protobuf:"varint,3,opt,name=ddm,proto3" json:"ddm,omitempty" bson:"ddm"`
+	Vendor            string                   `protobuf:"bytes,4,opt,name=vendor,proto3" json:"vendor,omitempty" bson:"vendor"`
+	Type              string                   `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty" bson:"type"`
+	TransferDistance  string                   `protobuf:"bytes,6,opt,name=transfer_distance,json=transferDistance,proto3" json:"transfer_distance,omitempty" bson:"transfer_distance"`
+	Wavelength        string                   `protobuf:"bytes,7,opt,name=wavelength,proto3" json:"wavelength,omitempty" bson:"wavelength"`
+	SerialNumber      string                   `protobuf:"bytes,8,opt,name=serial_number,json=serialNumber,proto3" json:"serial_number,omitempty" bson:"serial_number"`
+	PartNumber        string                   `protobuf:"bytes,9,opt,name=part_number,json=partNumber,proto3" json:"part_number,omitempty" bson:"part_number"`
+	ManufacturingDate string                   `protobuf:"bytes,10,opt,name=manufacturing_date,json=manufacturingDate,proto3" json:"manufacturing_date,omitempty" bson:"manufacturing_date"`
+	Stats             []*TransceiverStatistics `protobuf:"bytes,11,rep,name=stats,proto3" json:"stats,omitempty" bson:"stats"`
+	Analysis          []*analysispb.Analysis   `protobuf:"bytes,12,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
 }
 
 func (x *Transceiver) Reset() {
@@ -2286,12 +2286,12 @@ type TransceiverStatistics struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Current   float64 `protobuf:"fixed64,1,opt,name=current,proto3" json:"current,omitempty"` // should be returned in mA
-	Rx        float64 `protobuf:"fixed64,2,opt,name=rx,proto3" json:"rx,omitempty"`           // should be returned in dBm
-	Tx        float64 `protobuf:"fixed64,3,opt,name=tx,proto3" json:"tx,omitempty"`           // should be returned in dBm
-	Temp      float64 `protobuf:"fixed64,4,opt,name=temp,proto3" json:"temp,omitempty"`       // in celsius
-	Voltage   float64 `protobuf:"fixed64,5,opt,name=voltage,proto3" json:"voltage,omitempty"` // should be returned in V
-	Timestamp string  `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Current   float64 `protobuf:"fixed64,1,opt,name=current,proto3" json:"current,omitempty" bson:"current"` // should be returned in mA
+	Rx        float64 `protobuf:"fixed64,2,opt,name=rx,proto3" json:"rx,omitempty" bson:"rx"`           // should be returned in dBm
+	Tx        float64 `protobuf:"fixed64,3,opt,name=tx,proto3" json:"tx,omitempty" bson:"tx"`           // should be returned in dBm
+	Temp      float64 `protobuf:"fixed64,4,opt,name=temp,proto3" json:"temp,omitempty" bson:"temp"`       // in celsius
+	Voltage   float64 `protobuf:"fixed64,5,opt,name=voltage,proto3" json:"voltage,omitempty" bson:"voltage"` // should be returned in V
+	Timestamp string  `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 }
 
 func (x *TransceiverStatistics) Reset() {
@@ -2373,15 +2373,15 @@ type Neighbor struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ConnectInterfaceType       string `protobuf:"bytes,1,opt,name=connect_interface_type,json=connectInterfaceType,proto3" json:"connect_interface_type,omitempty"`
-	RemoteInterface            string `protobuf:"bytes,2,opt,name=remote_interface,json=remoteInterface,proto3" json:"remote_interface,omitempty"`
-	RemoteHostname             string `protobuf:"bytes,3,opt,name=remote_hostname,json=remoteHostname,proto3" json:"remote_hostname,omitempty"`
-	RemoteMgmtIpAddress        string `protobuf:"bytes,4,opt,name=remote_mgmt_ip_address,json=remoteMgmtIpAddress,proto3" json:"remote_mgmt_ip_address,omitempty"`
-	RemoteInterfaceDescription string `protobuf:"bytes,5,opt,name=remote_interface_description,json=remoteInterfaceDescription,proto3" json:"remote_interface_description,omitempty"`
-	ChassisId                  string `protobuf:"bytes,6,opt,name=chassis_id,json=chassisId,proto3" json:"chassis_id,omitempty"`
-	Pvid                       string `protobuf:"bytes,7,opt,name=pvid,proto3" json:"pvid,omitempty"`
-	Lagg                       bool   `protobuf:"varint,8,opt,name=lagg,proto3" json:"lagg,omitempty"`
-	Timestamp                  string `protobuf:"bytes,9,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ConnectInterfaceType       string `protobuf:"bytes,1,opt,name=connect_interface_type,json=connectInterfaceType,proto3" json:"connect_interface_type,omitempty" bson:"connect_interface_type"`
+	RemoteInterface            string `protobuf:"bytes,2,opt,name=remote_interface,json=remoteInterface,proto3" json:"remote_interface,omitempty" bson:"remote_interface"`
+	RemoteHostname             string `protobuf:"bytes,3,opt,name=remote_hostname,json=remoteHostname,proto3" json:"remote_hostname,omitempty" bson:"remote_hostname"`
+	RemoteMgmtIpAddress        string `protobuf:"bytes,4,opt,name=remote_mgmt_ip_address,json=remoteMgmtIpAddress,proto3" json:"remote_mgmt_ip_address,omitempty" bson:"remote_mgmt_ip_address"`
+	RemoteInterfaceDescription string `protobuf:"bytes,5,opt,name=remote_interface_description,json=remoteInterfaceDescription,proto3" json:"remote_interface_description,omitempty" bson:"remote_interface_description"`
+	ChassisId                  string `protobuf:"bytes,6,opt,name=chassis_id,json=chassisId,proto3" json:"chassis_id,omitempty" bson:"chassis_id"`
+	Pvid                       string `protobuf:"bytes,7,opt,name=pvid,proto3" json:"pvid,omitempty" bson:"pvid"`
+	Lagg                       bool   `protobuf:"varint,8,opt,name=lagg,proto3" json:"lagg,omitempty" bson:"lagg"`
+	Timestamp                  string `protobuf:"bytes,9,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 }
 
 func (x *Neighbor) Reset() {
@@ -2484,10 +2484,10 @@ type MACEntry struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	HardwareAddress string `protobuf:"bytes,1,opt,name=hardware_address,json=hardwareAddress,proto3" json:"hardware_address,omitempty"`
-	Vlan            int64  `protobuf:"varint,2,opt,name=vlan,proto3" json:"vlan,omitempty"`
-	Vendor          string `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty"`
-	Timestamp       string `protobuf:"bytes,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	HardwareAddress string `protobuf:"bytes,1,opt,name=hardware_address,json=hardwareAddress,proto3" json:"hardware_address,omitempty" bson:"hardware_address"`
+	Vlan            int64  `protobuf:"varint,2,opt,name=vlan,proto3" json:"vlan,omitempty" bson:"vlan"`
+	Vendor          string `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty" bson:"vendor"`
+	Timestamp       string `protobuf:"bytes,4,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 }
 
 func (x *MACEntry) Reset() {
@@ -2555,11 +2555,11 @@ type DHCPEntry struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	IpAddress       string `protobuf:"bytes,1,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
-	HardwareAddress string `protobuf:"bytes,2,opt,name=hardware_address,json=hardwareAddress,proto3" json:"hardware_address,omitempty"`
-	Vendor          string `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty"`
-	Vlan            int64  `protobuf:"varint,4,opt,name=vlan,proto3" json:"vlan,omitempty"`
-	Timestamp       string `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	IpAddress       string `protobuf:"bytes,1,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty" bson:"ip_address"`
+	HardwareAddress string `protobuf:"bytes,2,opt,name=hardware_address,json=hardwareAddress,proto3" json:"hardware_address,omitempty" bson:"hardware_address"`
+	Vendor          string `protobuf:"bytes,3,opt,name=vendor,proto3" json:"vendor,omitempty" bson:"vendor"`
+	Vlan            int64  `protobuf:"varint,4,opt,name=vlan,proto3" json:"vlan,omitempty" bson:"vlan"`
+	Timestamp       string `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 }
 
 func (x *DHCPEntry) Reset() {
@@ -2634,7 +2634,7 @@ type InterfaceMetrics struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp string `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp string `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty" bson:"timestamp"`
 }
 
 func (x *InterfaceMetrics) Reset() {
@@ -2681,9 +2681,9 @@ type PhysicalPortInformation struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Oid   string `protobuf:"bytes,2,opt,name=oid,proto3" json:"oid,omitempty"`
-	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" bson:"name"`
+	Oid   string `protobuf:"bytes,2,opt,name=oid,proto3" json:"oid,omitempty" bson:"oid"`
+	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty" bson:"value"`
 }
 
 func (x *PhysicalPortInformation) Reset() {

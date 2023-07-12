@@ -92,11 +92,11 @@ type Analysis struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Level     Analysis_Level `protobuf:"varint,1,opt,name=level,proto3,enum=analysis.Analysis_Level" json:"level,omitempty"`
-	Message   string         `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Value     string         `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
-	Threshold string         `protobuf:"bytes,4,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	Type      string         `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
+	Level     Analysis_Level `protobuf:"varint,1,opt,name=level,proto3,enum=analysis.Analysis_Level" json:"level,omitempty" bson:"level"`
+	Message   string         `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty" bson:"message"`
+	Value     string         `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty" bson:"value"`
+	Threshold string         `protobuf:"bytes,4,opt,name=threshold,proto3" json:"threshold,omitempty" bson:"threshold"`
+	Type      string         `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty" bson:"type"`
 }
 
 func (x *Analysis) Reset() {
