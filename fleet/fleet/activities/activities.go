@@ -211,6 +211,7 @@ func (a *Activities) CollectDevices(ctx context.Context) error {
 			case <-result:
 				devicesCollected += 1
 				activity.RecordHeartbeat(ctx, devicesCollected)
+				a.logger.Debug("heartbeat", "devicesCollected", devicesCollected)
 			case <-ctx.Done():
 				return
 			}
@@ -227,10 +228,12 @@ func (a *Activities) CollectDevices(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		a.logger.Debug("devices marked for collection by schedule", "count", len(res.Devices))
 		// stop if we have no devices
 		if len(res.Devices) == 0 {
 			keepGoing = false
-			continue
+			a.logger.Debug("no devices marked for collection by schedule")
+			return nil
 		}
 
 		wg := sync.WaitGroup{}
@@ -239,8 +242,8 @@ func (a *Activities) CollectDevices(ctx context.Context) error {
 
 			go func(d *devicepb.Device) {
 				defer wg.Done()
+				a.logger.Debug("collect device", "device", d.Id, "hostname", d.Hostname)
 				s := utils.GetDeviceScheduleByType(d, devicepb.Device_Schedule_COLLECT_DEVICE)
-
 				_, err := a.fleet.CollectDevice(ctx, &fleetpb.CollectDeviceParameters{
 					DeviceId: d.Id,
 					Blocking: true,

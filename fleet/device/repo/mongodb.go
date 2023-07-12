@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"git.liero.se/opentelco/go-swpx/database"
@@ -263,14 +264,17 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) ([]*de
 	}
 
 	options := options.Find()
-
 	if params.HasFiringSchedule != nil {
+		if params.ScheduleType == nil {
+			return nil, fmt.Errorf("schedule type is required when filtering by firing schedule")
+		}
 		filter["schedules"] = bson.M{
 			"$elemMatch": bson.M{
 				"active": true,
 				"type":   protoreflect.EnumNumber(*params.ScheduleType),
 			},
 		}
+
 		// sort by schedule last_run ascending
 		options.SetSort(bson.M{"schedules.last_run": 1})
 	}

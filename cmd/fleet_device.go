@@ -47,6 +47,9 @@ func init() {
 	updateDeviceCmd.Flags().String("poller-provider-plugin", "default_provider", "default provider for the device")
 	updateDeviceCmd.Flags().String("poller-resource-plugin", "", "resource plugin to use when polling the device (VRP, CTC, etc)")
 
+	listDeviceCmd.Flags().BoolP("has-firing-schedule", "f", false, "filter devices that has a firing schedule")
+	listDeviceCmd.Flags().StringP("schedule-type", "t", "", "filter devices that has a firing schedule of a specific type COLLECT_DEVICE, COLLECT_CONFIG")
+
 	fleetDeviceCmd.AddCommand(updateDeviceCmd)
 
 	fleetDeviceCmd.AddCommand(listDeviceChangesCmd)
@@ -254,15 +257,32 @@ var listDeviceCmd = &cobra.Command{
 			search = args[0]
 		}
 
+		hasFiringSchedule, _ := cmd.Flags().GetBool("has-firing-schedule")
+
+		scheduleType, _ := cmd.Flags().GetString("schedule-type")
+
 		fleetDeviceClient, err := getDeviceClient(cmd)
 		if err != nil {
 			cmd.PrintErr(err)
 			os.Exit(1)
 		}
-
-		res, err := fleetDeviceClient.List(cmd.Context(), &devicepb.ListParameters{
+		params := &devicepb.ListParameters{
 			Search: &search,
-		})
+		}
+		if scheduleType != "" {
+			st := devicepb.Device_Schedule_Type(devicepb.Device_Schedule_Type_value[scheduleType])
+			if st == devicepb.Device_Schedule_SCHEDULE_TYPE_NOT_SET {
+				cmd.PrintErrf("invalid schedule type: %s\n", scheduleType)
+				os.Exit(1)
+			}
+			params.ScheduleType = &st
+		}
+
+		if hasFiringSchedule {
+			params.HasFiringSchedule = &hasFiringSchedule
+		}
+
+		res, err := fleetDeviceClient.List(cmd.Context(), params)
 
 		if err != nil {
 			cmd.PrintErr(err)
