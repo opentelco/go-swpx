@@ -93,6 +93,7 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 	var keepGoing = true
 	result := make(chan struct{})
 
+	a.logger.Debug("collecting configs from devices...")
 	// heartbeat for the activity
 	go func() {
 		devicesCollected := 0
@@ -101,6 +102,7 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 			case <-result:
 				devicesCollected += 1
 				activity.RecordHeartbeat(ctx, devicesCollected)
+				a.logger.Debug("heartbeat", "devicesConfigCollected", devicesCollected)
 			case <-ctx.Done():
 				return
 			}
@@ -117,6 +119,7 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		a.logger.Debug("got devices to collect configs for", "count", len(res.Devices))
 		// stop if we have no devices
 		if len(res.Devices) == 0 {
 			keepGoing = false
@@ -129,6 +132,7 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 			go func(d *devicepb.Device) {
 				defer wg.Done()
 
+				a.logger.Debug("collecting config for device", "device", d.Id)
 				s := utils.GetDeviceScheduleByType(d, devicepb.Device_Schedule_COLLECT_DEVICE)
 				_, err := a.fleet.CollectConfig(ctx, &fleetpb.CollectConfigParameters{
 					DeviceId: d.Id,
