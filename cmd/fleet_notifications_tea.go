@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/glamour"
 
@@ -15,6 +16,7 @@ import (
 
 type notificationItem struct {
 	id, title, desc string
+	ts              time.Time
 	read            bool
 }
 
@@ -28,10 +30,11 @@ func colorBg(val, color string) string {
 
 func (i notificationItem) Title() string {
 	if !i.read {
-		i.title = "🟢 " + i.title
+
+		i.title = fmt.Sprintf("🟢 %s (%s)", i.title, i.ts)
 		return colorFg(i.title, "32")
 	} else {
-		i.title = "⚪ " + i.title
+		i.title = fmt.Sprintf("⚪ %s (%s)", i.title, i.ts)
 	}
 
 	return i.title

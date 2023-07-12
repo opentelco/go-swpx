@@ -177,11 +177,12 @@ func (a *Activities) CollectConfigsFromDevices(ctx context.Context) error {
 				} else { // no failures, update schedule and continue
 
 					// update schedule
+					s.LastRun = timestamppb.Now()
 					if _, err := a.device.SetSchedule(ctx, &devicepb.SetScheduleParameters{
 						DeviceId: d.Id,
 						Schedule: s,
 					}); err != nil {
-						a.logger.Error("could not deactivate schedule", "error", err)
+						a.logger.Error("could not update schedule (collect config)", "error", err)
 					}
 				}
 

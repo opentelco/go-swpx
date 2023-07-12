@@ -62,6 +62,7 @@ var listNotificationsCmd = &cobra.Command{
 				desc:  n.Message,
 				id:    n.Id,
 				read:  n.Read,
+				ts:    n.Timestamp.AsTime(),
 			}
 		}
 
