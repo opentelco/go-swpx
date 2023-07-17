@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.20
 
 require (
-	git.liero.se/opentelco/go-dnc v1.0.7-0.20230711002445-490526a092e3
+	git.liero.se/opentelco/go-dnc v1.0.7-0.20230716201851-c4f7f4c6b0fe
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/charmbracelet/bubbles v0.16.1

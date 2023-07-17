@@ -29,8 +29,6 @@ type CoreServiceClient interface {
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
-	// Send a command to a network device through the Poller
-	Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
 	Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
@@ -58,15 +56,6 @@ func (c *coreServiceClient) Discover(ctx context.Context, in *DiscoverRequest, o
 func (c *coreServiceClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
 	out := new(PollResponse)
 	err := c.cc.Invoke(ctx, "/core.CoreService/Poll", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *coreServiceClient) Command(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
-	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Command", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +90,6 @@ type CoreServiceServer interface {
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(context.Context, *PollRequest) (*PollResponse, error)
-	// Send a command to a network device through the Poller
-	Command(context.Context, *CommandRequest) (*CommandResponse, error)
 	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
 	Information(context.Context, *emptypb.Empty) (*InformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
@@ -120,9 +107,6 @@ func (UnimplementedCoreServiceServer) Discover(context.Context, *DiscoverRequest
 }
 func (UnimplementedCoreServiceServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
-}
-func (UnimplementedCoreServiceServer) Command(context.Context, *CommandRequest) (*CommandResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Command not implemented")
 }
 func (UnimplementedCoreServiceServer) Information(context.Context, *emptypb.Empty) (*InformationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Information not implemented")
@@ -179,24 +163,6 @@ func _CoreService_Poll_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CoreService_Command_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CommandRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoreServiceServer).Command(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/core.CoreService/Command",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Command(ctx, req.(*CommandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _CoreService_Information_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -249,10 +215,6 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CoreService_Poll_Handler,
 		},
 		{
-			MethodName: "Command",
-			Handler:    _CoreService_Command_Handler,
-		},
-		{
 			MethodName: "Information",
 			Handler:    _CoreService_Information_Handler,
 		},
@@ -269,6 +231,8 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommanderServiceClient interface {
+	// configure a configuration stanza on a network element
+	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error)
 	TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 }
@@ -279,6 +243,15 @@ type commanderServiceClient struct {
 
 func NewCommanderServiceClient(cc grpc.ClientConnInterface) CommanderServiceClient {
 	return &commanderServiceClient{cc}
+}
+
+func (c *commanderServiceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error) {
+	out := new(ConfigureStanzaResponse)
+	err := c.cc.Invoke(ctx, "/core.CommanderService/ConfigureStanza", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *commanderServiceClient) TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
@@ -303,6 +276,8 @@ func (c *commanderServiceClient) EnablePortFlapDetection(ctx context.Context, in
 // All implementations must embed UnimplementedCommanderServiceServer
 // for forward compatibility
 type CommanderServiceServer interface {
+	// configure a configuration stanza on a network element
+	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error)
 	TogglePort(context.Context, *CommandRequest) (*CommandResponse, error)
 	EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error)
 	mustEmbedUnimplementedCommanderServiceServer()
@@ -312,6 +287,9 @@ type CommanderServiceServer interface {
 type UnimplementedCommanderServiceServer struct {
 }
 
+func (UnimplementedCommanderServiceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigureStanza not implemented")
+}
 func (UnimplementedCommanderServiceServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TogglePort not implemented")
 }
@@ -329,6 +307,24 @@ type UnsafeCommanderServiceServer interface {
 
 func RegisterCommanderServiceServer(s grpc.ServiceRegistrar, srv CommanderServiceServer) {
 	s.RegisterService(&CommanderService_ServiceDesc, srv)
+}
+
+func _CommanderService_ConfigureStanza_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureStanzaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommanderServiceServer).ConfigureStanza(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.CommanderService/ConfigureStanza",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommanderServiceServer).ConfigureStanza(ctx, req.(*ConfigureStanzaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CommanderService_TogglePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -374,6 +370,10 @@ var CommanderService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "core.CommanderService",
 	HandlerType: (*CommanderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ConfigureStanza",
+			Handler:    _CommanderService_ConfigureStanza_Handler,
+		},
 		{
 			MethodName: "TogglePort",
 			Handler:    _CommanderService_TogglePort_Handler,

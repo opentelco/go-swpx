@@ -160,6 +160,12 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		commander, err := core.NewCommander(c, logger)
+		if err != nil {
+			cmd.PrintErr("could not create commander service: ", err)
+			os.Exit(1)
+		}
+
 		// start API endpoint and add the queue
 		// the queue is initated in the core and n workers takes request from it
 
@@ -180,6 +186,7 @@ var StartCmd = &cobra.Command{
 		}
 		grpcServer := grpc.NewServer()
 		api.NewGrpc(c, grpcServer, logger)
+		api.NewCommanderGrpc(commander, grpcServer)
 
 		// add fleet to grpc
 		fleet.NewGRPC(fleetService, grpcServer)

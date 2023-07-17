@@ -65,6 +65,8 @@ type Resource interface {
 	GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error)
 
 	GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error)
+
+	ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error)
 }
 
 // Here is an implementation that talks over RPC
@@ -120,6 +122,14 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
+func (rpc *ResourceGRPCClient) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+	resp, err := rpc.client.ConfigureStanza(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 // ResourceGRPCServer is the server struct
 type ResourceGRPCServer struct {
 	resourcepb.UnimplementedResourceServer
@@ -172,6 +182,10 @@ func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context,
 
 func (rpc *ResourceGRPCServer) GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error) {
 	return rpc.Impl.GetRunningConfig(ctx, req)
+}
+
+func (rpc *ResourceGRPCServer) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+	return rpc.Impl.ConfigureStanza(ctx, req)
 }
 
 // ResourcePlugin is the implementation of plugin.Plugin so we can serve/consume this

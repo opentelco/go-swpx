@@ -45,7 +45,22 @@ func init() {
 	}
 	discoverCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
 	discoverCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
-	Root.AddCommand(discoverCmd)
+
+	// -
+	configureCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
+	configureCmd.Flags().StringP("target", "t", "", "the target to test")
+	if err := configureCmd.MarkFlagRequired("target"); err != nil {
+		panic(err)
+	}
+	configureCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
+	configureCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
+	configureCmd.Flags().StringSliceP("line", "l", []string{}, "specify which line to configure")
+	if err := configureCmd.MarkFlagRequired("line"); err != nil {
+		panic(err)
+	}
+
+	TestRootCmd.AddCommand(discoverCmd)
+	TestRootCmd.AddCommand(configureCmd)
 
 	Root.AddCommand(TestRootCmd)
 
@@ -196,7 +211,6 @@ var discoverCmd = &cobra.Command{
 		resource, _ := cmd.Flags().GetString("resource")
 
 		cmd.Println("selected providers: ", providers)
-
 		_, err := time.ParseDuration(ttlString)
 		if err != nil {
 			cmd.Println("could not parse ttl: ", err)
@@ -227,6 +241,55 @@ var discoverCmd = &cobra.Command{
 			cmd.Println(prettyPrintJSON(resp.NetworkElement))
 		} else {
 			fmt.Println("failed to discover")
+		}
+
+	},
+}
+
+var configureCmd = &cobra.Command{
+	Use:   "configure",
+	Short: "configure a device with a set of commands",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		target, _ := cmd.Flags().GetString("target")
+		ttlString, _ := cmd.Flags().GetString("ttl")
+		providers, _ := cmd.Flags().GetStringSlice("providers")
+		resource, _ := cmd.Flags().GetString("resource")
+		lines, _ := cmd.Flags().GetStringSlice("line")
+
+		cmd.Println("selected providers: ", providers)
+
+		_, err := time.ParseDuration(ttlString)
+		if err != nil {
+			cmd.Println("could not parse ttl: ", err)
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := corepb.NewCommanderServiceClient(conn)
+
+		resp, err := swpx.ConfigureStanza(cmd.Context(), &corepb.ConfigureStanzaRequest{
+			Settings: &corepb.Settings{
+				ProviderPlugin: providers,
+				ResourcePlugin: resource,
+				Timeout:        ttlString,
+			},
+			Session: &corepb.SessionRequest{
+				Hostname: target,
+			},
+			Stanza: lines,
+		})
+		if err != nil {
+			cmd.PrintErr(err)
+		}
+		if resp != nil {
+			cmd.Println(prettyPrintJSON(resp))
+		} else {
+			fmt.Println("failed to configure")
 		}
 
 	},

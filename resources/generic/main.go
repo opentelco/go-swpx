@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,10 +9,13 @@ import (
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-swpx/config"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"git.liero.se/opentelco/go-swpx/shared"
+	"github.com/gogo/status"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"google.golang.org/grpc/codes"
 )
 
 var VERSION *version.Version
@@ -86,4 +90,8 @@ func validateEOLTimeout(reqTimeout string, defaultDuration time.Duration) time.D
 	}
 
 	return dur
+}
+
+func (d *driver) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+	return nil, status.New(codes.Unimplemented, "not implemented").Err()
 }

@@ -163,9 +163,6 @@ service CoreService {
     // the type of the request is used to determine what information to collect from the network element
     rpc Poll(PollRequest) returns (PollResponse);
 
-    // Send a command to a network device through the Poller
-    rpc Command(CommandRequest) returns (CommandResponse);
-
     // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
     rpc Information(google.protobuf.Empty) returns (InformationResponse);
 
@@ -175,10 +172,27 @@ service CoreService {
 }
 
 service CommanderService {
+    // configure a configuration stanza on a network element
+    rpc ConfigureStanza(ConfigureStanzaRequest) returns (ConfigureStanzaResponse);
+
     rpc TogglePort(CommandRequest) returns (CommandResponse);
     rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
 
+
+message ConfigureStanzaRequest {
+    SessionRequest session = 1;
+
+    Settings settings      = 2;
+
+    // lines of config to be applied to the network element
+    repeated string stanza = 3;
+}
+
+message ConfigureStanzaResponse {}
+
+
+// provider things
 message ProvideCPERequest {}
 message ProvideCPEResponse {}
 message ProvideAccessRequest {}

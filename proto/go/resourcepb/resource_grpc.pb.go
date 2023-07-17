@@ -43,6 +43,23 @@ type ResourceClient interface {
 	GetAllTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*networkelementpb.Transceivers, error)
 	// Get the running config and return it
 	GetRunningConfig(ctx context.Context, in *GetRunningConfigParameters, opts ...grpc.CallOption) (*GetRunningConfigResponse, error)
+	// ConfigureStanza the devcice by trying to set the lines in the config array
+	// the resource plugin is repsonsible for preparing the device for the configuration
+	// and to commit the configuration if it is successful
+	// for example,
+	//  if the device is a Cisco device, the plugin should send the "configure terminal" command
+	//  and then send the lines in the stanza, and then send the "end" command
+	//  and then send copy run start to commit the configuration
+	// on a Huaawei device,
+	//  the plugin should send the "system-view" command
+	//  and then send the lines in the stanza, and then send the "quit" command
+	//  and then send save to commit the configuration.
+	//
+	// an error will abort the configuration and exit the configuration mode
+	// Locking is expected to be done by the one calling the ConfigureStanza method
+	// the plugin should not do any locking. Use the DNC SDK to lock the device with
+	// the "Mutex Locking API" together with Temporal
+	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error)
 }
 
 type resourceClient struct {
@@ -143,6 +160,15 @@ func (c *resourceClient) GetRunningConfig(ctx context.Context, in *GetRunningCon
 	return out, nil
 }
 
+func (c *resourceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error) {
+	out := new(ConfigureStanzaResponse)
+	err := c.cc.Invoke(ctx, "/resource.Resource/ConfigureStanza", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ResourceServer is the server API for Resource service.
 // All implementations must embed UnimplementedResourceServer
 // for forward compatibility
@@ -166,6 +192,23 @@ type ResourceServer interface {
 	GetAllTransceiverInformation(context.Context, *Request) (*networkelementpb.Transceivers, error)
 	// Get the running config and return it
 	GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error)
+	// ConfigureStanza the devcice by trying to set the lines in the config array
+	// the resource plugin is repsonsible for preparing the device for the configuration
+	// and to commit the configuration if it is successful
+	// for example,
+	//  if the device is a Cisco device, the plugin should send the "configure terminal" command
+	//  and then send the lines in the stanza, and then send the "end" command
+	//  and then send copy run start to commit the configuration
+	// on a Huaawei device,
+	//  the plugin should send the "system-view" command
+	//  and then send the lines in the stanza, and then send the "quit" command
+	//  and then send save to commit the configuration.
+	//
+	// an error will abort the configuration and exit the configuration mode
+	// Locking is expected to be done by the one calling the ConfigureStanza method
+	// the plugin should not do any locking. Use the DNC SDK to lock the device with
+	// the "Mutex Locking API" together with Temporal
+	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error)
 	mustEmbedUnimplementedResourceServer()
 }
 
@@ -202,6 +245,9 @@ func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context,
 }
 func (UnimplementedResourceServer) GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRunningConfig not implemented")
+}
+func (UnimplementedResourceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigureStanza not implemented")
 }
 func (UnimplementedResourceServer) mustEmbedUnimplementedResourceServer() {}
 
@@ -396,6 +442,24 @@ func _Resource_GetRunningConfig_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Resource_ConfigureStanza_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureStanzaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).ConfigureStanza(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/ConfigureStanza",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).ConfigureStanza(ctx, req.(*ConfigureStanzaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Resource_ServiceDesc is the grpc.ServiceDesc for Resource service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -442,6 +506,10 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRunningConfig",
 			Handler:    _Resource_GetRunningConfig_Handler,
+		},
+		{
+			MethodName: "ConfigureStanza",
+			Handler:    _Resource_ConfigureStanza_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

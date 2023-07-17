@@ -5,13 +5,16 @@ import (
 	"os"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	fleetRootCmd.AddCommand(fleetConfigRootCmd)
 
-	listConfigCmd.Flags().Int64("limit", 2, "limit")
+	listConfigCmd.Flags().Int64("limit", 100, "limit")
 	listConfigCmd.Flags().Int64("offset", 0, "offset")
 
 	listConfigCmd.Flags().BoolP("quite", "q", false, "only print ids")
@@ -52,6 +55,12 @@ var listConfigCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		devClient, err := getDeviceClient(cmd)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
 		res, err := client.List(cmd.Context(), &configurationpb.ListParameters{
 			DeviceId: deviceId,
 			Limit:    &limit,
@@ -66,7 +75,40 @@ var listConfigCmd = &cobra.Command{
 			if quite {
 				fmt.Printf("%s ", c.Id)
 			} else {
-				fmt.Println(prettyPrintJSON(c))
+				items := make([]list.Item, len(res.Configurations))
+
+				for i, n := range res.Configurations {
+					d, _ := devClient.GetByID(cmd.Context(), &devicepb.GetByIDParameters{Id: n.DeviceId})
+					var title string
+
+					if d != nil {
+						if d.Hostname != "" {
+							title = d.Hostname
+						} else {
+							title = d.ManagementIp
+						}
+					} else {
+						title = n.Id
+					}
+
+					items[i] = configItem{
+						title: title,
+						desc:  n.Created.AsTime().String(),
+						id:    n.Id,
+						c:     n,
+					}
+				}
+
+				m := configModel{
+					list: list.New(items, list.NewDefaultDelegate(), 200, 0), service: client}
+				m.list.Title = "Configurations"
+
+				p := tea.NewProgram(m, tea.WithAltScreen())
+
+				if _, err := p.Run(); err != nil {
+					fmt.Println("Error running program:", err)
+					os.Exit(1)
+				}
 			}
 		}
 
