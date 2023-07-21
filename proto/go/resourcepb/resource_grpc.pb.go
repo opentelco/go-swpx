@@ -9,6 +9,7 @@ package resourcepb
 import (
 	context "context"
 	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -45,21 +46,17 @@ type ResourceClient interface {
 	GetRunningConfig(ctx context.Context, in *GetRunningConfigParameters, opts ...grpc.CallOption) (*GetRunningConfigResponse, error)
 	// ConfigureStanza the devcice by trying to set the lines in the config array
 	// the resource plugin is repsonsible for preparing the device for the configuration
-	// and to commit the configuration if it is successful
-	// for example,
+	// and to commit the configuration if it is successful for example,
 	//  if the device is a Cisco device, the plugin should send the "configure terminal" command
 	//  and then send the lines in the stanza, and then send the "end" command
-	//  and then send copy run start to commit the configuration
-	// on a Huaawei device,
-	//  the plugin should send the "system-view" command
-	//  and then send the lines in the stanza, and then send the "quit" command
-	//  and then send save to commit the configuration.
+	//  and then send copy run start to commit the configuration on a Huaawei device,
+	//  the plugin should send the "system-view" command and then send the lines in the stanza,
+	// and then send the "quit" command and then send save to commit the configuration.
 	//
-	// an error will abort the configuration and exit the configuration mode
 	// Locking is expected to be done by the one calling the ConfigureStanza method
 	// the plugin should not do any locking. Use the DNC SDK to lock the device with
 	// the "Mutex Locking API" together with Temporal
-	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error)
+	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error)
 }
 
 type resourceClient struct {
@@ -160,8 +157,8 @@ func (c *resourceClient) GetRunningConfig(ctx context.Context, in *GetRunningCon
 	return out, nil
 }
 
-func (c *resourceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error) {
-	out := new(ConfigureStanzaResponse)
+func (c *resourceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error) {
+	out := new(stanzapb.ConfigureResponse)
 	err := c.cc.Invoke(ctx, "/resource.Resource/ConfigureStanza", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -194,21 +191,17 @@ type ResourceServer interface {
 	GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error)
 	// ConfigureStanza the devcice by trying to set the lines in the config array
 	// the resource plugin is repsonsible for preparing the device for the configuration
-	// and to commit the configuration if it is successful
-	// for example,
+	// and to commit the configuration if it is successful for example,
 	//  if the device is a Cisco device, the plugin should send the "configure terminal" command
 	//  and then send the lines in the stanza, and then send the "end" command
-	//  and then send copy run start to commit the configuration
-	// on a Huaawei device,
-	//  the plugin should send the "system-view" command
-	//  and then send the lines in the stanza, and then send the "quit" command
-	//  and then send save to commit the configuration.
+	//  and then send copy run start to commit the configuration on a Huaawei device,
+	//  the plugin should send the "system-view" command and then send the lines in the stanza,
+	// and then send the "quit" command and then send save to commit the configuration.
 	//
-	// an error will abort the configuration and exit the configuration mode
 	// Locking is expected to be done by the one calling the ConfigureStanza method
 	// the plugin should not do any locking. Use the DNC SDK to lock the device with
 	// the "Mutex Locking API" together with Temporal
-	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error)
+	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error)
 	mustEmbedUnimplementedResourceServer()
 }
 
@@ -246,7 +239,7 @@ func (UnimplementedResourceServer) GetAllTransceiverInformation(context.Context,
 func (UnimplementedResourceServer) GetRunningConfig(context.Context, *GetRunningConfigParameters) (*GetRunningConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRunningConfig not implemented")
 }
-func (UnimplementedResourceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error) {
+func (UnimplementedResourceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigureStanza not implemented")
 }
 func (UnimplementedResourceServer) mustEmbedUnimplementedResourceServer() {}

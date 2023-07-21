@@ -28,6 +28,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -66,7 +67,7 @@ type Resource interface {
 
 	GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error)
 
-	ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error)
+	ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error)
 }
 
 // Here is an implementation that talks over RPC
@@ -122,7 +123,7 @@ func (rpc *ResourceGRPCClient) Version() (string, error) {
 	return resp.Version, err
 }
 
-func (rpc *ResourceGRPCClient) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+func (rpc *ResourceGRPCClient) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	resp, err := rpc.client.ConfigureStanza(ctx, req)
 	if err != nil {
 		return nil, err
@@ -184,7 +185,7 @@ func (rpc *ResourceGRPCServer) GetRunningConfig(ctx context.Context, req *resour
 	return rpc.Impl.GetRunningConfig(ctx, req)
 }
 
-func (rpc *ResourceGRPCServer) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+func (rpc *ResourceGRPCServer) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	return rpc.Impl.ConfigureStanza(ctx, req)
 }
 

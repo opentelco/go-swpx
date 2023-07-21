@@ -3,9 +3,12 @@ package device
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"go.temporal.io/sdk/temporal"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Activities struct {
@@ -59,4 +62,23 @@ func (a *Activities) UpdateDevice(ctx context.Context, params *devicepb.UpdatePa
 
 func (a *Activities) ListDevices(ctx context.Context, params *devicepb.ListParameters) (*devicepb.ListResponse, error) {
 	return a.device.List(ctx, params)
+}
+
+func (a *Activities) SetScheduleLastRun(ctx context.Context, id string, scheduleType devicepb.Device_Schedule_Type, lastRun time.Time) (*devicepb.Device, error) {
+	d, err := a.device.GetByID(ctx, &devicepb.GetByIDParameters{Id: id})
+	if err != nil {
+		return nil, err
+	}
+
+	schedule := getDeviceScheduleByType(d.Schedules, scheduleType)
+	if schedule == nil {
+		return nil, fmt.Errorf("schedule %s not found", scheduleType.String())
+	}
+	schedule.LastRun = timestamppb.New(lastRun)
+	params := &devicepb.SetScheduleParameters{
+		DeviceId: id,
+		Schedule: schedule,
+	}
+
+	return a.device.SetSchedule(ctx, params)
 }

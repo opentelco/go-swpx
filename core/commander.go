@@ -6,6 +6,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -26,7 +27,7 @@ func NewCommander(core *Core, logger hclog.Logger) (corepb.CommanderServiceServe
 	}, nil
 }
 
-func (c *commander) ConfigureStanza(ctx context.Context, req *corepb.ConfigureStanzaRequest) (*corepb.ConfigureStanzaResponse, error) {
+func (c *commander) ConfigureStanza(ctx context.Context, req *corepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	selectedProviders, err := c.core.selectProviders(ctx, req.Settings)
 	if err != nil {
 		return nil, err
@@ -68,5 +69,5 @@ func (c *commander) ConfigureStanza(ctx context.Context, req *corepb.ConfigureSt
 	}
 
 	c.logger.Debug("ConfigureStanza: stanza configured", "result", res)
-	return &corepb.ConfigureStanzaResponse{}, nil
+	return res, nil
 }

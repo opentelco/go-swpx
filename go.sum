@@ -609,6 +609,8 @@ git.liero.se/opentelco/go-dnc v1.0.7-0.20230715062941-a8c2edca76c6 h1:lJHDyS0l37
 git.liero.se/opentelco/go-dnc v1.0.7-0.20230715062941-a8c2edca76c6/go.mod h1:JwdodID5LFSEMvZh1hPHkM/SguEbYN5cEJECjY9knKk=
 git.liero.se/opentelco/go-dnc v1.0.7-0.20230716201851-c4f7f4c6b0fe h1:bNCQamE8d3ueXyXnX41r4pqpaixBkoF5XyP/2+EJvSY=
 git.liero.se/opentelco/go-dnc v1.0.7-0.20230716201851-c4f7f4c6b0fe/go.mod h1:JwdodID5LFSEMvZh1hPHkM/SguEbYN5cEJECjY9knKk=
+git.liero.se/opentelco/go-dnc v1.0.7-0.20230717071333-2a5036bf2561 h1:JbiBILl7Luo2MmZnBx7GOGj4XLEhl3gnQb1Vh1hA41c=
+git.liero.se/opentelco/go-dnc v1.0.7-0.20230717071333-2a5036bf2561/go.mod h1:JwdodID5LFSEMvZh1hPHkM/SguEbYN5cEJECjY9knKk=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=

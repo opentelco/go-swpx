@@ -363,3 +363,12 @@ func (d *device) SetSchedule(ctx context.Context, params *devicepb.SetSchedulePa
 	return dev, nil
 
 }
+
+func getDeviceScheduleByType(schedules []*devicepb.Device_Schedule, t devicepb.Device_Schedule_Type) *devicepb.Device_Schedule {
+	for _, schedule := range schedules {
+		if schedule.Type == t {
+			return schedule
+		}
+	}
+	return nil
+}

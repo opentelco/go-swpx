@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc"
 )
 
@@ -22,7 +23,7 @@ func NewCommanderGrpc(service corepb.CommanderServiceServer, srv *grpc.Server) {
 
 }
 
-func (s *commanderGrpcImpl) ConfigureStanza(ctx context.Context, req *corepb.ConfigureStanzaRequest) (*corepb.ConfigureStanzaResponse, error) {
+func (s *commanderGrpcImpl) ConfigureStanza(ctx context.Context, req *corepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	resp, err := s.service.ConfigureStanza(ctx, req)
 	if err != nil {
 		return nil, err

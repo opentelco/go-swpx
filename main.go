@@ -29,6 +29,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/cmd"
 )
 
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/stanza.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/healtcheck.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/resource.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/provider.proto
@@ -43,6 +44,7 @@ import (
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/fleet_stanza.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/fleet_template.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/fleet_notification.proto
+
 //go:generate go run ./proto/tagparser/tagparser.go ./proto/go
 
 func main() {

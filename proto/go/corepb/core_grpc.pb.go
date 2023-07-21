@@ -8,6 +8,7 @@ package corepb
 
 import (
 	context "context"
+	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -232,7 +233,7 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommanderServiceClient interface {
 	// configure a configuration stanza on a network element
-	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error)
+	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error)
 	TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 }
@@ -245,8 +246,8 @@ func NewCommanderServiceClient(cc grpc.ClientConnInterface) CommanderServiceClie
 	return &commanderServiceClient{cc}
 }
 
-func (c *commanderServiceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*ConfigureStanzaResponse, error) {
-	out := new(ConfigureStanzaResponse)
+func (c *commanderServiceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error) {
+	out := new(stanzapb.ConfigureResponse)
 	err := c.cc.Invoke(ctx, "/core.CommanderService/ConfigureStanza", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -277,7 +278,7 @@ func (c *commanderServiceClient) EnablePortFlapDetection(ctx context.Context, in
 // for forward compatibility
 type CommanderServiceServer interface {
 	// configure a configuration stanza on a network element
-	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error)
+	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error)
 	TogglePort(context.Context, *CommandRequest) (*CommandResponse, error)
 	EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error)
 	mustEmbedUnimplementedCommanderServiceServer()
@@ -287,7 +288,7 @@ type CommanderServiceServer interface {
 type UnimplementedCommanderServiceServer struct {
 }
 
-func (UnimplementedCommanderServiceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*ConfigureStanzaResponse, error) {
+func (UnimplementedCommanderServiceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigureStanza not implemented")
 }
 func (UnimplementedCommanderServiceServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {

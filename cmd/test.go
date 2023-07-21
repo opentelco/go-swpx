@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -272,6 +273,13 @@ var configureCmd = &cobra.Command{
 		}
 		swpx := corepb.NewCommanderServiceClient(conn)
 
+		stanza := make([]*stanzapb.ConfigurationLine, len(lines))
+		for i, line := range lines {
+			stanza[i] = &stanzapb.ConfigurationLine{
+				Content: line,
+			}
+		}
+
 		resp, err := swpx.ConfigureStanza(cmd.Context(), &corepb.ConfigureStanzaRequest{
 			Settings: &corepb.Settings{
 				ProviderPlugin: providers,
@@ -281,7 +289,7 @@ var configureCmd = &cobra.Command{
 			Session: &corepb.SessionRequest{
 				Hostname: target,
 			},
-			Stanza: lines,
+			Stanza: stanza,
 		})
 		if err != nil {
 			cmd.PrintErr(err)

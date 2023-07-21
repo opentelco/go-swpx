@@ -76,6 +76,11 @@ func CollectDeviceWorkflow(ctx workflow.Context, params *fleetpb.CollectDevicePa
 		return nil, err
 	}
 
+	device, err = setScheduleLastRun(ctx, device, devicepb.Device_Schedule_COLLECT_DEVICE)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := addEventCollectSuccess(ctx, device.Id); err != nil {
 		return nil, err
 	}

@@ -102,3 +102,21 @@ func listDevices(ctx workflow.Context, params *devicepb.ListParameters) ([]*devi
 	return resp.Devices, nil
 
 }
+
+func setScheduleLastRun(ctx workflow.Context, device *devicepb.Device, st devicepb.Device_Schedule_Type) (*devicepb.Device, error) {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		TaskQueue:           devicepb.TaskQueue_TASK_QUEUE_FLEET_DEVICE.String(),
+		StartToCloseTimeout: thirty,
+		WaitForCancellation: false,
+	})
+
+	var resp devicepb.Device
+	if err := workflow.ExecuteActivity(ctx, devAct.SetScheduleLastRun,
+		device.Id,
+		st,
+		workflow.Now(ctx),
+	).Get(ctx, &resp); err != nil {
+		return nil, fmt.Errorf("failed to set schedule last run: %w", err)
+	}
+	return &resp, nil
+}

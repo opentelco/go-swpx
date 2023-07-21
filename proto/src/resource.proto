@@ -25,6 +25,7 @@ syntax = "proto3";
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resourcepb";
 
 import "network_element.proto";
+import "stanza.proto";
 import "google/protobuf/empty.proto";
 
 package resource;
@@ -107,22 +108,19 @@ service Resource {
 
     // ConfigureStanza the devcice by trying to set the lines in the config array
     // the resource plugin is repsonsible for preparing the device for the configuration
-    // and to commit the configuration if it is successful
-    // for example,
+    // and to commit the configuration if it is successful for example,
     //  if the device is a Cisco device, the plugin should send the "configure terminal" command
     //  and then send the lines in the stanza, and then send the "end" command
-    //  and then send copy run start to commit the configuration
-    // on a Huaawei device,
-    //  the plugin should send the "system-view" command
-    //  and then send the lines in the stanza, and then send the "quit" command
-    //  and then send save to commit the configuration.
+    //  and then send copy run start to commit the configuration on a Huaawei device,
+    //  the plugin should send the "system-view" command and then send the lines in the stanza,
+    // and then send the "quit" command and then send save to commit the configuration.
     //
-    // an error will abort the configuration and exit the configuration mode
     // Locking is expected to be done by the one calling the ConfigureStanza method
     // the plugin should not do any locking. Use the DNC SDK to lock the device with
     // the "Mutex Locking API" together with Temporal
-    rpc ConfigureStanza(ConfigureStanzaRequest) returns (ConfigureStanzaResponse);
+    rpc ConfigureStanza(ConfigureStanzaRequest) returns (stanza.ConfigureResponse);
 }
+
 
 message GetRunningConfigParameters {
     // hostname or ip address
@@ -152,7 +150,5 @@ message ConfigureStanzaRequest {
     string network_region = 3;
 
     // the configuration to send to the device, each line is a string in the array
-    repeated string stanza = 4;
+    repeated stanza.ConfigurationLine stanza = 4;
 }
-
-message ConfigureStanzaResponse {}

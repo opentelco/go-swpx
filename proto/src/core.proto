@@ -25,6 +25,7 @@ package core;
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/corepb";
 
 import "network_element.proto";
+import "stanza.proto";
 import "google/protobuf/empty.proto";
 
 message Error {
@@ -173,7 +174,7 @@ service CoreService {
 
 service CommanderService {
     // configure a configuration stanza on a network element
-    rpc ConfigureStanza(ConfigureStanzaRequest) returns (ConfigureStanzaResponse);
+    rpc ConfigureStanza(ConfigureStanzaRequest) returns (stanza.ConfigureResponse);
 
     rpc TogglePort(CommandRequest) returns (CommandResponse);
     rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
@@ -185,11 +186,10 @@ message ConfigureStanzaRequest {
 
     Settings settings      = 2;
 
-    // lines of config to be applied to the network element
-    repeated string stanza = 3;
+    // the configuration to send to the device, each line is a string in the array
+    repeated stanza.ConfigurationLine stanza = 4;
 }
 
-message ConfigureStanzaResponse {}
 
 
 // provider things

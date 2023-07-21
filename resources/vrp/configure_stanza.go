@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"sort"
 	"time"
 
 	"git.liero.se/opentelco/go-dnc/client"
 	"git.liero.se/opentelco/go-dnc/models/pb/terminalpb"
 	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -19,7 +20,7 @@ const (
 	commandEndConfigure    = "quit"
 )
 
-func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*resourcepb.ConfigureStanzaResponse, error) {
+func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	deadline := time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))
 	sshConf := d.conf.Transports.GetByLabel("ssh")
 	msg, err := client.NewMessage(client.NewMessageParameters{
@@ -39,7 +40,7 @@ func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.Configu
 
 	for n, s := range req.Stanza {
 		stanza = append(stanza, &terminalpb.Task_Payload{
-			Command:      s,
+			Command:      s.Content,
 			LineNumber:   int64(n + 1),
 			PromptErrors: []string{"Error: Unrecognized command found"},
 		})
@@ -48,7 +49,7 @@ func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.Configu
 	// we start at 0 so the last is linue number is the length of the stanza
 	stanza = append(stanza, &terminalpb.Task_Payload{
 		Command:    commandEndConfigure,
-		LineNumber: int64(len(req.Stanza))})
+		LineNumber: int64(len(req.Stanza) + 1)})
 
 	task := &terminalpb.Task{
 		Payload:  stanza,
@@ -72,21 +73,33 @@ func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.Configu
 	}
 
 	pl := res.Task.GetTerminal().Payload
-	// sort pl by line number
-	sort.Slice(pl, func(i, j int) bool {
-		return pl[i].LineNumber < pl[j].LineNumber
-	})
+	response := &stanzapb.ConfigureResponse{
+		StanzaResult: []*stanzapb.Result{},
+	}
+
 	for _, p := range pl {
+		lineResult := &stanzapb.Result{
+			LineNumber: p.LineNumber,
+			Line:       p.Command,
+			Status:     stanzapb.Result_SUCCESS,
+		}
 
 		if p.Error != "" {
-			d.logger.Error("error in stanza", "error", p.Error)
+			lineResult.Status = stanzapb.Result_FAILED
+			lineResult.Error = &p.Error
 		}
+		response.StanzaResult = append(response.StanzaResult, lineResult)
 	}
 
 	if res.Error != "" {
 		d.logger.Error("error in stanza", "error", res.Error)
-		return nil, fmt.Errorf("error in stanza: %s", res.Error)
+		return response, fmt.Errorf("error in stanza: %s", res.Error)
 	}
 
-	return &resourcepb.ConfigureStanzaResponse{}, nil
+	return response, nil
+}
+
+func prettyPrintJSON(v interface{}) string {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	return string(b)
 }

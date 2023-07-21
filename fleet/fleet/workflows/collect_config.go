@@ -86,6 +86,11 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 		return nil, err
 	}
 
+	device, err = setScheduleLastRun(ctx, device, devicepb.Device_Schedule_COLLECT_CONFIG)
+	if err != nil {
+		return nil, err
+	}
+
 	// add event config collected
 	if err := addEventCollectConfigSuccess(ctx, device.Id); err != nil {
 		return nil, err
