@@ -210,8 +210,10 @@ func (d *device) Update(ctx context.Context, params *devicepb.UpdateParameters) 
 	if params.Status != nil {
 		deviceToUpdate.Status = *params.Status
 	}
+	d.logger.Debug("update device", "deviceToUpdate", deviceToUpdate)
 
 	changes := getChanges(deviceA, deviceToUpdate)
+	d.logger.Debug("update device with changes", "changes", changes)
 	if len(changes) > 0 {
 
 		deviceToUpdate, err = d.repo.Upsert(ctx, deviceToUpdate)
@@ -271,12 +273,14 @@ func getChanges(a, b *devicepb.Device) []*devicepb.Change {
 	amap := protoToMap(a)
 	bmap := protoToMap(b)
 	changes := make([]*devicepb.Change, 0)
+
 	for k, v := range amap {
 		if inStringArray(k, skipFields) {
 			continue
 		}
-		if vk, ok := bmap[k]; !ok {
-			if reflect.DeepEqual(v, vk) {
+
+		if vk, ok := bmap[k]; ok {
+			if !reflect.DeepEqual(v, vk) {
 				changes = append(changes, &devicepb.Change{
 					DeviceId: a.Id,
 					Field:    k,

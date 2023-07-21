@@ -49,10 +49,17 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 		return nil, fmt.Errorf("could not hash config: %w", err)
 	}
 
+	device, err = setScheduleLastRun(ctx, device, devicepb.Device_Schedule_COLLECT_CONFIG)
+	if err != nil {
+		return nil, err
+	}
+
 	listOfConfigs, err := listConfigs(ctx, &configurationpb.ListParameters{DeviceId: device.Id})
 	if err != nil {
 		return nil, err
 	}
+
+	// if no changes, return the stored config
 	var diffs string
 	if len(listOfConfigs.Configurations) > 0 {
 		logger.Debug("comparing config checksum", "old", listOfConfigs.Configurations[0].Checksum, "new", checksum)
@@ -76,17 +83,14 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 		}
 		diffs = changes.Changes
 	}
+
+	// only reaches this point if there are changes or no previous config
 	storedConfig, err := storeConfig(ctx, &configurationpb.CreateParameters{
 		DeviceId:      device.Id,
 		Configuration: collectedConfig.Config,
 		Checksum:      checksum,
 		Changes:       diffs,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	device, err = setScheduleLastRun(ctx, device, devicepb.Device_Schedule_COLLECT_CONFIG)
 	if err != nil {
 		return nil, err
 	}
