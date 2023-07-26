@@ -123,6 +123,7 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		poller := corepb.NewCoreServiceClient(cc)
+		commanderClient := corepb.NewCommanderServiceClient(cc)
 
 		deviceService, err := device.New(drepo, tc, logger)
 		if err != nil {
@@ -137,7 +138,7 @@ var StartCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		stanzaService, err := stanza.New(stanzaRepo, tc, logger)
+		stanzaService, err := stanza.New(stanzaRepo, tc, commanderClient, logger)
 		if err != nil {
 			cmd.PrintErr("could not create stanza service:", err)
 			os.Exit(1)

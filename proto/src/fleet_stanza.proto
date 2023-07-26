@@ -63,6 +63,9 @@ service StanzaService {
     // Create a new stanza and return it
     rpc Create(CreateRequest) returns (Stanza);
 
+    // Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
+    rpc Clone(CloneRequest) returns (Stanza);
+
     // Get a stanza by id and return it
     rpc GetByID(GetByIDRequest) returns (Stanza);
 
@@ -154,7 +157,6 @@ message UpdateRequest {
     optional string device_type = 6;
 }
 
-
 // DeleteRequest
 message DeleteRequest {
     // the id of the stanza to be deleted
@@ -185,6 +187,15 @@ message RevertResponse {
 message RevertRequest {
     // the id of the stanza to be reverted
     string id = 1;
+}
+
+
+message CloneRequest {
+    // the id of the stanza to be cloned
+    string id = 1;
+
+    // the id of the device to apply the stanza to
+    string device_id = 2;
 }
 
 

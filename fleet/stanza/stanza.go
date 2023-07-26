@@ -5,17 +5,19 @@ import (
 	"fmt"
 
 	"git.liero.se/opentelco/go-swpx/fleet/stanza/workflows"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/hashicorp/go-hclog"
 	"go.temporal.io/sdk/client"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func New(repo Repository, temporalClient client.Client, logger hclog.Logger) (stanzapb.StanzaServiceServer, error) {
+func New(repo Repository, temporalClient client.Client, commanderClient corepb.CommanderServiceClient, logger hclog.Logger) (stanzapb.StanzaServiceServer, error) {
 	n := &stanzaImpl{
-		temporalClient: temporalClient,
-		repo:           repo,
-		logger:         logger.Named("fleet-notitification"),
+		temporalClient:  temporalClient,
+		repo:            repo,
+		commanderClient: commanderClient,
+		logger:          logger.Named("fleet.stanza"),
 	}
 	w := n.newWorker()
 	err := w.Start()
@@ -26,9 +28,10 @@ func New(repo Repository, temporalClient client.Client, logger hclog.Logger) (st
 }
 
 type stanzaImpl struct {
-	repo           Repository
-	logger         hclog.Logger
-	temporalClient client.Client
+	repo            Repository
+	logger          hclog.Logger
+	temporalClient  client.Client
+	commanderClient corepb.CommanderServiceClient
 
 	stanzapb.UnimplementedStanzaServiceServer
 }
@@ -103,4 +106,23 @@ func (s *stanzaImpl) Apply(ctx context.Context, params *stanzapb.ApplyRequest) (
 
 func (s *stanzaImpl) Revert(ctx context.Context, params *stanzapb.RevertRequest) (*stanzapb.RevertResponse, error) {
 	return nil, ErrNotImplemented
+}
+
+func (s *stanzaImpl) Clone(ctx context.Context, params *stanzapb.CloneRequest) (*stanzapb.Stanza, error) {
+	stanza, err := s.repo.GetByID(ctx, params.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	// create a cloned stanza and upsert it
+	clonedStanza := &stanzapb.Stanza{
+		Name:          stanza.Name,
+		Description:   stanza.Description,
+		Content:       stanza.Content,
+		RevertContent: stanza.RevertContent,
+		DeviceType:    stanza.DeviceType,
+		DeviceId:      &params.DeviceId,
+	}
+	return s.repo.Upsert(ctx, clonedStanza)
+
 }

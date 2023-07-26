@@ -21,7 +21,7 @@ func (n *stanzaImpl) newWorker() worker.Worker {
 			Name: "fleet.stanza.apply",
 		})
 
-	act := activities.New(n)
+	act := activities.New(n, n.commanderClient)
 
 	w.RegisterActivity(act)
 	return w

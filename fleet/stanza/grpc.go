@@ -75,6 +75,15 @@ func (g *grpcImpl) Revert(ctx context.Context, params *stanzapb.RevertRequest) (
 	return res, nil
 }
 
+func (g *grpcImpl) Clone(ctx context.Context, params *stanzapb.CloneRequest) (*stanzapb.Stanza, error) {
+	res, err := g.stanzaService.Clone(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+
+}
+
 func errHandler(err error) error {
 	if err == nil {
 		return nil

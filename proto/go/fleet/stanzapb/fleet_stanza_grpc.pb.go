@@ -25,6 +25,8 @@ const _ = grpc.SupportPackageIsVersion7
 type StanzaServiceClient interface {
 	// Create a new stanza and return it
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*Stanza, error)
+	// Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
+	Clone(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// Get a stanza by id and return it
 	GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// List stanzas, if no filters are used the list will return all stanzas not applied to a device
@@ -54,6 +56,15 @@ func NewStanzaServiceClient(cc grpc.ClientConnInterface) StanzaServiceClient {
 func (c *stanzaServiceClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*Stanza, error) {
 	out := new(Stanza)
 	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stanzaServiceClient) Clone(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (*Stanza, error) {
+	out := new(Stanza)
+	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Clone", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +131,8 @@ func (c *stanzaServiceClient) Revert(ctx context.Context, in *RevertRequest, opt
 type StanzaServiceServer interface {
 	// Create a new stanza and return it
 	Create(context.Context, *CreateRequest) (*Stanza, error)
+	// Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
+	Clone(context.Context, *CloneRequest) (*Stanza, error)
 	// Get a stanza by id and return it
 	GetByID(context.Context, *GetByIDRequest) (*Stanza, error)
 	// List stanzas, if no filters are used the list will return all stanzas not applied to a device
@@ -145,6 +158,9 @@ type UnimplementedStanzaServiceServer struct {
 
 func (UnimplementedStanzaServiceServer) Create(context.Context, *CreateRequest) (*Stanza, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedStanzaServiceServer) Clone(context.Context, *CloneRequest) (*Stanza, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Clone not implemented")
 }
 func (UnimplementedStanzaServiceServer) GetByID(context.Context, *GetByIDRequest) (*Stanza, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetByID not implemented")
@@ -191,6 +207,24 @@ func _StanzaService_Create_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StanzaServiceServer).Create(ctx, req.(*CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StanzaService_Clone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StanzaServiceServer).Clone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.stanza.StanzaService/Clone",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StanzaServiceServer).Clone(ctx, req.(*CloneRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -313,6 +347,10 @@ var StanzaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Create",
 			Handler:    _StanzaService_Create_Handler,
+		},
+		{
+			MethodName: "Clone",
+			Handler:    _StanzaService_Clone_Handler,
 		},
 		{
 			MethodName: "GetByID",

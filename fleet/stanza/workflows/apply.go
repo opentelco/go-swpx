@@ -33,8 +33,12 @@ func ApplyStanzaWorkflow(ctx workflow.Context, deviceId string, stanza *stanzapb
 
 	// emulate long running process
 	logger.Info("critical operation started")
-	_ = workflow.Sleep(ctx, 10*time.Second)
-	logger.Info("critical operation finished")
+	resp, err := applyStanza(ctx, device, stanza)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("critical operation finished", "resp", resp)
 
 	logger.Info("finished")
 	return nil
