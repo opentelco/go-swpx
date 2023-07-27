@@ -25,8 +25,9 @@ const _ = grpc.SupportPackageIsVersion7
 type StanzaServiceClient interface {
 	// Create a new stanza and return it
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*Stanza, error)
-	// Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
-	Clone(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (*Stanza, error)
+	// Attach te stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device. Before attaching it will Attach the staza with the Go Template engine.
+	// it will Attach the stanza and stored the Attached tempaltes into the content and  revert_content fields.
+	Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// Get a stanza by id and return it
 	GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// List stanzas, if no filters are used the list will return all stanzas not applied to a device
@@ -36,10 +37,14 @@ type StanzaServiceClient interface {
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// Delete a stanza that is not yet applied, Delete from the stanza library
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Apply a stanza to a device, this will duplicate the stanza and apply it to the device and return the applied stanza
-	// if the Apply fails the stanza will be reverted by using the revert_content in the stanza. If no revert_content is set
-	// the stanza will not be reverted and apply will return an error.
+	// Validate a stanza, this will process the stanza and return the processed content and revert_content
+	// without attaching it to a device.
+	Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error)
+	// Apply a stanza to a device by runnig the ApplyStanza Workflow.
+	// This will Process and Process the stanza and apply it to the device.
 	Apply(ctx context.Context, in *ApplyRequest, opts ...grpc.CallOption) (*ApplyResponse, error)
+	// set the Stanza as applied, Used by Apply to set the stanza as applied to a device
+	SetApplied(ctx context.Context, in *SetAppliedRequest, opts ...grpc.CallOption) (*Stanza, error)
 	// Revert a stanza that has been applied to a device, this will use the revert_content in the stanza to revert the configuration
 	// written to the device. If no revert_content is set the stanza will not be reverted and revert will return an error and the stanza
 	Revert(ctx context.Context, in *RevertRequest, opts ...grpc.CallOption) (*RevertResponse, error)
@@ -62,9 +67,9 @@ func (c *stanzaServiceClient) Create(ctx context.Context, in *CreateRequest, opt
 	return out, nil
 }
 
-func (c *stanzaServiceClient) Clone(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (*Stanza, error) {
+func (c *stanzaServiceClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*Stanza, error) {
 	out := new(Stanza)
-	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Clone", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Attach", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,9 +112,27 @@ func (c *stanzaServiceClient) Delete(ctx context.Context, in *DeleteRequest, opt
 	return out, nil
 }
 
+func (c *stanzaServiceClient) Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error) {
+	out := new(ValidateResponse)
+	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Validate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *stanzaServiceClient) Apply(ctx context.Context, in *ApplyRequest, opts ...grpc.CallOption) (*ApplyResponse, error) {
 	out := new(ApplyResponse)
 	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/Apply", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stanzaServiceClient) SetApplied(ctx context.Context, in *SetAppliedRequest, opts ...grpc.CallOption) (*Stanza, error) {
+	out := new(Stanza)
+	err := c.cc.Invoke(ctx, "/fleet.stanza.StanzaService/SetApplied", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +154,9 @@ func (c *stanzaServiceClient) Revert(ctx context.Context, in *RevertRequest, opt
 type StanzaServiceServer interface {
 	// Create a new stanza and return it
 	Create(context.Context, *CreateRequest) (*Stanza, error)
-	// Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
-	Clone(context.Context, *CloneRequest) (*Stanza, error)
+	// Attach te stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device. Before attaching it will Attach the staza with the Go Template engine.
+	// it will Attach the stanza and stored the Attached tempaltes into the content and  revert_content fields.
+	Attach(context.Context, *AttachRequest) (*Stanza, error)
 	// Get a stanza by id and return it
 	GetByID(context.Context, *GetByIDRequest) (*Stanza, error)
 	// List stanzas, if no filters are used the list will return all stanzas not applied to a device
@@ -142,10 +166,14 @@ type StanzaServiceServer interface {
 	Update(context.Context, *UpdateRequest) (*Stanza, error)
 	// Delete a stanza that is not yet applied, Delete from the stanza library
 	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
-	// Apply a stanza to a device, this will duplicate the stanza and apply it to the device and return the applied stanza
-	// if the Apply fails the stanza will be reverted by using the revert_content in the stanza. If no revert_content is set
-	// the stanza will not be reverted and apply will return an error.
+	// Validate a stanza, this will process the stanza and return the processed content and revert_content
+	// without attaching it to a device.
+	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
+	// Apply a stanza to a device by runnig the ApplyStanza Workflow.
+	// This will Process and Process the stanza and apply it to the device.
 	Apply(context.Context, *ApplyRequest) (*ApplyResponse, error)
+	// set the Stanza as applied, Used by Apply to set the stanza as applied to a device
+	SetApplied(context.Context, *SetAppliedRequest) (*Stanza, error)
 	// Revert a stanza that has been applied to a device, this will use the revert_content in the stanza to revert the configuration
 	// written to the device. If no revert_content is set the stanza will not be reverted and revert will return an error and the stanza
 	Revert(context.Context, *RevertRequest) (*RevertResponse, error)
@@ -159,8 +187,8 @@ type UnimplementedStanzaServiceServer struct {
 func (UnimplementedStanzaServiceServer) Create(context.Context, *CreateRequest) (*Stanza, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedStanzaServiceServer) Clone(context.Context, *CloneRequest) (*Stanza, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Clone not implemented")
+func (UnimplementedStanzaServiceServer) Attach(context.Context, *AttachRequest) (*Stanza, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Attach not implemented")
 }
 func (UnimplementedStanzaServiceServer) GetByID(context.Context, *GetByIDRequest) (*Stanza, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetByID not implemented")
@@ -174,8 +202,14 @@ func (UnimplementedStanzaServiceServer) Update(context.Context, *UpdateRequest) 
 func (UnimplementedStanzaServiceServer) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
+func (UnimplementedStanzaServiceServer) Validate(context.Context, *ValidateRequest) (*ValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
+}
 func (UnimplementedStanzaServiceServer) Apply(context.Context, *ApplyRequest) (*ApplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Apply not implemented")
+}
+func (UnimplementedStanzaServiceServer) SetApplied(context.Context, *SetAppliedRequest) (*Stanza, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetApplied not implemented")
 }
 func (UnimplementedStanzaServiceServer) Revert(context.Context, *RevertRequest) (*RevertResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Revert not implemented")
@@ -211,20 +245,20 @@ func _StanzaService_Create_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StanzaService_Clone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloneRequest)
+func _StanzaService_Attach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AttachRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StanzaServiceServer).Clone(ctx, in)
+		return srv.(StanzaServiceServer).Attach(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/fleet.stanza.StanzaService/Clone",
+		FullMethod: "/fleet.stanza.StanzaService/Attach",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StanzaServiceServer).Clone(ctx, req.(*CloneRequest))
+		return srv.(StanzaServiceServer).Attach(ctx, req.(*AttachRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -301,6 +335,24 @@ func _StanzaService_Delete_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StanzaService_Validate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StanzaServiceServer).Validate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.stanza.StanzaService/Validate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StanzaServiceServer).Validate(ctx, req.(*ValidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StanzaService_Apply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ApplyRequest)
 	if err := dec(in); err != nil {
@@ -315,6 +367,24 @@ func _StanzaService_Apply_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StanzaServiceServer).Apply(ctx, req.(*ApplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StanzaService_SetApplied_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetAppliedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StanzaServiceServer).SetApplied(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fleet.stanza.StanzaService/SetApplied",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StanzaServiceServer).SetApplied(ctx, req.(*SetAppliedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -349,8 +419,8 @@ var StanzaService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StanzaService_Create_Handler,
 		},
 		{
-			MethodName: "Clone",
-			Handler:    _StanzaService_Clone_Handler,
+			MethodName: "Attach",
+			Handler:    _StanzaService_Attach_Handler,
 		},
 		{
 			MethodName: "GetByID",
@@ -369,8 +439,16 @@ var StanzaService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StanzaService_Delete_Handler,
 		},
 		{
+			MethodName: "Validate",
+			Handler:    _StanzaService_Validate_Handler,
+		},
+		{
 			MethodName: "Apply",
 			Handler:    _StanzaService_Apply_Handler,
+		},
+		{
+			MethodName: "SetApplied",
+			Handler:    _StanzaService_SetApplied_Handler,
 		},
 		{
 			MethodName: "Revert",

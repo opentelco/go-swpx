@@ -75,8 +75,26 @@ func (g *grpcImpl) Revert(ctx context.Context, params *stanzapb.RevertRequest) (
 	return res, nil
 }
 
-func (g *grpcImpl) Clone(ctx context.Context, params *stanzapb.CloneRequest) (*stanzapb.Stanza, error) {
-	res, err := g.stanzaService.Clone(ctx, params)
+func (g *grpcImpl) Attach(ctx context.Context, params *stanzapb.AttachRequest) (*stanzapb.Stanza, error) {
+	res, err := g.stanzaService.Attach(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+
+}
+
+func (g *grpcImpl) Validate(ctx context.Context, params *stanzapb.ValidateRequest) (*stanzapb.ValidateResponse, error) {
+	res, err := g.stanzaService.Validate(ctx, params)
+	if err != nil {
+		return nil, errHandler(err)
+	}
+	return res, nil
+
+}
+
+func (g *grpcImpl) SetApplied(ctx context.Context, params *stanzapb.SetAppliedRequest) (*stanzapb.Stanza, error) {
+	res, err := g.stanzaService.SetApplied(ctx, params)
 	if err != nil {
 		return nil, errHandler(err)
 	}

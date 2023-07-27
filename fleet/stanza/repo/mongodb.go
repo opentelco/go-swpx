@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"git.liero.se/opentelco/go-swpx/database"
-	"git.liero.se/opentelco/go-swpx/fleet/configuration"
 	"git.liero.se/opentelco/go-swpx/fleet/stanza"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/hashicorp/go-hclog"
@@ -22,7 +21,7 @@ const (
 
 type repo struct {
 	mc               *mongo.Client
-	configCollection *mongo.Collection
+	stanzaCollection *mongo.Collection
 	logger           hclog.Logger
 }
 
@@ -33,7 +32,7 @@ func New(mc *mongo.Client, database string, logger hclog.Logger) (stanza.Reposit
 
 	return &repo{
 		mc:               mc,
-		configCollection: mc.Database(database).Collection(defaultTemplateCollection),
+		stanzaCollection: mc.Database(database).Collection(defaultTemplateCollection),
 		logger:           logger.Named("db"),
 	}, nil
 }
@@ -41,12 +40,12 @@ func New(mc *mongo.Client, database string, logger hclog.Logger) (stanza.Reposit
 func (r *repo) GetByID(ctx context.Context, id string) (*stanzapb.Stanza, error) {
 	// get a stanza by its ID, this is used to get a specific device configuration
 	filter := bson.M{"_id": id}
-	var deviceConfiguration stanzapb.Stanza
-	err := r.configCollection.FindOne(ctx, filter).Decode(&deviceConfiguration)
+	var st stanzapb.Stanza
+	err := r.stanzaCollection.FindOne(ctx, filter).Decode(&st)
 	if err != nil {
-		return nil, configuration.ErrConfigurationNotFound
+		return nil, stanza.ErrStanzaNotFound
 	}
-	return &deviceConfiguration, nil
+	return &st, nil
 }
 
 func (r *repo) List(ctx context.Context, params *stanzapb.ListRequest) (*stanzapb.ListResponse, error) {
@@ -89,18 +88,18 @@ func (r *repo) List(ctx context.Context, params *stanzapb.ListRequest) (*stanzap
 	}
 
 	var stanzas []*stanzapb.Stanza
-	cur, err := r.configCollection.Find(ctx, filter, opts)
+	cur, err := r.stanzaCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cur.Close(context.Background())
 	for cur.Next(context.Background()) {
-		var deviceConfiguration stanzapb.Stanza
-		err := cur.Decode(&deviceConfiguration)
+		var stanza stanzapb.Stanza
+		err := cur.Decode(&stanza)
 		if err != nil {
 			return nil, err
 		}
-		stanzas = append(stanzas, &deviceConfiguration)
+		stanzas = append(stanzas, &stanza)
 	}
 	if err := cur.Err(); err != nil {
 
@@ -123,7 +122,7 @@ func (r *repo) Upsert(ctx context.Context, stanza *stanzapb.Stanza) (*stanzapb.S
 
 	stanza.UpdatedAt = timestamppb.New(time.Now())
 
-	_, err := r.configCollection.UpdateOne(ctx, bson.M{"_id": stanza.Id}, bson.M{"$set": stanza}, &options.UpdateOptions{Upsert: &[]bool{true}[0]})
+	_, err := r.stanzaCollection.UpdateOne(ctx, bson.M{"_id": stanza.Id}, bson.M{"$set": stanza}, &options.UpdateOptions{Upsert: &[]bool{true}[0]})
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,7 @@ func (r *repo) Upsert(ctx context.Context, stanza *stanzapb.Stanza) (*stanzapb.S
 
 func (r *repo) Delete(ctx context.Context, id string) error {
 	// delete a device configuration from the device configuration collection
-	_, err := r.configCollection.DeleteOne(ctx, bson.M{"_id": id})
+	_, err := r.stanzaCollection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
 	}

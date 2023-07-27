@@ -24,6 +24,7 @@ syntax = "proto3";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb";
 
+import "stanza.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -40,31 +41,38 @@ message Stanza {
     // description of the configuration snippet e.g "Enable SSH on the device"
     string description = 3;
 
+    // template is the template that will be used to process the stanza, the processed template will be stored as the content
+    string template = 4;
+
     // the content of the configuration snippet the actual configuration that will be applied to the device
-    string content = 4;
+    string content = 5;
+
+    // revert_template is the template that will be used to revert the stanza, if the configuration cannot be applied. the processed template will be stored as the revert_content
+    string revert_template = 6;
 
     // if the configuration content cannot be applied, what should be run to revert the configuration
-    string revert_content = 5;
+    string revert_content = 7;
 
     // the type of device this stanza is applicable to
-    string device_type = 6;
+    string device_type = 8;
 
-    google.protobuf.Timestamp created_at = 7;
-    google.protobuf.Timestamp updated_at = 8;
+    google.protobuf.Timestamp created_at = 9;
+    google.protobuf.Timestamp updated_at = 10;
 
     // applied_at is the time when the stanza was applied to a device (if it has been applied)
-    optional google.protobuf.Timestamp applied_at = 9;
+    optional google.protobuf.Timestamp applied_at = 11;
 
     // the id of the device this stanza is applied to (if it has been applied)
-    optional string device_id = 10;
+    optional string device_id = 12;
 }
 
 service StanzaService {
     // Create a new stanza and return it
     rpc Create(CreateRequest) returns (Stanza);
 
-    // Clone a stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device
-    rpc Clone(CloneRequest) returns (Stanza);
+    // Attach te stanza and attach it to a device, this is used on Apply to create a new stanza that is applied to a device. Before attaching it will Attach the staza with the Go Template engine.
+    // it will Attach the stanza and stored the Attached tempaltes into the content and  revert_content fields.
+    rpc Attach(AttachRequest) returns (Stanza);
 
     // Get a stanza by id and return it
     rpc GetByID(GetByIDRequest) returns (Stanza);
@@ -79,14 +87,21 @@ service StanzaService {
     // Delete a stanza that is not yet applied, Delete from the stanza library
     rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
 
-    // Apply a stanza to a device, this will duplicate the stanza and apply it to the device and return the applied stanza
-    // if the Apply fails the stanza will be reverted by using the revert_content in the stanza. If no revert_content is set
-    // the stanza will not be reverted and apply will return an error.
+    // Validate a stanza, this will process the stanza and return the processed content and revert_content
+    // without attaching it to a device.
+    rpc Validate(ValidateRequest) returns (ValidateResponse);
+
+    // Apply a stanza to a device by runnig the ApplyStanza Workflow.
+    // This will Process and Process the stanza and apply it to the device.
     rpc Apply(ApplyRequest) returns (ApplyResponse);
 
-     // Revert a stanza that has been applied to a device, this will use the revert_content in the stanza to revert the configuration
-     // written to the device. If no revert_content is set the stanza will not be reverted and revert will return an error and the stanza
+    // set the Stanza as applied, Used by Apply to set the stanza as applied to a device
+    rpc SetApplied(SetAppliedRequest) returns (Stanza);
+
+    // Revert a stanza that has been applied to a device, this will use the revert_content in the stanza to revert the configuration
+    // written to the device. If no revert_content is set the stanza will not be reverted and revert will return an error and the stanza
     rpc Revert(RevertRequest) returns (RevertResponse);
+
 }
 
 message CreateRequest {
@@ -96,11 +111,11 @@ message CreateRequest {
     // description of the configuration snippet e.g "Enable SSH on the device"
     optional string description = 3;
 
-    // the content of the configuration snippet the actual configuration that will be applied to the device
-    string content = 4;
+    // the template of the configuration snippet the actual configuration that will be applied to the device
+    string template = 4;
 
     // if the configuration content cannot be applied, what should be run to revert the configuration
-    optional string revert_content = 5;
+    optional string revert_template = 5;
 
     // the type of device this stanza is applicable to
     string device_type = 6;
@@ -111,17 +126,16 @@ message GetByIDRequest {
     string id = 1;
 }
 
-
 message ListRequest {
     // the type of device this stanza is applicable to
     optional string device_type = 1;
 
-    optional  string device_id = 2;
+    optional string device_id = 2;
 
-    repeated Filter filters  = 3;
+    repeated Filter filters = 3;
     enum Filter {
         FILTER_UNSPECIFIED = 0;
-        FILTER_APPLIED = 1;
+        FILTER_APPLIED     = 1;
         FILTER_NOT_APPLIED = 2;
     }
 
@@ -134,7 +148,7 @@ message ListRequest {
 
 message ListResponse {
     repeated Stanza stanzas = 1;
-    int64 total = 2;
+    int64 total             = 2;
 }
 
 message UpdateRequest {
@@ -147,11 +161,11 @@ message UpdateRequest {
     // description of the configuration snippet e.g "Enable SSH on the device"
     optional string description = 3;
 
-    // the content of the configuration snippet the actual configuration that will be applied to the device
-    optional string content = 4;
+    // the template of the configuration snippet the actual configuration that will be applied to the device
+    optional string template = 4;
 
     // if the configuration content cannot be applied, what should be run to revert the configuration
-    optional string revert_content = 5;
+    optional string revert_template = 5;
 
     // the type of device this stanza is applicable to
     optional string device_type = 6;
@@ -177,6 +191,8 @@ message ApplyRequest {
 message ApplyResponse {
     // the applied stanza
     Stanza stanza = 1;
+
+    repeated .stanza.Result result = 2;
 }
 
 message RevertResponse {
@@ -189,14 +205,44 @@ message RevertRequest {
     string id = 1;
 }
 
-
-message CloneRequest {
-    // the id of the stanza to be cloned
+message AttachRequest {
+    // the id of the stanza to be Attached
     string id = 1;
 
     // the id of the device to apply the stanza to
     string device_id = 2;
+
+    // the content of the configuration snippet the actual configuration that will be applied to the device
+    string content = 3;
+
+    // if the configuration content cannot be applied, what should be run to revert the configuration
+    string revert_content = 4;
 }
+
+message ValidateRequest {
+    // the id of the stanza to be validated
+    string id = 1;
+
+    // the id of the device to validate the stanza width
+    string device_id = 2;
+}
+
+message ValidateResponse {
+    string stanza_id = 1;
+    // content as processed by the template engine
+    string content = 2;
+    // revert_content as processed by the template engine
+    string revert_content = 3;
+}
+
+
+message SetAppliedRequest {
+    // the id of the stanza to be set as applied
+    string id = 1;
+
+    google.protobuf.Timestamp applied_at = 2;
+}
+
 
 
 enum TaskQueue {

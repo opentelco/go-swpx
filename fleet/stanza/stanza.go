@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/fleet/stanza/workflows"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/hashicorp/go-hclog"
@@ -38,7 +37,7 @@ type stanzaImpl struct {
 
 func (s *stanzaImpl) GetByID(ctx context.Context, params *stanzapb.GetByIDRequest) (*stanzapb.Stanza, error) {
 	if params.Id == "" {
-		return nil, ErrNotificationNotFound
+		return nil, ErrStanzaNotFound
 	}
 	return s.repo.GetByID(ctx, params.Id)
 }
@@ -54,14 +53,14 @@ func (s *stanzaImpl) List(ctx context.Context, params *stanzapb.ListRequest) (*s
 func (s *stanzaImpl) Create(ctx context.Context, params *stanzapb.CreateRequest) (*stanzapb.Stanza, error) {
 	st := &stanzapb.Stanza{
 		Name:       params.Name,
-		Content:    params.Content,
+		Template:   params.Template,
 		DeviceType: params.DeviceType,
 	}
 	if params.Description != nil {
 		st.Description = *params.Description
 	}
-	if params.RevertContent != nil {
-		st.RevertContent = *params.RevertContent
+	if params.RevertTemplate != nil {
+		st.RevertTemplate = *params.RevertTemplate
 	}
 
 	return s.repo.Upsert(ctx, st)
@@ -77,29 +76,25 @@ func (s *stanzaImpl) Delete(ctx context.Context, params *stanzapb.DeleteRequest)
 
 func (s *stanzaImpl) Apply(ctx context.Context, params *stanzapb.ApplyRequest) (*stanzapb.ApplyResponse, error) {
 
-	stanza, err := s.GetByID(ctx, &stanzapb.GetByIDRequest{Id: params.Id})
-	if err != nil {
-		return nil, fmt.Errorf("could not get stanza: %w", err)
-	}
-
 	wf, err := s.temporalClient.ExecuteWorkflow(
 		ctx,
 		client.StartWorkflowOptions{
 			TaskQueue: stanzapb.TaskQueue_TASK_QUEUE_FLEET_STANZA.String(),
 		},
-		workflows.ApplyStanzaWorkflow,
+		ApplyStanzaWorkflow,
 		params.DeviceId,
-		stanza,
+		params.Id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not start apply workflow: %w", err)
 	}
 
 	if params.Blocking {
-		if err := wf.Get(ctx, nil); err != nil {
+		var result stanzapb.ApplyResponse
+		if err := wf.Get(ctx, &result); err != nil {
 			return nil, fmt.Errorf("could not get apply result: %w", err)
 		}
-		return &stanzapb.ApplyResponse{}, nil
+		return &result, nil
 	}
 	return &stanzapb.ApplyResponse{}, nil
 }
@@ -108,7 +103,32 @@ func (s *stanzaImpl) Revert(ctx context.Context, params *stanzapb.RevertRequest)
 	return nil, ErrNotImplemented
 }
 
-func (s *stanzaImpl) Clone(ctx context.Context, params *stanzapb.CloneRequest) (*stanzapb.Stanza, error) {
+// Validate the stanza and process the template to check if it is valid
+// if the template cannot be processed an error is returned
+func (s *stanzaImpl) Validate(ctx context.Context, params *stanzapb.ValidateRequest) (*stanzapb.ValidateResponse, error) {
+
+	wf, err := s.temporalClient.ExecuteWorkflow(
+		ctx,
+		client.StartWorkflowOptions{
+			TaskQueue: stanzapb.TaskQueue_TASK_QUEUE_FLEET_STANZA.String(),
+		},
+		ValidateWorkflow,
+		params,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not start validate workflow: %w", err)
+	}
+
+	var result stanzapb.ValidateResponse
+	err = wf.Get(ctx, &result)
+	if err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	return &result, nil
+}
+
+func (s *stanzaImpl) Attach(ctx context.Context, params *stanzapb.AttachRequest) (*stanzapb.Stanza, error) {
 	stanza, err := s.repo.GetByID(ctx, params.Id)
 	if err != nil {
 		return nil, err
@@ -118,11 +138,22 @@ func (s *stanzaImpl) Clone(ctx context.Context, params *stanzapb.CloneRequest) (
 	clonedStanza := &stanzapb.Stanza{
 		Name:          stanza.Name,
 		Description:   stanza.Description,
-		Content:       stanza.Content,
-		RevertContent: stanza.RevertContent,
+		Content:       params.Content,
+		RevertContent: params.RevertContent,
 		DeviceType:    stanza.DeviceType,
 		DeviceId:      &params.DeviceId,
 	}
 	return s.repo.Upsert(ctx, clonedStanza)
+
+}
+
+func (s *stanzaImpl) SetApplied(ctx context.Context, params *stanzapb.SetAppliedRequest) (*stanzapb.Stanza, error) {
+	stanza, err := s.repo.GetByID(ctx, params.Id)
+	if err != nil {
+		return nil, err
+	}
+	stanza.AppliedAt = params.AppliedAt
+
+	return s.repo.Upsert(ctx, stanza)
 
 }

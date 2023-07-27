@@ -49,6 +49,7 @@ service FleetService {
 
     // Delete a device, chagnes and all stored configuration
     rpc DeleteDevice(fleet.device.DeleteParameters) returns (google.protobuf.Empty) {}
+
 }
 
 message CollectDeviceParameters {

@@ -26,15 +26,19 @@ func init() {
 
 	createStanzaCmd.Flags().String("description", "", "the description of the stanza")
 	createStanzaCmd.Flags().String("device-type", "", "device type")
-	createStanzaCmd.Flags().String("content", "", "content of the stanza, e.g 'sysname foo'")
-	_ = createStanzaCmd.MarkFlagRequired("content")
+	createStanzaCmd.Flags().String("template", "", "template of the stanza, e.g 'sysname foo'")
+	_ = createStanzaCmd.MarkFlagRequired("template")
 
-	createStanzaCmd.Flags().String("revert-content", "", "revert-content of the stanza, e.g 'sysname old'")
+	createStanzaCmd.Flags().String("revert-template", "", "revert-template of the stanza, e.g 'sysname old'")
 
 	applyStanzaCmd.Flags().StringP("device-id", "d", "", "device id")
 	applyStanzaCmd.MarkFlagRequired("device-id")
 	applyStanzaCmd.Flags().Bool("non-blocking", false, "blocking")
 
+	validateStanzaCmd.Flags().StringP("device-id", "d", "", "device id")
+	validateStanzaCmd.MarkFlagRequired("device-id")
+
+	fleetStanzaRootCmd.AddCommand(validateStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(listStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(getStanzaCmd)
 	fleetStanzaRootCmd.AddCommand(deleteStanzaCmd)
@@ -128,8 +132,8 @@ var createStanzaCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		description, _ := cmd.Flags().GetString("description")
 		deviceType, _ := cmd.Flags().GetString("device-type")
-		content, _ := cmd.Flags().GetString("content")
-		revertContent, _ := cmd.Flags().GetString("revert-content")
+		template, _ := cmd.Flags().GetString("template")
+		revertTemplate, _ := cmd.Flags().GetString("revert-template")
 
 		stanzaClient, err := getStanzaClient(cmd)
 		if err != nil {
@@ -138,11 +142,11 @@ var createStanzaCmd = &cobra.Command{
 		}
 
 		res, err := stanzaClient.Create(cmd.Context(), &stanzapb.CreateRequest{
-			Name:          name,
-			Description:   &description,
-			DeviceType:    deviceType,
-			Content:       content,
-			RevertContent: &revertContent,
+			Name:           name,
+			Description:    &description,
+			DeviceType:     deviceType,
+			Template:       template,
+			RevertTemplate: &revertTemplate,
 		})
 
 		if err != nil {
@@ -232,6 +236,36 @@ var applyStanzaCmd = &cobra.Command{
 			Id:       id,
 			DeviceId: deviceId,
 			Blocking: !nonBlocking,
+		})
+
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		fmt.Println(applyRes)
+	},
+}
+
+// apply stanza
+var validateStanzaCmd = &cobra.Command{
+	Use:   "validate [id] ",
+	Short: "validate an stanza with a device",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		deviceId, _ := cmd.Flags().GetString("device-id")
+
+		id := args[0]
+		stanzaClient, err := getStanzaClient(cmd)
+		if err != nil {
+			cmd.PrintErr(err)
+			os.Exit(1)
+		}
+
+		applyRes, err := stanzaClient.Validate(cmd.Context(), &stanzapb.ValidateRequest{
+			Id:       id,
+			DeviceId: deviceId,
 		})
 
 		if err != nil {
