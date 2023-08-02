@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb";
+
+package fleet.common;
+
+
+message PageInfo {
+    // the total number of devices that matched the search
+    int64 total = 1;
+
+    // the offset used in the search
+    optional int64 offset = 2;
+
+    // the limit used in the search
+    optional int64 limit = 3;
+
+    // the number of devices returned in this page
+    int64 count = 4;
+
+}

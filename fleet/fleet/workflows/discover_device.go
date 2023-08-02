@@ -9,7 +9,6 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/activities"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
 	"git.liero.se/opentelco/go-swpx/fleet/notification"
-	na "git.liero.se/opentelco/go-swpx/fleet/notification/activities"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
@@ -25,7 +24,7 @@ var safeNow = func(ctx workflow.Context) time.Time {
 }
 
 var act = &activities.Activities{}
-var notificationActivities = &na.Activities{}
+var notificationActivities = &notification.Activities{}
 
 var (
 	// dont overwrite theese variables, they are used as pointers in the workflows
@@ -190,7 +189,7 @@ func resolveTarget(params *devicepb.CreateParameters) (string, error) {
 }
 
 func addNotification(ctx workflow.Context, params *notificationpb.CreateRequest) (*notificationpb.Notification, error) {
-	ctx = na.ActivityOptionsNewNotification(ctx)
+	ctx = notification.ActivityOptionsNewNotification(ctx)
 	var n notificationpb.Notification
 	if err := workflow.ExecuteActivity(ctx,
 		notificationActivities.NewNotification, params,

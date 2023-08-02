@@ -1,3 +1,4 @@
+gql_addr = ":1336"
 http_addr = ":1337"
 grpc_addr = ":1338"
 

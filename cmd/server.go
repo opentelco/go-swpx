@@ -16,6 +16,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	deviceRepo "git.liero.se/opentelco/go-swpx/fleet/device/repo"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet"
+	"git.liero.se/opentelco/go-swpx/fleet/graph"
 	"git.liero.se/opentelco/go-swpx/fleet/notification"
 	notificationRepo "git.liero.se/opentelco/go-swpx/fleet/notification/repo"
 
@@ -172,13 +173,38 @@ var StartCmd = &cobra.Command{
 
 		// HTTP
 		server := api.NewServer(c, logger)
+
 		go func() {
-			err = server.ListenAndServe(appConfig.HttpAddr)
+			listner, err := net.Listen("tcp", appConfig.HttpAddr)
 			if err != nil {
 				cmd.PrintErr(err)
 				os.Exit(1)
 			}
+
+			err = server.Serve(listner)
+			if err != nil {
+				cmd.PrintErr(err)
+				os.Exit(1)
+			}
+
 		}()
+
+		go func() {
+			listner, err := net.Listen("tcp", appConfig.GQLAddr)
+			if err != nil {
+				cmd.PrintErr(err)
+				os.Exit(1)
+			}
+
+			resolvers := graph.NewResolver(deviceService)
+			err = graph.Serve(listner, resolvers, logger)
+			if err != nil {
+				cmd.PrintErr(err)
+				os.Exit(1)
+			}
+
+		}()
+
 		// GRPC Core
 		lis, err := net.Listen("tcp", appConfig.GrpcAddr)
 		if err != nil {

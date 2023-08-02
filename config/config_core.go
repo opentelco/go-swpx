@@ -3,6 +3,7 @@ package config
 type Configuration struct {
 	// HttpAddr is the address to listen on for HTTP requests
 	HttpAddr string `hcl:"http_addr"`
+	GQLAddr  string `hcl:"gql_addr"`
 
 	// GrpcAddr is the address to listen on for GRPC requests
 	GrpcAddr string `hcl:"grpc_addr"`

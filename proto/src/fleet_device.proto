@@ -24,6 +24,7 @@ syntax = "proto3";
 
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb";
 
+import "fleet_common.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
@@ -66,12 +67,21 @@ message Device {
     // the state of the device, the current condition of the device
     // used to determine if the device should be polled or not
     enum State {
-        DEVICE_STATE_NEW = 0;
+        DEVICE_STATE_NOT_SET = 0;
+
+        DEVICE_STATE_NEW = 1;
+
         // the device is active and collection should be done
-        DEVICE_STATE_ACTIVE = 1;
+        DEVICE_STATE_ACTIVE = 2;
 
         // the device is inactive and collection should not be done
-        DEVICE_STATE_INACTIVE = 2;
+        DEVICE_STATE_INACTIVE = 3;
+
+        // the device is rouge and collection should not be done
+        // rouge is a device that could not be disocvered or was created by
+        // automatically by DHCP etc
+        DEVICE_STATE_ROUGE = 4;
+
     }
     // the state of the device
     State state = 11;
@@ -79,11 +89,15 @@ message Device {
     // the status of the device, the current reachability of the device
     // basically the status of the last action done on the device
     enum Status {
-        DEVICE_STATUS_NEW = 0;
+        DEVICE_STATUS_NOT_SET = 0;
+
+        DEVICE_STATUS_NEW = 1;
+
         // the device could not be reached when polled, discovered or collected
-        DEVICE_STATUS_UNREACHABLE = 1;
+        DEVICE_STATUS_UNREACHABLE = 2;
+
         // the device could be reached when polled, discovered or collected
-        DEVICE_STATUS_REACHABLE = 2;
+        DEVICE_STATUS_REACHABLE = 3;
     }
 
     // the status of the device
@@ -327,34 +341,60 @@ message DeleteParameters {
 message ListResponse {
     // the devices that matched the search
     repeated Device devices = 1;
+
+    fleet.common.PageInfo page_info = 2;
 }
 
 message ListChangesParameters {
     // the id of the device to get changes for
     string device_id = 1;
+
+    // defaults to 50 Events if not set
+    optional int64 limit = 2;
+
+    // offset to start from (default 0)
+    optional int64 offset = 3;
 }
 message ListChangesResponse {
     // the changes that matched the search
     repeated Change changes = 1;
+
+    fleet.common.PageInfo page_info = 2;
 }
 
 message GetChangeByIDParameters {
     // the id of the change to get
     string id = 1;
+
+    optional int64 limit = 2;
+
+    optional int64 offset = 3;
 }
 
 message ListEventsParameters {
     // the id of the device to get Events for
     string device_id = 1;
+
+    // defaults to 50 Events if not set
+    optional int64 limit = 2;
+
+    // offset to start from (default 0)
+    optional int64 offset = 3;
 }
+
 message ListEventsResponse {
     // the Events that matched the search
     repeated Event events = 1;
+
+    fleet.common.PageInfo page_info = 2;
 }
 
 message GetEventByIDParameters {
     // the id of the change to get
     string id = 1;
+
+    optional int64 limit = 2;
+    optional int64 offset = 3;
 }
 
 message Event {
@@ -400,8 +440,6 @@ message SetScheduleParameters {
     // the schedule to upsert
     Device.Schedule schedule = 2;
 }
-
-
 
 enum TaskQueue {
     TASK_QUEUE_FLEET_DEVICE = 0;

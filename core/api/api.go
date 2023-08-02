@@ -24,6 +24,7 @@ package api
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -60,6 +61,11 @@ type Server struct {
 
 	core   *core.Core
 	logger hclog.Logger
+}
+
+func (s *Server) Serve(lis net.Listener) error {
+	s.logger.Info(fmt.Sprintf("serving http server on %s\n", lis.Addr()))
+	return http.Serve(lis, context.ClearHandler(s))
 }
 
 func (s *Server) ListenAndServe(host string) error {

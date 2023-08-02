@@ -79,10 +79,8 @@ func (d *device) GetByID(ctx context.Context, params *devicepb.GetByIDParameters
 
 // Get a device by its hostname, managment ip or serial number etc (used to search for a device)
 func (d *device) List(ctx context.Context, params *devicepb.ListParameters) (*devicepb.ListResponse, error) {
-	devices, err := d.repo.List(ctx, params)
-	return &devicepb.ListResponse{
-		Devices: devices,
-	}, err
+	resp, err := d.repo.List(ctx, params)
+	return resp, err
 
 }
 
@@ -241,7 +239,7 @@ func (d *device) Delete(ctx context.Context, params *devicepb.DeleteParameters) 
 		return nil, err
 	}
 
-	err = d.repo.DeleteChangersByDeviceID(ctx, params.Id)
+	err = d.repo.DeleteChangesByDeviceID(ctx, params.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -250,15 +248,13 @@ func (d *device) Delete(ctx context.Context, params *devicepb.DeleteParameters) 
 }
 
 func (d *device) ListChanges(ctx context.Context, params *devicepb.ListChangesParameters) (*devicepb.ListChangesResponse, error) {
-	c, err := d.repo.ListChanges(ctx, params)
+	resp, err := d.repo.ListChanges(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-	return &devicepb.ListChangesResponse{
-		Changes: c,
-	}, nil
-
+	return resp, nil
 }
+
 func (d *device) GetChangeByID(ctx context.Context, params *devicepb.GetChangeByIDParameters) (*devicepb.Change, error) {
 	c, err := d.repo.GetChangeByID(ctx, params.Id)
 	if err != nil {
@@ -332,13 +328,11 @@ func (d *device) GetEventByID(ctx context.Context, params *devicepb.GetEventByID
 // returns a list of events (default 100)
 func (d *device) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) (*devicepb.ListEventsResponse, error) {
 
-	events, err := d.repo.ListEvents(ctx, params)
+	resp, err := d.repo.ListEvents(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-	return &devicepb.ListEventsResponse{
-		Events: events,
-	}, nil
+	return resp, err
 }
 
 func (d *device) SetSchedule(ctx context.Context, params *devicepb.SetScheduleParameters) (*devicepb.Device, error) {

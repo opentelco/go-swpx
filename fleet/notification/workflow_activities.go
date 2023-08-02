@@ -1,4 +1,4 @@
-package activities
+package notification
 
 import (
 	"context"
@@ -12,7 +12,7 @@ type Activities struct {
 	notification notificationpb.NotificationServiceServer
 }
 
-func New(notification notificationpb.NotificationServiceServer) *Activities {
+func NewActivities(notification notificationpb.NotificationServiceServer) *Activities {
 	return &Activities{
 		notification: notification,
 	}

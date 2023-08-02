@@ -1,0 +1,120 @@
+scalar Timestamp
+scalar Duration
+
+type Device {
+  id: ID!
+  hostname: String
+  domain: String
+  managementIp: String
+  serialNumber: String
+  model: String
+  version: String
+  networkRegion: String
+  pollerResourcePlugin: String
+  pollerProviderPlugin: String
+  state: DeviceState!
+  status: DeviceStatus!
+
+  # 1-2 schedules on the device
+  schedules: [DeviceSchedule]
+
+  # 1-X events on the device, paginated and not eager-loaded
+  events(limit: Int, offset: Int): EventConnection!
+
+  # 1-X changes on the device, paginated and not eager-loaded
+  changes(limit: Int, offset: Int): ChangeConnection!
+
+  lastSeen: Timestamp
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  lastReboot: Timestamp
+}
+
+enum DeviceState {
+  NOT_SET
+  NEW
+  ACTIVE
+  INACTIVE
+  ROUGE
+}
+
+enum DeviceStatus {
+  NOT_SET
+  NEW
+  UNREACHABLE
+  REACHABLE
+}
+
+type DeviceSchedule {
+  interval: Duration!
+  type: ScheduleType!
+  lastRun: Timestamp
+  active: Boolean
+  failedCount: Int
+}
+
+enum ScheduleType {
+  NOT_SET
+  DEVICE
+  CONFIG
+}
+
+input ListDevicesParams {
+  hostname: String
+  managementIp: String
+  limit: Int
+  offset: Int
+}
+
+type ListDeviceResponse {
+  devices: [Device]
+  pageInfo: PageInfo
+}
+
+type DeviceEvent {
+  id: ID!
+  type: DeviceEventType!
+  message: String!
+  action: DeviceEventAction!
+  outcome: DeviceEventOutcome!
+  createdAt: Timestamp!
+}
+
+enum DeviceEventType {
+  NOT_SET
+  CONFIGURATION
+  DEVICE
+}
+
+enum DeviceEventAction {
+  NOT_SET
+  CREATE
+  UPDATE
+  COLLECT_CONFIG
+  COLLECT_DEVICE
+}
+
+enum DeviceEventOutcome {
+  NOT_SET
+  SUCCESS
+  FAILURE
+}
+
+
+type EventConnection {
+  events: [DeviceEvent]
+  pageInfo: PageInfo
+}
+
+type DeviceChange {
+  id: ID!
+  field: String!
+  oldValue: String!
+  newValue: String!
+  createdAt: Timestamp!
+}
+
+type ChangeConnection {
+  changes: [DeviceChange]
+  pageInfo: PageInfo
+}

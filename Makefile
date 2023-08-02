@@ -20,7 +20,7 @@ build: clean_all pb providers resources core
 
 pb:
 	# Generate new protobufs
-	@go generate
+	@go generate ./...
 
 providers:
 	# Building PROVIDERS

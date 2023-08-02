@@ -3,11 +3,13 @@ package repo
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet/device"
 	"git.liero.se/opentelco/go-swpx/fleet/fleet/utils"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -118,19 +120,25 @@ func (r *repo) GetChangeByID(ctx context.Context, id string) (*devicepb.Change, 
 	return &change, nil
 }
 
-func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesParameters) ([]*devicepb.Change, error) {
+func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesParameters) (*devicepb.ListChangesResponse, error) {
+
 	// list changes for a device
 	filter := bson.M{}
 	if params.DeviceId != "" {
 		filter["device_id"] = params.DeviceId
 	}
 
+	options := options.Find()
+	options.Limit = params.Limit
+	options.Skip = params.Offset
+
 	var changes []*devicepb.Change
-	cur, err := r.changesCollection.Find(ctx, filter)
+	cur, err := r.changesCollection.Find(ctx, filter, options)
 	if err != nil {
 		return nil, err
 	}
 	defer cur.Close(context.Background())
+
 	for cur.Next(context.Background()) {
 
 		var change devicepb.Change
@@ -143,7 +151,23 @@ func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesPara
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-	return changes, nil
+
+	totalCount, err := r.changesCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(changes)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
+	return &devicepb.ListChangesResponse{
+		Changes:  changes,
+		PageInfo: pageInfo,
+	}, nil
+
 }
 
 func (r *repo) DeleteChangeByID(ctx context.Context, id string) error {
@@ -155,7 +179,7 @@ func (r *repo) DeleteChangeByID(ctx context.Context, id string) error {
 
 	return nil
 }
-func (r *repo) DeleteChangersByDeviceID(ctx context.Context, id string) error {
+func (r *repo) DeleteChangesByDeviceID(ctx context.Context, id string) error {
 	// delete all device changes for a device
 	_, err := r.changesCollection.DeleteMany(ctx, bson.M{"device_id": id})
 	if err != nil {
@@ -190,15 +214,18 @@ func (r *repo) GetEventByID(ctx context.Context, id string) (*devicepb.Event, er
 	return &event, nil
 
 }
-func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) ([]*devicepb.Event, error) {
+func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParameters) (*devicepb.ListEventsResponse, error) {
 	// list events for a device
 	filter := bson.M{}
 	if params.DeviceId != "" {
 		filter["device_id"] = params.DeviceId
 	}
+	options := options.Find()
+	options.Limit = params.Limit
+	options.Skip = params.Offset
 
 	var events []*devicepb.Event
-	cur, err := r.eventsCollection.Find(ctx, filter)
+	cur, err := r.eventsCollection.Find(ctx, filter, options)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +242,21 @@ func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParame
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-	return events, nil
+	totalCount, err := r.eventsCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(events)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
+	return &devicepb.ListEventsResponse{
+		Events:   events,
+		PageInfo: pageInfo,
+	}, nil
 
 }
 
@@ -247,7 +288,7 @@ func GetEnumValues[T interface {
 	return values
 }
 
-func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) ([]*devicepb.Device, error) {
+func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) (*devicepb.ListResponse, error) {
 	filter := bson.M{}
 	if params.Hostname != nil {
 		filter["hostname"] = *params.Hostname
@@ -279,13 +320,8 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) ([]*de
 		options.SetSort(bson.M{"schedules.last_run": 1})
 	}
 
-	if params.Limit != nil {
-		options.SetLimit(*params.Limit)
-	}
-
-	if params.Offset != nil {
-		options.SetSkip(*params.Offset)
-	}
+	options.Limit = params.Limit
+	options.Skip = params.Offset
 
 	var devices []*devicepb.Device
 	cur, err := r.deviceCollection.Find(ctx, filter, options)
@@ -321,6 +357,21 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) ([]*de
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-	return devices, nil
+
+	totalCount, err := r.deviceCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(devices)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
+	return &devicepb.ListResponse{
+		Devices:  devices,
+		PageInfo: pageInfo,
+	}, nil
 
 }

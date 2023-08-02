@@ -1,0 +1,7 @@
+
+type PageInfo {
+  limit: Int
+  offset: Int
+  total: Int
+  count: Int
+}

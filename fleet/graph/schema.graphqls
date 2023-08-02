@@ -1,0 +1,6 @@
+
+
+type Query {
+  device(id: ID!): Device!
+  devices(params: ListDevicesParams): ListDeviceResponse!
+}
