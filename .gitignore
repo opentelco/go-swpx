@@ -17,3 +17,4 @@ plugins/providers/
 *.code-workspace
 build/*
 vendor/
+node_modules/
