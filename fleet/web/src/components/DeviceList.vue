@@ -5,7 +5,7 @@
       Could not fetch devices: {{ error }}
     </q-banner>
     <div class="q-pa-md">
-      <q-table :grid="grid" flat bordered title="Devices" :rows="result?.devices?.devices" :columns="columns"
+      <q-table :grid="grid" flat bordered title="Devices" v-if="result" :rows="result?.devices?.devices" :columns="columns"
         row-key="name" :filter="filter" :loading="loading">
         <template v-slot:top-right>
 

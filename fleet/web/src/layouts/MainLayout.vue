@@ -157,7 +157,7 @@
         </q-btn-dropdown>
 
         <q-btn flat dense round icon="dark_mode" @click="toggleDarMode"/>
-        <q-btn flat dense round icon="notifications" />
+        <NotificationsButton />
 
         <q-item-section avatar>
           <q-avatar>
@@ -176,11 +176,14 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useQuasar } from 'quasar';
+import NotificationsButton from 'src/components/NotificationsButton.vue';
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {},
+  components: {
+    NotificationsButton,
+  },
 
   setup() {
     const leftDrawerOpen = ref(false);

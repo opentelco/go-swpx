@@ -97,6 +97,7 @@ func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*n
 	opts := options.Find()
 	opts.Limit = params.Limit
 	opts.Skip = params.Offset
+	opts.Sort = bson.M{"timestamp": -1}
 
 	cur, err := r.notificationCollection.Find(ctx, filter, opts)
 	if err != nil {

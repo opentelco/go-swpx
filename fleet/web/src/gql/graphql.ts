@@ -138,7 +138,58 @@ export type ListDevicesParams = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   managementIp?: InputMaybe<Scalars['String']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
+
+export enum ListNotificationFilter {
+  IncludeRead = 'INCLUDE_READ',
+  ResourceTypeConfig = 'RESOURCE_TYPE_CONFIG',
+  ResourceTypeDevice = 'RESOURCE_TYPE_DEVICE'
+}
+
+export type ListNotificationsParams = {
+  filter?: InputMaybe<Array<ListNotificationFilter>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  resource_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+export type ListNotificationsResponse = {
+  __typename?: 'ListNotificationsResponse';
+  notifications?: Maybe<Array<Maybe<Notification>>>;
+  pageInfo: PageInfo;
+};
+
+export type MarkNotificationsAsReadParams = {
+  ids?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  markNotificationsAsRead?: Maybe<Array<Notification>>;
+};
+
+
+export type MutationMarkNotificationsAsReadArgs = {
+  input: MarkNotificationsAsReadParams;
+};
+
+export type Notification = {
+  __typename?: 'Notification';
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  read: Scalars['Boolean']['output'];
+  resource_id: Scalars['ID']['output'];
+  resource_type: NotificationResourceType;
+  timestamp: Scalars['Timestamp']['output'];
+  title: Scalars['String']['output'];
+};
+
+export enum NotificationResourceType {
+  Config = 'CONFIG',
+  Device = 'DEVICE',
+  Unspecified = 'UNSPECIFIED'
+}
 
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -152,6 +203,7 @@ export type Query = {
   __typename?: 'Query';
   device: Device;
   devices: ListDeviceResponse;
+  notifications: ListNotificationsResponse;
 };
 
 
@@ -162,6 +214,11 @@ export type QueryDeviceArgs = {
 
 export type QueryDevicesArgs = {
   params?: InputMaybe<ListDevicesParams>;
+};
+
+
+export type QueryNotificationsArgs = {
+  params?: InputMaybe<ListNotificationsParams>;
 };
 
 export enum ScheduleType {

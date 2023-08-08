@@ -5,6 +5,8 @@ A OpenTelco CRM system
 GRAPHQL_URI=https://prod.example.com/graphql quasar build
 GRAPHQL_URI=https://localhost:1336/query quasar dev
 
+generate the gql TS:
+`npx graphql-code-generator`
 
 ## Install the dependencies
 ```bash

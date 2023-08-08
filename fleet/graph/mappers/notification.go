@@ -19,6 +19,7 @@ func (n Notifications) ToGQL() []*model.Notification {
 func (n Notification) ToGQL() *model.Notification {
 	respo := &model.Notification{
 		ID:           n.Id,
+		Title:        n.Title,
 		ResourceID:   n.ResourceId,
 		ResourceType: NotificationResourceType(n.ResourceType).ToGQL(),
 		Message:      n.Message,
