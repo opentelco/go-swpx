@@ -3,15 +3,33 @@ scalar Duration
 
 type Device {
   id: ID!
+
+  # hostname e.g somename-a1
   hostname: String
+
+  # fqdn e.g somename-a1.example.com
   domain: String
+
+  # management ip e.g 172.22.11.1
   managementIp: String
+
+  # serial/mac aa-bb-cc-dd-ee-ff
   serialNumber: String
+
+  # model/version e.g S5700-28C-EI-V100R006C00
   model: String
+  # version e.g V100R006C00
   version: String
+
+  # region e.g eu-uk-west-1
   networkRegion: String
+
+  # poller resource plugin e.g vrp
   pollerResourcePlugin: String
+
+  # poller provider plugin e.g default
   pollerProviderPlugin: String
+
   state: DeviceState!
   status: DeviceStatus!
 
@@ -24,9 +42,13 @@ type Device {
   # 1-X changes on the device, paginated and not eager-loaded
   changes(limit: Int, offset: Int): ChangeConnection!
 
+  # last time collection was sucessful
   lastSeen: Timestamp
+
   createdAt: Timestamp!
   updatedAt: Timestamp!
+
+  # last reboot timestamp from snmp
   lastReboot: Timestamp
 }
 
@@ -60,6 +82,7 @@ enum ScheduleType {
 }
 
 input ListDevicesParams {
+  search: String
   hostname: String
   managementIp: String
   limit: Int

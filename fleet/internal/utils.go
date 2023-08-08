@@ -15,6 +15,10 @@ func CreatePaginationInfo(limit *int64, offset *int64, totalCount int) *commonpb
 	}
 }
 
+func ToPtr[T any](v T) *T {
+	return &v
+}
+
 func PointerIntToPointerInt64(i *int) *int64 {
 	if i == nil {
 		return nil

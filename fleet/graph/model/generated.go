@@ -72,10 +72,37 @@ type ListDeviceResponse struct {
 }
 
 type ListDevicesParams struct {
+	Search       *string `json:"search,omitempty"`
 	Hostname     *string `json:"hostname,omitempty"`
 	ManagementIP *string `json:"managementIp,omitempty"`
 	Limit        *int    `json:"limit,omitempty"`
 	Offset       *int    `json:"offset,omitempty"`
+}
+
+type ListNotificationsParams struct {
+	ResourceIds []string                 `json:"resource_ids,omitempty"`
+	Filter      []ListNotificationFilter `json:"filter,omitempty"`
+	Limit       *int                     `json:"limit,omitempty"`
+	Offset      *int                     `json:"offset,omitempty"`
+}
+
+type ListNotificationsResponse struct {
+	Notifications []*Notification `json:"notifications,omitempty"`
+	PageInfo      *PageInfo       `json:"pageInfo"`
+}
+
+type MarkNotificationsAsReadParams struct {
+	Ids []*string `json:"ids,omitempty"`
+}
+
+type Notification struct {
+	ID           string                   `json:"id"`
+	Title        string                   `json:"title"`
+	ResourceID   string                   `json:"resource_id"`
+	ResourceType NotificationResourceType `json:"resource_type"`
+	Timestamp    time.Time                `json:"timestamp"`
+	Message      string                   `json:"message"`
+	Read         bool                     `json:"read"`
 }
 
 type PageInfo struct {
@@ -307,6 +334,92 @@ func (e *DeviceStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e DeviceStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ListNotificationFilter string
+
+const (
+	ListNotificationFilterResourceTypeDevice ListNotificationFilter = "RESOURCE_TYPE_DEVICE"
+	ListNotificationFilterResourceTypeConfig ListNotificationFilter = "RESOURCE_TYPE_CONFIG"
+	ListNotificationFilterIncludeRead        ListNotificationFilter = "INCLUDE_READ"
+)
+
+var AllListNotificationFilter = []ListNotificationFilter{
+	ListNotificationFilterResourceTypeDevice,
+	ListNotificationFilterResourceTypeConfig,
+	ListNotificationFilterIncludeRead,
+}
+
+func (e ListNotificationFilter) IsValid() bool {
+	switch e {
+	case ListNotificationFilterResourceTypeDevice, ListNotificationFilterResourceTypeConfig, ListNotificationFilterIncludeRead:
+		return true
+	}
+	return false
+}
+
+func (e ListNotificationFilter) String() string {
+	return string(e)
+}
+
+func (e *ListNotificationFilter) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListNotificationFilter(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListNotificationFilter", str)
+	}
+	return nil
+}
+
+func (e ListNotificationFilter) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type NotificationResourceType string
+
+const (
+	NotificationResourceTypeUnspecified NotificationResourceType = "UNSPECIFIED"
+	NotificationResourceTypeDevice      NotificationResourceType = "DEVICE"
+	NotificationResourceTypeConfig      NotificationResourceType = "CONFIG"
+)
+
+var AllNotificationResourceType = []NotificationResourceType{
+	NotificationResourceTypeUnspecified,
+	NotificationResourceTypeDevice,
+	NotificationResourceTypeConfig,
+}
+
+func (e NotificationResourceType) IsValid() bool {
+	switch e {
+	case NotificationResourceTypeUnspecified, NotificationResourceTypeDevice, NotificationResourceTypeConfig:
+		return true
+	}
+	return false
+}
+
+func (e NotificationResourceType) String() string {
+	return string(e)
+}
+
+func (e *NotificationResourceType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = NotificationResourceType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid NotificationResourceType", str)
+	}
+	return nil
+}
+
+func (e NotificationResourceType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

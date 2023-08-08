@@ -360,7 +360,7 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) (*devi
 
 	totalCount, err := r.deviceCollection.CountDocuments(ctx, filter)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	pageInfo := &commonpb.PageInfo{
 		Count:  int64(len(devices)),

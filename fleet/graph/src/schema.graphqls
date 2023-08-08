@@ -1,0 +1,13 @@
+
+
+type Query {
+  device(id: ID!): Device!
+  devices(params: ListDevicesParams): ListDeviceResponse!
+
+  notifications(params: ListNotificationsParams): ListNotificationsResponse!
+}
+
+
+type Mutation {
+  markNotificationsAsRead(input: MarkNotificationsAsReadParams!): [Notification!]
+}

@@ -53,6 +53,7 @@ type DeviceListParameters struct{ *devicepb.ListParameters }
 
 func (p DeviceListParameters) ToGQL() *model.ListDevicesParams {
 	return &model.ListDevicesParams{
+		Search:       p.Search,
 		Hostname:     p.Hostname,
 		ManagementIP: p.ManagementIp,
 		Limit:        internal.PointerInt64ToPointerInt(p.Limit),
@@ -62,6 +63,10 @@ func (p DeviceListParameters) ToGQL() *model.ListDevicesParams {
 
 func ToDeviceListResponse(r *devicepb.ListResponse) *DeviceListResponse {
 	return &DeviceListResponse{r}
+}
+
+func ToDevice(r *devicepb.Device) *Device {
+	return &Device{r}
 }
 
 type DeviceListResponse struct{ *devicepb.ListResponse }

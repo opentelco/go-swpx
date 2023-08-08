@@ -7,6 +7,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet/notification"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -65,10 +66,8 @@ func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*n
 	}
 
 	for _, f := range params.Filter {
-		// all filters are OR filters
 		switch f {
 		case notificationpb.ListRequest_INCLUDE_READ:
-			// filter by read true and false
 			delete(filter, "read")
 
 		case notificationpb.ListRequest_RESOURCE_TYPE_CONFIG:
@@ -96,12 +95,8 @@ func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*n
 	}
 
 	opts := options.Find()
-	if params.Limit != nil {
-		opts.SetLimit(*params.Limit)
-	}
-	if params.Offset != nil {
-		opts.SetSkip(*params.Offset)
-	}
+	opts.Limit = params.Limit
+	opts.Skip = params.Offset
 
 	cur, err := r.notificationCollection.Find(ctx, filter, opts)
 	if err != nil {
@@ -118,8 +113,21 @@ func (r *repo) List(ctx context.Context, params *notificationpb.ListRequest) (*n
 		notifications = append(notifications, &nf)
 	}
 
+	totalCount, err := r.notificationCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(notifications)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
 	return &notificationpb.ListResponse{
 		Notifications: notifications,
+		PageInfo:      pageInfo,
 	}, nil
 
 }

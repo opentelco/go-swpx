@@ -6,10 +6,16 @@ import (
 )
 
 func (p *ListDevicesParams) ToProto() *devicepb.ListParameters {
+	if p == nil {
+		return &devicepb.ListParameters{}
+	}
 
 	params := &devicepb.ListParameters{
-		Limit:  internal.PointerIntToPointerInt64(p.Limit),
-		Offset: internal.PointerIntToPointerInt64(p.Offset),
+		Search:       p.Search,
+		Hostname:     p.Hostname,
+		ManagementIp: p.ManagementIP,
+		Limit:        internal.PointerIntToPointerInt64(p.Limit),
+		Offset:       internal.PointerIntToPointerInt64(p.Offset),
 	}
 
 	if p.Hostname != nil {

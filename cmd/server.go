@@ -196,7 +196,7 @@ var StartCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			resolvers := graph.NewResolver(deviceService)
+			resolvers := graph.NewResolver(deviceService, notificationService)
 			err = graph.Serve(listner, resolvers, logger)
 			if err != nil {
 				cmd.PrintErr(err)

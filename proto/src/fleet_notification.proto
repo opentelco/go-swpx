@@ -6,6 +6,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationp
 
 package notificationpb;
 
+import "fleet_common.proto";
 import "google/protobuf/timestamp.proto";
 
 // Notification is a notification triggered by a fleet event
@@ -62,11 +63,13 @@ message ListRequest {
 
     repeated Filter filter = 3;
     enum Filter {
-        NO_LIST_REQUEST_FILTER = 0;
-        RESOURCE_TYPE_DEVICE   = 1;
-        RESOURCE_TYPE_CONFIG   = 2;
-        // include read notifications and unread notifications
-        INCLUDE_READ           = 3;
+        LIST_REQUEST_FILTER_UNSET = 0;
+        // must be of type device
+        RESOURCE_TYPE_DEVICE = 1;
+        // must be of type config
+        RESOURCE_TYPE_CONFIG = 2;
+
+        INCLUDE_READ = 3;
     }
 
     // how many notifications to return (default 10)
@@ -78,6 +81,7 @@ message ListRequest {
 
 message ListResponse {
     repeated Notification notifications = 1;
+    fleet.common.PageInfo page_info = 2;
 }
 
 message CreateRequest {
