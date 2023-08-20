@@ -1,13 +1,17 @@
 package graph
 
 import (
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 )
 
 //go:generate go run github.com/99designs/gqlgen generate
 
 type Resolver struct {
-	devices       devicepb.DeviceServiceServer
-	notifications notificationpb.NotificationServiceServer
+	devices        devicepb.DeviceServiceServer
+	notifications  notificationpb.NotificationServiceServer
+	configurations configurationpb.ConfigurationServiceServer
+	stanzas        stanzapb.StanzaServiceServer
 }

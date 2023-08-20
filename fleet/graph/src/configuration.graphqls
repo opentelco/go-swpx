@@ -1,0 +1,13 @@
+
+type Configuration {
+  id: ID!
+
+  # a configuration is alwas associated with a device
+  # but its not required to include the field in the query
+  device: Device
+
+  configuration: String
+  changes: String
+  checksum: String
+  createdAt: Timestamp!
+}

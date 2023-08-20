@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { DeviceState } from '../gql/graphql'
-
+import { ref } from 'vue'
 const props = defineProps<{
   state: DeviceState
 }>()
+
+let hover = ref(false)
 
 
 // colorFromState is a function that get the prop state and switch cases all the possible values
@@ -12,11 +14,11 @@ const props = defineProps<{
 const colorFromState = (state: DeviceState) => {
   switch (state) {
     case DeviceState.Active:
-      return { bg: 'green', fg: 'white' }
+      return { bg: 'positive', fg: 'white' }
     case DeviceState.Inactive:
-      return { bg: 'red', fg: 'white' }
+      return { bg: 'negative', fg: 'white' }
     case DeviceState.Rouge:
-      return { bg: 'yellow', fg: 'black' }
+      return { bg: 'warning', fg: 'black' }
     case DeviceState.New:
       return { bg: 'blue', fg: 'white' }
     default:
@@ -63,10 +65,14 @@ const stateTooltip = (state: DeviceState) => {
 </script>
 
 <template>
-  <q-chip size="sm" :color="colorFromState(props.state).bg" :text-color="colorFromState(props.state).fg" :icon="stateIcon(props.state)">
-    <q-tooltip class=" shadow-4" :offset="[10, 10]">
-      {{ stateTooltip(props.state) }}
-    </q-tooltip>
-    {{ props.state }}
-  </q-chip>
+  <div>
+    <q-chip size="sm" outline square :color="colorFromState(props.state).bg" :text-color="colorFromState(props.state).fg"
+      :icon="stateIcon(props.state)">
+      {{ props.state }}
+      <q-tooltip class="shadow-4">
+        {{ stateTooltip(props.state) }}
+      </q-tooltip>
+    </q-chip>
+
+  </div>
 </template>

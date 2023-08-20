@@ -4,8 +4,10 @@ import (
 	"net"
 	"net/http"
 
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
@@ -14,11 +16,18 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-func NewResolver(device devicepb.DeviceServiceServer, notification notificationpb.NotificationServiceServer) Config {
+func NewResolver(
+	device devicepb.DeviceServiceServer,
+	notification notificationpb.NotificationServiceServer,
+	stanzas stanzapb.StanzaServiceServer,
+	configurations configurationpb.ConfigurationServiceServer,
+) Config {
 	return Config{
 		Resolvers: &Resolver{
-			devices:       device,
-			notifications: notification,
+			devices:        device,
+			notifications:  notification,
+			stanzas:        stanzas,
+			configurations: configurations,
 		},
 	}
 }

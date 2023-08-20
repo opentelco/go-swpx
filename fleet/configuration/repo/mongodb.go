@@ -6,6 +6,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet/configuration"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,7 +49,7 @@ func (r *repo) GetByID(ctx context.Context, id string) (*configurationpb.Configu
 	return &deviceConfiguration, nil
 }
 
-func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters) ([]*configurationpb.Configuration, error) {
+func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters) (*configurationpb.ListResponse, error) {
 	// list device configurations, this is used to list all device configurations
 	filter := bson.M{}
 	if params.DeviceId != "" {
@@ -63,6 +64,37 @@ func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters)
 	if params.Offset != nil {
 		opts.SetSkip(*params.Offset)
 	}
+
+	if params.CreatedAfter != nil {
+		// filter that configuration must be Created after the set Timestamp
+		filter["created"] = bson.M{"$gt": params.CreatedAfter}
+	}
+
+	if params.CreatedBefore != nil {
+		// filter that configuration must be Created before the set Timestamp
+		filter["created"] = bson.M{"$lt": params.CreatedBefore}
+	}
+
+	var sort int = -1
+	orderBy := bson.M{}
+	if params.OrderAsc != nil {
+		if *params.OrderAsc {
+			sort = 1
+		}
+	}
+	// order by the the array of order_By
+	if params.OrderBy != nil {
+		for _, o := range params.OrderBy {
+			switch o {
+			case configurationpb.ListParameters_ORDER_BY_CREATED:
+				orderBy["created"] = sort
+			}
+
+		}
+	} else {
+		orderBy["created"] = sort
+	}
+	opts.SetSort(orderBy)
 
 	var deviceConfigurations []*configurationpb.Configuration
 	cur, err := r.configCollection.Find(ctx, filter, opts)
@@ -82,7 +114,23 @@ func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters)
 
 		return nil, err
 	}
-	return deviceConfigurations, nil
+
+	totalCount, err := r.configCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(deviceConfigurations)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
+	return &configurationpb.ListResponse{
+		Configurations: deviceConfigurations,
+		PageInfo:       pageInfo,
+	}, nil
 }
 
 func (r *repo) Upsert(ctx context.Context, conf *configurationpb.Configuration) (*configurationpb.Configuration, error) {

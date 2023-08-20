@@ -116,7 +116,7 @@
 
         <q-btn-dropdown flat label="Admin">
           <div class="row no-wrap q-pa-md">
-            <q-item clickable tag="a" to="/devices" class="mainmenu-item">
+            <q-item clickable tag="a" to="/admin/notifications" class="mainmenu-item">
               <q-item-section avatar>
                 <q-icon name="fa-solid fa-bell" />
               </q-item-section>
@@ -143,7 +143,7 @@
           </div>
           <div class="row no-wrap q-pa-md justify-end">
 
-            <q-item clickable tag="a" to="/devices/changes" class="mainmenu-item">
+            <q-item clickable tag="a" to="/admin" class="mainmenu-item">
               <q-item-section avatar>
                 <q-icon name="fa-solid fa-ellipsis" />
               </q-item-section>
@@ -157,7 +157,7 @@
         </q-btn-dropdown>
 
         <q-btn flat dense round icon="dark_mode" @click="toggleDarMode"/>
-        <NotificationsButton />
+        <NotificationsMainButton />
 
         <q-item-section avatar>
           <q-avatar>
@@ -176,13 +176,13 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import NotificationsButton from 'src/components/NotificationsButton.vue';
+import NotificationsMainButton from 'src/components/NotificationsMainButton.vue';
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    NotificationsButton,
+    NotificationsMainButton,
   },
 
   setup() {

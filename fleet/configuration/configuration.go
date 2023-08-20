@@ -82,6 +82,7 @@ func (c *config) Diff(ctx context.Context, params *configurationpb.DiffParameter
 	}
 
 	edits := myers.ComputeEdits(span.URIFromPath("device-config.cfg"), params.ConfigurationA, params.ConfigurationB)
+
 	diff := fmt.Sprint(gotextdiff.ToUnified(prevConfigName, newConfigName, params.ConfigurationA, edits))
 	return &configurationpb.DiffResponse{
 		Changes: diff,
@@ -95,9 +96,7 @@ func (c *config) List(ctx context.Context, params *configurationpb.ListParameter
 	if err != nil {
 		return nil, err
 	}
-	return &configurationpb.ListResponse{
-		Configurations: res,
-	}, nil
+	return res, nil
 }
 
 // Create a device configuration in the fleet (this is used to store the configuration of a device)

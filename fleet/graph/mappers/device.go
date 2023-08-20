@@ -137,8 +137,8 @@ func (d DeviceSchedule) ToGQL() *model.DeviceSchedule {
 		Interval:    d.Interval.AsDuration(),
 		Type:        DeviceScheduleType(d.Type).ToGQL(),
 		LastRun:     internal.TimestampPBToTimePointer(d.LastRun),
-		Active:      &d.Active,
-		FailedCount: internal.PointerInt64ToPointerInt(&d.FailedCount),
+		Active:      d.Active,
+		FailedCount: int(d.FailedCount),
 	}
 }
 

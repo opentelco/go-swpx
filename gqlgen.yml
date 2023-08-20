@@ -100,3 +100,17 @@ models:
         resolver: true
       changes:
         resolver: true
+      configurations:
+        resolver: true
+      stanzas:
+        resolver: true
+
+  Configuration:
+    fields:
+      device:
+        resolver: true
+
+  Stanza:
+    fields:
+      device:
+        resolver: true

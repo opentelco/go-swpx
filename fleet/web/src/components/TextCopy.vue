@@ -5,24 +5,42 @@ import { useQuasar, copyToClipboard } from 'quasar'
 
 const $q = useQuasar()
 
+let copied = ref(false)
 
 const props = defineProps<{
   text: string
+  toCopy?: string
+  noIcon?: boolean
 }>()
+
+// copy toCopy if defined else text
+const whatText = () => {
+  if (props.toCopy) {
+    return props.toCopy
+  } else {
+    return props.text
+  }
+}
 
 const copy = (text: string) => {
   copyToClipboard(text).then(() => {
-    $q.notify({
-      type: 'positive',
-      message: text + ' copied to clipboard',
-      icon: 'announcement'
-    })
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+      hover.value = false
+    }, 1000)
+
+    // $q.notify({
+    //   type: 'positive',
+    //   message: text + ' copied to clipboard',
+    //   icon: 'announcement'
+    // })
   }).catch(() => {
-    $q.notify({
-      type: 'negative',
-      message: text + ' copied to clipboard',
-      icon: 'announcement'
-    })
+    // $q.notify({
+    //   type: 'negative',
+    //   message: text + ' copied to clipboard',
+    //   icon: 'announcement'
+    // })
   })
 }
 
@@ -31,68 +49,55 @@ let hover = ref(false)
 </script>
 
 <template>
-  <div>
-    <div @mouseover="hover = true" @mouseleave="hover = false" @mousedown="copy(props.text)" class="hoverEffect cursor-pointer" :data-replace="props.text">
-      <span>{{ props.text }}</span>
-
-      <!-- <q-tooltip anchor="bottom middle" self="top middle">
-        <q-btn v-if="hover" dense flat round icon="content_copy" size="xs" /> Click to copy to clipboard
-      </q-tooltip> -->
-
+  <div @mouseover="hover = true" @mouseleave="hover = false" @mousedown="copy(whatText())"
+    class="hoverEffect cursor-pointer copyDiv" :data-replace="props.text">
+    <div class="">
+      <span>
+        {{ props.text }}
+      </span>
+      <q-icon v-if="hover && !noIcon && !copied" name="content_copy" class="q-ml-sm" />
+      <q-icon name="check" color="green" class="q-ml-sm" v-if="!noIcon && copied" />
     </div>
-
   </div>
 </template>
 
 <style>
-.hoverEffect {
-  overflow: hidden;
-  position: relative;
-  display: inline-block;
-  line-height: 1.5;
-}
-
-.hoverEffect::before,
-.hoverEffect::after {
- content: '';
+.floating {
   position: absolute;
-  width: 100%;
-  left: 0;
-}
-.hoverEffect::before {
-  background-color: #276c85;
-
-  height: 2px;
-  bottom: 0;
-  transform-origin: 100% 50%;
-  transform: scaleX(0);
-  transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
-}
-.hoverEffect::after {
-  content: attr(data-replace);
-  height: 100%;
-  top: 0;
-  transform-origin: 100% 50%;
-  transform: translate3d(200%, 0, 0);
-  transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
-  color: #276c85;
+  background-color: white;
+  border-radius: 5px;
+  padding: 5px;
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
+  animation: fadein 0.5s;
+  z-index: 1000;
 }
 
-.hoverEffect:hover::before {
-  content: "\E84E";
-  transform-origin: 0% 50%;
-  transform: scaleX(1);
-}
-.hoverEffect:hover::after {
-  transform: translate3d(0, 0, 0);
+.copyDiv {
+  width: fit-content;
+  overflow: auto;
+
 }
 
-.hoverEffect span {
-  display: inline-block;
-  transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
+.hoverEffect:hover {
+  animation: shake 0.5s;
 }
 
-.hoverEffect:hover span {
-  transform: translate3d(-200%, 0, 0);
+@keyframes shake {
+  0% {
+    transform: translateX(0)
+  }
+
+  25% {
+    transform: translateX(3px);
+  }
+
+
+  50% {
+    transform: translateX(-3px);
+  }
+
+  100% {
+    transform: translateX(0px);
+  }
 }
 </style>

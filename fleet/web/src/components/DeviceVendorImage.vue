@@ -24,7 +24,7 @@ const vendorImage = (vendor: string) => {
     case 'ubiquiti':
       return '~assets/vendor_ubiquiti.svg'
     case 'huawei':
-      return '~assets/vendor_huawei.svg'
+      return 'img/vendor/vendor_huawei.svg'
     case 'dell':
       return '~assets/vendor_dell.svg'
     case 'hp':
@@ -40,5 +40,8 @@ const vendorImage = (vendor: string) => {
 </script>
 
 <template>
-  <q-img class="rounded-borders" :src="vendorImage(props.vendor)" />
+  <q-img class="rounded-borders" :src="vendorImage(props.vendor)" fit="scale-down"/>
 </template>
+
+<style lang="sass">
+</style>

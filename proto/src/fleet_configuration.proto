@@ -26,6 +26,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/configuration
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "fleet_common.proto";
 
 package fleet.configuration;
 
@@ -68,13 +69,11 @@ message Configuration {
     // https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
     string changes = 4;
 
-
     // the checksum of the config (used to compare configs)
     string checksum = 5;
 
     // the timestamp when the configuration was created (fetched from the device)
     google.protobuf.Timestamp created = 6;
-
 }
 
 message GetByIDParameters {
@@ -94,9 +93,24 @@ message ListParameters {
     // the id of the device to list the configurations for
     string device_id = 1;
 
-    optional int64 limit = 3;
+    // created_after filters all configurations created after (or equal) to the set timestamp
+    optional google.protobuf.Timestamp created_after = 2;
 
-    optional int64 offset = 4;
+    // created_until filters all configuration to be created before the set timestamp
+    optional google.protobuf.Timestamp created_before = 3;
+
+    enum OrderBy {
+        ORDER_BY_NOT_SET = 0;
+        ORDER_BY_CREATED = 1;
+    }
+    repeated OrderBy order_by = 4;
+
+    // order descending is the default
+    optional bool order_asc = 5;
+
+    optional int64 limit = 6;
+
+    optional int64 offset = 7;
 }
 
 message CreateParameters {
@@ -139,8 +153,9 @@ message ListResponse {
 
     // the configurations for the device
     repeated Configuration configurations = 2;
-}
 
+    fleet.common.PageInfo page_info = 3;
+}
 
 message DiffParameters {
     // the configuration to compare to
@@ -159,5 +174,4 @@ message DiffParameters {
 message DiffResponse {
     // the diff between the configurations
     string changes = 1;
-
 }

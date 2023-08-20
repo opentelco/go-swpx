@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"git.liero.se/opentelco/go-swpx/fleet/graph/mappers"
 	"git.liero.se/opentelco/go-swpx/fleet/graph/model"
@@ -15,7 +14,11 @@ import (
 
 // MarkNotificationsAsRead is the resolver for the markNotificationsAsRead field.
 func (r *mutationResolver) MarkNotificationsAsRead(ctx context.Context, input model.MarkNotificationsAsReadParams) ([]*model.Notification, error) {
-	panic(fmt.Errorf("not implemented: MarkNotificationsAsRead - markNotificationsAsRead"))
+	res, err := r.notifications.MarkAsRead(ctx, input.ToProto())
+	if err != nil {
+		return nil, err
+	}
+	return mappers.Notifications(res.Notifications).ToGQL(), nil
 }
 
 // Device is the resolver for the device field.

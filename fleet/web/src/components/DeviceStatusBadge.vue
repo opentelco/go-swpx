@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { DeviceStatus } from '../gql/graphql'
+import { ref } from 'vue'
 
+let hover = ref(false)
 const props = defineProps<{
   status: DeviceStatus
 }>()
@@ -13,9 +15,9 @@ const props = defineProps<{
 const colorFromStatus = (status: DeviceStatus) => {
   switch (status) {
     case DeviceStatus.Reachable:
-      return { bg: 'green', fg: 'white' }
+      return { bg: 'primary', fg: 'white' }
     case DeviceStatus.Unreachable:
-      return { bg: 'red', fg: 'white' }
+      return { bg: 'negative', fg: 'white' }
     default:
       return { bg: 'grey', fg: 'white' }
   }
@@ -29,7 +31,7 @@ const colorFromStatus = (status: DeviceStatus) => {
 const statusIcon = (status: DeviceStatus) => {
   switch (status) {
     case DeviceStatus.Reachable:
-      return 'vital_signs'
+      return 'fa-solid fa-heart-pulse'
     case DeviceStatus.Unreachable:
       return 'remove_circle'
     default:
@@ -59,10 +61,15 @@ const statusTooltip = (status: DeviceStatus) => {
 </script>
 
 <template>
-  <q-chip size="sm" :color="colorFromStatus(props.status).bg" :text-color="colorFromStatus(props.status).fg" :icon="statusIcon(props.status)">
-    <q-tooltip class=" shadow-4" :offset="[10, 10]">
+  <div>
+    <q-chip size="sm" outline square :color="colorFromStatus(props.status).bg" :text-color="colorFromStatus(props.status).fg" :icon="statusIcon(props.status)">
+      {{ props.status }}
+      <q-tooltip class="shadow-4">
       {{ statusTooltip(props.status) }}
     </q-tooltip>
-    {{ props.status }}
-  </q-chip>
+    </q-chip>
+
+
+  </div>
+
 </template>

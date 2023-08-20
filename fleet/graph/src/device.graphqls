@@ -34,13 +34,17 @@ type Device {
   status: DeviceStatus!
 
   # 1-2 schedules on the device
-  schedules: [DeviceSchedule]
+  schedules: [DeviceSchedule!]
 
   # 1-X events on the device, paginated and not eager-loaded
   events(limit: Int, offset: Int): EventConnection!
 
   # 1-X changes on the device, paginated and not eager-loaded
   changes(limit: Int, offset: Int): ChangeConnection!
+
+  configurations(limit: Int, offset: Int): ConfigurationConnection!
+
+  stanzas(limit: Int, offset: Int): StanzaConnection!
 
   # last time collection was sucessful
   lastSeen: Timestamp
@@ -71,8 +75,8 @@ type DeviceSchedule {
   interval: Duration!
   type: ScheduleType!
   lastRun: Timestamp
-  active: Boolean
-  failedCount: Int
+  active: Boolean!
+  failedCount: Int!
 }
 
 enum ScheduleType {
@@ -90,8 +94,8 @@ input ListDevicesParams {
 }
 
 type ListDeviceResponse {
-  devices: [Device]
-  pageInfo: PageInfo
+  devices: [Device!]
+  pageInfo: PageInfo!
 }
 
 type DeviceEvent {
@@ -125,8 +129,18 @@ enum DeviceEventOutcome {
 
 
 type EventConnection {
-  events: [DeviceEvent]
-  pageInfo: PageInfo
+  events: [DeviceEvent!]
+  pageInfo: PageInfo!
+}
+
+type ConfigurationConnection {
+  configurations: [Configuration!]
+  pageInfo: PageInfo!
+}
+
+type StanzaConnection {
+  stanzas: [Stanza!]
+  pageInfo: PageInfo!
 }
 
 type DeviceChange {
@@ -138,6 +152,6 @@ type DeviceChange {
 }
 
 type ChangeConnection {
-  changes: [DeviceChange]
-  pageInfo: PageInfo
+  changes: [DeviceChange!]
+  pageInfo: PageInfo!
 }

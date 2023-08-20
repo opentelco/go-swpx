@@ -72,16 +72,31 @@ message ListRequest {
         INCLUDE_READ = 3;
     }
 
+    // after filters all notifications after (or equal) to the set timestamp
+    optional google.protobuf.Timestamp after = 4;
+
+    // before filters all notifications before (or equal) to the set timestamp
+    optional google.protobuf.Timestamp before = 5;
+
+    enum OrderBy {
+        ORDER_BY_NOT_SET = 0;
+        ORDER_BY_CREATED = 1;
+    }
+    repeated OrderBy order_by = 6;
+
+    // order descending is the default
+    optional bool order_asc = 7;
+
     // how many notifications to return (default 10)
-    optional int64 limit = 4;
+    optional int64 limit = 8;
 
     // offset to start from (default 0)
-    optional int64 offset = 5;
+    optional int64 offset = 9;
 }
 
 message ListResponse {
     repeated Notification notifications = 1;
-    fleet.common.PageInfo page_info = 2;
+    fleet.common.PageInfo page_info     = 2;
 }
 
 message CreateRequest {

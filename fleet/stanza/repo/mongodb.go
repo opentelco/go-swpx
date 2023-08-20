@@ -6,6 +6,7 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/database"
 	"git.liero.se/opentelco/go-swpx/fleet/stanza"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -86,6 +87,36 @@ func (r *repo) List(ctx context.Context, params *stanzapb.ListRequest) (*stanzap
 	if params.Offset != nil {
 		opts.SetSkip(*params.Offset)
 	}
+	if params.AppliedBefore != nil {
+		filter["applied_at"] = bson.M{"$lt": params.AppliedBefore}
+	}
+
+	if params.AppliedAfter != nil {
+		filter["applied_at"] = bson.M{"$gt": params.AppliedAfter}
+	}
+
+	var sort int = -1
+	orderBy := bson.M{}
+	if params.OrderAsc != nil {
+		if *params.OrderAsc {
+			sort = 1
+		}
+	}
+	// order by the the array of order_By
+	if params.OrderBy != nil {
+		for _, o := range params.OrderBy {
+			switch o {
+			case stanzapb.ListRequest_ORDER_BY_CREATED:
+				orderBy["created"] = sort
+			case stanzapb.ListRequest_ORDER_BY_APPLIED:
+				orderBy["applied_at"] = sort
+			}
+
+		}
+	} else {
+		orderBy["created"] = sort
+	}
+	opts.SetSort(orderBy)
 
 	var stanzas []*stanzapb.Stanza
 	cur, err := r.stanzaCollection.Find(ctx, filter, opts)
@@ -102,13 +133,23 @@ func (r *repo) List(ctx context.Context, params *stanzapb.ListRequest) (*stanzap
 		stanzas = append(stanzas, &stanza)
 	}
 	if err := cur.Err(); err != nil {
-
+		return nil, err
+	}
+	totalCount, err := r.stanzaCollection.CountDocuments(ctx, filter)
+	if err != nil {
 		return nil, err
 	}
 
+	pageInfo := &commonpb.PageInfo{
+		Count:  int64(len(stanzas)),
+		Offset: params.Offset,
+		Limit:  params.Limit,
+		Total:  totalCount,
+	}
+
 	resp := &stanzapb.ListResponse{
-		Stanzas: stanzas,
-		Total:   int64(len(stanzas)),
+		Stanzas:  stanzas,
+		PageInfo: pageInfo,
 	}
 	return resp, nil
 }

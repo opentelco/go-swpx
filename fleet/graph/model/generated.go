@@ -11,29 +11,45 @@ import (
 
 type ChangeConnection struct {
 	Changes  []*DeviceChange `json:"changes,omitempty"`
-	PageInfo *PageInfo       `json:"pageInfo,omitempty"`
+	PageInfo *PageInfo       `json:"pageInfo"`
+}
+
+type Configuration struct {
+	ID            string    `json:"id"`
+	Device        *Device   `json:"device,omitempty"`
+	Configuration *string   `json:"configuration,omitempty"`
+	Changes       *string   `json:"changes,omitempty"`
+	Checksum      *string   `json:"checksum,omitempty"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
+type ConfigurationConnection struct {
+	Configurations []*Configuration `json:"configurations,omitempty"`
+	PageInfo       *PageInfo        `json:"pageInfo"`
 }
 
 type Device struct {
-	ID                   string            `json:"id"`
-	Hostname             *string           `json:"hostname,omitempty"`
-	Domain               *string           `json:"domain,omitempty"`
-	ManagementIP         *string           `json:"managementIp,omitempty"`
-	SerialNumber         *string           `json:"serialNumber,omitempty"`
-	Model                *string           `json:"model,omitempty"`
-	Version              *string           `json:"version,omitempty"`
-	NetworkRegion        *string           `json:"networkRegion,omitempty"`
-	PollerResourcePlugin *string           `json:"pollerResourcePlugin,omitempty"`
-	PollerProviderPlugin *string           `json:"pollerProviderPlugin,omitempty"`
-	State                DeviceState       `json:"state"`
-	Status               DeviceStatus      `json:"status"`
-	Schedules            []*DeviceSchedule `json:"schedules,omitempty"`
-	Events               *EventConnection  `json:"events"`
-	Changes              *ChangeConnection `json:"changes"`
-	LastSeen             *time.Time        `json:"lastSeen,omitempty"`
-	CreatedAt            time.Time         `json:"createdAt"`
-	UpdatedAt            time.Time         `json:"updatedAt"`
-	LastReboot           *time.Time        `json:"lastReboot,omitempty"`
+	ID                   string                   `json:"id"`
+	Hostname             *string                  `json:"hostname,omitempty"`
+	Domain               *string                  `json:"domain,omitempty"`
+	ManagementIP         *string                  `json:"managementIp,omitempty"`
+	SerialNumber         *string                  `json:"serialNumber,omitempty"`
+	Model                *string                  `json:"model,omitempty"`
+	Version              *string                  `json:"version,omitempty"`
+	NetworkRegion        *string                  `json:"networkRegion,omitempty"`
+	PollerResourcePlugin *string                  `json:"pollerResourcePlugin,omitempty"`
+	PollerProviderPlugin *string                  `json:"pollerProviderPlugin,omitempty"`
+	State                DeviceState              `json:"state"`
+	Status               DeviceStatus             `json:"status"`
+	Schedules            []*DeviceSchedule        `json:"schedules,omitempty"`
+	Events               *EventConnection         `json:"events"`
+	Changes              *ChangeConnection        `json:"changes"`
+	Configurations       *ConfigurationConnection `json:"configurations"`
+	Stanzas              *StanzaConnection        `json:"stanzas"`
+	LastSeen             *time.Time               `json:"lastSeen,omitempty"`
+	CreatedAt            time.Time                `json:"createdAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
+	LastReboot           *time.Time               `json:"lastReboot,omitempty"`
 }
 
 type DeviceChange struct {
@@ -57,18 +73,18 @@ type DeviceSchedule struct {
 	Interval    time.Duration `json:"interval"`
 	Type        ScheduleType  `json:"type"`
 	LastRun     *time.Time    `json:"lastRun,omitempty"`
-	Active      *bool         `json:"active,omitempty"`
-	FailedCount *int          `json:"failedCount,omitempty"`
+	Active      bool          `json:"active"`
+	FailedCount int           `json:"failedCount"`
 }
 
 type EventConnection struct {
 	Events   []*DeviceEvent `json:"events,omitempty"`
-	PageInfo *PageInfo      `json:"pageInfo,omitempty"`
+	PageInfo *PageInfo      `json:"pageInfo"`
 }
 
 type ListDeviceResponse struct {
 	Devices  []*Device `json:"devices,omitempty"`
-	PageInfo *PageInfo `json:"pageInfo,omitempty"`
+	PageInfo *PageInfo `json:"pageInfo"`
 }
 
 type ListDevicesParams struct {
@@ -82,17 +98,19 @@ type ListDevicesParams struct {
 type ListNotificationsParams struct {
 	ResourceIds []string                 `json:"resource_ids,omitempty"`
 	Filter      []ListNotificationFilter `json:"filter,omitempty"`
+	StartTime   *time.Time               `json:"start_time,omitempty"`
+	EndTime     *time.Time               `json:"end_time,omitempty"`
 	Limit       *int                     `json:"limit,omitempty"`
 	Offset      *int                     `json:"offset,omitempty"`
 }
 
 type ListNotificationsResponse struct {
-	Notifications []*Notification `json:"notifications,omitempty"`
+	Notifications []*Notification `json:"notifications"`
 	PageInfo      *PageInfo       `json:"pageInfo"`
 }
 
 type MarkNotificationsAsReadParams struct {
-	Ids []*string `json:"ids,omitempty"`
+	Ids []string `json:"ids"`
 }
 
 type Notification struct {
@@ -110,6 +128,26 @@ type PageInfo struct {
 	Offset *int `json:"offset,omitempty"`
 	Total  *int `json:"total,omitempty"`
 	Count  *int `json:"count,omitempty"`
+}
+
+type Stanza struct {
+	ID             string    `json:"id"`
+	Name           *string   `json:"name,omitempty"`
+	Description    *string   `json:"description,omitempty"`
+	Template       *string   `json:"template,omitempty"`
+	Content        *string   `json:"content,omitempty"`
+	RevertTemplate *string   `json:"revert_template,omitempty"`
+	RevertContent  *string   `json:"revert_content,omitempty"`
+	DeviceType     *string   `json:"device_type,omitempty"`
+	Device         *Device   `json:"device,omitempty"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	CreatedAt      time.Time `json:"createdAt"`
+	AppliedAt      time.Time `json:"appliedAt"`
+}
+
+type StanzaConnection struct {
+	Stanzas  []*Stanza `json:"stanzas,omitempty"`
+	PageInfo *PageInfo `json:"pageInfo"`
 }
 
 type DeviceEventAction string

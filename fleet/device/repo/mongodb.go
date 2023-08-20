@@ -132,6 +132,34 @@ func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesPara
 	options.Limit = params.Limit
 	options.Skip = params.Offset
 
+	if params.Before != nil {
+		filter["created"] = bson.M{"$lt": params.Before}
+	}
+
+	if params.After != nil {
+		filter["created"] = bson.M{"$gt": params.After}
+	}
+
+	var sort int = -1
+	orderBy := bson.M{}
+	if params.OrderAsc != nil {
+		if *params.OrderAsc {
+			sort = 1
+		}
+	}
+	// order by the the array of order_By
+	if params.OrderBy != nil {
+		for _, o := range params.OrderBy {
+			switch o {
+			case devicepb.ListChangesParameters_ORDER_BY_CREATED:
+				orderBy["created"] = sort
+			}
+		}
+	} else {
+		orderBy["created"] = sort
+	}
+	options.SetSort(orderBy)
+
 	var changes []*devicepb.Change
 	cur, err := r.changesCollection.Find(ctx, filter, options)
 	if err != nil {
@@ -223,6 +251,26 @@ func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParame
 	options := options.Find()
 	options.Limit = params.Limit
 	options.Skip = params.Offset
+
+	var sort int = -1
+	orderBy := bson.M{}
+	if params.OrderAsc != nil {
+		if *params.OrderAsc {
+			sort = 1
+		}
+	}
+	// order by the the array of order_By
+	if params.OrderBy != nil {
+		for _, o := range params.OrderBy {
+			switch o {
+			case devicepb.ListEventsParameters_ORDER_BY_CREATED:
+				orderBy["created"] = sort
+			}
+		}
+	} else {
+		orderBy["created"] = sort
+	}
+	options.SetSort(orderBy)
 
 	var events []*devicepb.Event
 	cur, err := r.eventsCollection.Find(ctx, filter, options)
@@ -322,6 +370,31 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) (*devi
 
 	options.Limit = params.Limit
 	options.Skip = params.Offset
+
+	var sort int = -1
+	orderBy := bson.M{}
+	if params.OrderAsc != nil {
+		if *params.OrderAsc {
+			sort = 1
+		}
+	}
+	// order by the the array of order_By
+	if params.OrderBy != nil {
+		for _, o := range params.OrderBy {
+			switch o {
+			case devicepb.ListParameters_ORDER_BY_CREATED:
+				orderBy["created"] = sort
+			case devicepb.ListParameters_ORDER_BY_LAST_SEEN:
+				orderBy["last_seen"] = sort
+			case devicepb.ListParameters_ORDER_BY_UPDATED:
+				orderBy["updated"] = sort
+			}
+
+		}
+	} else {
+		orderBy["created"] = sort
+	}
+	options.SetSort(orderBy)
 
 	var devices []*devicepb.Device
 	cur, err := r.deviceCollection.Find(ctx, filter, options)

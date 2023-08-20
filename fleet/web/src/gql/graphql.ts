@@ -19,13 +19,30 @@ export type Scalars = {
 
 export type ChangeConnection = {
   __typename?: 'ChangeConnection';
-  changes?: Maybe<Array<Maybe<DeviceChange>>>;
-  pageInfo?: Maybe<PageInfo>;
+  changes?: Maybe<Array<DeviceChange>>;
+  pageInfo: PageInfo;
+};
+
+export type Configuration = {
+  __typename?: 'Configuration';
+  changes?: Maybe<Scalars['String']['output']>;
+  checksum?: Maybe<Scalars['String']['output']>;
+  configuration?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Timestamp']['output'];
+  device?: Maybe<Device>;
+  id: Scalars['ID']['output'];
+};
+
+export type ConfigurationConnection = {
+  __typename?: 'ConfigurationConnection';
+  configurations?: Maybe<Array<Configuration>>;
+  pageInfo: PageInfo;
 };
 
 export type Device = {
   __typename?: 'Device';
   changes: ChangeConnection;
+  configurations: ConfigurationConnection;
   createdAt: Scalars['Timestamp']['output'];
   domain?: Maybe<Scalars['String']['output']>;
   events: EventConnection;
@@ -38,8 +55,9 @@ export type Device = {
   networkRegion?: Maybe<Scalars['String']['output']>;
   pollerProviderPlugin?: Maybe<Scalars['String']['output']>;
   pollerResourcePlugin?: Maybe<Scalars['String']['output']>;
-  schedules?: Maybe<Array<Maybe<DeviceSchedule>>>;
+  schedules?: Maybe<Array<DeviceSchedule>>;
   serialNumber?: Maybe<Scalars['String']['output']>;
+  stanzas: StanzaConnection;
   state: DeviceState;
   status: DeviceStatus;
   updatedAt: Scalars['Timestamp']['output'];
@@ -53,7 +71,19 @@ export type DeviceChangesArgs = {
 };
 
 
+export type DeviceConfigurationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type DeviceEventsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type DeviceStanzasArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -99,8 +129,8 @@ export enum DeviceEventType {
 
 export type DeviceSchedule = {
   __typename?: 'DeviceSchedule';
-  active?: Maybe<Scalars['Boolean']['output']>;
-  failedCount?: Maybe<Scalars['Int']['output']>;
+  active: Scalars['Boolean']['output'];
+  failedCount: Scalars['Int']['output'];
   interval: Scalars['Duration']['output'];
   lastRun?: Maybe<Scalars['Timestamp']['output']>;
   type: ScheduleType;
@@ -123,14 +153,14 @@ export enum DeviceStatus {
 
 export type EventConnection = {
   __typename?: 'EventConnection';
-  events?: Maybe<Array<Maybe<DeviceEvent>>>;
-  pageInfo?: Maybe<PageInfo>;
+  events?: Maybe<Array<DeviceEvent>>;
+  pageInfo: PageInfo;
 };
 
 export type ListDeviceResponse = {
   __typename?: 'ListDeviceResponse';
-  devices?: Maybe<Array<Maybe<Device>>>;
-  pageInfo?: Maybe<PageInfo>;
+  devices?: Maybe<Array<Device>>;
+  pageInfo: PageInfo;
 };
 
 export type ListDevicesParams = {
@@ -156,12 +186,12 @@ export type ListNotificationsParams = {
 
 export type ListNotificationsResponse = {
   __typename?: 'ListNotificationsResponse';
-  notifications?: Maybe<Array<Maybe<Notification>>>;
+  notifications: Array<Notification>;
   pageInfo: PageInfo;
 };
 
 export type MarkNotificationsAsReadParams = {
-  ids?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type Mutation = {
@@ -226,3 +256,25 @@ export enum ScheduleType {
   Device = 'DEVICE',
   NotSet = 'NOT_SET'
 }
+
+export type Stanza = {
+  __typename?: 'Stanza';
+  appliedAt: Scalars['Timestamp']['output'];
+  content?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Timestamp']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  device?: Maybe<Device>;
+  device_type?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  revert_content?: Maybe<Scalars['String']['output']>;
+  revert_template?: Maybe<Scalars['String']['output']>;
+  template?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Timestamp']['output'];
+};
+
+export type StanzaConnection = {
+  __typename?: 'StanzaConnection';
+  pageInfo: PageInfo;
+  stanzas?: Maybe<Array<Stanza>>;
+};

@@ -10,7 +10,9 @@ import (
 	"git.liero.se/opentelco/go-swpx/fleet/graph/mappers"
 	"git.liero.se/opentelco/go-swpx/fleet/graph/model"
 	"git.liero.se/opentelco/go-swpx/fleet/internal"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 )
 
 // Events is the resolver for the events field.
@@ -45,6 +47,38 @@ func (r *deviceResolver) Changes(ctx context.Context, obj *model.Device, limit *
 		PageInfo: mappers.PageInfo{res.PageInfo}.ToGQL(),
 	}
 	return result, nil
+}
+
+// Configurations is the resolver for the configurations field.
+func (r *deviceResolver) Configurations(ctx context.Context, obj *model.Device, limit *int, offset *int) (*model.ConfigurationConnection, error) {
+	res, err := r.configurations.List(ctx, &configurationpb.ListParameters{
+		DeviceId: obj.ID,
+		Limit:    internal.PointerIntToPointerInt64(limit),
+		Offset:   internal.PointerIntToPointerInt64(offset),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &model.ConfigurationConnection{
+		Configurations: mappers.Configurations(res.Configurations).ToGQL(),
+		PageInfo:       mappers.PageInfo{res.PageInfo}.ToGQL(),
+	}, nil
+}
+
+// Stanzas is the resolver for the stanzas field.
+func (r *deviceResolver) Stanzas(ctx context.Context, obj *model.Device, limit *int, offset *int) (*model.StanzaConnection, error) {
+	res, err := r.stanzas.List(ctx, &stanzapb.ListRequest{
+		DeviceId: &obj.ID,
+		Limit:    internal.PointerIntToPointerInt64(limit),
+		Offset:   internal.PointerIntToPointerInt64(offset),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &model.StanzaConnection{
+		Stanzas:  mappers.Stanzas(res.Stanzas).ToGQL(),
+		PageInfo: mappers.PageInfo{res.PageInfo}.ToGQL(),
+	}, nil
 }
 
 // Device returns DeviceResolver implementation.

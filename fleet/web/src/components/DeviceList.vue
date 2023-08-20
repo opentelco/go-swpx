@@ -1,14 +1,15 @@
 
 <template>
-  <div>
-    <q-banner inline-actions class="text-white bg-red" v-if="error">
-      Could not fetch devices: {{ error }}
-    </q-banner>
-    <div class="q-pa-md">
-      <q-table :grid="grid" flat bordered title="Devices" v-if="result" :rows="result?.devices?.devices" :columns="columns"
-        row-key="name" :filter="filter" :loading="loading">
-        <template v-slot:top-right>
+  <q-banner inline-actions class="text-white bg-red" v-if="error">
+    Could not fetch devices: {{ error }}
+  </q-banner>
 
+  <div class="q-pa-md">
+    <div class="text-h4 q-pa-md">Devices</div>
+    <q-card class="shadow-2 card">
+      <q-table :grid="grid" flat bordered :rows="data" :columns="columns" row-key="name"
+        :filter="filter" :loading="loading">
+        <template v-slot:top-right>
           <q-input debounce="300" v-model="filter" outlined rounded input-class="text-right"
             class="q-ml-md q-pr-lg search-input">
             <template v-slot:append>
@@ -17,7 +18,7 @@
             </template>
           </q-input>
 
-          <q-btn round color="primary" @click="grid = !grid">
+          <q-btn round color="primary" @click="grid = !grid" size="sm">
             <q-icon name="table_rows" v-if="grid" />
             <q-icon name="dashboard" v-else />
           </q-btn>
@@ -26,73 +27,126 @@
 
 
         <template v-slot:item="props">
-          <div class="q-pa-xs col-xs-12 col-sm-6 col-md-4">
-            <q-card class="my-card" bordered>
+          <div class="q-pa-lg col-sm-12 col-md-6 col-lg-4 col-xl-3">
+            <q-card class="card shadow-3">
+              <q-item>
+                <q-item-section class="col-3 vendor-avatar">
+                  <DeviceVendorImage vendor="huawei"/>
+                </q-item-section>
+
+
+
+                <q-item-section>
+                  <q-item-label>
+
+                  </q-item-label>
+                  <q-item-label class="text-weight-medium">
+                    <TextCopy :text="props.row.hostname" />
+                    </q-item-label>
+                  <q-item-label caption>
+                    <TextCopy :text="props.row.managementIp" />
+                  </q-item-label>
+
+                </q-item-section>
+                <DeviceStateBadge :state="props.row.state" />
+                <DeviceStatusBadge :status="props.row.status" />
+              </q-item>
+
+
+              <q-separator class="q-mt-sm q-mb-sm" />
+
+
+
               <q-card-section horizontal>
-                <q-card-section class="q-pt-xs">
-
-                  <div class="q-pt-sm">
-                    <DeviceStateBadge :state="props.row.state" class="" />
-                    <DeviceStatusBadge :status="props.row.status" />
-                  </div>
-
-                  <div class="text-h5 q-mt-sm q-mb-xs">{{ props.row.hostname }}</div>
+                <q-card-section class="q-pt-xs col-8">
                   <q-list>
-                    <q-item>
+                    <q-item v-if="props.row.lastSeen != ''">
                       <q-item-section avatar>
-                        <q-icon color="primary" name="public" />
+                        <q-icon color="primary" name="timer" />
                       </q-item-section>
-
                       <q-item-section>
-                        <q-item-label>Management IP</q-item-label>
+                        <q-item-label class="text-weight-medium">Last Seen</q-item-label>
                         <q-item-label caption>
-                          <TextCopy :text="props.row.managementIp" />
+                          {{ props.row.lastSeen }}
                         </q-item-label>
                       </q-item-section>
-
                     </q-item>
 
-                    <q-item>
+                    <q-item v-if="props.row.lastReboot != ''">
+                      <q-item-section avatar>
+                        <q-icon color="primary" name="restart_alt" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">Last Reboot</q-item-label>
+                        <q-item-label caption>
+                          {{ props.row.lastReboot }}
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+
+                    <q-item v-if="props.row.networkRegion != ''">
                       <q-item-section avatar>
                         <q-icon color="primary" name="hub" />
                       </q-item-section>
                       <q-item-section>
-                        <q-item-label>Network Region</q-item-label>
+                        <q-item-label class="text-weight-medium">Network Region</q-item-label>
                         <q-item-label caption>
                           <TextCopy :text="props.row.networkRegion" />
                         </q-item-label>
                       </q-item-section>
-
                     </q-item>
-
-
+                    <q-item v-if="props.row.model != ''">
+                      <q-item-section avatar>
+                        <q-icon color="primary" name="tag" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">Model</q-item-label>
+                        <q-item-label caption>
+                          <TextCopy :text="props.row.model" />
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item v-if="props.row.version != ''">
+                      <q-item-section avatar>
+                        <q-icon color="primary" name="class" />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">Version</q-item-label>
+                        <q-item-label caption lines="2">
+                          <TextCopy :text="props.row.version" />
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
                   </q-list>
-
-                  <div class="text-caption text-grey">
-                  </div>
                 </q-card-section>
 
-                <q-card-section class="col-5 flex flex-center">
-                  <DeviceVendorImage :vendor="props.row.model" />
+                <q-separator vertical v-if="props.row.loading"/>
+                <q-card-section class="col-4 items-center q-pa-xl" v-if="props.row.loading">
+                  <q-item-label caption class="q-mb-sm">
+                    Getting data from device...
+                  </q-item-label>
+                  <q-spinner-ios color="primary" size="50px" />
                 </q-card-section>
               </q-card-section>
 
+
+
               <q-separator />
-
-              <q-card-actions >
-                <q-btn flat icon="fa-solid fa-file-code" class="q-mr-md">
-                  Collect Config
+              <q-card-actions>
+                <q-btn flat icon="fa-solid fa-file-code">
+                  <q-tooltip class="shadow-4">Collect configuration from device</q-tooltip>
                 </q-btn>
-
                 <q-btn flat icon="query_stats">
-                  Discover
+                  <q-tooltip class="shadow-4">Collect information about device</q-tooltip>
                 </q-btn>
+
                 <q-space />
-                <q-btn flat icon="fa-solid fa-square-up-right">
-                  Open
+                <q-btn flat icon="fa-solid fa-square-up-right" :to="'/devices/' + props.row.id">
+                  <q-tooltip class="shadow-4">Open device to see details</q-tooltip>
                 </q-btn>
               </q-card-actions>
             </q-card>
+
           </div>
         </template>
 
@@ -106,22 +160,24 @@
         </template>
 
       </q-table>
-    </div>
+    </q-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { ListDeviceResponse } from '../gql/graphql'
+import { Device, ListDeviceResponse } from '../gql/graphql'
 import DeviceStateBadge from './DeviceStateBadge.vue'
 import DeviceStatusBadge from './DeviceStatusBadge.vue'
 import TextCopy from './TextCopy.vue'
 import DeviceVendorImage from './DeviceVendorImage.vue'
 
 let grid = ref(true)
+
+
 
 const columns: Array<any> = [
   {
@@ -135,16 +191,15 @@ const columns: Array<any> = [
   { name: 'managementIp', align: 'center', label: 'Management IP', field: 'managementIp', sortable: true },
 ]
 
-let searchInput = ref('')
 let filter = ref('')
 
+// remap the response so it matches the response
+type response = {
+  devices: ListDeviceResponse
+}
 
-const onInput = (event) => {
-  // Handle any immediate input logic here if needed
-  console.log('Immediate input handling:', event.target.value);
-};
 
-const { result, loading, error } = useQuery<ListDeviceResponse>(gql`
+const { result, loading, error } = useQuery<response>(gql`
   query Devices ($limit: Int!,  $search: String!){
     devices(params: { limit: $limit, search: $search } ) {
         pageInfo {
@@ -174,18 +229,37 @@ const { result, loading, error } = useQuery<ListDeviceResponse>(gql`
     }
 `, {
   limit: 10,
-  search: searchInput
+  search: filter
+})
+
+
+interface CardDevice extends Device {
+  loading: boolean;
+}
+
+const data = computed(() => {
+  if (result.value && result.value.devices) {
+    return result.value.devices.devices.map((device: CardDevice) => {
+      const x = Math.floor(Math.random() * 2)
+      return {
+        ...device,
+        loading: x,
+      }
+    })
+  }
+  return []
 })
 
 </script>
 
 <style lang="sass" scoped>
 .search-input
-  width: 300px
+  width: 350px
 
-.my-card
+.card
+  padding: 10px
   width: 100%
-  max-width: 500px
-  border-bottom-color: rgb(82, 84, 196)
-
+  border-radius: 15px
+.vendor-avatar
+  max-height: 80px
 </style>

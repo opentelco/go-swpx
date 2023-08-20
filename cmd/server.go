@@ -196,7 +196,7 @@ var StartCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			resolvers := graph.NewResolver(deviceService, notificationService)
+			resolvers := graph.NewResolver(deviceService, notificationService, stanzaService, configService)
 			err = graph.Serve(listner, resolvers, logger)
 			if err != nil {
 				cmd.PrintErr(err)
@@ -206,6 +206,7 @@ var StartCmd = &cobra.Command{
 		}()
 
 		// GRPC Core
+		logger.Info("starting grpc listner", "address", appConfig.GrpcAddr)
 		lis, err := net.Listen("tcp", appConfig.GrpcAddr)
 		if err != nil {
 			cmd.PrintErrf("failed to listen: %s", err)
@@ -223,6 +224,7 @@ var StartCmd = &cobra.Command{
 		stanza.NewGRPC(stanzaService, grpcServer)
 
 		go func() {
+			logger.Debug("serve grpc server", "address", appConfig.GrpcAddr)
 			err = grpcServer.Serve(lis)
 			if err != nil {
 				cmd.PrintErr(err)

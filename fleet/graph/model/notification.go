@@ -48,3 +48,9 @@ func (f ListNotificationFilter) ToProto() notificationpb.ListRequest_Filter {
 	}
 	return notificationpb.ListRequest_LIST_REQUEST_FILTER_UNSET
 }
+
+func (p MarkNotificationsAsReadParams) ToProto() *notificationpb.MarkAsReadRequest {
+	return &notificationpb.MarkAsReadRequest{
+		Ids: p.Ids,
+	}
+}

@@ -25,6 +25,9 @@ input ListNotificationsParams {
     # The resource types to filter by or read/unread
     filter: [ListNotificationFilter!]
 
+    start_time: Timestamp
+    end_time: Timestamp
+
     # The number of notifications to return
     limit: Int
 
@@ -39,11 +42,11 @@ enum ListNotificationFilter {
 }
 
 type ListNotificationsResponse {
-    notifications: [Notification]
+    notifications: [Notification!]!
     pageInfo: PageInfo!
 }
 
 input MarkNotificationsAsReadParams {
     # ids of the notifications to mark as read
-    ids: [ID]
+    ids: [ID!]!
 }

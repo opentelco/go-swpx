@@ -27,6 +27,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb";
 import "stanza.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "fleet_common.proto";
 
 package fleet.stanza;
 
@@ -101,7 +102,6 @@ service StanzaService {
     // Revert a stanza that has been applied to a device, this will use the revert_content in the stanza to revert the configuration
     // written to the device. If no revert_content is set the stanza will not be reverted and revert will return an error and the stanza
     rpc Revert(RevertRequest) returns (RevertResponse);
-
 }
 
 message CreateRequest {
@@ -139,16 +139,32 @@ message ListRequest {
         FILTER_NOT_APPLIED = 2;
     }
 
+    // after filters all stanzas after (or equal) to the set timestap
+    optional google.protobuf.Timestamp applied_after = 4;
+
+    // before filters all stanzas before (or equal) to the set timestamp
+    optional google.protobuf.Timestamp applied_before = 5;
+
+    enum OrderBy {
+        ORDER_BY_NOT_SET = 0;
+        ORDER_BY_CREATED = 1;
+        ORDER_BY_APPLIED = 2;
+    }
+    repeated OrderBy order_by = 6;
+
+    // order descending is the default
+    optional bool order_asc = 7;
+
     // the maximum number of stanzas to return
-    optional int64 limit = 4;
+    optional int64 limit = 8;
 
     // the offset to start from when returning stanzas
-    optional int64 offset = 5;
+    optional int64 offset = 9;
 }
 
 message ListResponse {
-    repeated Stanza stanzas = 1;
-    int64 total             = 2;
+    repeated Stanza stanzas         = 1;
+    fleet.common.PageInfo page_info = 3;
 }
 
 message UpdateRequest {
@@ -235,15 +251,12 @@ message ValidateResponse {
     string revert_content = 3;
 }
 
-
 message SetAppliedRequest {
     // the id of the stanza to be set as applied
     string id = 1;
 
     google.protobuf.Timestamp applied_at = 2;
 }
-
-
 
 enum TaskQueue {
     TASK_QUEUE_FLEET_STANZA = 0;
