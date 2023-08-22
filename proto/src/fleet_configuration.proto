@@ -91,7 +91,7 @@ message CompareParameters {
 
 message ListParameters {
     // the id of the device to list the configurations for
-    string device_id = 1;
+    optional string device_id = 1;
 
     // created_after filters all configurations created after (or equal) to the set timestamp
     optional google.protobuf.Timestamp created_after = 2;

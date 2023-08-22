@@ -94,6 +94,7 @@ type ComplexityRoot struct {
 
 	DeviceChange struct {
 		CreatedAt func(childComplexity int) int
+		DeviceID  func(childComplexity int) int
 		Field     func(childComplexity int) int
 		ID        func(childComplexity int) int
 		NewValue  func(childComplexity int) int
@@ -103,6 +104,7 @@ type ComplexityRoot struct {
 	DeviceEvent struct {
 		Action    func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
+		DeviceID  func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Message   func(childComplexity int) int
 		Outcome   func(childComplexity int) int
@@ -118,6 +120,21 @@ type ComplexityRoot struct {
 	}
 
 	EventConnection struct {
+		Events   func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	ListConfigurationsResponse struct {
+		Configurations func(childComplexity int) int
+		PageInfo       func(childComplexity int) int
+	}
+
+	ListDeviceChangesResponse struct {
+		Changes  func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	ListDeviceEventsResponse struct {
 		Events   func(childComplexity int) int
 		PageInfo func(childComplexity int) int
 	}
@@ -154,9 +171,14 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Device        func(childComplexity int, id string) int
-		Devices       func(childComplexity int, params *model.ListDevicesParams) int
-		Notifications func(childComplexity int, params *model.ListNotificationsParams) int
+		Configuration  func(childComplexity int, id string) int
+		Configurations func(childComplexity int, params *model.ListConfigurationsParams) int
+		Device         func(childComplexity int, id string) int
+		DeviceChanges  func(childComplexity int, params *model.ListDeviceChangesParams) int
+		DeviceEvents   func(childComplexity int, params *model.ListDeviceEventsParams) int
+		Devices        func(childComplexity int, params *model.ListDevicesParams) int
+		Notification   func(childComplexity int, id string) int
+		Notifications  func(childComplexity int, params *model.ListNotificationsParams) int
 	}
 
 	Stanza struct {
@@ -195,7 +217,12 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Device(ctx context.Context, id string) (*model.Device, error)
 	Devices(ctx context.Context, params *model.ListDevicesParams) (*model.ListDeviceResponse, error)
+	DeviceChanges(ctx context.Context, params *model.ListDeviceChangesParams) (*model.ListDeviceChangesResponse, error)
+	DeviceEvents(ctx context.Context, params *model.ListDeviceEventsParams) (*model.ListDeviceEventsResponse, error)
 	Notifications(ctx context.Context, params *model.ListNotificationsParams) (*model.ListNotificationsResponse, error)
+	Notification(ctx context.Context, id string) (*model.Notification, error)
+	Configurations(ctx context.Context, params *model.ListConfigurationsParams) (*model.ListConfigurationsResponse, error)
+	Configuration(ctx context.Context, id string) (*model.Configuration, error)
 }
 type StanzaResolver interface {
 	Device(ctx context.Context, obj *model.Stanza) (*model.Device, error)
@@ -460,6 +487,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DeviceChange.CreatedAt(childComplexity), true
 
+	case "DeviceChange.deviceId":
+		if e.complexity.DeviceChange.DeviceID == nil {
+			break
+		}
+
+		return e.complexity.DeviceChange.DeviceID(childComplexity), true
+
 	case "DeviceChange.field":
 		if e.complexity.DeviceChange.Field == nil {
 			break
@@ -501,6 +535,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DeviceEvent.CreatedAt(childComplexity), true
+
+	case "DeviceEvent.deviceId":
+		if e.complexity.DeviceEvent.DeviceID == nil {
+			break
+		}
+
+		return e.complexity.DeviceEvent.DeviceID(childComplexity), true
 
 	case "DeviceEvent.id":
 		if e.complexity.DeviceEvent.ID == nil {
@@ -578,6 +619,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EventConnection.PageInfo(childComplexity), true
+
+	case "ListConfigurationsResponse.configurations":
+		if e.complexity.ListConfigurationsResponse.Configurations == nil {
+			break
+		}
+
+		return e.complexity.ListConfigurationsResponse.Configurations(childComplexity), true
+
+	case "ListConfigurationsResponse.pageInfo":
+		if e.complexity.ListConfigurationsResponse.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.ListConfigurationsResponse.PageInfo(childComplexity), true
+
+	case "ListDeviceChangesResponse.changes":
+		if e.complexity.ListDeviceChangesResponse.Changes == nil {
+			break
+		}
+
+		return e.complexity.ListDeviceChangesResponse.Changes(childComplexity), true
+
+	case "ListDeviceChangesResponse.pageInfo":
+		if e.complexity.ListDeviceChangesResponse.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.ListDeviceChangesResponse.PageInfo(childComplexity), true
+
+	case "ListDeviceEventsResponse.events":
+		if e.complexity.ListDeviceEventsResponse.Events == nil {
+			break
+		}
+
+		return e.complexity.ListDeviceEventsResponse.Events(childComplexity), true
+
+	case "ListDeviceEventsResponse.pageInfo":
+		if e.complexity.ListDeviceEventsResponse.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.ListDeviceEventsResponse.PageInfo(childComplexity), true
 
 	case "ListDeviceResponse.devices":
 		if e.complexity.ListDeviceResponse.Devices == nil {
@@ -696,6 +779,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PageInfo.Total(childComplexity), true
 
+	case "Query.configuration":
+		if e.complexity.Query.Configuration == nil {
+			break
+		}
+
+		args, err := ec.field_Query_configuration_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Configuration(childComplexity, args["id"].(string)), true
+
+	case "Query.configurations":
+		if e.complexity.Query.Configurations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_configurations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Configurations(childComplexity, args["params"].(*model.ListConfigurationsParams)), true
+
 	case "Query.device":
 		if e.complexity.Query.Device == nil {
 			break
@@ -708,6 +815,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Device(childComplexity, args["id"].(string)), true
 
+	case "Query.deviceChanges":
+		if e.complexity.Query.DeviceChanges == nil {
+			break
+		}
+
+		args, err := ec.field_Query_deviceChanges_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DeviceChanges(childComplexity, args["params"].(*model.ListDeviceChangesParams)), true
+
+	case "Query.deviceEvents":
+		if e.complexity.Query.DeviceEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Query_deviceEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DeviceEvents(childComplexity, args["params"].(*model.ListDeviceEventsParams)), true
+
 	case "Query.devices":
 		if e.complexity.Query.Devices == nil {
 			break
@@ -719,6 +850,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Devices(childComplexity, args["params"].(*model.ListDevicesParams)), true
+
+	case "Query.notification":
+		if e.complexity.Query.Notification == nil {
+			break
+		}
+
+		args, err := ec.field_Query_notification_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Notification(childComplexity, args["id"].(string)), true
 
 	case "Query.notifications":
 		if e.complexity.Query.Notifications == nil {
@@ -838,6 +981,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputListConfigurationsParams,
+		ec.unmarshalInputListDeviceChangesParams,
+		ec.unmarshalInputListDeviceEventsParams,
 		ec.unmarshalInputListDevicesParams,
 		ec.unmarshalInputListNotificationsParams,
 		ec.unmarshalInputMarkNotificationsAsReadParams,
@@ -937,7 +1083,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
 }
 
-//go:embed "src/configuration.graphqls" "src/device.graphqls" "src/notifications.graphqls" "src/pageinfo.graphqls" "src/schema.graphqls" "src/stanza.graphqls"
+//go:embed "src/common.graphqls" "src/configuration.graphqls" "src/device.graphqls" "src/notifications.graphqls" "src/schema.graphqls" "src/stanza.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -949,10 +1095,10 @@ func sourceData(filename string) string {
 }
 
 var sources = []*ast.Source{
+	{Name: "src/common.graphqls", Input: sourceData("src/common.graphqls"), BuiltIn: false},
 	{Name: "src/configuration.graphqls", Input: sourceData("src/configuration.graphqls"), BuiltIn: false},
 	{Name: "src/device.graphqls", Input: sourceData("src/device.graphqls"), BuiltIn: false},
 	{Name: "src/notifications.graphqls", Input: sourceData("src/notifications.graphqls"), BuiltIn: false},
-	{Name: "src/pageinfo.graphqls", Input: sourceData("src/pageinfo.graphqls"), BuiltIn: false},
 	{Name: "src/schema.graphqls", Input: sourceData("src/schema.graphqls"), BuiltIn: false},
 	{Name: "src/stanza.graphqls", Input: sourceData("src/stanza.graphqls"), BuiltIn: false},
 }
@@ -1088,6 +1234,66 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_configuration_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_configurations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ListConfigurationsParams
+	if tmp, ok := rawArgs["params"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("params"))
+		arg0, err = ec.unmarshalOListConfigurationsParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListConfigurationsParams(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["params"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_deviceChanges_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ListDeviceChangesParams
+	if tmp, ok := rawArgs["params"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("params"))
+		arg0, err = ec.unmarshalOListDeviceChangesParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesParams(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["params"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_deviceEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ListDeviceEventsParams
+	if tmp, ok := rawArgs["params"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("params"))
+		arg0, err = ec.unmarshalOListDeviceEventsParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsParams(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["params"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_device_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1115,6 +1321,21 @@ func (ec *executionContext) field_Query_devices_args(ctx context.Context, rawArg
 		}
 	}
 	args["params"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_notification_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1209,6 +1430,8 @@ func (ec *executionContext) fieldContext_ChangeConnection_changes(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_DeviceChange_id(ctx, field)
+			case "deviceId":
+				return ec.fieldContext_DeviceChange_deviceId(ctx, field)
 			case "field":
 				return ec.fieldContext_DeviceChange_field(ctx, field)
 			case "oldValue":
@@ -2695,6 +2918,50 @@ func (ec *executionContext) fieldContext_DeviceChange_id(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _DeviceChange_deviceId(ctx context.Context, field graphql.CollectedField, obj *model.DeviceChange) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceChange_deviceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeviceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceChange_deviceId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceChange",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeviceChange_field(ctx context.Context, field graphql.CollectedField, obj *model.DeviceChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeviceChange_field(ctx, field)
 	if err != nil {
@@ -2903,6 +3170,50 @@ func (ec *executionContext) _DeviceEvent_id(ctx context.Context, field graphql.C
 }
 
 func (ec *executionContext) fieldContext_DeviceEvent_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeviceEvent_deviceId(ctx context.Context, field graphql.CollectedField, obj *model.DeviceEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceEvent_deviceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeviceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceEvent_deviceId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeviceEvent",
 		Field:      field,
@@ -3390,6 +3701,8 @@ func (ec *executionContext) fieldContext_EventConnection_events(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_DeviceEvent_id(ctx, field)
+			case "deviceId":
+				return ec.fieldContext_DeviceEvent_deviceId(ctx, field)
 			case "type":
 				return ec.fieldContext_DeviceEvent_type(ctx, field)
 			case "message":
@@ -3441,6 +3754,338 @@ func (ec *executionContext) _EventConnection_pageInfo(ctx context.Context, field
 func (ec *executionContext) fieldContext_EventConnection_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EventConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "limit":
+				return ec.fieldContext_PageInfo_limit(ctx, field)
+			case "offset":
+				return ec.fieldContext_PageInfo_offset(ctx, field)
+			case "total":
+				return ec.fieldContext_PageInfo_total(ctx, field)
+			case "count":
+				return ec.fieldContext_PageInfo_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListConfigurationsResponse_configurations(ctx context.Context, field graphql.CollectedField, obj *model.ListConfigurationsResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListConfigurationsResponse_configurations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Configurations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Configuration)
+	fc.Result = res
+	return ec.marshalNConfiguration2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfigurationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListConfigurationsResponse_configurations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListConfigurationsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Configuration_id(ctx, field)
+			case "device":
+				return ec.fieldContext_Configuration_device(ctx, field)
+			case "configuration":
+				return ec.fieldContext_Configuration_configuration(ctx, field)
+			case "changes":
+				return ec.fieldContext_Configuration_changes(ctx, field)
+			case "checksum":
+				return ec.fieldContext_Configuration_checksum(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Configuration_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListConfigurationsResponse_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.ListConfigurationsResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListConfigurationsResponse_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListConfigurationsResponse_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListConfigurationsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "limit":
+				return ec.fieldContext_PageInfo_limit(ctx, field)
+			case "offset":
+				return ec.fieldContext_PageInfo_offset(ctx, field)
+			case "total":
+				return ec.fieldContext_PageInfo_total(ctx, field)
+			case "count":
+				return ec.fieldContext_PageInfo_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDeviceChangesResponse_changes(ctx context.Context, field graphql.CollectedField, obj *model.ListDeviceChangesResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDeviceChangesResponse_changes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Changes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DeviceChange)
+	fc.Result = res
+	return ec.marshalODeviceChange2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐDeviceChangeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDeviceChangesResponse_changes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDeviceChangesResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DeviceChange_id(ctx, field)
+			case "deviceId":
+				return ec.fieldContext_DeviceChange_deviceId(ctx, field)
+			case "field":
+				return ec.fieldContext_DeviceChange_field(ctx, field)
+			case "oldValue":
+				return ec.fieldContext_DeviceChange_oldValue(ctx, field)
+			case "newValue":
+				return ec.fieldContext_DeviceChange_newValue(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DeviceChange_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeviceChange", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDeviceChangesResponse_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.ListDeviceChangesResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDeviceChangesResponse_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDeviceChangesResponse_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDeviceChangesResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "limit":
+				return ec.fieldContext_PageInfo_limit(ctx, field)
+			case "offset":
+				return ec.fieldContext_PageInfo_offset(ctx, field)
+			case "total":
+				return ec.fieldContext_PageInfo_total(ctx, field)
+			case "count":
+				return ec.fieldContext_PageInfo_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDeviceEventsResponse_events(ctx context.Context, field graphql.CollectedField, obj *model.ListDeviceEventsResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDeviceEventsResponse_events(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Events, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DeviceEvent)
+	fc.Result = res
+	return ec.marshalODeviceEvent2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐDeviceEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDeviceEventsResponse_events(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDeviceEventsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DeviceEvent_id(ctx, field)
+			case "deviceId":
+				return ec.fieldContext_DeviceEvent_deviceId(ctx, field)
+			case "type":
+				return ec.fieldContext_DeviceEvent_type(ctx, field)
+			case "message":
+				return ec.fieldContext_DeviceEvent_message(ctx, field)
+			case "action":
+				return ec.fieldContext_DeviceEvent_action(ctx, field)
+			case "outcome":
+				return ec.fieldContext_DeviceEvent_outcome(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DeviceEvent_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeviceEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ListDeviceEventsResponse_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.ListDeviceEventsResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ListDeviceEventsResponse_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ListDeviceEventsResponse_pageInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ListDeviceEventsResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4414,6 +5059,128 @@ func (ec *executionContext) fieldContext_Query_devices(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_deviceChanges(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_deviceChanges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DeviceChanges(rctx, fc.Args["params"].(*model.ListDeviceChangesParams))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ListDeviceChangesResponse)
+	fc.Result = res
+	return ec.marshalNListDeviceChangesResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_deviceChanges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "changes":
+				return ec.fieldContext_ListDeviceChangesResponse_changes(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_ListDeviceChangesResponse_pageInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ListDeviceChangesResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_deviceChanges_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_deviceEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_deviceEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DeviceEvents(rctx, fc.Args["params"].(*model.ListDeviceEventsParams))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ListDeviceEventsResponse)
+	fc.Result = res
+	return ec.marshalNListDeviceEventsResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_deviceEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "events":
+				return ec.fieldContext_ListDeviceEventsResponse_events(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_ListDeviceEventsResponse_pageInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ListDeviceEventsResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_deviceEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_notifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_notifications(ctx, field)
 	if err != nil {
@@ -4469,6 +5236,207 @@ func (ec *executionContext) fieldContext_Query_notifications(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_notifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_notification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_notification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Notification(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Notification)
+	fc.Result = res
+	return ec.marshalNNotification2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐNotification(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_notification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Notification_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Notification_title(ctx, field)
+			case "resource_id":
+				return ec.fieldContext_Notification_resource_id(ctx, field)
+			case "resource_type":
+				return ec.fieldContext_Notification_resource_type(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_Notification_timestamp(ctx, field)
+			case "message":
+				return ec.fieldContext_Notification_message(ctx, field)
+			case "read":
+				return ec.fieldContext_Notification_read(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Notification", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_notification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_configurations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_configurations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Configurations(rctx, fc.Args["params"].(*model.ListConfigurationsParams))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ListConfigurationsResponse)
+	fc.Result = res
+	return ec.marshalNListConfigurationsResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListConfigurationsResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_configurations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "configurations":
+				return ec.fieldContext_ListConfigurationsResponse_configurations(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_ListConfigurationsResponse_pageInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ListConfigurationsResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_configurations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_configuration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_configuration(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Configuration(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Configuration)
+	fc.Result = res
+	return ec.marshalNConfiguration2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfiguration(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_configuration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Configuration_id(ctx, field)
+			case "device":
+				return ec.fieldContext_Configuration_device(ctx, field)
+			case "configuration":
+				return ec.fieldContext_Configuration_configuration(ctx, field)
+			case "changes":
+				return ec.fieldContext_Configuration_changes(ctx, field)
+			case "checksum":
+				return ec.fieldContext_Configuration_checksum(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Configuration_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_configuration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7046,6 +8014,255 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputListConfigurationsParams(ctx context.Context, obj interface{}) (model.ListConfigurationsParams, error) {
+	var it model.ListConfigurationsParams
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"deviceId", "after", "before", "order", "orderBy", "limit", "offset"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "deviceId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceID = data
+		case "after":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.After = data
+		case "before":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Before = data
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "orderBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+			data, err := ec.unmarshalOConfigurationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfigurationOrderBy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderBy = data
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
+		case "offset":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Offset = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputListDeviceChangesParams(ctx context.Context, obj interface{}) (model.ListDeviceChangesParams, error) {
+	var it model.ListDeviceChangesParams
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"deviceId", "after", "before", "order", "orderBy", "limit", "offset"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "deviceId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceID = data
+		case "after":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.After = data
+		case "before":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Before = data
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "orderBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+			data, err := ec.unmarshalOListDeviceChangesOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesOrderBy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderBy = data
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
+		case "offset":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Offset = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputListDeviceEventsParams(ctx context.Context, obj interface{}) (model.ListDeviceEventsParams, error) {
+	var it model.ListDeviceEventsParams
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"deviceId", "after", "before", "order", "orderBy", "limit", "offset"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "deviceId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceID = data
+		case "after":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.After = data
+		case "before":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Before = data
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "orderBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+			data, err := ec.unmarshalOListDeviceEventsOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsOrderBy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderBy = data
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Limit = data
+		case "offset":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Offset = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputListDevicesParams(ctx context.Context, obj interface{}) (model.ListDevicesParams, error) {
 	var it model.ListDevicesParams
 	asMap := map[string]interface{}{}
@@ -7118,7 +8335,7 @@ func (ec *executionContext) unmarshalInputListNotificationsParams(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resource_ids", "filter", "start_time", "end_time", "limit", "offset"}
+	fieldsInOrder := [...]string{"resource_ids", "filter", "before", "after", "order", "orderBy", "limit", "offset"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7143,24 +8360,42 @@ func (ec *executionContext) unmarshalInputListNotificationsParams(ctx context.Co
 				return it, err
 			}
 			it.Filter = data
-		case "start_time":
+		case "before":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start_time"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
 			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.StartTime = data
-		case "end_time":
+			it.Before = data
+		case "after":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end_time"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
 			data, err := ec.unmarshalOTimestamp2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.EndTime = data
+			it.After = data
+		case "order":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Order = data
+		case "orderBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+			data, err := ec.unmarshalOListNotificationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListNotificationOrderBy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderBy = data
 		case "limit":
 			var err error
 
@@ -7630,6 +8865,11 @@ func (ec *executionContext) _DeviceChange(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "deviceId":
+			out.Values[i] = ec._DeviceChange_deviceId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "field":
 			out.Values[i] = ec._DeviceChange_field(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7686,6 +8926,11 @@ func (ec *executionContext) _DeviceEvent(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = graphql.MarshalString("DeviceEvent")
 		case "id":
 			out.Values[i] = ec._DeviceEvent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deviceId":
+			out.Values[i] = ec._DeviceEvent_deviceId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7808,6 +9053,132 @@ func (ec *executionContext) _EventConnection(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._EventConnection_events(ctx, field, obj)
 		case "pageInfo":
 			out.Values[i] = ec._EventConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var listConfigurationsResponseImplementors = []string{"ListConfigurationsResponse"}
+
+func (ec *executionContext) _ListConfigurationsResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ListConfigurationsResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, listConfigurationsResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ListConfigurationsResponse")
+		case "configurations":
+			out.Values[i] = ec._ListConfigurationsResponse_configurations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._ListConfigurationsResponse_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var listDeviceChangesResponseImplementors = []string{"ListDeviceChangesResponse"}
+
+func (ec *executionContext) _ListDeviceChangesResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ListDeviceChangesResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, listDeviceChangesResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ListDeviceChangesResponse")
+		case "changes":
+			out.Values[i] = ec._ListDeviceChangesResponse_changes(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._ListDeviceChangesResponse_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var listDeviceEventsResponseImplementors = []string{"ListDeviceEventsResponse"}
+
+func (ec *executionContext) _ListDeviceEventsResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ListDeviceEventsResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, listDeviceEventsResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ListDeviceEventsResponse")
+		case "events":
+			out.Values[i] = ec._ListDeviceEventsResponse_events(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._ListDeviceEventsResponse_pageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -8139,6 +9510,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "deviceChanges":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_deviceChanges(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "deviceEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_deviceEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "notifications":
 			field := field
 
@@ -8149,6 +9564,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_notifications(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "notification":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_notification(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "configurations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_configurations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "configuration":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_configuration(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -8689,6 +10170,54 @@ func (ec *executionContext) marshalNChangeConnection2ᚖgitᚗlieroᚗseᚋopent
 	return ec._ChangeConnection(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNConfiguration2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v model.Configuration) graphql.Marshaler {
+	return ec._Configuration(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNConfiguration2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Configuration) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNConfiguration2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfiguration(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNConfiguration2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.Configuration) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8898,6 +10427,48 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNListConfigurationsResponse2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListConfigurationsResponse(ctx context.Context, sel ast.SelectionSet, v model.ListConfigurationsResponse) graphql.Marshaler {
+	return ec._ListConfigurationsResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNListConfigurationsResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListConfigurationsResponse(ctx context.Context, sel ast.SelectionSet, v *model.ListConfigurationsResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ListConfigurationsResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNListDeviceChangesResponse2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesResponse(ctx context.Context, sel ast.SelectionSet, v model.ListDeviceChangesResponse) graphql.Marshaler {
+	return ec._ListDeviceChangesResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNListDeviceChangesResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesResponse(ctx context.Context, sel ast.SelectionSet, v *model.ListDeviceChangesResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ListDeviceChangesResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNListDeviceEventsResponse2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsResponse(ctx context.Context, sel ast.SelectionSet, v model.ListDeviceEventsResponse) graphql.Marshaler {
+	return ec._ListDeviceEventsResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNListDeviceEventsResponse2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsResponse(ctx context.Context, sel ast.SelectionSet, v *model.ListDeviceEventsResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ListDeviceEventsResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNListDeviceResponse2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceResponse(ctx context.Context, sel ast.SelectionSet, v model.ListDeviceResponse) graphql.Marshaler {
 	return ec._ListDeviceResponse(ctx, sel, &v)
 }
@@ -8939,6 +10510,10 @@ func (ec *executionContext) marshalNListNotificationsResponse2ᚖgitᚗlieroᚗs
 func (ec *executionContext) unmarshalNMarkNotificationsAsReadParams2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐMarkNotificationsAsReadParams(ctx context.Context, v interface{}) (model.MarkNotificationsAsReadParams, error) {
 	res, err := ec.unmarshalInputMarkNotificationsAsReadParams(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNotification2gitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐNotification(ctx context.Context, sel ast.SelectionSet, v model.Notification) graphql.Marshaler {
+	return ec._Notification(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNNotification2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Notification) graphql.Marshaler {
@@ -9405,6 +10980,22 @@ func (ec *executionContext) marshalOConfiguration2ᚕᚖgitᚗlieroᚗseᚋopent
 	return ret
 }
 
+func (ec *executionContext) unmarshalOConfigurationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfigurationOrderBy(ctx context.Context, v interface{}) (*model.ConfigurationOrderBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ConfigurationOrderBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOConfigurationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐConfigurationOrderBy(ctx context.Context, sel ast.SelectionSet, v *model.ConfigurationOrderBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalODevice2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐDeviceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Device) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -9638,6 +11229,22 @@ func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast
 	return ret
 }
 
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalID(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -9652,6 +11259,62 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOListConfigurationsParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListConfigurationsParams(ctx context.Context, v interface{}) (*model.ListConfigurationsParams, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputListConfigurationsParams(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOListDeviceChangesOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesOrderBy(ctx context.Context, v interface{}) (*model.ListDeviceChangesOrderBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ListDeviceChangesOrderBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOListDeviceChangesOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesOrderBy(ctx context.Context, sel ast.SelectionSet, v *model.ListDeviceChangesOrderBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOListDeviceChangesParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceChangesParams(ctx context.Context, v interface{}) (*model.ListDeviceChangesParams, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputListDeviceChangesParams(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOListDeviceEventsOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsOrderBy(ctx context.Context, v interface{}) (*model.ListDeviceEventsOrderBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ListDeviceEventsOrderBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOListDeviceEventsOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsOrderBy(ctx context.Context, sel ast.SelectionSet, v *model.ListDeviceEventsOrderBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOListDeviceEventsParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDeviceEventsParams(ctx context.Context, v interface{}) (*model.ListDeviceEventsParams, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputListDeviceEventsParams(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOListDevicesParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListDevicesParams(ctx context.Context, v interface{}) (*model.ListDevicesParams, error) {
@@ -9729,12 +11392,44 @@ func (ec *executionContext) marshalOListNotificationFilter2ᚕgitᚗlieroᚗse�
 	return ret
 }
 
+func (ec *executionContext) unmarshalOListNotificationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListNotificationOrderBy(ctx context.Context, v interface{}) (*model.ListNotificationOrderBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ListNotificationOrderBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOListNotificationOrderBy2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListNotificationOrderBy(ctx context.Context, sel ast.SelectionSet, v *model.ListNotificationOrderBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalOListNotificationsParams2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListNotificationsParams(ctx context.Context, v interface{}) (*model.ListNotificationsParams, error) {
 	if v == nil {
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputListNotificationsParams(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx context.Context, v interface{}) (*model.ListOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ListOrder)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOListOrder2ᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐListOrder(ctx context.Context, sel ast.SelectionSet, v *model.ListOrder) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalONotification2ᚕᚖgitᚗlieroᚗseᚋopentelcoᚋgoᚑswpxᚋfleetᚋgraphᚋmodelᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Notification) graphql.Marshaler {

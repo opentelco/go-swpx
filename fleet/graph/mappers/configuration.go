@@ -29,3 +29,16 @@ func (c Configuration) ToGQL() *model.Configuration {
 		CreatedAt:     c.Created.AsTime(),
 	}
 }
+
+type ListConfigurationsResponse struct{ *configurationpb.ListResponse }
+
+func (l *ListConfigurationsResponse) ToGQL() *model.ListConfigurationsResponse {
+	return &model.ListConfigurationsResponse{
+		Configurations: Configurations(l.Configurations).ToGQL(),
+		PageInfo:       ToPageInfo(l.PageInfo).ToGQL(),
+	}
+}
+
+func ToListConfigurationsResponse(in *configurationpb.ListResponse) *ListConfigurationsResponse {
+	return &ListConfigurationsResponse{in}
+}

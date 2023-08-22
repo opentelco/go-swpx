@@ -1,4 +1,3 @@
-
 type Configuration {
   id: ID!
 
@@ -10,4 +9,28 @@ type Configuration {
   changes: String
   checksum: String
   createdAt: Timestamp!
+}
+
+input ListConfigurationsParams {
+  # the device id to filter by
+  deviceId: ID
+
+  after: Timestamp
+  before: Timestamp
+
+  order: ListOrder
+
+  orderBy: ConfigurationOrderBy
+
+  limit: Int
+  offset: Int
+}
+
+enum ConfigurationOrderBy {
+  CREATED
+}
+
+type ListConfigurationsResponse {
+    configurations: [Configuration!]!
+    pageInfo: PageInfo!
 }

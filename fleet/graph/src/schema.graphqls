@@ -4,7 +4,14 @@ type Query {
   device(id: ID!): Device!
   devices(params: ListDevicesParams): ListDeviceResponse!
 
+  deviceChanges(params: ListDeviceChangesParams): ListDeviceChangesResponse!
+  deviceEvents(params: ListDeviceEventsParams): ListDeviceEventsResponse!
+
   notifications(params: ListNotificationsParams): ListNotificationsResponse!
+  notification(id: ID!): Notification!
+
+  configurations(params: ListConfigurationsParams): ListConfigurationsResponse!
+  configuration(id: ID!): Configuration!
 }
 
 

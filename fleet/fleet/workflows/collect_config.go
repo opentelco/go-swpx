@@ -54,7 +54,7 @@ func CollectConfigWorkflow(ctx workflow.Context, params *fleetpb.CollectConfigPa
 		return nil, err
 	}
 
-	listOfConfigs, err := listConfigs(ctx, &configurationpb.ListParameters{DeviceId: device.Id})
+	listOfConfigs, err := listConfigs(ctx, &configurationpb.ListParameters{DeviceId: &device.Id})
 	if err != nil {
 		return nil, err
 	}

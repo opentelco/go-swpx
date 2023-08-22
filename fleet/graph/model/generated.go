@@ -54,6 +54,7 @@ type Device struct {
 
 type DeviceChange struct {
 	ID        string    `json:"id"`
+	DeviceID  string    `json:"deviceId"`
 	Field     string    `json:"field"`
 	OldValue  string    `json:"oldValue"`
 	NewValue  string    `json:"newValue"`
@@ -62,6 +63,7 @@ type DeviceChange struct {
 
 type DeviceEvent struct {
 	ID        string             `json:"id"`
+	DeviceID  string             `json:"deviceId"`
 	Type      DeviceEventType    `json:"type"`
 	Message   string             `json:"message"`
 	Action    DeviceEventAction  `json:"action"`
@@ -82,6 +84,51 @@ type EventConnection struct {
 	PageInfo *PageInfo      `json:"pageInfo"`
 }
 
+type ListConfigurationsParams struct {
+	DeviceID *string               `json:"deviceId,omitempty"`
+	After    *time.Time            `json:"after,omitempty"`
+	Before   *time.Time            `json:"before,omitempty"`
+	Order    *ListOrder            `json:"order,omitempty"`
+	OrderBy  *ConfigurationOrderBy `json:"orderBy,omitempty"`
+	Limit    *int                  `json:"limit,omitempty"`
+	Offset   *int                  `json:"offset,omitempty"`
+}
+
+type ListConfigurationsResponse struct {
+	Configurations []*Configuration `json:"configurations"`
+	PageInfo       *PageInfo        `json:"pageInfo"`
+}
+
+type ListDeviceChangesParams struct {
+	DeviceID string                    `json:"deviceId"`
+	After    *time.Time                `json:"after,omitempty"`
+	Before   *time.Time                `json:"before,omitempty"`
+	Order    *ListOrder                `json:"order,omitempty"`
+	OrderBy  *ListDeviceChangesOrderBy `json:"orderBy,omitempty"`
+	Limit    *int                      `json:"limit,omitempty"`
+	Offset   *int                      `json:"offset,omitempty"`
+}
+
+type ListDeviceChangesResponse struct {
+	Changes  []*DeviceChange `json:"changes,omitempty"`
+	PageInfo *PageInfo       `json:"pageInfo"`
+}
+
+type ListDeviceEventsParams struct {
+	DeviceID string                   `json:"deviceId"`
+	After    *time.Time               `json:"after,omitempty"`
+	Before   *time.Time               `json:"before,omitempty"`
+	Order    *ListOrder               `json:"order,omitempty"`
+	OrderBy  *ListDeviceEventsOrderBy `json:"orderBy,omitempty"`
+	Limit    *int                     `json:"limit,omitempty"`
+	Offset   *int                     `json:"offset,omitempty"`
+}
+
+type ListDeviceEventsResponse struct {
+	Events   []*DeviceEvent `json:"events,omitempty"`
+	PageInfo *PageInfo      `json:"pageInfo"`
+}
+
 type ListDeviceResponse struct {
 	Devices  []*Device `json:"devices,omitempty"`
 	PageInfo *PageInfo `json:"pageInfo"`
@@ -98,8 +145,10 @@ type ListDevicesParams struct {
 type ListNotificationsParams struct {
 	ResourceIds []string                 `json:"resource_ids,omitempty"`
 	Filter      []ListNotificationFilter `json:"filter,omitempty"`
-	StartTime   *time.Time               `json:"start_time,omitempty"`
-	EndTime     *time.Time               `json:"end_time,omitempty"`
+	Before      *time.Time               `json:"before,omitempty"`
+	After       *time.Time               `json:"after,omitempty"`
+	Order       *ListOrder               `json:"order,omitempty"`
+	OrderBy     *ListNotificationOrderBy `json:"orderBy,omitempty"`
 	Limit       *int                     `json:"limit,omitempty"`
 	Offset      *int                     `json:"offset,omitempty"`
 }
@@ -148,6 +197,45 @@ type Stanza struct {
 type StanzaConnection struct {
 	Stanzas  []*Stanza `json:"stanzas,omitempty"`
 	PageInfo *PageInfo `json:"pageInfo"`
+}
+
+type ConfigurationOrderBy string
+
+const (
+	ConfigurationOrderByCreated ConfigurationOrderBy = "CREATED"
+)
+
+var AllConfigurationOrderBy = []ConfigurationOrderBy{
+	ConfigurationOrderByCreated,
+}
+
+func (e ConfigurationOrderBy) IsValid() bool {
+	switch e {
+	case ConfigurationOrderByCreated:
+		return true
+	}
+	return false
+}
+
+func (e ConfigurationOrderBy) String() string {
+	return string(e)
+}
+
+func (e *ConfigurationOrderBy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConfigurationOrderBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConfigurationOrderBy", str)
+	}
+	return nil
+}
+
+func (e ConfigurationOrderBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type DeviceEventAction string
@@ -375,6 +463,84 @@ func (e DeviceStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type ListDeviceChangesOrderBy string
+
+const (
+	ListDeviceChangesOrderByCreatedAt ListDeviceChangesOrderBy = "CREATED_AT"
+)
+
+var AllListDeviceChangesOrderBy = []ListDeviceChangesOrderBy{
+	ListDeviceChangesOrderByCreatedAt,
+}
+
+func (e ListDeviceChangesOrderBy) IsValid() bool {
+	switch e {
+	case ListDeviceChangesOrderByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e ListDeviceChangesOrderBy) String() string {
+	return string(e)
+}
+
+func (e *ListDeviceChangesOrderBy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListDeviceChangesOrderBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListDeviceChangesOrderBy", str)
+	}
+	return nil
+}
+
+func (e ListDeviceChangesOrderBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ListDeviceEventsOrderBy string
+
+const (
+	ListDeviceEventsOrderByCreatedAt ListDeviceEventsOrderBy = "CREATED_AT"
+)
+
+var AllListDeviceEventsOrderBy = []ListDeviceEventsOrderBy{
+	ListDeviceEventsOrderByCreatedAt,
+}
+
+func (e ListDeviceEventsOrderBy) IsValid() bool {
+	switch e {
+	case ListDeviceEventsOrderByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e ListDeviceEventsOrderBy) String() string {
+	return string(e)
+}
+
+func (e *ListDeviceEventsOrderBy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListDeviceEventsOrderBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListDeviceEventsOrderBy", str)
+	}
+	return nil
+}
+
+func (e ListDeviceEventsOrderBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type ListNotificationFilter string
 
 const (
@@ -415,6 +581,86 @@ func (e *ListNotificationFilter) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ListNotificationFilter) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ListNotificationOrderBy string
+
+const (
+	ListNotificationOrderByCreated ListNotificationOrderBy = "CREATED"
+)
+
+var AllListNotificationOrderBy = []ListNotificationOrderBy{
+	ListNotificationOrderByCreated,
+}
+
+func (e ListNotificationOrderBy) IsValid() bool {
+	switch e {
+	case ListNotificationOrderByCreated:
+		return true
+	}
+	return false
+}
+
+func (e ListNotificationOrderBy) String() string {
+	return string(e)
+}
+
+func (e *ListNotificationOrderBy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListNotificationOrderBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListNotificationOrderBy", str)
+	}
+	return nil
+}
+
+func (e ListNotificationOrderBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ListOrder string
+
+const (
+	ListOrderAsc  ListOrder = "ASC"
+	ListOrderDesc ListOrder = "DESC"
+)
+
+var AllListOrder = []ListOrder{
+	ListOrderAsc,
+	ListOrderDesc,
+}
+
+func (e ListOrder) IsValid() bool {
+	switch e {
+	case ListOrderAsc, ListOrderDesc:
+		return true
+	}
+	return false
+}
+
+func (e ListOrder) String() string {
+	return string(e)
+}
+
+func (e *ListOrder) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ListOrder(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ListOrder", str)
+	}
+	return nil
+}
+
+func (e ListOrder) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

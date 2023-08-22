@@ -52,7 +52,7 @@ func (r *repo) GetByID(ctx context.Context, id string) (*configurationpb.Configu
 func (r *repo) List(ctx context.Context, params *configurationpb.ListParameters) (*configurationpb.ListResponse, error) {
 	// list device configurations, this is used to list all device configurations
 	filter := bson.M{}
-	if params.DeviceId != "" {
+	if params.DeviceId != nil {
 		filter["device_id"] = params.DeviceId
 	}
 	// order by created time (newest first)

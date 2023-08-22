@@ -25,14 +25,26 @@ input ListNotificationsParams {
     # The resource types to filter by or read/unread
     filter: [ListNotificationFilter!]
 
-    start_time: Timestamp
-    end_time: Timestamp
+    # notifications should be created before timestamp
+    before: Timestamp
+    # notifications should be created after timestamp
+    after: Timestamp
+
+    # order ascending or descending
+    order: ListOrder
+
+    # order by a field
+    orderBy: ListNotificationOrderBy
 
     # The number of notifications to return
     limit: Int
 
     # The offset to start from
     offset: Int
+}
+
+enum ListNotificationOrderBy {
+    CREATED
 }
 
 enum ListNotificationFilter {

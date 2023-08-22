@@ -5,3 +5,9 @@ type PageInfo {
   total: Int
   count: Int
 }
+
+
+enum ListOrder {
+    ASC
+    DESC
+}

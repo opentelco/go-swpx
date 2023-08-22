@@ -100,6 +100,7 @@ type ListDeviceResponse {
 
 type DeviceEvent {
   id: ID!
+  deviceId: ID!
   type: DeviceEventType!
   message: String!
   action: DeviceEventAction!
@@ -145,6 +146,7 @@ type StanzaConnection {
 
 type DeviceChange {
   id: ID!
+  deviceId: String!
   field: String!
   oldValue: String!
   newValue: String!
@@ -153,5 +155,48 @@ type DeviceChange {
 
 type ChangeConnection {
   changes: [DeviceChange!]
+  pageInfo: PageInfo!
+}
+
+
+input ListDeviceChangesParams {
+  deviceId: ID!
+
+  after: Timestamp
+  before: Timestamp
+
+  order: ListOrder
+  orderBy: ListDeviceChangesOrderBy
+
+  limit: Int
+  offset: Int
+}
+
+enum ListDeviceChangesOrderBy {
+  CREATED_AT
+}
+
+type ListDeviceChangesResponse {
+  changes: [DeviceChange!]
+  pageInfo: PageInfo!
+}
+
+input ListDeviceEventsParams {
+  deviceId: ID!
+
+  after: Timestamp
+  before: Timestamp
+ order: ListOrder
+  orderBy: ListDeviceEventsOrderBy
+  limit: Int
+  offset: Int
+}
+
+enum ListDeviceEventsOrderBy {
+  CREATED_AT
+}
+
+type ListDeviceEventsResponse {
+  events: [DeviceEvent!]
   pageInfo: PageInfo!
 }

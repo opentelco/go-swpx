@@ -52,7 +52,7 @@ func (r *deviceResolver) Changes(ctx context.Context, obj *model.Device, limit *
 // Configurations is the resolver for the configurations field.
 func (r *deviceResolver) Configurations(ctx context.Context, obj *model.Device, limit *int, offset *int) (*model.ConfigurationConnection, error) {
 	res, err := r.configurations.List(ctx, &configurationpb.ListParameters{
-		DeviceId: obj.ID,
+		DeviceId: &obj.ID,
 		Limit:    internal.PointerIntToPointerInt64(limit),
 		Offset:   internal.PointerIntToPointerInt64(offset),
 	})

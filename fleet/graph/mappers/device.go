@@ -199,6 +199,7 @@ func (o DeviceEventOutcome) ToGQL() model.DeviceEventOutcome {
 func (e DeviceEvent) ToGQL() *model.DeviceEvent {
 	return &model.DeviceEvent{
 		ID:        e.Id,
+		DeviceID:  e.DeviceId,
 		Type:      DeviceEventType(e.Type).ToGQL(),
 		Message:   e.Message,
 		Action:    DeviceEventAction(e.Action).ToGQL(),
@@ -224,6 +225,7 @@ func (c DeviceChange) ToGQL() *model.DeviceChange {
 	return &model.DeviceChange{
 		ID:        c.Id,
 		Field:     c.Field,
+		DeviceID:  c.DeviceId,
 		OldValue:  c.OldValue,
 		NewValue:  c.NewValue,
 		CreatedAt: c.Created.AsTime(),
@@ -236,4 +238,30 @@ func (c DeviceChanges) ToGQL() []*model.DeviceChange {
 		res[i] = DeviceChange{v}.ToGQL()
 	}
 	return res
+}
+
+type ListDeviceChangesResponse struct{ *devicepb.ListChangesResponse }
+
+func (r ListDeviceChangesResponse) ToGQL() *model.ListDeviceChangesResponse {
+	return &model.ListDeviceChangesResponse{
+		Changes:  DeviceChanges(r.Changes).ToGQL(),
+		PageInfo: ToPageInfo(r.PageInfo).ToGQL(),
+	}
+}
+
+func ToListDeviceChangesResponse(r *devicepb.ListChangesResponse) *ListDeviceChangesResponse {
+	return &ListDeviceChangesResponse{r}
+}
+
+type ListDeviceEventsResponse struct{ *devicepb.ListEventsResponse }
+
+func (r ListDeviceEventsResponse) ToGQL() *model.ListDeviceEventsResponse {
+	return &model.ListDeviceEventsResponse{
+		Events:   DeviceEvents(r.Events).ToGQL(),
+		PageInfo: ToPageInfo(r.PageInfo).ToGQL(),
+	}
+}
+
+func ToListDeviceEventsResponse(r *devicepb.ListEventsResponse) *ListDeviceEventsResponse {
+	return &ListDeviceEventsResponse{r}
 }

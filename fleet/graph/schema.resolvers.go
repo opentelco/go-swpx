@@ -9,7 +9,9 @@ import (
 
 	"git.liero.se/opentelco/go-swpx/fleet/graph/mappers"
 	"git.liero.se/opentelco/go-swpx/fleet/graph/model"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
 	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
 )
 
 // MarkNotificationsAsRead is the resolver for the markNotificationsAsRead field.
@@ -40,6 +42,24 @@ func (r *queryResolver) Devices(ctx context.Context, params *model.ListDevicesPa
 	return mappers.ToDeviceListResponse(res).ToGQL(), nil
 }
 
+// DeviceChanges is the resolver for the deviceChanges field.
+func (r *queryResolver) DeviceChanges(ctx context.Context, params *model.ListDeviceChangesParams) (*model.ListDeviceChangesResponse, error) {
+	res, err := r.devices.ListChanges(ctx, params.ToProto())
+	if err != nil {
+		return nil, err
+	}
+	return mappers.ToListDeviceChangesResponse(res).ToGQL(), nil
+}
+
+// DeviceEvents is the resolver for the deviceEvents field.
+func (r *queryResolver) DeviceEvents(ctx context.Context, params *model.ListDeviceEventsParams) (*model.ListDeviceEventsResponse, error) {
+	res, err := r.devices.ListEvents(ctx, params.ToProto())
+	if err != nil {
+		return nil, err
+	}
+	return mappers.ToListDeviceEventsResponse(res).ToGQL(), nil
+}
+
 // Notifications is the resolver for the notifications field.
 func (r *queryResolver) Notifications(ctx context.Context, params *model.ListNotificationsParams) (*model.ListNotificationsResponse, error) {
 	resp, err := r.notifications.List(ctx, params.ToProto())
@@ -47,6 +67,33 @@ func (r *queryResolver) Notifications(ctx context.Context, params *model.ListNot
 		return nil, err
 	}
 	return mappers.ToListNotificationResponse(resp).ToGQL(), nil
+}
+
+// Notification is the resolver for the notification field.
+func (r *queryResolver) Notification(ctx context.Context, id string) (*model.Notification, error) {
+	res, err := r.notifications.GetByID(ctx, &notificationpb.GetByIDRequest{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	return mappers.Notification{res}.ToGQL(), nil
+}
+
+// Configurations is the resolver for the configurations field.
+func (r *queryResolver) Configurations(ctx context.Context, params *model.ListConfigurationsParams) (*model.ListConfigurationsResponse, error) {
+	res, err := r.configurations.List(ctx, params.ToProto())
+	if err != nil {
+		return nil, err
+	}
+	return mappers.ToListConfigurationsResponse(res).ToGQL(), nil
+}
+
+// Configuration is the resolver for the configuration field.
+func (r *queryResolver) Configuration(ctx context.Context, id string) (*model.Configuration, error) {
+	res, err := r.configurations.GetByID(ctx, &configurationpb.GetByIDParameters{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	return mappers.Configuration{res}.ToGQL(), nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -131,13 +131,16 @@ func (r *repo) ListChanges(ctx context.Context, params *devicepb.ListChangesPara
 	options := options.Find()
 	options.Limit = params.Limit
 	options.Skip = params.Offset
+	if params.Before != nil && params.After != nil {
+		filter["created"] = bson.M{"$gt": params.After, "$lt": params.Before}
+	} else {
+		if params.Before != nil {
+			filter["created"] = bson.M{"$lt": params.Before}
+		}
 
-	if params.Before != nil {
-		filter["created"] = bson.M{"$lt": params.Before}
-	}
-
-	if params.After != nil {
-		filter["created"] = bson.M{"$gt": params.After}
+		if params.After != nil {
+			filter["created"] = bson.M{"$gt": params.After}
+		}
 	}
 
 	var sort int = -1
@@ -251,6 +254,18 @@ func (r *repo) ListEvents(ctx context.Context, params *devicepb.ListEventsParame
 	options := options.Find()
 	options.Limit = params.Limit
 	options.Skip = params.Offset
+
+	if params.Before != nil && params.After != nil {
+		filter["created"] = bson.M{"$gt": params.After, "$lt": params.Before}
+	} else {
+		if params.Before != nil {
+			filter["created"] = bson.M{"$lt": params.Before}
+		}
+
+		if params.After != nil {
+			filter["created"] = bson.M{"$gt": params.After}
+		}
+	}
 
 	var sort int = -1
 	orderBy := bson.M{}
@@ -378,6 +393,7 @@ func (r *repo) List(ctx context.Context, params *devicepb.ListParameters) (*devi
 			sort = 1
 		}
 	}
+
 	// order by the the array of order_By
 	if params.OrderBy != nil {
 		for _, o := range params.OrderBy {

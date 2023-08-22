@@ -464,7 +464,7 @@ var deviceConfigCmd = &cobra.Command{
 
 		var one int64 = 1
 		cfgs, err := fleetClient.List(cmd.Context(), &configurationpb.ListParameters{
-			DeviceId: deviceId,
+			DeviceId: &deviceId,
 			Limit:    &one,
 		})
 		if err != nil {

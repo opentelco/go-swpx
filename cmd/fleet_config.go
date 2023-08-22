@@ -62,7 +62,7 @@ var listConfigCmd = &cobra.Command{
 		}
 
 		res, err := client.List(cmd.Context(), &configurationpb.ListParameters{
-			DeviceId: deviceId,
+			DeviceId: &deviceId,
 			Limit:    &limit,
 			Offset:   &offset,
 		})
