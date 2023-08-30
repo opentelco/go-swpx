@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -24,7 +25,10 @@ type coreGrpcImpl struct {
 	logger hclog.Logger
 }
 
-var automatedOkList = []string{""}
+var automatedOkList = []string{
+	"mulbarton-migration",
+	"only-for-migration",
+}
 
 // Request to SWP-core
 func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_core.Response, error) {
@@ -71,7 +75,7 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *pb_core.Request) (*pb_
 // Helper to get a .In behaviour
 func In(hostname string, list ...string) bool {
 	for _, item := range list {
-		if item == hostname {
+		if strings.HasPrefix(hostname, item) {
 			return true
 		}
 	}
