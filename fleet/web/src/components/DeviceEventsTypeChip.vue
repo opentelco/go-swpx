@@ -7,15 +7,15 @@ const props = defineProps<{
 </script>
 
 <template>
-  <q-chip class="shadow-1 subtitle">
-    <q-avatar color="primary">
-      <q-icon color="white" name="fa-solid fa-network-wired" v-if="props.type == DeviceEventType.Device" />
-      <q-icon color="white" name="fa-solid fa-file-code" v-else />
-    </q-avatar>
-    <span class="">
-      {{ props.type }}
-    </span>
-  </q-chip>
+  <q-avatar color="primary" size="30px">
+
+    <q-icon color="white" name="fa-solid fa-network-wired" v-if="props.type == DeviceEventType.Device" />
+
+    <q-icon color="white" name="fa-solid fa-file-code" v-else />
+    <q-tooltip>
+      type <q-icon name="arrow_right_alt" /> {{ props.type }}
+    </q-tooltip>
+  </q-avatar>
 </template>
 
 <style lang="sass">

@@ -7,23 +7,18 @@ let defaults = {
 
 let props = defineProps<{
   action: DeviceEventAction
-  size: string
 
 }>()
 
 
-type ActionIcon = {
-  icon: string,
-  fg: string
-  bg: string
-}
+
 
 // switch icon depending on the DeviceEventAction
 // return icon and color matching the action (ActionIcon)
 const actionIcon = (action: DeviceEventAction) => {
   switch (action) {
     case DeviceEventAction.CollectConfig:
-      return { icon: 'fa-solid fa-file-code', bg: 'primary', fg: 'white'}
+      return { icon: 'fa-solid fa-code-merge', bg: 'secondary', fg: 'white'}
     case DeviceEventAction.CollectDevice:
       return { icon: 'query_stats', bg: 'secondary', fg: 'white' }
     case DeviceEventAction.Create:
@@ -39,14 +34,13 @@ const actionIcon = (action: DeviceEventAction) => {
 </script>
 
 <template>
-  <q-chip class="shadow-1 subtitle">
-    <q-avatar :color="actionIcon(props.action).bg">
+    <q-avatar size="30px" :color="actionIcon(props.action).bg">
       <q-icon :color="actionIcon(props.action).fg" :name="actionIcon(props.action).icon" />
+      <q-tooltip >
+      action <q-icon name="arrow_right_alt"/> {{ props.action }}
+    </q-tooltip>
     </q-avatar>
-      <span class="">
-        {{ props.action }}
-      </span>
-  </q-chip>
+
 </template>
 
 <style lang="sass">

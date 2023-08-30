@@ -27,7 +27,7 @@
 
 
         <template v-slot:item="props">
-          <div class="q-pa-lg col-sm-12 col-md-6 col-lg-4 col-xl-3">
+          <div class="q-pa-lg col-sm-12 col-md-6 col-lg-5 col-xl-4">
             <q-card class="card shadow-3">
               <q-item>
                 <q-item-section class="col-3 vendor-avatar">
@@ -48,8 +48,8 @@
                   </q-item-label>
 
                 </q-item-section>
-                <DeviceStateBadge :state="props.row.state" />
-                <DeviceStatusBadge :status="props.row.status" />
+                <DeviceStateBadge :state="props.row.state" size="sm"/>
+                <DeviceStatusBadge :status="props.row.status" size="sm"/>
               </q-item>
 
 

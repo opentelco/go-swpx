@@ -1,182 +1,193 @@
 <script setup lang="ts">
-import { EventConnection } from '../gql/graphql'
+import { useQuery } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
+import { ListDeviceEventsResponse } from '../gql/graphql'
+
+import { getRelativeTimestamp } from '../utils/time.ts'
 
 import DeviceEventOutcomeChip from './DeviceEventOutcomeChip.vue'
 import DeviceEventsTypeChip from './DeviceEventsTypeChip.vue';
 import DeviceEventActionChip from './DeviceEventActionChip.vue';
-import { computed, ref, toRef } from 'vue'
-import { cpuUsage } from 'process';
+import { ref, toRefs, onMounted } from 'vue'
+import TextCopy from './TextCopy.vue';
 
-let search = ref('')
-let filter = ref(null)
+
+let getDeviceEvents = gql`query DeviceEvents (
+  $deviceId: ID!
+  $limit: Int
+  $offset: Int
+  ) {
+    deviceEvents( params: { deviceId: $deviceId, limit: $limit, offset: $offset } ) {
+      events {
+            id
+            deviceId
+            type
+            message
+            action
+            outcome
+            createdAt
+        }
+        pageInfo {
+            limit
+            offset
+            total
+            count
+        }
+      }
+}`
+
+
+
 
 const props = defineProps<{
-  events: EventConnection
-  limit: number
-  offset: number
+  deviceId: string,
 }>()
 
-const propsLimit = toRef(props, 'limit');
-const propsOffset = toRef(props, 'offset');
-const propsEvents = toRef(props, 'events')
+let { deviceId } = toRefs(props)
+let eventTableRef = ref()
 
-propsLimit.value = 20
+
+
 
 const columns = [
   { name: 'timestamp', label: 'Timestamp', field: 'createdAt', align: 'left' },
   { name: 'message', label: 'Message', field: 'message', align: 'left' },
-  { name: 'type', label: 'Type', field: 'type', align: 'left' },
-  { name: 'outcome', label: 'Outcome', field: 'outcome', align: 'left' },
-  { name: 'action', label: 'Action', field: 'action', align: 'left' },
+  { name: 'tags', label: '', field: 'tags', align: 'center' },
 ]
 
 
 
-const options = [
-  {
-    label: 'Google',
-    value: 'goog',
-    icon: 'mail'
-  },
-  {
-    label: 'Facebook',
-    value: 'fb',
-    icon: 'bluetooth'
-  },
-  {
-    label: 'Twitter',
-    value: 'twt',
-    icon: 'map'
-  },
-  {
-    label: 'Apple',
-    value: 'app',
-    icon: 'golf_course'
-  },
-  {
-    label: 'Oracle',
-    value: 'ora',
-    disable: true,
-    icon: 'casino'
-  }
-]
+let limit = ref(10)
+let offset = ref(0)
 
 
-function calculatePagination(limit: number, offset: number, totalCount: number | null | undefined): { page: number, rowsPerPage: number, rowsNumber: number } {
-  const rowsNumber = totalCount;
-  const rowsPerPage = limit;
 
-  const page = limit > 0 ? Math.floor(offset / limit) + 1 : 1;
-  return { page, rowsPerPage, rowsNumber };
+
+
+type response = {
+  deviceEvents: ListDeviceEventsResponse
 }
 
-// computed pagination with the help of the calculatePagination fuction
-const pagination = computed(() => {
-  return calculatePagination(propsLimit.value, propsOffset.value, propsEvents.value.pageInfo.total)
-});
 
-const reFetch = ((tp) => {
-  const { page, rowsPerPage, sortBy, descending } = tp.pagination
-  const f = tp.filter
-
-  localPagination.value.page = page
-  localPagination.value.rowsPerPage = rowsPerPage
-
-  propsLimit.value = rowsPerPage
-  propsOffset.value = localPagination.value.page*rowsPerPage
-
-
-  search.value = f
-  console.log(search)
-
-
+let { onResult, result, loading, error, refetch } = useQuery<response>(getDeviceEvents, {
+  deviceId: deviceId.value,
+  limit: limit,
+  offset: offset
 })
-
-
-
-const localPagination = ref({
+const pagination = ref({
   sortBy: 'desc',
   descending: false,
   page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 50
+  rowsPerPage: limit.value,
+  rowsNumber: 99
 })
 
 
+onResult(queryResult => {
+  if (queryResult.data !== undefined) {
+    pagination.value.rowsNumber = queryResult.data.deviceEvents.pageInfo.total
+  }
+})
 
+// computed pagination with the help of the calculatePagination fuction
+let reFetch = ((props) => {
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+
+
+  if (page !== pagination.value.page) {
+    offset.value = (page - 1) * rowsPerPage
+    refetch()
+  }
+
+  if (rowsPerPage !== limit.value) {
+    limit.value = rowsPerPage
+    offset.value = (page - 1) * rowsPerPage
+    refetch()
+  }
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
+  pagination.value.sortBy = sortBy
+  pagination.value.descending = descending
+})
+
+
+onMounted(() => {
+  eventTableRef.value.requestServerInteraction()
+})
 </script>
 
 <template>
-  {{ pagination }}
-  <br>
-  {{ localPagination }}
+  {{ error }}
   <div class="q-pa-md">
     <div class="row justify-center">
       <div class="">
-        <!-- <Timeline size="md"/> -->
       </div>
     </div>
     <div class="row">
       <div class="col col-12">
-        <q-table title="Events" :rows="props.events.events" :columns="columns" row-key="id"
-          class="q-pa-lg rounded shadow-3" :filter="search" :pagination="localPagination" @request="reFetch">
+        <q-table grid :loading="loading" title="Events" :rows="result?.deviceEvents.events" :columns="columns"
+          row-key="id" binary-state-sort class="q-pa-lg rounded shadow-3" v-model:pagination="pagination"
+          @request="reFetch" ref="eventTableRef">
 
-          <template v-slot:top-right>
-            <q-input debounce="300" v-model="search" outlined rounded input-class="text-right"
-              class="q-ml-md q-pr-lg search-input">
-              <template v-slot:append>
-                <q-icon v-if="search === ''" name="search" />
-                <q-icon v-else name="clear" class="cursor-pointer" @click="search = ''" />
-              </template>
-            </q-input>
+          <template v-slot:item="p">
+            <q-list :props="p" class="rounded-borders col-12" bordered>
+              <q-item clickable v-ripple class="q-pa-md ">
+                <q-item-section avatar top>
+                  <DeviceEventOutcomeChip :outcome="p.row.outcome" class="" />
+                </q-item-section>
 
+                <q-item-section top class="col-2 gt-sm">
+                  <q-item-label class="q-mt-sm">
+                    {{ p.row.type }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section top>
+                  <q-item-label lines="1">
+                    <span class="text-weight-medium q-mr-md"> {{ p.row.action }} </span>
+                  </q-item-label>
 
-            <q-select color="orange" multiple filled v-model="filter" :options="options" stack-label>
-
-              <template v-if="filter" v-slot:append>
-                <q-icon name="cancel" @click.stop.prevent="filter = null" class="cursor-pointer" />
-              </template>
-
-              <template v-slot:selected-item="scope">
-                <q-chip removable dense square color="white" text-color="primary" class=""
-                  @remove="scope.removeAtIndex(scope.index)" :tabindex="scope.tabindex">
-                  <q-avatar color="primary" text-color="white" :icon="scope.opt.icon" />
-                  {{ scope.opt.label }}
-                </q-chip>
-              </template>
-            </q-select>
+                  <q-item-label caption lines="1">
+                    <TextCopy :text="p.row.message" />
 
 
+                  </q-item-label>
+                  <!-- <q-item-label lines="1" class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase">
+                      something?
+                  </q-item-label> -->
+                </q-item-section>
 
+                <q-item-section top side>
+                  <div class="text-grey-8 q-pa-xs">
+                    {{ getRelativeTimestamp(p.row.createdAt) }}
+                    <q-tooltip>
+                      {{ p.row.createdAt }}
+                    </q-tooltip>
+                  </div>
+                  <div class="text-grey-8 q-gutter-xs">
+                    <DeviceEventsTypeChip :type="p.row.type" class="" />
+                    <DeviceEventActionChip :action="p.row.action" class="q-mr-sm" />
+
+
+                  </div>
+                </q-item-section>
+              </q-item>
+
+            </q-list>
 
           </template>
+          <template v-slot:no-data="{ message }">
+            <div class="full-width row flex-center q-mt-lg ">
+              <div class="col-12 col-md-auto text-center q-mt-lg">
+                <q-img src="img/undraw_empty_re_opql.svg" style="max-width: 400px" />
+                <h5 class="title">No events</h5>
+                <p class="text-body1">
+                  If anything has happend on a device it will show up here. <br>
+                  Reason:
+                  {{ message }}
+                </p>
+              </div>
 
-          <template v-slot:body="p">
-
-            <q-tr :props="props">
-
-              <q-td key="timestamp" :props="p">
-                {{ p.row.createdAt }}
-              </q-td>
-
-              <q-td key="message" :props="p">
-                {{ p.row.message }}
-              </q-td>
-
-              <q-td key="type" :props="p">
-                <DeviceEventsTypeChip :type="p.row.type" class="q-mr-sm" />
-
-              </q-td>
-
-              <q-td key="outcome" :props="p">
-                <DeviceEventOutcomeChip :outcome="p.row.outcome" class="q-mr-sm" />
-              </q-td>
-
-              <q-td key="action" :props="p">
-                <DeviceEventActionChip :action="p.row.action" class="q-mr-sm" />
-              </q-td>
-
-            </q-tr>
+            </div>
           </template>
         </q-table>
       </div>
@@ -194,5 +205,6 @@ const localPagination = ref({
 
 .search-input
   width: 350px
+
 
 </style>

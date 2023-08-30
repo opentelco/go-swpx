@@ -156,7 +156,7 @@
           </div>
         </q-btn-dropdown>
 
-        <q-btn flat dense round icon="dark_mode" @click="toggleDarMode"/>
+        <q-btn flat dense round icon="dark_mode" @click="toggleDarMode" />
         <NotificationsMainButton />
 
         <q-item-section avatar>

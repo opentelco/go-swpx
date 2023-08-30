@@ -9,11 +9,13 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'devices',  children: [
           { path: '', component: () => import('pages/DevicesPage.vue') },
-          { path: ':id', component: () => import('pages/DevicePage.vue'), children: [
-            { path: 'events', component: () => import('pages/DevicePage.vue') },
-            { path: 'configuration', component: () => import('pages/DevicePage.vue') },
-            { path: 'changes', component: () => import('pages/DevicePage.vue') },
-            { path: 'stanza', component: () => import('pages/DevicePage.vue') },
+          { name: 'devicePage', path: ':id', component: () => import('pages/DevicePage.vue'), children: [
+            { name:'deviceEvents', path: 'events', component: () => import('pages/DevicePage.vue') },
+            { name: 'deviceConfiguration', path: 'configuration', component: () => import('pages/DevicePage.vue') },
+            { name:'deviceTimeline', path: 'timeline', component: () => import('pages/DevicePage.vue') },
+            { name:'deviceChanges', path: 'changes', component: () => import('pages/DevicePage.vue') },
+            { name:'deviceStanza', path: 'stanza', component: () => import('pages/DevicePage.vue') },
+
           ]},
         ]
       },

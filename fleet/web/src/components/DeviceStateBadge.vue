@@ -3,6 +3,7 @@ import { DeviceState } from '../gql/graphql'
 import { ref } from 'vue'
 const props = defineProps<{
   state: DeviceState
+  size?: 'xs' |'sm' | 'md' | 'lg' | 'xl'
 }>()
 
 let hover = ref(false)
@@ -66,7 +67,7 @@ const stateTooltip = (state: DeviceState) => {
 
 <template>
   <div>
-    <q-chip size="sm" outline square :color="colorFromState(props.state).bg" :text-color="colorFromState(props.state).fg"
+    <q-chip :size="props.size" outline square :color="colorFromState(props.state).bg" :text-color="colorFromState(props.state).fg"
       :icon="stateIcon(props.state)">
       {{ props.state }}
       <q-tooltip class="shadow-4">

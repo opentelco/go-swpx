@@ -90,6 +90,7 @@ models:
   Timestamp:
     model:
       - "git.liero.se/opentelco/go-swpx/fleet/graph/model.Timestamp"
+
   Duration:
     model:
       - "git.liero.se/opentelco/go-swpx/fleet/graph/model.Duration"

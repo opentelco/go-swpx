@@ -6,6 +6,9 @@
      - Create device
      - Stanza
      - etc
+ - Spotlight on Info with good to know stuff?
+ - Add State: Planned ?
+ - Add OOB Device? How to handle a new type?
  - Horizontal timeline with events, changes and configs ?
  - Store ports on devices
  - Collect sFlow for devices

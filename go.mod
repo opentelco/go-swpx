@@ -37,6 +37,7 @@ require (
 	go.vxfiber.dev/vx-bouncer v1.5.19
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
+	layeh.com/radius v0.0.0-20221205141417-e7fbddd11d68
 )
 
 require (

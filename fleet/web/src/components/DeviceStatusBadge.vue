@@ -5,6 +5,7 @@ import { ref } from 'vue'
 let hover = ref(false)
 const props = defineProps<{
   status: DeviceStatus
+  size?: 'xs' |'sm' | 'md' | 'lg' | 'xl'
 }>()
 
 
@@ -15,7 +16,7 @@ const props = defineProps<{
 const colorFromStatus = (status: DeviceStatus) => {
   switch (status) {
     case DeviceStatus.Reachable:
-      return { bg: 'primary', fg: 'white' }
+      return { bg: 'positive', fg: 'white' }
     case DeviceStatus.Unreachable:
       return { bg: 'negative', fg: 'white' }
     default:
@@ -62,7 +63,7 @@ const statusTooltip = (status: DeviceStatus) => {
 
 <template>
   <div>
-    <q-chip size="sm" outline square :color="colorFromStatus(props.status).bg" :text-color="colorFromStatus(props.status).fg" :icon="statusIcon(props.status)">
+    <q-chip :size="props.size" outline square :color="colorFromStatus(props.status).bg" :text-color="colorFromStatus(props.status).fg" :icon="statusIcon(props.status)">
       {{ props.status }}
       <q-tooltip class="shadow-4">
       {{ statusTooltip(props.status) }}

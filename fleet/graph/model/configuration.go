@@ -7,6 +7,10 @@ import (
 )
 
 func (p *ListConfigurationsParams) ToProto() *configurationpb.ListParameters {
+	if p == nil {
+		return &configurationpb.ListParameters{}
+	}
+
 	params := &configurationpb.ListParameters{
 		DeviceId: p.DeviceID,
 		Limit:    internal.PointerIntToPointerInt64(p.Limit),

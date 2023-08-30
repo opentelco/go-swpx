@@ -39,6 +39,10 @@ export type ConfigurationConnection = {
   pageInfo: PageInfo;
 };
 
+export enum ConfigurationOrderBy {
+  Created = 'CREATED'
+}
+
 export type Device = {
   __typename?: 'Device';
   changes: ChangeConnection;
@@ -91,6 +95,7 @@ export type DeviceStanzasArgs = {
 export type DeviceChange = {
   __typename?: 'DeviceChange';
   createdAt: Scalars['Timestamp']['output'];
+  deviceId: Scalars['String']['output'];
   field: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   newValue: Scalars['String']['output'];
@@ -101,6 +106,7 @@ export type DeviceEvent = {
   __typename?: 'DeviceEvent';
   action: DeviceEventAction;
   createdAt: Scalars['Timestamp']['output'];
+  deviceId: Scalars['ID']['output'];
   id: Scalars['ID']['output'];
   message: Scalars['String']['output'];
   outcome: DeviceEventOutcome;
@@ -157,6 +163,62 @@ export type EventConnection = {
   pageInfo: PageInfo;
 };
 
+export type ListConfigurationsParams = {
+  after?: InputMaybe<Scalars['Timestamp']['input']>;
+  before?: InputMaybe<Scalars['Timestamp']['input']>;
+  deviceId?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<ListOrder>;
+  orderBy?: InputMaybe<ConfigurationOrderBy>;
+};
+
+export type ListConfigurationsResponse = {
+  __typename?: 'ListConfigurationsResponse';
+  configurations: Array<Configuration>;
+  pageInfo: PageInfo;
+};
+
+export enum ListDeviceChangesOrderBy {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type ListDeviceChangesParams = {
+  after?: InputMaybe<Scalars['Timestamp']['input']>;
+  before?: InputMaybe<Scalars['Timestamp']['input']>;
+  deviceId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<ListOrder>;
+  orderBy?: InputMaybe<ListDeviceChangesOrderBy>;
+};
+
+export type ListDeviceChangesResponse = {
+  __typename?: 'ListDeviceChangesResponse';
+  changes?: Maybe<Array<DeviceChange>>;
+  pageInfo: PageInfo;
+};
+
+export enum ListDeviceEventsOrderBy {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type ListDeviceEventsParams = {
+  after?: InputMaybe<Scalars['Timestamp']['input']>;
+  before?: InputMaybe<Scalars['Timestamp']['input']>;
+  deviceId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<ListOrder>;
+  orderBy?: InputMaybe<ListDeviceEventsOrderBy>;
+};
+
+export type ListDeviceEventsResponse = {
+  __typename?: 'ListDeviceEventsResponse';
+  events?: Maybe<Array<DeviceEvent>>;
+  pageInfo: PageInfo;
+};
+
 export type ListDeviceResponse = {
   __typename?: 'ListDeviceResponse';
   devices?: Maybe<Array<Device>>;
@@ -177,10 +239,18 @@ export enum ListNotificationFilter {
   ResourceTypeDevice = 'RESOURCE_TYPE_DEVICE'
 }
 
+export enum ListNotificationOrderBy {
+  Created = 'CREATED'
+}
+
 export type ListNotificationsParams = {
+  after?: InputMaybe<Scalars['Timestamp']['input']>;
+  before?: InputMaybe<Scalars['Timestamp']['input']>;
   filter?: InputMaybe<Array<ListNotificationFilter>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<ListOrder>;
+  orderBy?: InputMaybe<ListNotificationOrderBy>;
   resource_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
@@ -189,6 +259,11 @@ export type ListNotificationsResponse = {
   notifications: Array<Notification>;
   pageInfo: PageInfo;
 };
+
+export enum ListOrder {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
 
 export type MarkNotificationsAsReadParams = {
   ids: Array<Scalars['ID']['input']>;
@@ -231,9 +306,24 @@ export type PageInfo = {
 
 export type Query = {
   __typename?: 'Query';
+  configuration: Configuration;
+  configurations: ListConfigurationsResponse;
   device: Device;
+  deviceChanges: ListDeviceChangesResponse;
+  deviceEvents: ListDeviceEventsResponse;
   devices: ListDeviceResponse;
+  notification: Notification;
   notifications: ListNotificationsResponse;
+};
+
+
+export type QueryConfigurationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryConfigurationsArgs = {
+  params?: InputMaybe<ListConfigurationsParams>;
 };
 
 
@@ -242,8 +332,23 @@ export type QueryDeviceArgs = {
 };
 
 
+export type QueryDeviceChangesArgs = {
+  params?: InputMaybe<ListDeviceChangesParams>;
+};
+
+
+export type QueryDeviceEventsArgs = {
+  params?: InputMaybe<ListDeviceEventsParams>;
+};
+
+
 export type QueryDevicesArgs = {
   params?: InputMaybe<ListDevicesParams>;
+};
+
+
+export type QueryNotificationArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
