@@ -1,3 +1,132 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+
+import { useQuery } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
+import { Device, ListDeviceResponse } from '../gql/graphql'
+import DeviceStateBadge from './DeviceStateBadge.vue'
+import DeviceStatusBadge from './DeviceStatusBadge.vue'
+import TextCopy from './TextCopy.vue'
+import DeviceVendorImage from './DeviceVendorImage.vue'
+
+let eventTableRef = ref()
+
+let grid = ref(true)
+
+
+const columns: Array<any> = [
+  {
+    name: 'hostname',
+    field: 'hostname',
+    required: true,
+    label: 'Hostname',
+    align: 'left',
+    sortable: true
+  },
+  { name: 'managementIp', align: 'center', label: 'Management IP', field: 'managementIp', sortable: true },
+]
+
+let limit = ref(10)
+let offset = ref(0)
+let filter = ref('')
+
+// remap the response so it matches the response
+type response = {
+  devices: ListDeviceResponse
+}
+
+
+const { onResult, result, loading, error, refetch } = useQuery<response>(gql`
+  query Devices ($limit: Int!,  $search: String!){
+    devices(params: { limit: $limit, search: $search } ) {
+        pageInfo {
+            limit
+            offset
+            total
+            count
+        }
+        devices {
+            id
+            hostname
+            managementIp
+            serialNumber
+            model
+            networkRegion
+            pollerResourcePlugin
+            pollerProviderPlugin
+            version
+            state
+            status
+            lastSeen
+            createdAt
+            updatedAt
+            lastReboot
+        }
+      }
+    }
+`, {
+  limit: 10,
+  search: filter
+})
+
+const pagination = ref({
+  sortBy: 'desc',
+  descending: false,
+  page: 1,
+  rowsPerPage: limit.value,
+  rowsNumber: 99
+})
+
+onResult(queryResult => {
+  if (queryResult.data !== undefined) {
+    pagination.value.rowsNumber = queryResult.data.devices.pageInfo.total
+  }
+})
+
+// computed pagination with the help of the calculatePagination fuction
+let reFetch = ((props) => {
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+
+
+  if (page !== pagination.value.page) {
+    offset.value = (page - 1) * rowsPerPage
+    refetch()
+  }
+
+  if (rowsPerPage !== limit.value) {
+    limit.value = rowsPerPage
+    offset.value = (page - 1) * rowsPerPage
+    refetch()
+  }
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
+  pagination.value.sortBy = sortBy
+  pagination.value.descending = descending
+})
+
+
+onMounted(() => {
+  eventTableRef.value.requestServerInteraction()
+})
+
+interface CardDevice extends Device {
+  loading: boolean;
+}
+
+const data = computed(() => {
+  if (result.value && result.value.devices) {
+    return result.value.devices.devices.map((device: CardDevice) => {
+      const x = Math.floor(Math.random() * 2)
+      return {
+        ...device,
+        loading: x,
+      }
+    })
+  }
+  return []
+})
+
+</script>
 
 <template>
   <q-banner inline-actions class="text-white bg-red" v-if="error">
@@ -7,8 +136,8 @@
   <div class="q-pa-md">
     <div class="text-h4 q-pa-md">Devices</div>
     <q-card class="shadow-2 card">
-      <q-table :grid="grid" flat bordered :rows="data" :columns="columns" row-key="name"
-        :filter="filter" :loading="loading">
+      <q-table :grid="grid" flat bordered :rows="data" :columns="columns" row-key="name" :filter="filter"
+        :loading="loading" @request="reFetch" ref="eventTableRef" v-model:pagination="pagination">
         <template v-slot:top-right>
           <q-input debounce="300" v-model="filter" outlined rounded input-class="text-right"
             class="q-ml-md q-pr-lg search-input">
@@ -31,25 +160,22 @@
             <q-card class="card shadow-3">
               <q-item>
                 <q-item-section class="col-3 vendor-avatar">
-                  <DeviceVendorImage vendor="huawei"/>
+                  <DeviceVendorImage vendor="huawei" />
                 </q-item-section>
-
-
 
                 <q-item-section>
                   <q-item-label>
-
                   </q-item-label>
                   <q-item-label class="text-weight-medium">
                     <TextCopy :text="props.row.hostname" />
-                    </q-item-label>
+                  </q-item-label>
                   <q-item-label caption>
                     <TextCopy :text="props.row.managementIp" />
                   </q-item-label>
 
                 </q-item-section>
-                <DeviceStateBadge :state="props.row.state" size="sm"/>
-                <DeviceStatusBadge :status="props.row.status" size="sm"/>
+                <DeviceStateBadge :state="props.row.state" size="sm" />
+                <DeviceStatusBadge :status="props.row.status" size="sm" />
               </q-item>
 
 
@@ -120,7 +246,7 @@
                   </q-list>
                 </q-card-section>
 
-                <q-separator vertical v-if="props.row.loading"/>
+                <q-separator vertical v-if="props.row.loading" />
                 <q-card-section class="col-4 items-center q-pa-xl" v-if="props.row.loading">
                   <q-item-label caption class="q-mb-sm">
                     Getting data from device...
@@ -163,94 +289,6 @@
     </q-card>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-
-import { useQuery } from '@vue/apollo-composable'
-import gql from 'graphql-tag'
-import { Device, ListDeviceResponse } from '../gql/graphql'
-import DeviceStateBadge from './DeviceStateBadge.vue'
-import DeviceStatusBadge from './DeviceStatusBadge.vue'
-import TextCopy from './TextCopy.vue'
-import DeviceVendorImage from './DeviceVendorImage.vue'
-
-let grid = ref(true)
-
-
-
-const columns: Array<any> = [
-  {
-    name: 'hostname',
-    field: 'hostname',
-    required: true,
-    label: 'Hostname',
-    align: 'left',
-    sortable: true
-  },
-  { name: 'managementIp', align: 'center', label: 'Management IP', field: 'managementIp', sortable: true },
-]
-
-let filter = ref('')
-
-// remap the response so it matches the response
-type response = {
-  devices: ListDeviceResponse
-}
-
-
-const { result, loading, error } = useQuery<response>(gql`
-  query Devices ($limit: Int!,  $search: String!){
-    devices(params: { limit: $limit, search: $search } ) {
-        pageInfo {
-            limit
-            offset
-            total
-            count
-        }
-        devices {
-            id
-            hostname
-            managementIp
-            serialNumber
-            model
-            networkRegion
-            pollerResourcePlugin
-            pollerProviderPlugin
-            version
-            state
-            status
-            lastSeen
-            createdAt
-            updatedAt
-            lastReboot
-        }
-      }
-    }
-`, {
-  limit: 10,
-  search: filter
-})
-
-
-interface CardDevice extends Device {
-  loading: boolean;
-}
-
-const data = computed(() => {
-  if (result.value && result.value.devices) {
-    return result.value.devices.devices.map((device: CardDevice) => {
-      const x = Math.floor(Math.random() * 2)
-      return {
-        ...device,
-        loading: x,
-      }
-    })
-  }
-  return []
-})
-
-</script>
 
 <style lang="sass" scoped>
 .search-input

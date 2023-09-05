@@ -27,9 +27,48 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb";
 import "fleet_common.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 
 package fleet.device;
+
+service DeviceService {
+    // *** Device ***
+    // Get a device by its ID, this is used to get a specific device
+    rpc GetByID(GetByIDParameters) returns (Device) {}
+
+    // Get a device by its hostname, managment ip or serial number etc (used to search for a device)
+    rpc List(ListParameters) returns (ListResponse) {}
+
+    // Create a device in the fleet
+    // note: if device needs to be discovered use the FleetService instead
+    // Creating a device will append the default schedles to the device.
+    // - CollectDevice every hour
+    // - CollectConfig every 24 hours
+    rpc Create(CreateParameters) returns (Device) {}
+
+    // Update a device in the fleet (this is used to update the device with new information)
+    rpc Update(UpdateParameters) returns (Device) {}
+
+    // Delete a device from the fleet and all changes for the device
+    // To purge a device use the Delete in the FleetService instead (as it also also deletes the configuration)
+    rpc Delete(DeleteParameters) returns (google.protobuf.Empty) {}
+
+    // Get changes for a device, changes are created when a device is updated
+    rpc GetChangeByID(GetChangeByIDParameters) returns (Change) {}
+
+    // returns a list of changes (default 100)
+    rpc ListChanges(ListChangesParameters) returns (ListChangesResponse) {}
+
+    // add an event
+    rpc AddEvent(Event) returns (Event) {}
+
+    // Get changes for a device, changes are created when a device is updated
+    rpc GetEventByID(GetEventByIDParameters) returns (Event) {}
+
+    // returns a list of events (default 100)
+    rpc ListEvents(ListEventsParameters) returns (ListEventsResponse) {}
+
+}
+
 
 message Device {
     // id of the device
@@ -102,46 +141,18 @@ message Device {
     // the status of the device
     Status status = 12;
 
-    message Schedule {
-        // duration between each poll
-        // minimum of 120 seconds (2 minutes)
-        google.protobuf.Duration interval = 1;
-
-        enum Type {
-            SCHEDULE_TYPE_NOT_SET = 0;
-            COLLECT_DEVICE        = 1;
-            COLLECT_CONFIG        = 2;
-        }
-
-        // the type of schedule
-        Type type = 2;
-
-        // the last time the schedule was run (if it has been run)
-        google.protobuf.Timestamp last_run = 3;
-
-        // if the schedule is active or not (if it should be run)
-        bool active = 4;
-
-        // the number of times the schedule has failed to run
-        // if the schedule has failed more than 3 times it will be disabled. To unlock
-        // the schedule it needs to be manually enabled again and setting failed count to 0
-        int64 failed_count = 5;
-    }
-
-    // the schedules for the device (polling, collection etc)
-    repeated Schedule schedules = 13;
 
     // the last time the device was seen by the fleet
-    google.protobuf.Timestamp last_seen = 14;
+    google.protobuf.Timestamp last_seen = 13;
 
     // the time the device was created in the fleet database
-    google.protobuf.Timestamp created = 15;
+    google.protobuf.Timestamp created = 14;
 
     // the time the device was updated in the database
-    google.protobuf.Timestamp updated = 16;
+    google.protobuf.Timestamp updated = 15;
 
     // last known time when the device was rebooted (uptime from snmp)
-    google.protobuf.Timestamp last_reboot = 17;
+    google.protobuf.Timestamp last_reboot = 16;
 }
 
 message Change {
@@ -164,46 +175,7 @@ message Change {
     google.protobuf.Timestamp created = 6;
 }
 
-service DeviceService {
-    // *** Device ***
-    // Get a device by its ID, this is used to get a specific device
-    rpc GetByID(GetByIDParameters) returns (Device) {}
 
-    // Get a device by its hostname, managment ip or serial number etc (used to search for a device)
-    rpc List(ListParameters) returns (ListResponse) {}
-
-    // Create a device in the fleet
-    // note: if device needs to be discovered use the FleetService instead
-    // Creating a device will append the default schedles to the device.
-    // - CollectDevice every hour
-    // - CollectConfig every 24 hours
-    rpc Create(CreateParameters) returns (Device) {}
-
-    // Update a device in the fleet (this is used to update the device with new information)
-    rpc Update(UpdateParameters) returns (Device) {}
-
-    // Delete a device from the fleet and all changes for the device
-    // To purge a device use the Delete in the FleetService instead (as it also also deletes the configuration)
-    rpc Delete(DeleteParameters) returns (google.protobuf.Empty) {}
-
-    // Get changes for a device, changes are created when a device is updated
-    rpc GetChangeByID(GetChangeByIDParameters) returns (Change) {}
-
-    // returns a list of changes (default 100)
-    rpc ListChanges(ListChangesParameters) returns (ListChangesResponse) {}
-
-    // add an event
-    rpc AddEvent(Event) returns (Event) {}
-
-    // Get changes for a device, changes are created when a device is updated
-    rpc GetEventByID(GetEventByIDParameters) returns (Event) {}
-
-    // returns a list of events (default 100)
-    rpc ListEvents(ListEventsParameters) returns (ListEventsResponse) {}
-
-    // uspert a schedule for a device, the schedule is unuqie by type
-    rpc SetSchedule(SetScheduleParameters) returns (Device) {}
-}
 
 message GetByIDParameters {
     // the id of the device to get
@@ -219,29 +191,22 @@ message ListParameters {
     // free text search for hostname and management_ip
     optional string search = 3;
 
-    // has schedule to be run in the next 10 secs, the device also needs to be in the active state
-    // or it will not be returned (default false)
-    optional bool has_firing_schedule = 4;
-
-    // one of the schedule types to filter on (default all)
-    optional Device.Schedule.Type schedule_type = 6;
-
     enum OrderBy {
         ORDER_BY_NOT_SET   = 0;
         ORDER_BY_CREATED   = 1;
         ORDER_BY_UPDATED   = 2;
         ORDER_BY_LAST_SEEN = 3;
     }
-    repeated OrderBy order_by = 7;
+    repeated OrderBy order_by = 4;
 
     // order descending is the default
-    optional bool order_asc = 8;
+    optional bool order_asc = 5;
 
     // defaults to 50 devices if not set
-    optional int64 limit = 9;
+    optional int64 limit = 6;
 
     // offset to start from (default 0)
-    optional int64 offset = 10;
+    optional int64 offset = 7;
 }
 
 message CreateParameters {
@@ -473,12 +438,6 @@ message Event {
     google.protobuf.Timestamp created = 7;
 }
 
-message SetScheduleParameters {
-    // the id of the device to upsert the schedule for
-    string device_id = 1;
-    // the schedule to upsert
-    Device.Schedule schedule = 2;
-}
 
 enum TaskQueue {
     TASK_QUEUE_FLEET_DEVICE = 0;

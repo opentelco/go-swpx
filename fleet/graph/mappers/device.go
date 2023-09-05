@@ -13,10 +13,6 @@ type Device struct {
 }
 
 func (d Device) ToGQL() *model.Device {
-	schedules := make([]*model.DeviceSchedule, len(d.Schedules))
-	for i, s := range d.Schedules {
-		schedules[i] = DeviceSchedule{s}.ToGQL()
-	}
 
 	return &model.Device{
 		ID:                   d.Id,
@@ -31,7 +27,6 @@ func (d Device) ToGQL() *model.Device {
 		PollerProviderPlugin: &d.PollerProviderPlugin,
 		State:                DeviceState(d.State).ToGQL(),
 		Status:               DeviceStatus(d.Status).ToGQL(),
-		Schedules:            schedules,
 		Events:               &model.EventConnection{},
 		Changes:              &model.ChangeConnection{},
 		LastSeen:             internal.TimestampPBToTimePointer(d.LastSeen),
@@ -110,36 +105,6 @@ func (s DeviceState) ToGQL() model.DeviceState {
 		return model.DeviceStateNotSet
 	}
 
-}
-
-type DeviceScheduleType devicepb.Device_Schedule_Type
-
-func (t DeviceScheduleType) ToGQL() model.ScheduleType {
-	switch devicepb.Device_Schedule_Type(t) {
-	case devicepb.Device_Schedule_COLLECT_CONFIG:
-		return model.ScheduleTypeConfig
-	case devicepb.Device_Schedule_COLLECT_DEVICE:
-		return model.ScheduleTypeDevice
-	default:
-		return model.ScheduleTypeNotSet
-	}
-
-}
-
-type DeviceSchedule struct{ *devicepb.Device_Schedule }
-
-func (d DeviceSchedule) ToGQL() *model.DeviceSchedule {
-	if d.Device_Schedule == nil {
-		return nil
-	}
-
-	return &model.DeviceSchedule{
-		Interval:    d.Interval.AsDuration(),
-		Type:        DeviceScheduleType(d.Type).ToGQL(),
-		LastRun:     internal.TimestampPBToTimePointer(d.LastRun),
-		Active:      d.Active,
-		FailedCount: int(d.FailedCount),
-	}
 }
 
 type DeviceEvents []*devicepb.Event

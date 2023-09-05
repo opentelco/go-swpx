@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"git.liero.se/opentelco/go-swpx/fleet/radius/huawei"
+	"git.liero.se/opentelco/go-swpx/fleet/aaa/radius/huawei"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 )

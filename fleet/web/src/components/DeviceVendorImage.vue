@@ -14,25 +14,25 @@ const vendorImage = (vendor: string) => {
 
   switch (vendor.toLowerCase()) {
     case 'cisco':
-      return '~assets/vendor_cisco.svg'
+      return '/img/vendor_logos/cisco.svg'
     case 'juniper':
-      return '~assets/vendor_juniper.svg'
+      return '/img/vendor_logos/juniper.svg'
     case 'arista':
-      return '~assets/vendor_arista.svg'
+      return '/img/vendor_logos/arista.svg'
     case 'mikrotik':
-      return '~assets/vendor_mikrotik.svg'
+      return '/img/vendor_logos/mikrotik.svg'
     case 'ubiquiti':
-      return '~assets/vendor_ubiquiti.svg'
+      return '/img/vendor_logos/ubiquiti.svg'
     case 'huawei':
-      return 'img/vendor/vendor_huawei.svg'
+      return '/img/vendor_logos/huawei.svg'
     case 'dell':
-      return '~assets/vendor_dell.svg'
+      return '/img/vendor_logos/dell.svg'
     case 'hp':
-      return '~assets/vendor_hp.svg'
+      return '/img/vendor_logos/hp.svg'
     case 'fortinet':
-      return '~assets/vendor_fortinet.svg'
+      return '~assets/vendor_logos/fortinet.svg'
     case 'palo alto':
-      return '~assets/vendor_paloalto.svg'
+      return '~assets/vendor_logos/alto.svg'
     default:
       return 'img/vendor/vendor_unknown.svg'
   }

@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { DeviceChange, DeviceEvent, ListDeviceChangesResponse } from '../gql/graphql'
-
-import { getRelativeTimestamp } from '../utils/time'
-
+import { DeviceChange, DeviceEvent, ListDeviceChangesResponse, ListDeviceEventsResponse } from '../gql/graphql'
 
 import { ref, toRefs, onMounted, computed } from 'vue'
-import TextCopy from './TextCopy.vue';
+
 
 
 let getDeviceChanges = gql`query DeviceChanges (
@@ -31,7 +28,26 @@ let getDeviceChanges = gql`query DeviceChanges (
             count
         }
       }
+
+      deviceEvents( params: { deviceId: $deviceId, limit: $limit, offset: $offset } ) {
+      events {
+            id
+            deviceId
+            type
+            message
+            action
+            outcome
+            createdAt
+        }
+        pageInfo {
+            limit
+            offset
+            total
+            count
+        }
+      }
 }`
+
 
 
 type TimelineObject = {
@@ -39,8 +55,56 @@ type TimelineObject = {
   event?: DeviceEvent
 }
 
-// Timeline is a array of TimelineObject
-let timeline = ref<TimelineObject[]>([])
+function formatDateToYYYYMMDD(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+// Timeline is a computed value that returns a map of TimelineObject  ordered by createdAt
+const timeline = computed(() => {
+  let timeline: Map<string, TimelineObject[]> = new Map()
+  let changes = result.value?.deviceChanges.changes
+  let events = result.value?.deviceEvents.events
+
+
+
+
+  if (changes !== undefined && changes !== null) {
+    changes.forEach((change) => {
+      let ts = formatDateToYYYYMMDD(new Date(change.createdAt))
+
+      if (timeline.has(ts)) {
+        let items = timeline.get(ts)
+        items?.push({ change: change })
+        timeline.set(ts, items!)
+      } else {
+        timeline.set(ts, [{ change: change }])
+      }
+    })
+  }
+
+  if (events !== undefined && events !== null) {
+    events.forEach((event) => {
+      let ts = formatDateToYYYYMMDD(new Date(event.createdAt))
+
+      if (timeline.has(ts)) {
+        let items = timeline.get(ts)
+        items?.push({ event: event })
+        timeline.set(ts, items!)
+      } else {
+        timeline.set(ts, [{ event: event }])
+      }
+    })
+  }
+
+  let ordredMap = new Map([...timeline.entries()].sort((a, b) => {
+    return new Date(a[0]).getTime() - new Date(b[0]).getTime()
+  }))
+  return Array.from(ordredMap)
+})
+
+// function to convert timeline to a array of key and values
+
+
 
 
 const props = defineProps<{
@@ -56,6 +120,7 @@ let offset = ref(0)
 
 type response = {
   deviceChanges: ListDeviceChangesResponse
+  deviceEvents: ListDeviceEventsResponse
 }
 
 
@@ -82,9 +147,9 @@ onResult(queryResult => {
 
 // computed pagination with the help of the calculatePagination fuction
 let reFetch = ((page) => {
-    offset.value = (page - 1) * pagination.value.rowsPerPage
-    refetch()
-  })
+  offset.value = (page - 1) * pagination.value.rowsPerPage
+  refetch()
+})
 
 // isEven returns right if even left is odd
 const isEven = (num: number) => {
@@ -115,58 +180,95 @@ onMounted(() => {
     </div>
     <div class="row justify-center">
       <div class="q-pa-lg flex flex-center">
-        <q-pagination v-model="pagination.page" :max=maxPage input @update:model-value="reFetch"/>
+        <q-pagination v-model="pagination.page" :max=maxPage input @update:model-value="reFetch" />
       </div>
     </div>
     <div class="row">
       <div class="col col-12">
         {{ error }}
-        <q-timeline layout="loose" color="secondary" class="" v-if="result?.deviceChanges.changes?.length > 0">
-          <q-timeline-entry :side="isEven(i)" icon="edit" v-for="p, i in result?.deviceChanges.changes" :key="p.id"
-            class="q-mb-xl">
+        <q-timeline layout="loose" color="secondary" class="" v-if="timeline.length > 0" :loading=loading>
+          <q-timeline-entry :side="isEven(i)" icon="edit" v-for="(item, key) in timeline" :key="i" class="q-mb-xl">
             <template v-slot:title>
-              <span class="text-weight-medium q-mr-md"> Field <q-chip square color="primary" text-color="white" dense
-                  class="text-uppercase">{{ p.field }}</q-chip>
-                changed</span>
+              <span class="text-weight-medium q-mr-md">
+                {{ item[0] }}
+              </span>
             </template>
             <template v-slot:subtitle>
-              {{ getRelativeTimestamp(p.createdAt) }}
-              <q-tooltip>{{ p.createdAt }}</q-tooltip>
+              <span class="text-weight-medium q-mr-md">
+                {{ item[1].length }} happenings
+              </span>
             </template>
 
             <div class="text-body1">
 
               <q-card style="max-width:700px" class="q-pa-lg q-ma-lg">
-                <div class="row">
-                  <div class="col">
-                    The field changed from <q-badge color="grey">{{ p.oldValue }}</q-badge> <q-icon
-                      name="arrow_forward" />
-                    <q-badge color="green">{{ p.newValue }}</q-badge>
+                <div class="row" v-for="(h, i) in item[1]" :key="i">
+
+                  <div v-if="h.event" class="col col-8 q-pa-md ">
+                    <q-card class="my-card shadow-2 q-pa-sm"  bordered>
+                      <q-item>
+                        <q-item-section avatar>
+                          <q-avatar>
+                            <q-icon name="fa-solid fa-envelope-open-text"/>
+                          </q-avatar>
+                        </q-item-section>
+
+                        <q-item-section>
+                          <q-item-label>{{ h.event?.type }}</q-item-label>
+                          <q-item-label caption>
+                            {{ h.event?.action }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+
+                      <q-separator />
+                      <div class="text-body1">
+                        {{ h.event?.message }}
+                      </div>
+                    </q-card>
                   </div>
+
+                  <div v-if="h.change" class="col col-8 q-pa-md ">
+                    <q-card class="my-card shadow-2 q-pa-sm"  bordered>
+                      <q-item>
+                        <q-item-section avatar>
+                          <q-avatar>
+                            <q-icon name="fa-solid fa-pen-to-square"/>
+                          </q-avatar>
+                        </q-item-section>
+
+                        <q-item-section>
+                          <q-item-label>Field <q-badge align="middle">{{ h.change?.field }}</q-badge> changed</q-item-label>
+                          <q-item-label caption>
+                            {{ h.change?.newValue }} <q-icon name="fa-solid fa-arrow-right"/> {{ h.change?.oldValue }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+
+                      <q-separator />
+                      <div class="text-body1">
+                        {{ h.event?.message }}
+                      </div>
+                    </q-card>
+                  </div>
+
                 </div>
                 <q-separator class="q-mb-md q-mt-md" />
                 <div class="row">
                   <div class="col text-subtitle1">
-                    <q-icon name="commit" />
-                    Before Change
                   </div>
                   <div class="col text-body1">
-                    <TextCopy :text="p.oldValue" />
                   </div>
                 </div>
                 <div class="row">
                   <div class="col text-subtitle1">
-                    <q-icon name="merge" />
-                    After Change
                   </div>
                   <div class="col text-body1">
-                    <TextCopy :text="p.newValue" />
                   </div>
                 </div>
                 <div class="row q-mt-md">
                   <div class="col-12 text-caption">
                     <div class="text-right">
-                      Change was done <span class="text-bold">{{ p.createdAt }} </span>
                     </div>
                   </div>
                 </div>
@@ -181,9 +283,9 @@ onMounted(() => {
         <div class="full-width row flex-center q-mt-lg " v-else>
           <div class="col-12 col-md-auto text-center q-mt-lg">
             <q-img src="img/undraw_empty_re_opql.svg" style="max-width: 400px" />
-            <h5 class="title">No changes</h5>
+            <h5 class="title">Quite times</h5>
             <p class="text-body1">
-              If anything changes on the device props it will show up here. <br>
+              If anything happens on the device props it will show up here. <br>
             </p>
           </div>
 

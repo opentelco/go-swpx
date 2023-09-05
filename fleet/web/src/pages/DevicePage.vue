@@ -95,7 +95,7 @@
       </div>
       <div class="row">
         <div class="col-12">
-
+          <q-separator class="q-mt-lg shadow-up-5"/>
           <q-tabs v-model="tab" class="text-grey" active-color="primary" indicator-color="primary" align="justify">
             <q-route-tab label="device" name="spotlight" icon="fa-regular fa-lightbulb" :to="tabRouteTo('')" />
             <q-route-tab label="ports" name="ports" icon="fa-solid fa-ethernet" disabled/>
@@ -315,9 +315,7 @@
 
                 </div>
               </div>
-
-            </q-tab-panel>
-
+s            </q-tab-panel>
             <q-tab-panel name="stanza">
               <div class="text-h6">stanza</div>
               Lorem ipsum dolor sit amet consectetur adipisicing elit.
@@ -332,7 +330,7 @@
             </q-tab-panel>
 
             <q-tab-panel name="changes">
-              Changes in a table
+              <DeviceChangesTable :deviceId="route.params.id" />
             </q-tab-panel>
             <q-tab-panel name="events">
               <DeviceEventsTable :deviceId="route.params.id" />
@@ -360,6 +358,7 @@ import DeviceStatusBadge from '../components/DeviceStatusBadge.vue'
 import DeviceStateBadge from '../components/DeviceStateBadge.vue'
 import DeviceConfigTable from '../components/DeviceConfigTable.vue'
 import DeviceEventsTable from '../components/DeviceEventsTable.vue'
+import DeviceChangesTable from '../components/DeviceChangesTable.vue'
 import DeviceTimeline from 'src/components/DeviceTimeline.vue'
 import DeviceVendorImage from 'src/components/DeviceVendorImage.vue'
 import TextCopy from 'src/components/TextCopy.vue'
