@@ -35,6 +35,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/gorilla/context"
 
+	"git.liero.se/opentelco/go-swpx/config"
 	"git.liero.se/opentelco/go-swpx/core"
 
 	"github.com/go-chi/chi"
@@ -58,6 +59,7 @@ func (d TimeoutDuration) MarshalJSON() (b []byte, err error) {
 type Server struct {
 	*chi.Mux
 
+	conf   *config.Configuration
 	core   *core.Core
 	logger hclog.Logger
 }
@@ -68,7 +70,7 @@ func (s *Server) ListenAndServe(host string) error {
 }
 
 // NewServer creates and returns a server.
-func NewServer(core *core.Core, logger hclog.Logger) *Server {
+func NewServer(core *core.Core, conf *config.Configuration, logger hclog.Logger) *Server {
 	if logger != nil {
 		logger = hclog.New(&hclog.LoggerOptions{
 			Name:   APP_NAME,
@@ -80,6 +82,7 @@ func NewServer(core *core.Core, logger hclog.Logger) *Server {
 	srv := &Server{
 		Mux:    chi.NewRouter(),
 		core:   core,
+		conf:   conf,
 		logger: logger,
 	}
 

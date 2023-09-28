@@ -7,6 +7,10 @@ import (
 )
 
 func Test_In(t *testing.T) {
+	automatedOkList := []string{
+		"only-for-migration",
+	}
+
 	assert.True(t, In("only-for-migration-a99", automatedOkList...))
 	assert.True(t, In("only-for-migration-a1", automatedOkList...))
 	assert.True(t, In("only-for-migration", automatedOkList...))

@@ -14,6 +14,10 @@ type RequestConfig struct {
 
 	// what cache TTL to use when no TTL is specified in the request
 	DefaultCacheTTL Duration `hcl:"default_cache_ttl,optional"`
+
+	// a list of hosts that will always respond with OK when polling
+	// used to override the normal behaviour of SWP-core
+	OverrideOkList []string `hcl:"override_ok_list,optional"`
 }
 
 type Duration string

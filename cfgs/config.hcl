@@ -7,6 +7,7 @@ request {
   default_task_queue_prefix = "VX_SE1"
   default_provider = "vx"
   default_cache_ttl = "30s"
+  override_ok_list = ["mulbarton-migration", "only-for-migration", "deltapark-a18"]
 }
 
 mongodb-cache "response" {
