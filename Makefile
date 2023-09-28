@@ -30,7 +30,6 @@ providers:
 	@cd $(providers_dir)/sait/; go build -o $(providers_plugin_dir)/sait .
 
 
-resources: r_clean r_vrp r_ctc r_generic
 
 r_clean:
 	@rm -f $(resources_bin)/*
