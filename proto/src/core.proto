@@ -26,7 +26,7 @@ option go_package = "git.liero.se/opentelco/go-swpx/proto/go/corepb";
 
 import "network_element.proto";
 import "stanza.proto";
-import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
 
 message Error {
     string message = 1;
@@ -155,17 +155,38 @@ message CommandRequest {}
 message CommandResponse {}
 message InformationResponse {}
 
+// DiagnosticRequest is used to run a diagnostic on a network element or a specific port on the network element
+message DiagnosticRequest {
+        // session is used to locate the network element
+    SessionRequest session = 1;
+    // settings is used to configure the request
+    Settings settings      = 2;
+
+    // the lenght of the diagnostic in seconds (wait between the two collections of data)
+    google.protobuf.Duration diagnosic_length = 3;
+}
+
+// DiagnosticResponse is used to return the result of a diagnostic
+message DiagnosticResponse {
+    string report = 1;
+}
+
 service CoreService {
     // Discover is used to get basic information about an network element
     rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+
+    // Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+    // It will collect data from the network element and then wait for a period of time and collect data again
+    // and return the difference between the two collections of data to the client. The data will also be analyzed
+    // by the poller and Report of the diagnostic will be returned to the client.
+    // the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
+    // the network element which means conneting, logging in etc
+    rpc Diagnostic(DiagnosticRequest) returns (DiagnosticResponse);
 
     // SWP Polling call to get technical Information and other information about a network element
     // the request is sent to the correct poller based on the network_region of the request
     // the type of the request is used to determine what information to collect from the network element
     rpc Poll(PollRequest) returns (PollResponse);
-
-    // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
-    rpc Information(google.protobuf.Empty) returns (InformationResponse);
 
     // CollectConfig collects the configuration of a network element check for any changes between the stored config and the
     // collected one. Returs a list of changes and the config collected from the network element

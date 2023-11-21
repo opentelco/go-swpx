@@ -11,6 +11,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func init() {
@@ -47,7 +48,10 @@ func init() {
 	discoverCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
 	discoverCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
 
+	TestRootCmd.AddCommand(discoverCmd)
+
 	// -
+
 	configureCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
 	configureCmd.Flags().StringP("target", "t", "", "the target to test")
 	if err := configureCmd.MarkFlagRequired("target"); err != nil {
@@ -59,9 +63,18 @@ func init() {
 	if err := configureCmd.MarkFlagRequired("line"); err != nil {
 		panic(err)
 	}
-
-	TestRootCmd.AddCommand(discoverCmd)
 	TestRootCmd.AddCommand(configureCmd)
+
+	// -
+
+	diagnosticCmd.Flags().String("ttl", "20s", "how long the diagnostc will run")
+	diagnosticCmd.Flags().StringP("target", "t", "", "the target to test")
+	if err := diagnosticCmd.MarkFlagRequired("target"); err != nil {
+		panic(err)
+	}
+	diagnosticCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
+	diagnosticCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
+	TestRootCmd.AddCommand(diagnosticCmd)
 
 	Root.AddCommand(TestRootCmd)
 
@@ -290,6 +303,54 @@ var configureCmd = &cobra.Command{
 				Hostname: target,
 			},
 			Stanza: stanza,
+		})
+		if err != nil {
+			cmd.PrintErr(err)
+		}
+		if resp != nil {
+			cmd.Println(prettyPrintJSON(resp))
+		} else {
+			fmt.Println("failed to configure")
+		}
+
+	},
+}
+
+var diagnosticCmd = &cobra.Command{
+	Use:   "diagnostic",
+	Short: "run diagnostic on network elements port",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		target, _ := cmd.Flags().GetString("target")
+		ttlString, _ := cmd.Flags().GetString("ttl")
+		providers, _ := cmd.Flags().GetStringSlice("providers")
+		resource, _ := cmd.Flags().GetString("resource")
+
+		cmd.Println("selected providers: ", providers)
+
+		ttlDur, err := time.ParseDuration(ttlString)
+		if err != nil {
+			cmd.Println("could not parse ttl: ", err)
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := corepb.NewCoreServiceClient(conn)
+
+		resp, err := swpx.Diagnostic(cmd.Context(), &corepb.DiagnosticRequest{
+			Settings: &corepb.Settings{
+				ProviderPlugin: providers,
+				ResourcePlugin: resource,
+				Timeout:        ttlString,
+			},
+			Session: &corepb.SessionRequest{
+				Hostname: target,
+			},
+			DiagnosicLength: durationpb.New(ttlDur),
 		})
 		if err != nil {
 			cmd.PrintErr(err)

@@ -155,6 +155,23 @@ func New(conf *config.Configuration, mongoClient *mongo.Client, logger hclog.Log
 	}
 	core.cacheEnabled = true
 
+	opts := client.Options{
+		HostPort:  conf.Temporal.Address,
+		Namespace: conf.Temporal.Namespace,
+		Logger:    logger,
+	}
+
+	tc, err := client.Dial(opts)
+	if err != nil {
+		return nil, fmt.Errorf("could not create temporal client: %w", err)
+	}
+	w := createTemporalWorker(tc, core)
+	if err := w.Start(); err != nil {
+		return nil, fmt.Errorf("could not start temporal worker: %w", err)
+	}
+
+	core.tc = tc
+
 	return core, nil
 }
 

@@ -12,7 +12,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -26,12 +25,17 @@ const _ = grpc.SupportPackageIsVersion7
 type CoreServiceClient interface {
 	// Discover is used to get basic information about an network element
 	Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
+	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+	// It will collect data from the network element and then wait for a period of time and collect data again
+	// and return the difference between the two collections of data to the client. The data will also be analyzed
+	// by the poller and Report of the diagnostic will be returned to the client.
+	// the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
+	// the network element which means conneting, logging in etc
+	Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
-	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
-	Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
 	// collected one. Returs a list of changes and the config collected from the network element
 	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
@@ -54,18 +58,18 @@ func (c *coreServiceClient) Discover(ctx context.Context, in *DiscoverRequest, o
 	return out, nil
 }
 
-func (c *coreServiceClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
-	out := new(PollResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Poll", in, out, opts...)
+func (c *coreServiceClient) Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error) {
+	out := new(DiagnosticResponse)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Diagnostic", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreServiceClient) Information(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InformationResponse, error) {
-	out := new(InformationResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Information", in, out, opts...)
+func (c *coreServiceClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
+	out := new(PollResponse)
+	err := c.cc.Invoke(ctx, "/core.CoreService/Poll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +91,17 @@ func (c *coreServiceClient) CollectConfig(ctx context.Context, in *CollectConfig
 type CoreServiceServer interface {
 	// Discover is used to get basic information about an network element
 	Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
+	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+	// It will collect data from the network element and then wait for a period of time and collect data again
+	// and return the difference between the two collections of data to the client. The data will also be analyzed
+	// by the poller and Report of the diagnostic will be returned to the client.
+	// the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
+	// the network element which means conneting, logging in etc
+	Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(context.Context, *PollRequest) (*PollResponse, error)
-	// Information returns infomration about the switch poller. loaded resources plugins and provider plugins
-	Information(context.Context, *emptypb.Empty) (*InformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
 	// collected one. Returs a list of changes and the config collected from the network element
 	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
@@ -106,11 +115,11 @@ type UnimplementedCoreServiceServer struct {
 func (UnimplementedCoreServiceServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
 }
+func (UnimplementedCoreServiceServer) Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Diagnostic not implemented")
+}
 func (UnimplementedCoreServiceServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
-}
-func (UnimplementedCoreServiceServer) Information(context.Context, *emptypb.Empty) (*InformationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Information not implemented")
 }
 func (UnimplementedCoreServiceServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectConfig not implemented")
@@ -146,6 +155,24 @@ func _CoreService_Discover_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CoreService_Diagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiagnosticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServiceServer).Diagnostic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.CoreService/Diagnostic",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServiceServer).Diagnostic(ctx, req.(*DiagnosticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CoreService_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PollRequest)
 	if err := dec(in); err != nil {
@@ -160,24 +187,6 @@ func _CoreService_Poll_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CoreServiceServer).Poll(ctx, req.(*PollRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CoreService_Information_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoreServiceServer).Information(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/core.CoreService/Information",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Information(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -212,12 +221,12 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CoreService_Discover_Handler,
 		},
 		{
-			MethodName: "Poll",
-			Handler:    _CoreService_Poll_Handler,
+			MethodName: "Diagnostic",
+			Handler:    _CoreService_Diagnostic_Handler,
 		},
 		{
-			MethodName: "Information",
-			Handler:    _CoreService_Information_Handler,
+			MethodName: "Poll",
+			Handler:    _CoreService_Poll_Handler,
 		},
 		{
 			MethodName: "CollectConfig",

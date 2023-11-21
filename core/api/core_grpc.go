@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"git.liero.se/opentelco/go-swpx/core"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
@@ -40,6 +39,10 @@ var automatedOkList = []string{
 
 func (s *coreGrpcImpl) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*corepb.DiscoverResponse, error) {
 	return s.core.Discover(ctx, request)
+}
+
+func (s *coreGrpcImpl) Diagnostic(ctx context.Context, request *corepb.DiagnosticRequest) (*corepb.DiagnosticResponse, error) {
+	return s.core.Diagnostic(ctx, request)
 }
 
 // Request to SWP-core
@@ -79,14 +82,6 @@ func In(hostname string, list ...string) bool {
 
 func (s *coreGrpcImpl) CollectConfig(ctx context.Context, request *corepb.CollectConfigRequest) (*corepb.CollectConfigResponse, error) {
 	return s.core.CollectConfig(ctx, request)
-}
-
-func (s *coreGrpcImpl) Command(ctx context.Context, request *corepb.CommandRequest) (*corepb.CommandResponse, error) {
-	panic("implement me")
-}
-
-func (s *coreGrpcImpl) Information(ctx context.Context, request *emptypb.Empty) (*corepb.InformationResponse, error) {
-	panic("implement me")
 }
 
 func NewGrpc(core *core.Core, srv *grpc.Server, logger hclog.Logger) {

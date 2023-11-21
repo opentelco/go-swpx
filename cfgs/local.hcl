@@ -41,6 +41,5 @@ logger {
 
 temporal {
   addr       = "localhost:7233"
-  task_queue = "swpx-tq"
   namespace  = "TEST_SwitchPoller_Local"
 }

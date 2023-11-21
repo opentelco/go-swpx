@@ -15,6 +15,8 @@ type Configuration struct {
 	MongoServer *MongoDb      `hcl:"mongodb,block"`
 	MongoCaches []*MongoCache `hcl:"mongodb-cache,block"`
 	Request     RequestConfig `hcl:"request,block"`
+
+	Temporal TemporalConfig `hcl:"temporal,block"`
 }
 
 type ListStr []string
@@ -57,4 +59,10 @@ type MongoCache struct {
 type Logger struct {
 	Level  string `hcl:"level,optional"`
 	AsJson bool   `hcl:"as_json,optional"`
+}
+
+// Temporal config stanza
+type TemporalConfig struct {
+	Address   string `hcl:"addr"`
+	Namespace string `hcl:"namespace"`
 }
