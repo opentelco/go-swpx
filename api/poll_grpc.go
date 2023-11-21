@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -43,6 +44,9 @@ func NewCoreGrpcServer(core *core.Core, conf *config.Configuration, logger hclog
 	}
 
 	pb_core.RegisterCoreServer(grpcServer, instance)
+
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
 
 	return instance
 }
