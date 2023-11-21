@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -42,8 +42,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -86,35 +86,31 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 }
 
-func (p *Provider) ProcessPollResponse(ctx context.Context, request *core.PollResponse) (*core.PollResponse, error) {
+func (p *Provider) ProcessPollResponse(ctx context.Context, request *corepb.PollResponse) (*corepb.PollResponse, error) {
 	p.logger.Named("post.ProcessPollResponse").Debug("processing response", "changes", 0)
 	return request, nil
 }
 
-func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
-	countChanges := 0
+func (p *Provider) ResolveSessionRequest(ctx context.Context, sess *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
-	isIp := net.ParseIP(request.Hostname)
-	region := p.parseRegion(request.NetworkRegion)
+	isIp := net.ParseIP(sess.Hostname)
+	region := p.parseRegion(sess.NetworkRegion)
 	if region == nil {
-		return request, fmt.Errorf("could not parse region from network region '%s'", request.NetworkRegion)
+		return sess, fmt.Errorf("could not parse region from network region '%s'", sess.NetworkRegion)
 	}
 
 	if isIp == nil {
-		domain := fmt.Sprintf(".%s", region.domain)
-		p.logger.Info("appending domain to hostname", "hostname", request.Hostname, "domain", domain)
-		request.Hostname = fmt.Sprintf("%s%s", request.Hostname, domain)
+		p.logger.Info("appending domain to hostname", "hostname", sess.Hostname, "domain", region.domain)
+		sess.Hostname = fmt.Sprintf("%s%s", sess.Hostname, region.domain)
 	}
 
-	p.logger.Named("pre.ResolveSessionRequest").Debug("processing request in", "changes", countChanges)
-	return request, nil
+	return sess, nil
 
 }
 
-func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
 	ctx = sdk.WithToken(ctx, p.appToken)
-	countChanges := 0
 	//  If s is not a valid textual representation of an IP address, ParseIP returns nil.
 
 	region := p.parseRegion(request.NetworkRegion)
@@ -132,25 +128,27 @@ func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.Sess
 		Hostname: HostFromFQDN(request.Hostname),
 	}
 	d, err := region.deviceClient.Get(ctx, params)
-	if err != nil || len(d.Devices) == 0 {
-		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err)
-		return nil, nil
+	if err != nil {
+		p.logger.Warn("could not get OSS device", "hostname", params.Hostname, "error", err, "region", region.region)
+		return nil, err
 	}
 
-	resp := &provider.ResolveResourcePluginResponse{}
+	if len(d.Devices) == 0 {
+		p.logger.Warn("could not find device in OSS", "hostname", params.Hostname, "region", region.region)
+		return nil, fmt.Errorf("could not find device in provider inventory system")
+	}
+
+	resp := &providerpb.ResolveResourcePluginResponse{}
 
 	host := d.Devices[0]
 	switch strings.ToUpper(host.Vendor) {
 	case "HUAWEI":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "vrp")
 		resp.ResourcePlugin = "vrp"
-		countChanges++
 	case "CTC", "VXFIBER":
 		p.logger.Debug("provider found device in oss, overwrite settings", "settings.resource_plugin", "ctc")
 		resp.ResourcePlugin = "ctc"
-		countChanges++
 	}
-	p.logger.Named("pre.ResolveResourcePlugin").Debug("processing request in", "changes", countChanges)
 	return resp, nil
 }
 
@@ -199,7 +197,7 @@ func main() {
 		DisableTime: true,
 	})
 	if err := setupEnv(); err != nil {
-		fmt.Println(err)
+		logger.Error("could not setup env", "error", err)
 		os.Exit(1)
 	}
 

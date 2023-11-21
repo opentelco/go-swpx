@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -24,13 +24,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/dispatcher"
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 	"git.liero.se/opentelco/go-swpx/config"
-
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMapInterface(t *testing.T) {
@@ -41,8 +42,8 @@ func TestMapInterface(t *testing.T) {
 		conf:   &config.ResourceVRP{},
 	}
 
-	req := &proto.Request{
-		Hostname: "någon-host",
+	req := &resourcepb.Request{
+		Hostname: "some-host",
 		Port:     "GigabitEthernet0/0/1",
 	}
 
@@ -56,13 +57,9 @@ func TestMapInterface(t *testing.T) {
 
 type MockClient struct{}
 
-func (m MockClient) Ping() (*dispatcher.PingReply, error) {
-	return &dispatcher.PingReply{}, nil
-}
+func (m MockClient) Put(ctx context.Context, msg *transportpb.Message) (*transportpb.Message, error) {
 
-func (m MockClient) Put(ctx context.Context, msg *transport.Message) (*transport.Message, error) {
-
-	return &transport.Message{}, nil
+	return &transportpb.Message{}, nil
 }
 
 func (m MockClient) Close() error {
@@ -70,4 +67,13 @@ func (m MockClient) Close() error {
 }
 
 func TestInterfaceDescriptionIndexParser(t *testing.T) {
+}
+
+func Test_ParseConfig(t *testing.T) {
+	f, err := os.ReadFile("tests/vrp_config.cfg")
+	assert.NoError(t, err)
+
+	strConf := string(f)
+	fmt.Println(cleanConfig(strConf))
+
 }

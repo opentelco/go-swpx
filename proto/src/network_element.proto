@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -27,7 +27,7 @@ import "google/protobuf/timestamp.proto";
 import "traffic_policy.proto";
 import "analysis.proto";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelement";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb";
 
 message Element {
   string hostname = 1;
@@ -49,6 +49,8 @@ message Element {
   string driver = 15;
   TransientErrors transient_errors = 16;
   // bool virtual = 16;
+
+  string last_changed = 17;
 }
 
 message TransientErrors {

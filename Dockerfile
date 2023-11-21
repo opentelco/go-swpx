@@ -9,12 +9,12 @@ RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/swpx .
 
 # build provider plugins
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/providers/default ./providers/default
-# RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/providers/sait ./providers/sait
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/providers/vx ./providers/vx
 
 # build resource plugins
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/vrp ./resources/vrp
 RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/ctc ./resources/ctc
+RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/generic ./resources/generic
 # RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /swpx/plugins/resources/raycore ./resources/raycore
 
 

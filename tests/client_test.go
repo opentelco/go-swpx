@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -23,16 +23,16 @@ func Test_Grpc(t *testing.T) {
 
 	}
 
-	client := core.NewCoreClient(conn)
-	r, err := client.Poll(ctx, &core.PollRequest{
-		Settings: &core.Settings{
+	client := corepb.NewCoreServiceClient(conn)
+	r, err := client.Poll(ctx, &corepb.PollRequest{
+		Settings: &corepb.Settings{
 			ProviderPlugin: []string{"vx"},
 			ResourcePlugin: "vrp",
 			RecreateIndex:  false,
 			Timeout:        "60s",
 			CacheTtl:       "0s",
 		},
-		Session: &core.SessionRequest{
+		Session: &corepb.SessionRequest{
 			Hostname: "bryanston-west-a39",
 			Port:     "GigabitEthernet0/0/1",
 		},

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.temporal.io/sdk/client"
 )
 
@@ -95,7 +96,7 @@ func (c *Core) Start() error {
 }
 
 // New creates a new SWPX Core Application
-func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
+func New(conf *config.Configuration, mongoClient *mongo.Client, logger hclog.Logger) (*Core, error) {
 	var err error
 	var ctx = context.Background()
 
@@ -104,6 +105,10 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 		providers: make(map[string]shared.Provider),
 		config:    conf,
 		logger:    logger,
+	}
+
+	if mongoClient == nil {
+		core.cacheEnabled = false
 	}
 
 	var availableResources = make(map[string]*plugin.Client)
@@ -120,7 +125,7 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 
 	if core.config.Request.DefaultProvider != "" {
 		if _, ok := availableProviders[core.config.Request.DefaultProvider]; !ok {
-			logger.Warn("the selected provider was not found, falling back on no provider", "default_provider", core.config.Request.DefaultProvider)
+			logger.Warn("the selected provider was not found, falling back on no provider", "selected", core.config.Request.DefaultProvider)
 		} else {
 			logger.Info("selected default_provider found and loaded", "default_provider", core.config.Request.DefaultProvider)
 		}
@@ -136,13 +141,6 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 	}
 
 	// setup mongodb client
-	mongoClient, err := initMongoDb(*conf.MongoServer, logger.Named("mongodb"))
-	if err != nil {
-		logger.Warn("could not establish mongodb connection", "error", err)
-		logger.Info("no mongo connection established", "cache_enabled", false)
-		core.cacheEnabled = false
-		return core, nil
-	}
 
 	if core.interfaceCache, err = newInterfaceCache(ctx, mongoClient, conf.GetMongoByLabel(config.LabelMongoInterfaceCache), logger); err != nil {
 		logger.Error("error creating cache", "error", err)
@@ -156,6 +154,23 @@ func New(conf *config.Configuration, logger hclog.Logger) (*Core, error) {
 		return core, nil
 	}
 	core.cacheEnabled = true
+
+	opts := client.Options{
+		HostPort:  conf.Temporal.Address,
+		Namespace: conf.Temporal.Namespace,
+		Logger:    logger,
+	}
+
+	tc, err := client.Dial(opts)
+	if err != nil {
+		return nil, fmt.Errorf("could not create temporal client: %w", err)
+	}
+	w := createTemporalWorker(tc, core)
+	if err := w.Start(); err != nil {
+		return nil, fmt.Errorf("could not start temporal worker: %w", err)
+	}
+
+	core.tc = tc
 
 	return core, nil
 }
@@ -218,7 +233,7 @@ func (c *Core) LoadProviderPlugins(availableProviders map[string]*plugin.Client)
 		if err == nil {
 			provider, ok := raw.(shared.Provider)
 			if !ok || provider == nil {
-				return fmt.Errorf("failed to load provider plugin: %s", name, "provider", provider, "ok", ok)
+				return fmt.Errorf("failed to load provider plugin: %s, provider: %s", name, provider)
 			}
 
 			// get information about the provider to use on request
@@ -261,6 +276,10 @@ func (c *Core) LoadPlugins(pluginPath string, pluginType string) (map[string]*pl
 	}
 	for _, p := range plugs {
 		if !p.IsDir() {
+			if c.config.BlacklistProvider.Has(p.Name()) {
+				c.logger.Debug("plugin is blacklisted", "plugin", p.Name())
+				continue
+			}
 			c.logger.Debug("found plugin", "type", pluginType, "plugin", p.Name())
 			loadedPlugins[p.Name()] = plugin.NewClient(&plugin.ClientConfig{
 				HandshakeConfig:  shared.Handshake,

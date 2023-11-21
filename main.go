@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@ import (
 	"git.liero.se/opentelco/go-swpx/cmd"
 )
 
+//go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/stanza.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/healtcheck.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/resource.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/provider.proto
@@ -37,6 +38,8 @@ import (
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/network_element.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/traffic_policy.proto
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/analysis.proto
+
+//go:generate go run ./proto/tagparser/tagparser.go ./proto/go
 
 func main() {
 	if err := cmd.Root.Execute(); err != nil {

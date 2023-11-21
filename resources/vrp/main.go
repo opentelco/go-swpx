@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -27,14 +27,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"git.liero.se/opentelco/go-swpx/config"
 
@@ -44,8 +47,8 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
@@ -80,6 +83,10 @@ func (d *VRPDriver) Version() (string, error) {
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
+func (d *VRPDriver) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+	return &networkelementpb.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
+}
+
 // parse a map of description/alias and return the ID
 func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*discoveryItem) (*discoveryItem, error) {
 	for _, v := range discoveryMap {
@@ -93,12 +100,12 @@ func (d VRPDriver) parseDescriptionToIndex(port string, discoveryMap map[int]*di
 }
 
 // MapInterface maps the interfaces to the snmp index to be used in the rest of the driver
-func (d *VRPDriver) MapInterface(ctx context.Context, req *proto.Request) (*proto.PortIndex, error) {
+func (d *VRPDriver) MapInterface(ctx context.Context, req *resourcepb.Request) (*resourcepb.PortIndex, error) {
 	d.logger.Info("determine what index and name this interface has", "host", req.Hostname, "port", req.Port)
 
-	var msg *transport.Message
+	var msg *transportpb.Message
 	discoveryMap := make(map[int]*discoveryItem)
-	var ports = make(map[string]*proto.PortIndexEntity)
+	var ports = make(map[string]*resourcepb.PortIndexEntity)
 
 	msg = createLogicalPortIndex(req, d.conf)
 	msg, err := d.dnc.Put(ctx, msg)
@@ -116,18 +123,18 @@ func (d *VRPDriver) MapInterface(ctx context.Context, req *proto.Request) (*prot
 	populateDiscoveryMap(d.logger, task, discoveryMap)
 
 	for _, v := range discoveryMap {
-		ports[v.Descr] = &proto.PortIndexEntity{
+		ports[v.Descr] = &resourcepb.PortIndexEntity{
 			Index:       int64(v.Index),
 			Description: v.Descr,
 			Alias:       v.Alias,
 		}
 	}
 
-	return &proto.PortIndex{Ports: ports}, nil
+	return &resourcepb.PortIndex{Ports: ports}, nil
 }
 
 // Find matching OID for port
-func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *proto.Request) (*proto.PortIndex, error) {
+func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *resourcepb.Request) (*resourcepb.PortIndex, error) {
 
 	portMsg := createPhysicalPortIndex(request, d.conf)
 
@@ -142,7 +149,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *proto.Reques
 		return nil, fmt.Errorf("could not complete MapEntityPhysical: %w", errors.New("task is nil"))
 	}
 
-	physicalPorts := make(map[string]*proto.PortIndexEntity)
+	physicalPorts := make(map[string]*resourcepb.PortIndexEntity)
 	for _, m := range task.Metrics {
 		fields := strings.Split(m.Oid, ".")
 		index, err := strconv.Atoi(fields[len(fields)-1])
@@ -156,7 +163,7 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *proto.Reques
 
 		}
 
-		physicalPorts[m.GetValue()] = &proto.PortIndexEntity{
+		physicalPorts[m.GetValue()] = &resourcepb.PortIndexEntity{
 			Alias:       m.Name,
 			Index:       int64(index),
 			Description: m.GetValue(),
@@ -164,14 +171,14 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *proto.Reques
 
 	}
 
-	return &proto.PortIndex{Ports: physicalPorts}, nil
+	return &resourcepb.PortIndex{Ports: physicalPorts}, nil
 
 }
 
 // GetInterfaceStatistics returns all transceiver information in a array of Transceivers
 // each Transceiver contains the physical port index that can be mapped to the interface if needed
-func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *proto.Request) (*networkelement.Transceivers, error) {
-	response := &networkelement.Transceivers{}
+func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *resourcepb.Request) (*networkelementpb.Transceivers, error) {
+	response := &networkelementpb.Transceivers{}
 
 	vrpMsg := createAllVRPTransceiverMsg(request, d.conf, request.NumInterfaces)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
@@ -196,7 +203,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *p
 	return response, nil
 }
 
-func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *proto.Request) (*networkelement.Transceiver, error) {
+func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
 
 	d.logger.Debug("get transceiver information", "host", req.Hostname, "port", req.Port, "phys-index", req.PhysicalPortIndex)
 	vrpMsg := createVRPTransceiverMsg(req, d.conf)
@@ -223,9 +230,9 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *proto.Re
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) AllPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
 	d.logger.Info("running ALL port info", "host", req.Hostname, "port", req.Port)
-	ne := &networkelement.Element{}
+	ne := &networkelementpb.Element{}
 	ne.Hostname = req.Hostname
 
 	sysInfoMsg := createTaskSystemInfo(req, d.conf)
@@ -264,11 +271,11 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, req *proto.Request) 
 	return ne, nil
 }
 
-func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
+func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
 	d.logger.Info("running technical port info", "host", req.Hostname, "port", req.Port)
-	errs := make([]*networkelement.TransientError, 0)
+	errs := make([]*networkelementpb.TransientError, 0)
 
-	var msgs []*transport.Message
+	var msgs []*transportpb.Message
 	if req.LogicalPortIndex != 0 {
 		msgs = append(msgs, createSinglePortMsg(req.LogicalPortIndex, req, d.conf))
 		msgs = append(msgs, createTaskGetPortStats(req.LogicalPortIndex, req, d.conf))
@@ -279,14 +286,14 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *proto.Req
 	msgs = append(msgs, createTaskSystemInfo(req, d.conf))
 	msgs = append(msgs, createBasicSSHInterfaceTask(req, d.conf))
 
-	ne := &networkelement.Element{}
+	ne := &networkelementpb.Element{}
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelement.Interface{
-		Stats: &networkelement.InterfaceStatistics{
-			Input:  &networkelement.InterfaceStatisticsInput{},
-			Output: &networkelement.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Interface{
+		Stats: &networkelementpb.InterfaceStatistics{
+			Input:  &networkelementpb.InterfaceStatisticsInput{},
+			Output: &networkelementpb.InterfaceStatisticsOutput{},
 		},
 	}
 	var err error
@@ -299,7 +306,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *proto.Req
 		}
 
 		switch task := reply.Task.Task.(type) {
-		case *transport.Task_Snmpc:
+		case *transportpb.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -323,7 +330,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *proto.Req
 					getIfXEntryInformation(m, elementInterface)
 				}
 			}
-		case *transport.Task_Terminal:
+		case *transportpb.Task_Terminal:
 
 			if reply.Error != "" {
 				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
@@ -360,26 +367,26 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *proto.Req
 	}
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
+	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
-func (d *VRPDriver) logAndAppend(err error, errs []*networkelement.TransientError, command string) []*networkelement.TransientError {
+func (d *VRPDriver) logAndAppend(err error, errs []*networkelementpb.TransientError, command string) []*networkelementpb.TransientError {
 	d.logger.Error("log and append error from dnc", "error", err.Error(), "command", command)
-	errs = append(errs, &networkelement.TransientError{
+	errs = append(errs, &networkelementpb.TransientError{
 		Message: err.Error(),
-		Level:   networkelement.TransientError_WARN,
+		Level:   networkelementpb.TransientError_WARN,
 		Cause:   command,
 	})
 
 	return errs
 }
 
-func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request) (*networkelement.Element, error) {
-	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port)
-	errs := make([]*networkelement.TransientError, 0)
+func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "region", req.NetworkRegion)
+	errs := make([]*networkelementpb.TransientError, 0)
 
-	var msgs []*transport.Message
+	var msgs []*transportpb.Message
 	if req.LogicalPortIndex != 0 {
 		msgs = append(msgs, createSinglePortMsgShort(req.LogicalPortIndex, req, d.conf))
 		// msgs = append(msgs, createTaskGetPortStats(req.LogicalPortIndex, req,d.conf))
@@ -391,14 +398,14 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 
 	msgs = append(msgs, t)
 
-	ne := &networkelement.Element{}
+	ne := &networkelementpb.Element{}
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelement.Interface{
-		Stats: &networkelement.InterfaceStatistics{
-			Input:  &networkelement.InterfaceStatisticsInput{},
-			Output: &networkelement.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Interface{
+		Stats: &networkelementpb.InterfaceStatistics{
+			Input:  &networkelementpb.InterfaceStatisticsInput{},
+			Output: &networkelementpb.InterfaceStatisticsOutput{},
 		},
 	}
 	var err error
@@ -410,7 +417,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 		}
 
 		switch task := reply.Task.Task.(type) {
-		case *transport.Task_Snmpc:
+		case *transportpb.Task_Snmpc:
 			d.logger.Debug("the reply returns from dnc",
 				"status", reply.Status.String(),
 				"completed", reply.Completed.String(),
@@ -434,7 +441,7 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 					getIfXEntryInformation(m, elementInterface)
 				}
 			}
-		case *transport.Task_Terminal:
+		case *transportpb.Task_Terminal:
 			if reply.Error != "" {
 				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
 				errs = d.logAndAppend(fmt.Errorf(reply.Error), errs, task.Terminal.Payload[0].Command)
@@ -453,35 +460,45 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *proto.Request
 	}
 
 	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelement.TransientErrors{Errors: errs}
+	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
-func (d *VRPDriver) GetRunningConfig(ctx context.Context, req *proto.GetRunningConfigParameters) (*proto.GetRunningConfigResponse, error) {
+func (d *VRPDriver) GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error) {
 	d.logger.Info("running get running config", "host", req.Hostname)
 	reply, err := d.dnc.Put(ctx, createCollectConfigMsg(req, d.conf))
 	if err != nil {
-		return nil, fmt.Errorf("could not complete BasicTechnicalPortInformation: %w", err)
+		return nil, fmt.Errorf("could not complete getRunningconfig: %w", err)
 	}
 	switch task := reply.Task.Task.(type) {
-	case *transport.Task_Terminal:
+	case *transportpb.Task_Terminal:
 		if reply.Error != "" {
 			logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
 			return nil, fmt.Errorf(reply.Error)
 		}
-		if t, ok := reply.Task.Task.(*transport.Task_Terminal); ok {
+		if t, ok := reply.Task.Task.(*transportpb.Task_Terminal); ok {
 
 			if len(t.Terminal.Payload) == 0 {
 				return nil, fmt.Errorf("no payload returned from terminal task")
 			}
-
 			payload := t.Terminal.Payload[0]
-			return &proto.GetRunningConfigResponse{
+			payload.Data = cleanConfig(payload.Data)
+
+			return &resourcepb.GetRunningConfigResponse{
 				Config: payload.Data,
 			}, nil
 		}
 	}
 	return nil, fmt.Errorf("could not get running config, unknown error")
+}
+
+func cleanConfig(conf string) string {
+	var lines []string = regexp.MustCompile("\r?\n").Split(conf, -1)
+	if len(lines) > 2 {
+		// Remove first and last line
+		lines = lines[1 : len(lines)-1]
+	}
+	return strings.Join(lines, "\n")
 }
 
 // handshakeConfigs are used to just do a basic handshake between

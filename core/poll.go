@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -27,11 +27,22 @@ import (
 	"fmt"
 	"time"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 )
 
 // PollNetworkElement sends the request!
-func (c *Core) PollNetworkElement(ctx context.Context, request *pb_core.PollRequest) (*pb_core.PollResponse, error) {
+func (c *Core) PollNetworkElement(ctx context.Context, request *corepb.PollRequest) (*corepb.PollResponse, error) {
+
+	c.logger.Debug("polling network element",
+		"hostname", request.Session.Hostname,
+		"port", request.Session.Port,
+		"accessId", request.Session.AccessId,
+		"type", request.Type,
+		"region", request.Session.NetworkRegion,
+		"recreateIndex", request.Settings.RecreateIndex,
+		"cacheTTL", request.Settings.CacheTtl,
+		"timeout", request.Settings.Timeout,
+	)
 
 	cacheTTLduration, _ := time.ParseDuration(request.Settings.CacheTtl)
 
@@ -59,8 +70,8 @@ func (c *Core) PollNetworkElement(ctx context.Context, request *pb_core.PollRequ
 	ctxTimeout, cancel := context.WithTimeout(ctx, timeoutDur)
 	defer cancel()
 
-	var resp *pb_core.PollResponse
-	respCh := make(chan *pb_core.PollResponse)
+	var resp *corepb.PollResponse
+	respCh := make(chan *corepb.PollResponse)
 	errCh := make(chan error)
 	go func() {
 		resp, err := c.doPollRequest(ctx, request)

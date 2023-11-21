@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	pb_core "git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"git.liero.se/opentelco/go-swpx/shared"
 )
 
-func (c *Core) selectProviders(ctx context.Context, settings *pb_core.Settings) ([]shared.Provider, error) {
+func (c *Core) selectProviders(ctx context.Context, settings *corepb.Settings) ([]shared.Provider, error) {
 	var selectedProviders []shared.Provider
 	// check if a providers are selected in the request
 	if len(settings.ProviderPlugin) > 0 {
@@ -22,7 +22,7 @@ func (c *Core) selectProviders(ctx context.Context, settings *pb_core.Settings) 
 		}
 
 	} else {
-		c.logger.Info("request has selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
+		c.logger.Debug("request has no selected provider and default provider is set in config", "default_provider", c.config.Request.DefaultProvider)
 		if provider, ok := c.providers[c.config.Request.DefaultProvider]; ok {
 			selectedProviders = append(selectedProviders, provider)
 		}
@@ -31,37 +31,35 @@ func (c *Core) selectProviders(ctx context.Context, settings *pb_core.Settings) 
 	return selectedProviders, nil
 }
 
-// providerPreProccessing pre-process the request with the selected providers
-// writes any changes to the settings/session parameters (as they are pointers)
-func (c *Core) providerGenericPreProccessing(ctx context.Context, session *pb_core.SessionRequest, settings *pb_core.Settings, selectedProviders []shared.Provider) error {
-	// check if a providers are selected in the request
+func (c *Core) resolveResourcePlugin(ctx context.Context, sess *corepb.SessionRequest, selectedProviders []shared.Provider) (string, error) {
 	for _, provider := range selectedProviders {
-		var err error
-		pname, _ := provider.Name()
-		c.logger.Info("pre-process request with provider", "provider", pname)
-		session, err = provider.ResolveSessionRequest(ctx, session)
+		rp, err := provider.ResolveResourcePlugin(ctx, sess)
 		if err != nil {
-			return err
+			return "", err
 		}
-
-		if settings.ResourcePlugin == "" {
-			rp, err := provider.ResolveResourcePlugin(ctx, session)
-			if err != nil {
-				return err
-			}
-			if rp != nil {
-				settings.ResourcePlugin = rp.ResourcePlugin
-			}
+		if rp != nil {
+			return rp.ResourcePlugin, nil
 		}
-
 	}
+	return "", nil
+}
 
-	return nil
+func (c *Core) resolveSession(ctx context.Context, sess *corepb.SessionRequest, selectedProviders []shared.Provider) (*corepb.SessionRequest, error) {
+	for _, provider := range selectedProviders {
+		s, err := provider.ResolveSessionRequest(ctx, sess)
+		if err != nil {
+			return sess, err
+		}
+		if s != nil {
+			return s, nil
+		}
+	}
+	return sess, nil
 }
 
 // providerPostProcess post-process the response with the selected providers
 // appends to the response in the input argument and returns an error if something went wrong
-func providerPollPostProcess(ctx context.Context, selectedProviders []shared.Provider, response *pb_core.PollResponse) error {
+func providerPollPostProcess(ctx context.Context, selectedProviders []shared.Provider, response *corepb.PollResponse) error {
 	// PostProcess the response with the selected Providers
 	for _, selectedProvider := range selectedProviders {
 		if selectedProvider != nil {

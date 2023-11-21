@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -22,100 +22,133 @@
 
 syntax = "proto3";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resource";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/resourcepb";
 
 import "network_element.proto";
+import "stanza.proto";
 import "google/protobuf/empty.proto";
-
 
 package resource;
 
-
 message VersionResponse {
-  string version = 1;
+    string version = 1;
 }
-
 
 message Status {
-  bool error = 1;
-  int32 code = 2;
-  string type = 3;
-  string message = 4;
+    bool error     = 1;
+    int32 code     = 2;
+    string type    = 3;
+    string message = 4;
 }
-
 
 // PortIndexEntity is a entity that is used to map the port index to the description
 // this is used both for the physical port and the logical port
 message PortIndexEntity {
-  int64 index = 1;
-  string description = 2;
-  string alias = 3;
+    int64 index        = 1;
+    string description = 2;
+    string alias       = 3;
 }
 
 // PortIndex is a map of the port index to the description
 message PortIndex {
-  map<string, PortIndexEntity> ports = 1;
+    map<string, PortIndexEntity> ports = 1;
 }
 
 message Request {
-  // hostname or ip address
-  string hostname = 1;
+    // hostname or ip address
+    string hostname = 1;
 
-  // port name (e.g. GigabitEthernet0/0/1 )
-  string port = 2;
+    // port name (e.g. GigabitEthernet0/0/1 )
+    string port = 2;
 
-  // the number of interfaces discovered on the port
-  // this is used to bulk get with by setting the "repition" to the number of interfaces
-  int32 num_interfaces = 3;
+    // the number of interfaces discovered on the port
+    // this is used to bulk get with by setting the "repition" to the number of interfaces
+    int32 num_interfaces = 3;
 
-  int64 physical_port_index = 4;
-  int64 logical_port_index = 5;
+    int64 physical_port_index = 4;
+    int64 logical_port_index  = 5;
 
-  // should be a string we can parse to a duration
-  // used to set the EOL timeout for requests
-  string timeout = 6;
+    // should be a string we can parse to a duration
+    // used to set the EOL timeout for requests
+    string timeout = 6;
+
+    // network regions passed down in from the SessionReqest.NetworkRegion
+    string network_region = 7;
 }
 
 service Resource {
-  // Get the version of the network element
-  rpc Version(google.protobuf.Empty) returns (VersionResponse);
+    // Get the version of the network element
+    rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
-  // Map the interfaces with ifIndex and description
-  rpc MapInterface(Request) returns (PortIndex);
+    // discover the device, type version and other basic information about the device
+    rpc Discover(Request) returns (networkelement.Element);
 
-  // Map the interace description and the environemnt index
-  rpc MapEntityPhysical(Request) returns (PortIndex);
+    // Map the interfaces with ifIndex and description
+    rpc MapInterface(Request) returns (PortIndex);
 
+    // Map the interace description and the environemnt index
+    rpc MapEntityPhysical(Request) returns (PortIndex);
 
-  rpc BasicPortInformation(Request) returns (networkelement.Element);
+    rpc BasicPortInformation(Request) returns (networkelement.Element);
 
-  // Get technical information about a port
-  rpc TechnicalPortInformation(Request) returns (networkelement.Element);
+    // Get technical information about a port
+    rpc TechnicalPortInformation(Request) returns (networkelement.Element);
 
-  // Get technical information about all ports TODO: rename
-  rpc AllPortInformation(Request) returns (networkelement.Element);
+    // Get technical information about all ports TODO: rename
+    rpc AllPortInformation(Request) returns (networkelement.Element);
 
+    // Get transceiver information about a interface
+    rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
 
-  // Get transceiver information about a interface
-  rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
+    // Get transceiver information about all interfaces
+    rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
 
-  // Get transceiver information about all interfaces
-  rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
+    // Get the running config and return it
+    rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);
 
-
-  // Get the running config and return it
-  rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);
+    // ConfigureStanza the devcice by trying to set the lines in the config array
+    // the resource plugin is repsonsible for preparing the device for the configuration
+    // and to commit the configuration if it is successful for example,
+    //  if the device is a Cisco device, the plugin should send the "configure terminal" command
+    //  and then send the lines in the stanza, and then send the "end" command
+    //  and then send copy run start to commit the configuration on a Huaawei device,
+    //  the plugin should send the "system-view" command and then send the lines in the stanza,
+    // and then send the "quit" command and then send save to commit the configuration.
+    //
+    // Locking is expected to be done by the one calling the ConfigureStanza method
+    // the plugin should not do any locking. Use the DNC SDK to lock the device with
+    // the "Mutex Locking API" together with Temporal
+    rpc ConfigureStanza(ConfigureStanzaRequest) returns (stanza.ConfigureResponse);
 }
 
-message GetRunningConfigParameters {
-  // hostname or ip address
-  string hostname = 1;
 
-  // should be a string we can parse to a duration
-  // used to set the EOL timeout for requests
-  string timeout = 3;
+message GetRunningConfigParameters {
+    // hostname or ip address
+    string hostname = 1;
+
+    // should be a string we can parse to a duration
+    // used to set the EOL timeout for requests
+    string timeout = 2;
+
+    // network regions passed down in from the SessionReqest.NetworkRegion
+    string network_region = 3;
 }
 
 message GetRunningConfigResponse {
-  string config = 1;
+    string config = 1;
+}
+
+message ConfigureStanzaRequest {
+    // hostname or ip address
+    string hostname = 1;
+
+    // should be a string we can parse to a duration
+    // used to set the EOL timeout for requests
+    string timeout = 2;
+
+    // network regions passed down in from the SessionReqest.NetworkRegion
+    string network_region = 3;
+
+    // the configuration to send to the device, each line is a string in the array
+    repeated stanza.ConfigurationLine stanza = 4;
 }

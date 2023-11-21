@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"log"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/provider"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
 	"git.liero.se/opentelco/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
@@ -41,7 +41,7 @@ var logger hclog.Logger
 
 const (
 	VERSION_BASE  string = "1.0-beta"
-	PROVIDER_NAME string = "default_provider"
+	PROVIDER_NAME string = "default"
 	WEIGHT        int64  = 1
 )
 
@@ -65,20 +65,20 @@ func (p *Provider) Name() (string, error) {
 	return PROVIDER_NAME, nil
 
 }
-func (p *Provider) ResolveSessionRequest(ctx context.Context, request *core.SessionRequest) (*core.SessionRequest, error) {
+func (p *Provider) ResolveSessionRequest(ctx context.Context, request *corepb.SessionRequest) (*corepb.SessionRequest, error) {
 	return request, nil
 }
 
-func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *core.SessionRequest) (*provider.ResolveResourcePluginResponse, error) {
-	return &provider.ResolveResourcePluginResponse{}, nil
+func (p *Provider) ResolveResourcePlugin(ctx context.Context, request *corepb.SessionRequest) (*providerpb.ResolveResourcePluginResponse, error) {
+	return &providerpb.ResolveResourcePluginResponse{}, nil
 }
 
-func (p *Provider) ProcessPollResponse(ctx context.Context, resp *core.PollResponse) (*core.PollResponse, error) {
+func (p *Provider) ProcessPollResponse(ctx context.Context, resp *corepb.PollResponse) (*corepb.PollResponse, error) {
 	return resp, nil
 }
 
-// func (p *Provider)  ResolveSessionRequest(ctx context.Context, request *pb_core.SessionRequest) (*pb_core.SessionRequest, error) {return nil,nil}
-// func (p *Provider)  PostHandler(ctx context.Context, response *core.Response) (*core.Response, error) {return nil,nil}
+// func (p *Provider)  ResolveSessionRequest(ctx context.Context, request *pb_corepb.SessionRequest) (*pb_corepb.SessionRequest, error) {return nil,nil}
+// func (p *Provider)  PostHandler(ctx context.Context, response *corepb.Response) (*corepb.Response, error) {return nil,nil}
 
 func main() {
 	logger = hclog.New(&hclog.LoggerOptions{

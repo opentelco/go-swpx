@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -75,4 +75,17 @@ func LoadConfig(fname string, cfg interface{}) error {
 	}
 
 	return parseConfig(content, fname, cfg)
+}
+
+type Duration string
+
+func (d Duration) AsDuration() time.Duration {
+	if d == "" {
+		return 0
+	}
+	duration, err := time.ParseDuration(string(d))
+	if err != nil {
+		return 0
+	}
+	return duration
 }

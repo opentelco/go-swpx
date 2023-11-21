@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -29,8 +29,8 @@ import (
 	"strconv"
 	"strings"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelement"
-	"git.liero.se/opentelco/go-swpx/proto/go/traffic_policy"
+	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb"
 )
 
 const (
@@ -39,7 +39,7 @@ const (
 
 	// The number of lines in a traffic policy statistics header.
 	StatisticsHeaderLength = 7
-	// The number of lines for each traffic policy statistics metric.
+	// The number of lines for each traffic policy statistics metricpb.
 	StatisticsMetricLength = 25
 )
 
@@ -47,13 +47,13 @@ var (
 	reDhcpTableEntry = regexp.MustCompile(`(?P<ipAddress>(^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))\s+(?P<macAddress>([0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}))\s+(?P<outerVlan>[0-9]{1,4})\s+/(?P<innerVlan>[0-9-]{1,4})\s+/(?P<mappedVlan>[0-9-]{1,4})\s+(?P<ifAlias>\w+[0-9]/[0-9]/[0-9]{1,2})\s+(?P<timestamp>.+)$`)
 )
 
-func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
+func parseMacTable(data string) ([]*networkelementpb.MACEntry, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	dataRows := strings.Split(data, "\n")
-	rows := make([]*networkelement.MACEntry, 0)
+	rows := make([]*networkelementpb.MACEntry, 0)
 
 	for _, row := range dataRows {
 		fields := strings.Fields(row)
@@ -68,7 +68,7 @@ func parseMacTable(data string) ([]*networkelement.MACEntry, error) {
 			return nil, err
 		}
 
-		rows = append(rows, &networkelement.MACEntry{
+		rows = append(rows, &networkelementpb.MACEntry{
 			HardwareAddress: fields[0],
 			Vlan:            int64(vlan),
 		})
@@ -90,13 +90,13 @@ func isMacAddressRow(fields []string) bool {
 	return match
 }
 
-func parseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
+func parseIPTable(data string) ([]*networkelementpb.DHCPEntry, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	dataRows := strings.Split(data, "\n")
-	rows := make([]*networkelement.DHCPEntry, 0)
+	rows := make([]*networkelementpb.DHCPEntry, 0)
 
 	for _, row := range dataRows {
 
@@ -108,7 +108,7 @@ func parseIPTable(data string) ([]*networkelement.DHCPEntry, error) {
 			timestamp := matches[reDhcpTableEntry.SubexpIndex("timestamp")]
 			vlan, _ := strconv.Atoi(vlanStr)
 
-			rows = append(rows, &networkelement.DHCPEntry{
+			rows = append(rows, &networkelementpb.DHCPEntry{
 				IpAddress:       ip,
 				HardwareAddress: mac,
 				Vlan:            int64(vlan),
@@ -133,7 +133,7 @@ func parseCurrentConfig(config string) string {
 	return config[configStart:configEnd]
 }
 
-func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data string) error {
+func parsePolicyStatistics(policy *trafficpolicypb.ConfiguredTrafficPolicy, data string) error {
 	if data == "" {
 		return fmt.Errorf("no data found")
 	}
@@ -141,8 +141,8 @@ func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data 
 	data = strings.Replace(data, "\r", "", -1) // remove line feeds
 	lines := strings.Split(data, "\n")
 
-	statistics := &traffic_policy.ConfiguredTrafficPolicy_Statistics{
-		Classifiers: make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier),
+	statistics := &trafficpolicypb.ConfiguredTrafficPolicy_Statistics{
+		Classifiers: make(map[string]*trafficpolicypb.ConfiguredTrafficPolicy_Statistics_Classifier),
 	}
 
 	if !policyStatsOutputValid(lines) {
@@ -160,7 +160,7 @@ func parsePolicyStatistics(policy *traffic_policy.ConfiguredTrafficPolicy, data 
 	return nil
 }
 
-func parseStatisticsHeader(statistics *traffic_policy.ConfiguredTrafficPolicy_Statistics, lines []string) error {
+func parseStatisticsHeader(statistics *trafficpolicypb.ConfiguredTrafficPolicy_Statistics, lines []string) error {
 	statistics.TrafficPolicy = strings.Split(lines[3], ": ")[1]
 
 	rulenumber, err := strconv.Atoi(strings.Split(lines[4], ": ")[1])
@@ -179,17 +179,17 @@ func parseStatisticsHeader(statistics *traffic_policy.ConfiguredTrafficPolicy_St
 	return nil
 }
 
-func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPolicy_Statistics) {
+func parseMetrics(lines []string, statistics *trafficpolicypb.ConfiguredTrafficPolicy_Statistics) {
 	var classifierName string
 	for i := StatisticsHeaderLength; i < len(lines)-1; {
 		if strings.HasPrefix(lines[i], "-") {
 			if strings.HasPrefix(lines[i+1], " Classifier:") {
 				classifierName = strings.Split(lines[i+1], "Classifier: ")[1]
-				statistics.Classifiers[classifierName] = &traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier{
+				statistics.Classifiers[classifierName] = &trafficpolicypb.ConfiguredTrafficPolicy_Statistics_Classifier{
 					Classifier: classifierName,
 					Behavior:   strings.Split(lines[i+2], "Behavior: ")[1],
 					Board:      strings.Split(lines[i+3], "Board : ")[1],
-					Metrics:    make(map[string]*traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier_Metric),
+					Metrics:    make(map[string]*trafficpolicypb.ConfiguredTrafficPolicy_Statistics_Classifier_Metric),
 				}
 				i += 3
 			}
@@ -202,7 +202,7 @@ func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPo
 
 			if len(fields) == 4 {
 				metricName = fields[0] //passed, dropped etc
-				metric := &traffic_policy.ConfiguredTrafficPolicy_Statistics_Classifier_Metric{
+				metric := &trafficpolicypb.ConfiguredTrafficPolicy_Statistics_Classifier_Metric{
 					Values: make(map[string]float64),
 				}
 				statistics.Classifiers[classifierName].Metrics[metricName] = metric
@@ -217,12 +217,12 @@ func parseMetrics(lines []string, statistics *traffic_policy.ConfiguredTrafficPo
 	}
 }
 
-func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
+func parsePolicy(data string) (*trafficpolicypb.ConfiguredTrafficPolicy, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
-	policy := &traffic_policy.ConfiguredTrafficPolicy{}
+	policy := &trafficpolicypb.ConfiguredTrafficPolicy{}
 
 	data = strings.Replace(data, "\r", "", -1) // remove line feeds
 	lines := strings.Split(data, "\n")
@@ -248,9 +248,9 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 			cbs, _ := strconv.ParseFloat(fields[9], Float64Size)
 			pbs, _ := strconv.ParseFloat(fields[11], Float64Size)
 
-			policy.Qos = &traffic_policy.ConfiguredTrafficPolicy_QOS{
+			policy.Qos = &trafficpolicypb.ConfiguredTrafficPolicy_QOS{
 				Queue: int64(queue),
-				Shaping: &traffic_policy.ConfiguredTrafficPolicy_QOS_Shaping{
+				Shaping: &trafficpolicypb.ConfiguredTrafficPolicy_QOS_Shaping{
 					Cir: cir,
 					Pir: pir,
 					Cbs: cbs,
@@ -263,15 +263,15 @@ func parsePolicy(data string) (*traffic_policy.ConfiguredTrafficPolicy, error) {
 	return policy, nil
 }
 
-func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
+func parseQueueStatistics(data string) (*trafficpolicypb.QOS, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	data = strings.Replace(data, ",", "", -1)
 	lines := strings.Split(data, "\n")
-	qos := &traffic_policy.QOS{
-		QueueStatistics: make([]*traffic_policy.QOS_QueueStatistics, len(lines)/QueueEntryLength),
+	qos := &trafficpolicypb.QOS{
+		QueueStatistics: make([]*trafficpolicypb.QOS_QueueStatistics, len(lines)/QueueEntryLength),
 	}
 
 	for i := 2; i < len(lines)-1; i += QueueEntryLength {
@@ -295,7 +295,7 @@ func parseQueueStatistics(data string) (*traffic_policy.QOS, error) {
 			return nil, fmt.Errorf("error parsing qos output: %v", err)
 		}
 
-		qos.QueueStatistics[i/QueueEntryLength] = &traffic_policy.QOS_QueueStatistics{
+		qos.QueueStatistics[i/QueueEntryLength] = &trafficpolicypb.QOS_QueueStatistics{
 			QueueId:        id,
 			Cir:            cir,
 			Pir:            pir,

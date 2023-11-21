@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"git.liero.se/opentelco/go-swpx/config"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,7 +15,7 @@ import (
 
 type PollInterfaceCache interface {
 	Pop(ctx context.Context, hostname, port string) (*CachedInterface, error)
-	Upsert(ctx context.Context, hostname string, logicalPortIndex *proto.PortIndex, physicalPortIndex *proto.PortIndex) error
+	Upsert(ctx context.Context, hostname string, logicalPortIndex *resourcepb.PortIndex, physicalPortIndex *resourcepb.PortIndex) error
 }
 
 // CachedInterface is the data object stored in mongo for a cached interface
@@ -82,7 +82,7 @@ func (c *ifCacheImpl) Pop(ctx context.Context, hostname, iface string) (*CachedI
 	return obj, nil
 }
 
-func (c *ifCacheImpl) Upsert(ctx context.Context, hostname string, logicalPortIndex *proto.PortIndex, physicalPortIndex *proto.PortIndex) error {
+func (c *ifCacheImpl) Upsert(ctx context.Context, hostname string, logicalPortIndex *resourcepb.PortIndex, physicalPortIndex *resourcepb.PortIndex) error {
 	for k, v := range logicalPortIndex.Ports {
 
 		data := bson.M{

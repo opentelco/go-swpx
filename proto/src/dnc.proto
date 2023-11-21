@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 
 syntax = "proto3";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/dnc";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/dncpb";
 
 package dnc;
 
@@ -40,4 +40,3 @@ message LookupResponse {
 message LookupRequest {
   string origin_id = 1;
 }
-

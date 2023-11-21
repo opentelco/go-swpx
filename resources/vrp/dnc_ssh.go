@@ -4,27 +4,27 @@ import (
 	"fmt"
 	"time"
 
-	shared2 "git.liero.se/opentelco/go-dnc/models/pb/shared"
-	"git.liero.se/opentelco/go-dnc/models/pb/terminal"
-	"git.liero.se/opentelco/go-dnc/models/pb/transport"
+	"git.liero.se/opentelco/go-dnc/models/pb/sharedpb"
+	"git.liero.se/opentelco/go-dnc/models/pb/terminalpb"
+	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
 	"git.liero.se/opentelco/go-swpx/config"
-	proto "git.liero.se/opentelco/go-swpx/proto/go/resource"
+	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *transport.Message {
+func createBasicSSHInterfaceTask(req *resourcepb.Request, conf *config.ResourceVRP) *transportpb.Message {
 
 	sshConf := conf.Transports.GetByLabel("ssh")
-	task := &terminal.Task{
+	task := &terminalpb.Task{
 		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
-		Payload: []*terminal.Task_Payload{
+		Payload: []*terminalpb.Task_Payload{
 			{
 				Command: fmt.Sprintf("display mac-address %s", req.Port),
 			},
 		},
-		Config: &terminal.Config{
+		Config: &terminalpb.Config{
 			User:                sshConf.User,
 			Password:            sshConf.Password,
 			RegexPrompt:         sshConf.RegexPrompt,
@@ -35,36 +35,37 @@ func createBasicSSHInterfaceTask(req *proto.Request, conf *config.ResourceVRP) *
 		},
 	}
 
-	message := &transport.Message{
-		Session: &transport.Session{
-			Target: req.Hostname,
-			Port:   int32(sshConf.Port),
-			Type:   transport.Type_SSH,
+	message := &transportpb.Message{
+		Session: &transportpb.Session{
+			NetworkRegion: req.NetworkRegion,
+			Target:        req.Hostname,
+			Port:          int32(sshConf.Port),
+			Type:          transportpb.Type_SSH,
 		},
 
 		Id:     ksuid.New().String(),
 		Source: VERSION.String(),
-		Task: &transport.Task{
-			Task: &transport.Task_Terminal{task},
+		Task: &transportpb.Task{
+			Task: &transportpb.Task_Terminal{Terminal: task},
 		},
-		Status:   shared2.Status_NEW,
+		Status:   sharedpb.Status_NEW,
 		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}
 	return message
 }
 
-func createCollectConfigMsg(req *proto.GetRunningConfigParameters, conf *config.ResourceVRP) *transport.Message {
+func createCollectConfigMsg(req *resourcepb.GetRunningConfigParameters, conf *config.ResourceVRP) *transportpb.Message {
 
 	sshConf := conf.Transports.GetByLabel("ssh")
-	task := &terminal.Task{
+	task := &terminalpb.Task{
 		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
-		Payload: []*terminal.Task_Payload{
+		Payload: []*terminalpb.Task_Payload{
 			{
 				Command: "disp cur",
 			},
 		},
-		Config: &terminal.Config{
+		Config: &terminalpb.Config{
 			User:                sshConf.User,
 			Password:            sshConf.Password,
 			RegexPrompt:         sshConf.RegexPrompt,
@@ -75,19 +76,20 @@ func createCollectConfigMsg(req *proto.GetRunningConfigParameters, conf *config.
 		},
 	}
 
-	message := &transport.Message{
-		Session: &transport.Session{
-			Target: req.Hostname,
-			Port:   int32(sshConf.Port),
-			Type:   transport.Type_SSH,
+	message := &transportpb.Message{
+		Session: &transportpb.Session{
+			NetworkRegion: req.NetworkRegion,
+			Target:        req.Hostname,
+			Port:          int32(sshConf.Port),
+			Type:          transportpb.Type_SSH,
 		},
 
 		Id:     ksuid.New().String(),
 		Source: VERSION.String(),
-		Task: &transport.Task{
-			Task: &transport.Task_Terminal{task},
+		Task: &transportpb.Task{
+			Task: &transportpb.Task_Terminal{Terminal: task},
 		},
-		Status:   shared2.Status_NEW,
+		Status:   sharedpb.Status_NEW,
 		Deadline: timestamppb.New(time.Now().Add(validateEOLTimeout(req.Timeout, defaultDeadlineTimeout))),
 		Created:  timestamppb.Now(),
 	}

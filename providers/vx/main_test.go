@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/core"
+	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +15,7 @@ func TestProvider_ResolveSessionRequest(t *testing.T) {
 	ctx := context.Background()
 	p := Provider{logger: logger}
 	os.Setenv("REGION", "VX_SA1")
-	req := &core.SessionRequest{
+	req := &corepb.SessionRequest{
 		Hostname: "testa-a1",
 	}
 	req, err := p.ResolveSessionRequest(ctx, req)
@@ -28,7 +28,7 @@ func TestProvider_ResolveSessionRequest_1(t *testing.T) {
 	ctx := context.Background()
 	p := Provider{logger: logger}
 	os.Setenv("REGION", "")
-	req := &core.SessionRequest{
+	req := &corepb.SessionRequest{
 		Hostname: "testa-a1",
 	}
 	req, err := p.ResolveSessionRequest(ctx, req)
@@ -41,7 +41,7 @@ func TestProvider_ResolveSessionRequest_Ip(t *testing.T) {
 	ctx := context.Background()
 	p := Provider{logger: logger}
 	os.Setenv("REGION", "VX_SA1")
-	req := &core.SessionRequest{
+	req := &corepb.SessionRequest{
 		Hostname: "172.26.11.232",
 	}
 	req, err := p.ResolveSessionRequest(ctx, req)

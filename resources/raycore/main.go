@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -96,7 +96,7 @@ package main
 // 	}
 
 // 	switch task := msg.Task.Task.(type) {
-// 	case *transport.Task_Snmpc:
+// 	case *transportpb.Task_Snmpc:
 // 		interfaces := make(map[string]*proto.NetworkElementInterface)
 // 		for _, m := range task.Snmpc.Metrics {
 // 			fields := strings.Split(m.Oid, ".")
@@ -187,7 +187,7 @@ package main
 // 	}
 
 // 	switch task := msg.Task.Task.(type) {
-// 	case *transport.Task_Terminal:
+// 	case *transportpb.Task_Terminal:
 // 		if len(task.Terminal.Payload) > 0 {
 // 			transceiver, err := parseTransceiverMessage(task.Terminal.Payload[0].Data)
 // 			if err != nil {

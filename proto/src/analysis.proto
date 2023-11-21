@@ -8,7 +8,7 @@
  * Modified By: Mathias Ehrlin (mathias.ehrlin@vx.se>)
  * -----
  * Copyright - 2021 VX Service Delivery AB
- * 
+ *
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * -----
@@ -18,7 +18,7 @@
 
 syntax = "proto3";
 package analysis;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/analysis";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/analysispb";
 
 
 

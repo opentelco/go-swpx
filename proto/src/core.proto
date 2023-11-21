@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Liero AB
+ * Copyright (c) 2023. Liero AB
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -22,10 +22,11 @@
 
 syntax = "proto3";
 package core;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/core";
+option go_package = "git.liero.se/opentelco/go-swpx/proto/go/corepb";
 
 import "network_element.proto";
-import "google/protobuf/empty.proto";
+import "stanza.proto";
+import "google/protobuf/duration.proto";
 
 message Error {
     string message = 1;
@@ -103,6 +104,7 @@ message PollRequest {
 
     enum Type {
         NOT_SET = 0;
+
         // GET_TECHNICAL_INFO returns a full picture of the network element or
         // on a specific port
         GET_TECHNICAL_INFO = 1;
@@ -125,10 +127,6 @@ message PollRequest {
         // GET_TRANSCEIVER on all ports on a device or on a specific port
         GET_TRANSCEIVER = 6;
 
-        // COLLECT_CONFIG collects the config of a network element and compares it
-        // with the stored config, if there are any changes it will return the changes
-        // and the new config
-        COLLECT_CONFIG = 7;
     }
     Type type = 3;
 }
@@ -141,39 +139,88 @@ message PollResponse {
     string execution_time                  = 6;
 }
 
+// DiscoverRequest is used to discover a network element
+message DiscoverRequest {
+    // session is used to locate the network element
+    SessionRequest session = 1;
+    // settings is used to configure the request
+    Settings settings      = 2;
+}
+
+message DiscoverResponse {
+    networkelement.Element network_element = 2;
+}
+
 message CommandRequest {}
 message CommandResponse {}
 message InformationResponse {}
 
-service Core {
+// DiagnosticRequest is used to run a diagnostic on a network element or a specific port on the network element
+message DiagnosticRequest {
+        // session is used to locate the network element
+    SessionRequest session = 1;
+    // settings is used to configure the request
+    Settings settings      = 2;
+
+    // the lenght of the diagnostic in seconds (wait between the two collections of data)
+    google.protobuf.Duration diagnosic_length = 3;
+}
+
+// DiagnosticResponse is used to return the result of a diagnostic
+message DiagnosticResponse {
+    string report = 1;
+}
+
+service CoreService {
+    // Discover is used to get basic information about an network element
+    rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+
+    // Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+    // It will collect data from the network element and then wait for a period of time and collect data again
+    // and return the difference between the two collections of data to the client. The data will also be analyzed
+    // by the poller and Report of the diagnostic will be returned to the client.
+    // the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
+    // the network element which means conneting, logging in etc
+    rpc Diagnostic(DiagnosticRequest) returns (DiagnosticResponse);
+
     // SWP Polling call to get technical Information and other information about a network element
     // the request is sent to the correct poller based on the network_region of the request
     // the type of the request is used to determine what information to collect from the network element
     rpc Poll(PollRequest) returns (PollResponse);
-
-    // Send a command to a network device through the Poller
-    rpc Command(CommandRequest) returns (CommandResponse);
-
-    // Information returns infomration about the switch poller. loaded resources plugins and provider plugins
-    rpc Information(google.protobuf.Empty) returns (InformationResponse);
 
     // CollectConfig collects the configuration of a network element check for any changes between the stored config and the
     // collected one. Returs a list of changes and the config collected from the network element
     rpc CollectConfig(CollectConfigRequest) returns (CollectConfigResponse);
 }
 
-service Commander {
+service CommanderService {
+    // configure a configuration stanza on a network element
+    rpc ConfigureStanza(ConfigureStanzaRequest) returns (stanza.ConfigureResponse);
+
     rpc TogglePort(CommandRequest) returns (CommandResponse);
     rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
 
+
+message ConfigureStanzaRequest {
+    SessionRequest session = 1;
+
+    Settings settings      = 2;
+
+    // the configuration to send to the device, each line is a string in the array
+    repeated stanza.ConfigurationLine stanza = 4;
+}
+
+
+
+// provider things
 message ProvideCPERequest {}
 message ProvideCPEResponse {}
 message ProvideAccessRequest {}
 message ProvideAccessResponse {}
 
-// Provide
-service Provide {
+// Provider
+service ProviderService {
     // Ask provider to return a valid CPE for a access
     rpc CPE(ProvideCPERequest) returns (ProvideCPEResponse);
 
