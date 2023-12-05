@@ -25,12 +25,18 @@ const _ = grpc.SupportPackageIsVersion7
 type CoreServiceClient interface {
 	// Discover is used to get basic information about an network element
 	Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
+	// CheckAvailability is used to check if a network element is available and responding to requests
+	// this does not imply that the network element is working correctly or that it is configured correctly but
+	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
+	// the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
+	CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error)
 	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
 	// It will collect data from the network element and then wait for a period of time and collect data again
 	// and return the difference between the two collections of data to the client. The data will also be analyzed
 	// by the poller and Report of the diagnostic will be returned to the client.
-	// the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
-	// the network element which means conneting, logging in etc
+	// the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
+	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
+	// will take aproximately 1 minute to complete.
 	Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
@@ -52,6 +58,15 @@ func NewCoreServiceClient(cc grpc.ClientConnInterface) CoreServiceClient {
 func (c *coreServiceClient) Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
 	out := new(DiscoverResponse)
 	err := c.cc.Invoke(ctx, "/core.CoreService/Discover", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coreServiceClient) CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error) {
+	out := new(CheckAvailabilityResponse)
+	err := c.cc.Invoke(ctx, "/core.CoreService/CheckAvailability", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,12 +106,18 @@ func (c *coreServiceClient) CollectConfig(ctx context.Context, in *CollectConfig
 type CoreServiceServer interface {
 	// Discover is used to get basic information about an network element
 	Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
+	// CheckAvailability is used to check if a network element is available and responding to requests
+	// this does not imply that the network element is working correctly or that it is configured correctly but
+	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
+	// the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
+	CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error)
 	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
 	// It will collect data from the network element and then wait for a period of time and collect data again
 	// and return the difference between the two collections of data to the client. The data will also be analyzed
 	// by the poller and Report of the diagnostic will be returned to the client.
-	// the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
-	// the network element which means conneting, logging in etc
+	// the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
+	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
+	// will take aproximately 1 minute to complete.
 	Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error)
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
@@ -114,6 +135,9 @@ type UnimplementedCoreServiceServer struct {
 
 func (UnimplementedCoreServiceServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
+}
+func (UnimplementedCoreServiceServer) CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAvailability not implemented")
 }
 func (UnimplementedCoreServiceServer) Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Diagnostic not implemented")
@@ -151,6 +175,24 @@ func _CoreService_Discover_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CoreServiceServer).Discover(ctx, req.(*DiscoverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CoreService_CheckAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoreServiceServer).CheckAvailability(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.CoreService/CheckAvailability",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoreServiceServer).CheckAvailability(ctx, req.(*SessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -219,6 +261,10 @@ var CoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Discover",
 			Handler:    _CoreService_Discover_Handler,
+		},
+		{
+			MethodName: "CheckAvailability",
+			Handler:    _CoreService_CheckAvailability_Handler,
 		},
 		{
 			MethodName: "Diagnostic",

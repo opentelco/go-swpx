@@ -36,20 +36,19 @@ func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.Configu
 	}
 
 	// setup the commands, first enable configure mode, then the stanza, then exit configure mode
-	stanza := []*terminalpb.Task_Payload{{Command: commandEnableConfigure, LineNumber: 0}}
+	stanza := []*terminalpb.Task_Payload{{Command: commandEnableConfigure}}
 
-	for n, s := range req.Stanza {
+	for _, s := range req.Stanza {
 		stanza = append(stanza, &terminalpb.Task_Payload{
 			Command:      s.Content,
-			LineNumber:   int64(n + 1),
 			PromptErrors: []string{"Error: Unrecognized command found"},
 		})
 	}
 
 	// we start at 0 so the last is linue number is the length of the stanza
 	stanza = append(stanza, &terminalpb.Task_Payload{
-		Command:    commandEndConfigure,
-		LineNumber: int64(len(req.Stanza) + 1)})
+		Command: commandEndConfigure,
+	})
 
 	task := &terminalpb.Task{
 		Payload:  stanza,
@@ -79,9 +78,8 @@ func (d *VRPDriver) ConfigureStanza(ctx context.Context, req *resourcepb.Configu
 
 	for _, p := range pl {
 		lineResult := &stanzapb.Result{
-			LineNumber: p.LineNumber,
-			Line:       p.Command,
-			Status:     stanzapb.Result_SUCCESS,
+			Line:   p.Command,
+			Status: stanzapb.Result_SUCCESS,
 		}
 
 		if p.Error != "" {

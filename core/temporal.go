@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/core/workflows"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
@@ -22,7 +21,7 @@ func createTemporalWorker(tc client.Client, c *Core) worker.Worker {
 		BackgroundActivityContext: context.WithValue(context.Background(), TemporalClientContextKey, tc),
 	})
 	w.RegisterWorkflowWithOptions(
-		workflows.DiagnosticWorkflow,
+		DiagnosticWorkflow,
 		workflow.RegisterOptions{
 			// Name: "",
 		})

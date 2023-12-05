@@ -41,5 +41,5 @@ logger {
 
 temporal {
   addr       = "localhost:7233"
-  namespace  = "TEST_SwitchPoller_Local"
+  namespace  = "TEST_SwitchPoller"
 }

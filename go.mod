@@ -3,7 +3,7 @@ module git.liero.se/opentelco/go-swpx
 go 1.21
 
 require (
-	git.liero.se/opentelco/go-dnc v1.0.7-0.20230717071333-2a5036bf2561
+	git.liero.se/opentelco/go-dnc v1.0.7-0.20231122091450-f92abf47eeee
 	github.com/amsokol/mongo-go-driver-protobuf v1.0.0-rc5
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/go-chi/chi v1.5.4

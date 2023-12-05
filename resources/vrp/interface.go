@@ -37,14 +37,14 @@ func createTaskGetPortStats(index int64, req *resourcepb.Request, conf *config.R
 
 			// OUT
 			{Oid: fmt.Sprintf(oids.IfOutErrorsF, index), Name: "ifOutErrors", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.IfOutOctetsF, index), Name: "ifOutOctets", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfHCOutOctetsF, index), Name: "ifHCOutOctets", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfOutUcastPktsF, index), Name: "ifOutUcastPkts", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfOutBroadcastPktsF, index), Name: "ifOutBroadcastPkts", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfOutMulticastPktsF, index), Name: "ifOutMulticastPkts", Type: metricpb.MetricType_INT},
 
 			// In
 			{Oid: fmt.Sprintf(oids.IfInErrorsF, index), Name: "ifInErrors", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.IfInOctetsF, index), Name: "ifInOctetsF", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfHCInOctetsF, index), Name: "ifHCInOctets", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfInUcastPktsF, index), Name: "ifInUcastPkts", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfInBroadcastPktsF, index), Name: "ifInBroadcastPkts", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfInMulticastPktsF, index), Name: "ifInMulticastPkts", Type: metricpb.MetricType_INT},
@@ -76,15 +76,23 @@ func createTaskGetPortStats(index int64, req *resourcepb.Request, conf *config.R
 	return message
 }
 
-func (v *VRPDriver) getIfEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Interface) {
+func (v *VRPDriver) getIfEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Port) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Stats.Output.Bytes = int64(i)
+		elementInterface.Stats.Output.Bits = int64(i) * 8 // mulitply to get bits
 
 	case strings.HasPrefix(m.Oid, oids.IfInOctets):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Stats.Input.Bytes = int64(i)
+		elementInterface.Stats.Input.Bits = int64(i) * 8 // mulitply to get bits
+
+	case strings.HasPrefix(m.Oid, oids.IfHCOutOctets):
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Output.Bits = int64(i) * 8 // mulitply to get bits
+
+	case strings.HasPrefix(m.Oid, oids.IfHCInOctets):
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Input.Bits = int64(i) * 8 // mulitply to get bits
 
 	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
 		i, _ := strconv.Atoi(m.GetValue())
@@ -103,7 +111,7 @@ func (v *VRPDriver) getIfEntryInformation(m *metricpb.Metric, elementInterface *
 
 	case strings.HasPrefix(m.Oid, oids.IfType):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Type = networkelementpb.InterfaceType(i)
+		elementInterface.Type = networkelementpb.Port_Type(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfMtu):
 		i, _ := strconv.Atoi(m.GetValue())
@@ -117,16 +125,16 @@ func (v *VRPDriver) getIfEntryInformation(m *metricpb.Metric, elementInterface *
 
 	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.AdminStatus = networkelementpb.InterfaceStatus(i)
+		elementInterface.AdminStatus = networkelementpb.Port_Status(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.OperationalStatus = networkelementpb.InterfaceStatus(i)
+		elementInterface.OperationalStatus = networkelementpb.Port_Status(i)
 
 	}
 }
 
-func (v *VRPDriver) getHuaweiInterfaceStats(m *metricpb.Metric, elementInterface *networkelementpb.Interface) {
+func (v *VRPDriver) getHuaweiInterfaceStats(m *metricpb.Metric, elementInterface *networkelementpb.Port) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.HuaIfEtherStatInCRCPkts):
 		i, _ := strconv.Atoi(m.GetValue())

@@ -21,17 +21,62 @@ package analysis;
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/analysispb";
 
 
+message Report {
+    repeated Analysis analysis = 1;
+}
 
 message Analysis {
-    enum Level {
-        NOT_SET = 0;
-        FAILURE = 1;
-        WARNING = 2;
-        OK = 3;
+
+    enum Type {
+        TYPE_NOT_SET = 0;
+
+        // analysis of the link state on the port
+        TYPE_LINK = 1;
+
+        // analysis of the link crc error counter on the port
+        // if the port has crc errors during the analysis
+        TYPE_LINK_CRC_ERROR = 2;
+
+        // Analysis of the link error counter on the port
+        // the number of packets that could not be transmitted because of errors
+        TYPE_LINK_ERROR = 3;
+
+        // analysis of the transceiver diagnostics on the port
+        // RX/TX power, temperature, voltage, bias current etc.
+        // Analyze of the Interface.Transceiver.Stats
+        TYPE_TRANSCEIVER_DIAGNOSTICS = 4;
+
+        // analysis of the traffic on the port
+        // if the port has traffic during the analysis
+        TYPE_TRAFFIC = 5;
+
+        // analysis of the mac address learned by mac learning
+        // some devices will inhert the mac address from the dhcp snooping and vice versa
+        TYPE_MAC_ADDRESS = 6;
+
+        // analysis of the dhcp snooping lease table
+        TYPE_DHCP_LEASE = 7;
+
+
     }
-    Level level = 1;
-    string message = 2;
-    string value = 3;
-    string threshold = 4;
-    string type = 5;
+    Type type = 1;
+
+    enum Result {
+        RESULT_NOT_SET = 0;
+        RESULT_ERROR = 1;
+        RESULT_WARNING = 2;
+        RESULT_OK = 3;
+    }
+
+    // the result of the analysis, if the analysis is ok, warning or error
+    Result result = 2;
+
+    // the note is a short description of the analysis, e.g "link was down through out the analysis"
+    string note = 3;
+
+    // the value is the values that was analyzed
+    repeated string value = 4;
+
+    // threshold is the value that the value is compared to
+    string threshold = 5;
 }

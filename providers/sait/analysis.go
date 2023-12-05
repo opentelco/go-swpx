@@ -39,72 +39,63 @@ func doAnalysis(n *networkelementpb.Element, changes *int) {
 	}
 }
 
-func doStatusAnalysis(iface *networkelementpb.Interface, changes *int) {
+func doStatusAnalysis(iface *networkelementpb.Port, changes *int) {
 	if iface.Analysis == nil {
 		iface.Analysis = make([]*analysispb.Analysis, 0)
 	}
 
-	if iface.AdminStatus != networkelementpb.InterfaceStatus_up {
+	if iface.AdminStatus != networkelementpb.Port_up {
 		iface.Analysis = append(iface.Analysis, &analysispb.Analysis{
-			Level:     analysispb.Analysis_FAILURE,
-			Message:   "interface is not administrative up",
-			Value:     iface.AdminStatus.String(),
-			Threshold: networkelementpb.InterfaceStatus_up.String(),
-			Type:      "admin-status",
+			Note: "interface is not administrative up",
+			// Value: iface.AdminStatus.String(),
+			// Code:  analysispb.Analysis_CODE_ERR_LINK_DOWN,
 		})
 		*changes++
 	}
 
-	if iface.OperationalStatus != networkelementpb.InterfaceStatus_up {
+	if iface.OperationalStatus != networkelementpb.Port_up {
 		iface.Analysis = append(iface.Analysis, &analysispb.Analysis{
-			Level:     analysispb.Analysis_FAILURE,
-			Message:   "interface is not operational up",
-			Value:     iface.OperationalStatus.String(),
-			Threshold: networkelementpb.InterfaceStatus_up.String(),
-			Type:      "operational-status",
+			Note: "interface is not operational up",
+			// Level: analysispb.Analysis_LEVEL_ERROR,
+			// Value: iface.OperationalStatus.String(),
+			// Code:  analysispb.Analysis_CODE_ERR_LINK_DOWN,
 		})
 		*changes++
 	}
 }
 
-func doStatsAnalysis(iface *networkelementpb.Interface, changes *int) {
+func doStatsAnalysis(iface *networkelementpb.Port, changes *int) {
 	if iface.Stats.Analysis == nil {
 		iface.Stats.Analysis = make([]*analysispb.Analysis, 0)
 	}
 
 	if iface.Stats.Input.Errors > 0 {
 		iface.Stats.Analysis = append(iface.Stats.Analysis, &analysispb.Analysis{
-			Level:     analysispb.Analysis_WARNING,
-			Message:   fmt.Sprintf("%d input errors", iface.Stats.Input.Errors),
-			Value:     fmt.Sprintf("%d", iface.Stats.Input.Errors),
-			Threshold: "0",
-			Type:      "stats-input-errors",
+			Note: fmt.Sprintf("%d input errors", iface.Stats.Input.Errors),
+			// Value: fmt.Sprintf("%d", iface.Stats.Input.Errors),
+			// Level: analysispb.Analysis_LEVEL_WARNING,
 		})
 		*changes++
 	}
 
 	if iface.Stats.Input.CrcErrors > 0 {
 		iface.Stats.Analysis = append(iface.Stats.Analysis, &analysispb.Analysis{
-			Level:     analysispb.Analysis_WARNING,
-			Message:   fmt.Sprintf("%d input crc errors", iface.Stats.Input.CrcErrors),
-			Value:     fmt.Sprintf("%d", iface.Stats.Input.CrcErrors),
-			Threshold: "0",
-			Type:      "stats-input-crc-errors",
+			Note: fmt.Sprintf("%d input crc errors", iface.Stats.Input.CrcErrors),
+			// Level: analysispb.Analysis_LEVEL_WARNING,
+			// Value: fmt.Sprintf("%d", iface.Stats.Input.CrcErrors),
 		})
 	}
 
 	if iface.Stats.Output.Errors > 0 {
 		iface.Stats.Analysis = append(iface.Stats.Analysis, &analysispb.Analysis{
-			Level:     analysispb.Analysis_WARNING,
-			Message:   fmt.Sprintf("%d output errors", iface.Stats.Output.Errors),
-			Value:     fmt.Sprintf("%d", iface.Stats.Output.Errors),
-			Threshold: "0",
-			Type:      "stats-output-errors",
+			Note: fmt.Sprintf("%d output errors", iface.Stats.Output.Errors),
+			// Value: fmt.Sprintf("%d", iface.Stats.Output.Errors),
+			// Level: analysispb.Analysis_LEVEL_WARNING,
 		})
 	}
 }
 
-func doTransceiverAnalysis(iface *networkelementpb.Interface, changes *int) {
+func doTransceiverAnalysis(iface *networkelementpb.Port, changes *int) {
 	if iface.Transceiver == nil || iface.Transceiver.Stats == nil {
 		return
 	}
@@ -117,11 +108,9 @@ func doTransceiverAnalysis(iface *networkelementpb.Interface, changes *int) {
 		// check if threshold for RX
 		case rx <= TransceiverRXThreshold:
 			iface.Transceiver.Analysis = append(iface.Transceiver.Analysis, &analysispb.Analysis{
-				Level:     analysispb.Analysis_WARNING,
-				Message:   "sfp rx value is below threshold",
-				Value:     fmt.Sprintf("%.2f", rx),
-				Threshold: fmt.Sprintf("%.2f", TransceiverRXThreshold),
-				Type:      "rx-value",
+				Note: "sfp rx value is below threshold",
+				// Value: fmt.Sprintf("%.2f", rx),
+				// Level: analysispb.Analysis_LEVEL_WARNING,
 			})
 			*changes++
 		}
@@ -129,11 +118,9 @@ func doTransceiverAnalysis(iface *networkelementpb.Interface, changes *int) {
 		switch tx := stats.Tx; {
 		case tx <= TransceiverTXThreshold:
 			iface.Transceiver.Analysis = append(iface.Transceiver.Analysis, &analysispb.Analysis{
-				Level:     analysispb.Analysis_WARNING,
-				Message:   "sfp TX value is below threshold",
-				Value:     fmt.Sprintf("%.2f", tx),
-				Threshold: fmt.Sprintf("%.2f", TransceiverTXThreshold),
-				Type:      "tx-value",
+				Note: "sfp TX value is below threshold",
+				// Level: analysispb.Analysis_LEVEL_WARNING,
+				// Value: fmt.Sprintf("%.2f", tx),
 			})
 			*changes++
 		}

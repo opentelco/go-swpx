@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/core/workflows"
 	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"go.temporal.io/sdk/client"
 )
@@ -14,7 +13,7 @@ func (c *Core) Diagnostic(ctx context.Context, request *corepb.DiagnosticRequest
 
 	wr, err := c.tc.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		TaskQueue: TemporalTaskQueue,
-	}, workflows.DiagnosticWorkflow, request)
+	}, DiagnosticWorkflow, request)
 
 	if err != nil {
 		c.logger.Error("Error executing workflow", "error", err)

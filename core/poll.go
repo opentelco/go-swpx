@@ -43,7 +43,6 @@ func (c *Core) PollNetworkElement(ctx context.Context, request *corepb.PollReque
 		"cacheTTL", request.Settings.CacheTtl,
 		"timeout", request.Settings.Timeout,
 	)
-
 	cacheTTLduration, _ := time.ParseDuration(request.Settings.CacheTtl)
 
 	if !request.Settings.RecreateIndex && cacheTTLduration != 0 {
@@ -64,6 +63,7 @@ func (c *Core) PollNetworkElement(ctx context.Context, request *corepb.PollReque
 
 	timeoutDur, _ := time.ParseDuration(request.Settings.Timeout)
 	if timeoutDur == 0 {
+		c.logger.Debug("using default timeout, since none was specified", "timeout", c.config.Request.DefaultRequestTimeout.AsDuration())
 		timeoutDur = c.config.Request.DefaultRequestTimeout.AsDuration()
 	}
 

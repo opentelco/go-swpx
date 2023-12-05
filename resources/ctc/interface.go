@@ -71,16 +71,26 @@ func createTaskGetPortStats(index int64, req *resourcepb.Request, conf *config.R
 	return message
 }
 
-func (d *driver) getIfEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Interface) {
+func (d *driver) getIfEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Port) {
 	switch {
 	case strings.HasPrefix(m.Oid, oids.IfOutOctets):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Stats.Output.Bytes = int64(i)
+		elementInterface.Stats.Output.Bits = int64(i) * 8 // mulitply to get bits
 
 	case strings.HasPrefix(m.Oid, oids.IfInOctets):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Stats.Input.Bytes = int64(i)
+		elementInterface.Stats.Input.Bits = int64(i) * 8 // mulitply to get bits
 
+	// --
+	case strings.HasPrefix(m.Oid, oids.IfHCOutOctets):
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Output.Bits = int64(i) * 8 // mulitply to get bits
+
+	case strings.HasPrefix(m.Oid, oids.IfHCInOctets):
+		i, _ := strconv.Atoi(m.GetValue())
+		elementInterface.Stats.Input.Bits = int64(i) * 8 // mulitply to get bits
+
+	// --
 	case strings.HasPrefix(m.Oid, oids.IfInUcastPkts):
 		i, _ := strconv.Atoi(m.GetValue())
 		elementInterface.Stats.Input.Unicast = int64(i)
@@ -98,7 +108,7 @@ func (d *driver) getIfEntryInformation(m *metricpb.Metric, elementInterface *net
 
 	case strings.HasPrefix(m.Oid, oids.IfType):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.Type = networkelementpb.InterfaceType(i)
+		elementInterface.Type = networkelementpb.Port_Type(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfMtu):
 		i, _ := strconv.Atoi(m.GetValue())
@@ -112,11 +122,11 @@ func (d *driver) getIfEntryInformation(m *metricpb.Metric, elementInterface *net
 
 	case strings.HasPrefix(m.Oid, oids.IfAdminStatus):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.AdminStatus = networkelementpb.InterfaceStatus(i)
+		elementInterface.AdminStatus = networkelementpb.Port_Status(i)
 
 	case strings.HasPrefix(m.Oid, oids.IfOperStatus):
 		i, _ := strconv.Atoi(m.GetValue())
-		elementInterface.OperationalStatus = networkelementpb.InterfaceStatus(i)
+		elementInterface.OperationalStatus = networkelementpb.Port_Status(i)
 
 	}
 }

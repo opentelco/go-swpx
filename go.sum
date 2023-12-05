@@ -595,6 +595,8 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 gioui.org v0.0.0-20210308172011-57750fc8a0a6/go.mod h1:RSH6KIUZ0p2xy5zHDxgAM4zumjgTw83q2ge/PI+yyw8=
 git.liero.se/opentelco/go-dnc v1.0.7-0.20230717071333-2a5036bf2561 h1:JbiBILl7Luo2MmZnBx7GOGj4XLEhl3gnQb1Vh1hA41c=
 git.liero.se/opentelco/go-dnc v1.0.7-0.20230717071333-2a5036bf2561/go.mod h1:JwdodID5LFSEMvZh1hPHkM/SguEbYN5cEJECjY9knKk=
+git.liero.se/opentelco/go-dnc v1.0.7-0.20231122091450-f92abf47eeee h1:IeM+ipbAp2XyU48gsRQ0n2SwFBfIYrt1VzOs7HWSSiw=
+git.liero.se/opentelco/go-dnc v1.0.7-0.20231122091450-f92abf47eeee/go.mod h1:JwdodID5LFSEMvZh1hPHkM/SguEbYN5cEJECjY9knKk=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=

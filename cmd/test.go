@@ -11,7 +11,6 @@ import (
 	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func init() {
@@ -67,13 +66,20 @@ func init() {
 
 	// -
 
-	diagnosticCmd.Flags().String("ttl", "20s", "how long the diagnostc will run")
+	diagnosticCmd.Flags().Int32("poll", 2, "how many times diagnostic should poll the device for data (10s between polls)")
 	diagnosticCmd.Flags().StringP("target", "t", "", "the target to test")
 	if err := diagnosticCmd.MarkFlagRequired("target"); err != nil {
 		panic(err)
 	}
+
+	diagnosticCmd.Flags().StringP("port", "p", "GigabitEthernet0/0/1", "the port to check for")
+	if err := diagnosticCmd.MarkFlagRequired("port"); err != nil {
+		panic(err)
+	}
+
 	diagnosticCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
 	diagnosticCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
+	diagnosticCmd.Flags().String("region", "default", "specify which region to poll the device in")
 	TestRootCmd.AddCommand(diagnosticCmd)
 
 	Root.AddCommand(TestRootCmd)
@@ -265,10 +271,11 @@ var configureCmd = &cobra.Command{
 	Short: "configure a device with a set of commands",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		target, _ := cmd.Flags().GetString("target")
 		ttlString, _ := cmd.Flags().GetString("ttl")
+		target, _ := cmd.Flags().GetString("target")
 		providers, _ := cmd.Flags().GetStringSlice("providers")
 		resource, _ := cmd.Flags().GetString("resource")
+		region, _ := cmd.Flags().GetString("region")
 		lines, _ := cmd.Flags().GetStringSlice("line")
 
 		cmd.Println("selected providers: ", providers)
@@ -300,7 +307,8 @@ var configureCmd = &cobra.Command{
 				Timeout:        ttlString,
 			},
 			Session: &corepb.SessionRequest{
-				Hostname: target,
+				Hostname:      target,
+				NetworkRegion: region,
 			},
 			Stanza: stanza,
 		})
@@ -323,16 +331,18 @@ var diagnosticCmd = &cobra.Command{
 
 		target, _ := cmd.Flags().GetString("target")
 		ttlString, _ := cmd.Flags().GetString("ttl")
+		pollTimes, _ := cmd.Flags().GetInt32("poll")
 		providers, _ := cmd.Flags().GetStringSlice("providers")
 		resource, _ := cmd.Flags().GetString("resource")
+		region, _ := cmd.Flags().GetString("resource")
+		port, _ := cmd.Flags().GetString("port")
 
-		cmd.Println("selected providers: ", providers)
-
-		ttlDur, err := time.ParseDuration(ttlString)
-		if err != nil {
-			cmd.Println("could not parse ttl: ", err)
+		if pollTimes < 2 {
+			cmd.Println("poll must be 2 or more")
 			os.Exit(1)
 		}
+
+		cmd.Println("selected providers: ", providers)
 
 		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
 		if err != nil {
@@ -348,17 +358,17 @@ var diagnosticCmd = &cobra.Command{
 				Timeout:        ttlString,
 			},
 			Session: &corepb.SessionRequest{
-				Hostname: target,
+				Hostname:      target,
+				Port:          port,
+				NetworkRegion: region,
 			},
-			DiagnosicLength: durationpb.New(ttlDur),
+			PollTimes: pollTimes,
 		})
 		if err != nil {
 			cmd.PrintErr(err)
 		}
 		if resp != nil {
 			cmd.Println(prettyPrintJSON(resp))
-		} else {
-			fmt.Println("failed to configure")
 		}
 
 	},

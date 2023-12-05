@@ -33,13 +33,41 @@ func createVRPTransceiverMsg(req *resourcepb.Request, conf *config.ResourceVRP) 
 		},
 		Type: snmpcpb.Type_GET,
 		Oids: []*snmpcpb.Oid{
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVendorSNF, req.PhysicalPortIndex), Name: "hwEntityOpticalVendorSn", Type: metricpb.MetricType_STRING},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTemperatureF, req.PhysicalPortIndex), Name: "hwEntityOpticalTemperature", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalVoltageF, req.PhysicalPortIndex), Name: "hwEntityOpticalVoltage", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalBiasF, req.PhysicalPortIndex), Name: "hwEntityOpticalBiasCurrent", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalRxPowerF, req.PhysicalPortIndex), Name: "hwEntityOpticalRxPower", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPOpticalTxPowerF, req.PhysicalPortIndex), Name: "hwEntityOpticalTxPower", Type: metricpb.MetricType_INT},
-			{Oid: fmt.Sprintf(oids.HuaIfVRPVendorPNF, req.PhysicalPortIndex), Name: "hwEntityOpticalVenderPn", Type: metricpb.MetricType_STRING},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalVendorSNF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalVendorSn",
+				Type: metricpb.MetricType_STRING,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalTemperatureF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalTemperature",
+				Type: metricpb.MetricType_INT,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalVoltageF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalVoltage",
+				Type: metricpb.MetricType_INT,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalBiasF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalBiasCurrent",
+				Type: metricpb.MetricType_INT,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalRxPowerF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalRxPower",
+				Type: metricpb.MetricType_INT,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPOpticalTxPowerF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalTxPower",
+				Type: metricpb.MetricType_INT,
+			},
+			{
+				Oid:  fmt.Sprintf(oids.HuaIfVRPVendorPNF, req.PhysicalPortIndex),
+				Name: "hwEntityOpticalVenderPn",
+				Type: metricpb.MetricType_STRING,
+			},
 		},
 	}
 
@@ -80,7 +108,7 @@ func (d *VRPDriver) parseTransceiverMessage(task *snmpcpb.Task, startIndex int) 
 
 	val := &networkelementpb.Transceiver{
 		SerialNumber: strings.Trim(task.Metrics[startIndex+0].GetValue(), " "),
-		Stats: []*networkelementpb.TransceiverStatistics{
+		Stats: []*networkelementpb.Transceiver_Statistics{
 			{
 				Temp:    float64(tempInt),
 				Voltage: float64(voltInt) / 1000,

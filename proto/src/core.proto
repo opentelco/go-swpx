@@ -25,8 +25,8 @@ package core;
 option go_package = "git.liero.se/opentelco/go-swpx/proto/go/corepb";
 
 import "network_element.proto";
+import "analysis.proto";
 import "stanza.proto";
-import "google/protobuf/duration.proto";
 
 message Error {
     string message = 1;
@@ -162,25 +162,42 @@ message DiagnosticRequest {
     // settings is used to configure the request
     Settings settings      = 2;
 
-    // the lenght of the diagnostic in seconds (wait between the two collections of data)
-    google.protobuf.Duration diagnosic_length = 3;
+    // how many times the diagnostic should fetch data from the network element
+    // the number of times will affect the time of the diagnostic as it will wait
+    // 10 seconds between each pol, minimum 3 times
+    int32 poll_times = 3;
 }
 
 // DiagnosticResponse is used to return the result of a diagnostic
 message DiagnosticResponse {
-    string report = 1;
+    analysis.Report report = 1;
 }
 
+message CheckAvailabilityResponse {
+    // if the network element is available or not
+    bool available = 1;
+
+    // response time in ms
+    float response_time = 2;
+
+}
 service CoreService {
     // Discover is used to get basic information about an network element
     rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+
+    // CheckAvailability is used to check if a network element is available and responding to requests
+    // this does not imply that the network element is working correctly or that it is configured correctly but
+    // that it is responding to requests and that the poller can connect to it over SNMP/ICMP
+    // the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
+    rpc CheckAvailability(SessionRequest) returns (CheckAvailabilityResponse);
 
     // Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
     // It will collect data from the network element and then wait for a period of time and collect data again
     // and return the difference between the two collections of data to the client. The data will also be analyzed
     // by the poller and Report of the diagnostic will be returned to the client.
-    // the diagnostic will be run for the time specified in the request + the time it takes to collect the data from
-    // the network element which means conneting, logging in etc
+    // the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
+    // connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
+    // will take aproximately 1 minute to complete.
     rpc Diagnostic(DiagnosticRequest) returns (DiagnosticResponse);
 
     // SWP Polling call to get technical Information and other information about a network element

@@ -54,3 +54,8 @@ func NewError(msg string, code ErrorCode) Error {
 		Code:    code,
 	}
 }
+
+const (
+	TemporalErrTypeRegionRequired = "NETWORK_REGION_REQUIRED"
+	TemporalErrTypePollFailed     = "POLL_FAILED"
+)

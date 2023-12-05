@@ -155,7 +155,7 @@ func populateDiscoveryMap(logger hclog.Logger, task *snmpcpb.Task, discoveryMap 
 	}
 }
 
-func getIfXEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Interface) {
+func getIfXEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Port) {
 
 	i, _ := strconv.Atoi(m.GetValue())
 	switch {
@@ -200,16 +200,16 @@ func getSystemInformation(m *metricpb.Metric, ne *networkelementpb.Element) {
 	}
 }
 
-func itemToInterface(v *discoveryItem) *networkelementpb.Interface {
-	iface := &networkelementpb.Interface{
+func itemToInterface(v *discoveryItem) *networkelementpb.Port {
+	iface := &networkelementpb.Port{
 		AggregatedId:      "",
 		Index:             int64(v.Index),
 		Alias:             v.Alias,
 		Description:       v.Descr,
 		Hwaddress:         v.physAddress,
-		Type:              networkelementpb.InterfaceType(v.ifType),
-		AdminStatus:       networkelementpb.InterfaceStatus(v.adminStatus),
-		OperationalStatus: networkelementpb.InterfaceStatus(v.operStatus),
+		Type:              networkelementpb.Port_Type(v.ifType),
+		AdminStatus:       networkelementpb.Port_Status(v.adminStatus),
+		OperationalStatus: networkelementpb.Port_Status(v.operStatus),
 		LastChanged:       v.lastChange,
 		Speed:             int64(v.highSpeed),
 		Mtu:               int64(v.mtu),

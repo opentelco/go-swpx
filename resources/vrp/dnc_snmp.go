@@ -238,7 +238,7 @@ func createAllPortsMsg(req *resourcepb.Request, conf *config.ResourceVRP) *trans
 	return message
 }
 
-func createSinglePortMsg(index int64, req *resourcepb.Request, conf *config.ResourceVRP) *transportpb.Message {
+func createMsgSnmpInterfaceStats(index int64, req *resourcepb.Request, conf *config.ResourceVRP) *transportpb.Message {
 	task := &snmpcpb.Task{
 		Deadline: timestamppb.New(time.Now().Add(shared.ValidateEOLTimeout(req, defaultDeadlineTimeout))),
 		Config: &snmpcpb.Config{
@@ -261,6 +261,47 @@ func createSinglePortMsg(index int64, req *resourcepb.Request, conf *config.Reso
 			{Oid: fmt.Sprintf(oids.IfOperStatusF, index), Name: "ifOperStatus", Type: metricpb.MetricType_INT},
 			{Oid: fmt.Sprintf(oids.IfLastChangeF, index), Name: "ifLastChange", Type: metricpb.MetricType_TIMETICKS},
 			{Oid: fmt.Sprintf(oids.IfHighSpeedF, index), Name: "ifHighSpeed", Type: metricpb.MetricType_INT},
+		},
+	}
+
+	message := &transportpb.Message{
+		Session: &transportpb.Session{
+			NetworkRegion: req.NetworkRegion,
+			Target:        req.Hostname,
+			Port:          int32(conf.Snmp.Port),
+			Type:          transportpb.Type_SNMP,
+		},
+		Id:     ksuid.New().String(),
+		Source: VERSION.String(),
+		Task: &transportpb.Task{
+			Task: &transportpb.Task_Snmpc{task},
+		},
+		Status:   sharedpb.Status_NEW,
+		Deadline: timestamppb.New(time.Now().Add(shared.ValidateEOLTimeout(req, defaultDeadlineTimeout))),
+		Created:  timestamppb.Now(),
+	}
+	return message
+}
+
+func createMsgSnmpInterfaceTrafficStats(index int64, req *resourcepb.Request, conf *config.ResourceVRP) *transportpb.Message {
+	task := &snmpcpb.Task{
+		Deadline: timestamppb.New(time.Now().Add(shared.ValidateEOLTimeout(req, defaultDeadlineTimeout))),
+		Config: &snmpcpb.Config{
+			Community:          conf.Snmp.Community,
+			DynamicRepititions: false,
+			NonRepeaters:       12,
+			MaxIterations:      1,
+			Version:            snmpcpb.SnmpVersion(conf.Snmp.Version),
+			Timeout:            durationpb.New(conf.Snmp.Timeout.AsDuration()),
+			Retries:            int32(conf.Snmp.Retries),
+		},
+		Type: snmpcpb.Type_GET,
+		Oids: []*snmpcpb.Oid{
+			{Oid: fmt.Sprintf(oids.HuaIfEtherStatInCRCPktsF, index), Name: "huaIfEtherStatInCRCPkts", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfHCInOctetsF, index), Name: "ifHCInOctets", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfHCOutOctetsF, index), Name: "ifHCOutOctets", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfInErrorsF, index), Name: "ifInErrors", Type: metricpb.MetricType_INT},
+			{Oid: fmt.Sprintf(oids.IfOutErrorsF, index), Name: "ifOutErrors", Type: metricpb.MetricType_INT},
 		},
 	}
 

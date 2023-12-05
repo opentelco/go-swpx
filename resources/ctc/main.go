@@ -90,10 +90,10 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelementpb.Interface{
-		Stats: &networkelementpb.InterfaceStatistics{
-			Input:  &networkelementpb.InterfaceStatisticsInput{},
-			Output: &networkelementpb.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Port{
+		Stats: &networkelementpb.Port_Statistics{
+			Input:  &networkelementpb.Port_Statistics_Metrics{},
+			Output: &networkelementpb.Port_Statistics_Metrics{},
 		},
 	}
 	for _, msg := range msgs {

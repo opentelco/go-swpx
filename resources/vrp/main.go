@@ -24,6 +24,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -271,29 +272,36 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Requ
 	return ne, nil
 }
 
+const (
+	idConf      = "conf"
+	idDhcpSnoop = "dhcp-snooping"
+	idMacTable  = "mac-table"
+)
+
 func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+
 	d.logger.Info("running technical port info", "host", req.Hostname, "port", req.Port)
 	errs := make([]*networkelementpb.TransientError, 0)
 
+	// assembly the messages
 	var msgs []*transportpb.Message
-	if req.LogicalPortIndex != 0 {
-		msgs = append(msgs, createSinglePortMsg(req.LogicalPortIndex, req, d.conf))
-		msgs = append(msgs, createTaskGetPortStats(req.LogicalPortIndex, req, d.conf))
-	} else {
-		msgs = append(msgs, createMsg(req, d.conf))
-	}
+	// get config
+	msgs = append(msgs,
+		createTaskSystemInfo(req, d.conf),
+		createMsgSnmpInterfaceStats(req.LogicalPortIndex, req, d.conf),
+		createMsgSnmpInterfaceTrafficStats(req.LogicalPortIndex, req, d.conf),
+		bootstrapSSHCommand(fmt.Sprintf(cmdDisplayConfiguration, req.Port), idConf, req, d.conf),
+		bootstrapSSHCommand(fmt.Sprintf(cmdDisplayDhcpSnooping, req.Port), idDhcpSnoop, req, d.conf),
+		bootstrapSSHCommand(fmt.Sprintf(cmdDisplayMacAddressTable, req.Port), idMacTable, req, d.conf),
+	)
 
-	msgs = append(msgs, createTaskSystemInfo(req, d.conf))
-	msgs = append(msgs, createBasicSSHInterfaceTask(req, d.conf))
-
+	// create the model
 	ne := &networkelementpb.Element{}
 	ne.Hostname = req.Hostname
-
-	// Create the model
-	elementInterface := &networkelementpb.Interface{
-		Stats: &networkelementpb.InterfaceStatistics{
-			Input:  &networkelementpb.InterfaceStatisticsInput{},
-			Output: &networkelementpb.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Port{
+		Stats: &networkelementpb.Port_Statistics{
+			Input:  &networkelementpb.Port_Statistics_Metrics{},
+			Output: &networkelementpb.Port_Statistics_Metrics{},
 		},
 	}
 	var err error
@@ -317,6 +325,7 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcep
 
 			for _, m := range task.Snmpc.Metrics {
 				switch {
+
 				case strings.HasPrefix(m.Oid, oids.SysPrefix):
 					getSystemInformation(m, ne)
 
@@ -331,6 +340,8 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcep
 				}
 			}
 		case *transportpb.Task_Terminal:
+			bs, _ := json.MarshalIndent(task.Terminal.Payload, "", "  ")
+			d.logger.Debug("the reply returns from dnc", "data", string(bs))
 
 			if reply.Error != "" {
 				logger.Error("error back from dnc", "errors", reply.Error, "command", task.Terminal.Payload[0].Command)
@@ -338,28 +349,28 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcep
 				continue
 			}
 
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
-				errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
+			switch msg.Id {
+			case idConf:
+				elementInterface.Config = parseCurrentConfig(task.Terminal.Payload[0].Data)
+
+				// use or not? needs to be fixed..
+				// elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(elementInterface.Config)
+				// if err != nil {
+				// 	errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
+				// }
+
+			case idDhcpSnoop:
+				if elementInterface.DhcpTable, err = parseIPTable(task.Terminal.Payload[0].Data); err != nil {
+					errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
+				}
+			case idMacTable:
+				if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
+					errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
+				}
+			default:
+				d.logger.Error("unknown terminal task", "id", task.Terminal.Id)
+
 			}
-
-			if elementInterface.DhcpTable, err = parseIPTable(task.Terminal.Payload[1].Data); err != nil {
-				errs = d.logAndAppend(err, errs, task.Terminal.Payload[1].Command)
-			}
-
-			elementInterface.Config = parseCurrentConfig(task.Terminal.Payload[2].Data)
-
-			if elementInterface.ConfiguredTrafficPolicy, err = parsePolicy(task.Terminal.Payload[3].Data); err != nil {
-				errs = d.logAndAppend(err, errs, task.Terminal.Payload[3].Command)
-			}
-
-			if err = parsePolicyStatistics(elementInterface.ConfiguredTrafficPolicy, task.Terminal.Payload[4].Data); err != nil {
-				errs = d.logAndAppend(err, errs, task.Terminal.Payload[4].Command)
-			}
-
-			if elementInterface.Qos, err = parseQueueStatistics(task.Terminal.Payload[5].Data); err != nil {
-				errs = d.logAndAppend(err, errs, task.Terminal.Payload[5].Command)
-			}
-
 		}
 	}
 	if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, req); err != nil {
@@ -402,10 +413,10 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Re
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelementpb.Interface{
-		Stats: &networkelementpb.InterfaceStatistics{
-			Input:  &networkelementpb.InterfaceStatisticsInput{},
-			Output: &networkelementpb.InterfaceStatisticsOutput{},
+	elementInterface := &networkelementpb.Port{
+		Stats: &networkelementpb.Port_Statistics{
+			Input:  &networkelementpb.Port_Statistics_Metrics{},
+			Output: &networkelementpb.Port_Statistics_Metrics{},
 		},
 	}
 	var err error
