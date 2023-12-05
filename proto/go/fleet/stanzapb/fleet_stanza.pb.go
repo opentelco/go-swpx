@@ -28,8 +28,8 @@
 package stanzapb
 
 import (
-	commonpb "git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
-	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	commonpb "go.opentelco.io/go-swpx/proto/go/fleet/commonpb"
+	stanzapb "go.opentelco.io/go-swpx/proto/go/stanzapb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"

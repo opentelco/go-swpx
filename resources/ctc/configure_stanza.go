@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

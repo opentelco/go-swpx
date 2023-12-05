@@ -29,8 +29,8 @@ import (
 	"strconv"
 	"strings"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/trafficpolicypb"
 )
 
 const (

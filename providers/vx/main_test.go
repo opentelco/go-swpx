@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/assert"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
 func TestProvider_ResolveSessionRequest(t *testing.T) {

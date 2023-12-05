@@ -8,7 +8,7 @@ package providerpb
 
 import (
 	context "context"
-	corepb "git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	corepb "go.opentelco.io/go-swpx/proto/go/corepb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

@@ -25,7 +25,7 @@ package api
 import (
 	"net/http"
 
-	"git.liero.se/opentelco/go-swpx/core"
+	"go.opentelco.io/go-swpx/core"
 )
 
 func ErrInvalidArgument(message string) *ResponseStatus {

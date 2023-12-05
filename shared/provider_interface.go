@@ -29,8 +29,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/providerpb"
 )
 
 // Provider is the interface that we're exposing as a Provider plugin.

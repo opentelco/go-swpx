@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"os"
 
-	"git.liero.se/opentelco/go-swpx/cmd"
+	"go.opentelco.io/go-swpx/cmd"
 )
 
 //go:generate protoc -I /usr/local/include/ -I $GOPATH/src/ -I ./proto/src --go-grpc_out=$GOPATH/src/ --go_out=$GOPATH/src/ ./proto/src/stanza.proto

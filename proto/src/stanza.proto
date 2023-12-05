@@ -22,7 +22,7 @@
 
 syntax = "proto3";
 package stanza;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/stanzapb";
+option go_package = "go.opentelco.io/go-swpx/proto/go/stanzapb";
 
 message ConfigurationLine {
     // line to set, e.g "interface GigabitEthernet0/0/1"

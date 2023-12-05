@@ -22,7 +22,7 @@
 
 syntax = "proto3";
 
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/healthcheckpb";
+option go_package = "go.opentelco.io/go-swpx/proto/go/healthcheckpb";
 
 package healthcheck;
 

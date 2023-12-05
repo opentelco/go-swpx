@@ -7,15 +7,15 @@ import (
 	"os"
 	"time"
 
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/gogo/status"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"go.opentelco.io/go-dnc/client"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
+	"go.opentelco.io/go-swpx/shared"
 	"google.golang.org/grpc/codes"
 )
 

@@ -25,11 +25,11 @@ package shared
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/hashicorp/go-plugin"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

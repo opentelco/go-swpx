@@ -25,7 +25,7 @@ package main
 import (
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
 )
 
 func Test_ParseFullMacTable(t *testing.T) {

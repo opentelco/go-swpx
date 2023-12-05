@@ -27,8 +27,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"git.liero.se/opentelco/go-swpx/core"
 	"github.com/spf13/cobra"
+	"go.opentelco.io/go-swpx/core"
 )
 
 var logger hclog.Logger

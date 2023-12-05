@@ -3,12 +3,12 @@ package cmd
 import (
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/fleetpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/notificationpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/fleet/stanzapb"
 	"github.com/spf13/cobra"
+	"go.opentelco.io/go-swpx/proto/go/fleet/configurationpb"
+	"go.opentelco.io/go-swpx/proto/go/fleet/devicepb"
+	"go.opentelco.io/go-swpx/proto/go/fleet/fleetpb"
+	"go.opentelco.io/go-swpx/proto/go/fleet/notificationpb"
+	"go.opentelco.io/go-swpx/proto/go/fleet/stanzapb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"

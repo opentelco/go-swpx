@@ -8,8 +8,8 @@ package resourcepb
 
 import (
 	context "context"
-	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	networkelementpb "go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	stanzapb "go.opentelco.io/go-swpx/proto/go/stanzapb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

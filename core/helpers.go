@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 func (c *Core) selectProviders(ctx context.Context, settings *corepb.Settings) ([]shared.Provider, error) {

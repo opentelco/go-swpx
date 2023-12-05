@@ -9,7 +9,7 @@
 package notificationpb
 
 import (
-	commonpb "git.liero.se/opentelco/go-swpx/proto/go/fleet/commonpb"
+	commonpb "go.opentelco.io/go-swpx/proto/go/fleet/commonpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"

@@ -8,19 +8,19 @@ import (
 	"strings"
 	"time"
 
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/shared"
-	"git.liero.se/opentelco/go-swpx/shared/oids"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
+	"go.opentelco.io/go-dnc/client"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/shared"
+	"go.opentelco.io/go-swpx/shared/oids"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
+	"go.opentelco.io/go-dnc/models/pb/transportpb"
 )
 
 var VERSION *version.Version

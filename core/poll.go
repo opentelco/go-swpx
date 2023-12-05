@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
 // PollNetworkElement sends the request!

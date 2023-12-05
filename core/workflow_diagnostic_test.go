@@ -3,10 +3,10 @@ package core
 import (
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/analysispb"
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
 	"github.com/stretchr/testify/assert"
+	"go.opentelco.io/go-swpx/proto/go/analysispb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
 )
 
 func Test_analyzeLink(t *testing.T) {

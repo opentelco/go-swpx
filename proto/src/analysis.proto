@@ -18,7 +18,7 @@
 
 syntax = "proto3";
 package analysis;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/analysispb";
+option go_package = "go.opentelco.io/go-swpx/proto/go/analysispb";
 
 
 message Report {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/shared"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

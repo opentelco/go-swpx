@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/config"
+	"go.opentelco.io/go-swpx/config"
 )
 
 func Test_Parse(t *testing.T) {

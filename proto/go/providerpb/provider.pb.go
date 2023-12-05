@@ -28,7 +28,7 @@
 package providerpb
 
 import (
-	corepb "git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	corepb "go.opentelco.io/go-swpx/proto/go/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"

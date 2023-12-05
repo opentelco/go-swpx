@@ -28,9 +28,9 @@
 package corepb
 
 import (
-	analysispb "git.liero.se/opentelco/go-swpx/proto/go/analysispb"
-	networkelementpb "git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	analysispb "go.opentelco.io/go-swpx/proto/go/analysispb"
+	networkelementpb "go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	stanzapb "go.opentelco.io/go-swpx/proto/go/stanzapb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

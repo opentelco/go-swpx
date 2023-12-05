@@ -36,7 +36,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/gorilla/context"
 
-	"git.liero.se/opentelco/go-swpx/core"
+	"go.opentelco.io/go-swpx/core"
 
 	"github.com/go-chi/chi"
 )

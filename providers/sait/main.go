@@ -32,10 +32,10 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/providerpb"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 var VERSION *version.Version

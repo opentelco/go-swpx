@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 	"go.temporal.io/sdk/client"
 )
 

@@ -8,7 +8,7 @@ package corepb
 
 import (
 	context "context"
-	stanzapb "git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	stanzapb "go.opentelco.io/go-swpx/proto/go/stanzapb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

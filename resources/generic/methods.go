@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/shared/oids"
+	"go.opentelco.io/go-dnc/models/pb/transportpb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/shared/oids"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

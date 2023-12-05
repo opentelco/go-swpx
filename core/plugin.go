@@ -25,7 +25,7 @@ package core
 import (
 	"sync"
 
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 type providerMap map[string]shared.Provider

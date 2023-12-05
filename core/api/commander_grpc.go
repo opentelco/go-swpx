@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc"
 )
 

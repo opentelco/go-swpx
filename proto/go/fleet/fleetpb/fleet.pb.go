@@ -28,8 +28,8 @@
 package fleetpb
 
 import (
-	configurationpb "git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
-	devicepb "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	configurationpb "go.opentelco.io/go-swpx/proto/go/fleet/configurationpb"
+	devicepb "go.opentelco.io/go-swpx/proto/go/fleet/devicepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"

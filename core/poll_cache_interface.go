@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"git.liero.se/opentelco/go-dnc/client"
-	"git.liero.se/opentelco/go-dnc/models/pb/terminalpb"
-	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
+	"go.opentelco.io/go-dnc/client"
+	"go.opentelco.io/go-dnc/models/pb/terminalpb"
+	"go.opentelco.io/go-dnc/models/pb/transportpb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

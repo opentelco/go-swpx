@@ -28,10 +28,10 @@ import (
 	"os"
 	"testing"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
 	"github.com/stretchr/testify/assert"
+	"go.opentelco.io/go-dnc/models/pb/transportpb"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 )
 
 func TestMapInterface(t *testing.T) {

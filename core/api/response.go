@@ -25,7 +25,7 @@ package api
 import (
 	"net/http"
 
-	"git.liero.se/opentelco/go-swpx/core"
+	"go.opentelco.io/go-swpx/core"
 )
 
 // Response is the main struct that returns to the client

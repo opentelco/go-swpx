@@ -2,7 +2,7 @@ syntax = "proto3";
 //  import "google/protobuf/timestamp.proto";
 
 package traffic_policy;
-option go_package = "git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb";
+option go_package = "go.opentelco.io/go-swpx/proto/go/trafficpolicypb";
 
 //display current-configuration interface GigabitEthernet0/0/5 | include traffic-policy|shaping
 //traffic-policy KBPS_0000 inbound

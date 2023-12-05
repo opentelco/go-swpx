@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"git.liero.se/opentelco/go-dnc/models/pb/terminalpb"
-	"git.liero.se/opentelco/go-dnc/models/pb/transportpb"
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-dnc/models/pb/terminalpb"
+	"go.opentelco.io/go-dnc/models/pb/transportpb"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/shared"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

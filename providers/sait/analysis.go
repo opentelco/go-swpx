@@ -19,8 +19,8 @@ package main
 import (
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/analysispb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/analysispb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
 )
 
 const (

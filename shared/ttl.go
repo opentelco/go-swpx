@@ -3,7 +3,7 @@ package shared
 import (
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 )
 
 func ValidateEOLTimeout(req *resourcepb.Request, defaultDuration time.Duration) time.Duration {

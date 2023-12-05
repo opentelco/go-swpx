@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 )
 
 // Discover will do basic discovery of a device and return basic info about it

@@ -8,8 +8,8 @@ package fleetpb
 
 import (
 	context "context"
-	configurationpb "git.liero.se/opentelco/go-swpx/proto/go/fleet/configurationpb"
-	devicepb "git.liero.se/opentelco/go-swpx/proto/go/fleet/devicepb"
+	configurationpb "go.opentelco.io/go-swpx/proto/go/fleet/configurationpb"
+	devicepb "go.opentelco.io/go-swpx/proto/go/fleet/devicepb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

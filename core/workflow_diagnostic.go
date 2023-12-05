@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/analysispb"
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/analysispb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

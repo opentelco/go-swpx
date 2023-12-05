@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/spf13/cobra"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc"
 )
 

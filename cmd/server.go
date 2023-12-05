@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/core/api"
-	"git.liero.se/opentelco/go-swpx/database"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/core"
+	"go.opentelco.io/go-swpx/core/api"
+	"go.opentelco.io/go-swpx/database"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"

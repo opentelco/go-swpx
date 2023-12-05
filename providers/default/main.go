@@ -27,9 +27,9 @@ import (
 	"fmt"
 	"log"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/providerpb"
+	"go.opentelco.io/go-swpx/shared"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"

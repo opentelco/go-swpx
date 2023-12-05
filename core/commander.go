@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/resourcepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/stanzapb"
 	"github.com/hashicorp/go-hclog"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 )
 
 type commander struct {

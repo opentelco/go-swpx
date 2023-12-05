@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
 func Test_RequestResolver(t *testing.T) {

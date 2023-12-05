@@ -6,12 +6,12 @@ import (
 	"log"
 	"strings"
 
-	"git.liero.se/opentelco/go-swpx/config"
 	codecs "github.com/amsokol/mongo-go-driver-protobuf"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.opentelco.io/go-swpx/config"
 )
 
 func New(conf config.MongoDb, logger hclog.Logger) (*mongo.Client, error) {

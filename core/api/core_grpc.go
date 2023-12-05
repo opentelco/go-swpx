@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/core"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
 type coreGrpcImpl struct {

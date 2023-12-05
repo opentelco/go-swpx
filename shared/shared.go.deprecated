@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
-	proto "git.liero.se/opentelco/go-swpx/proto/go/provider"
+	proto "go.opentelco.io/go-swpx/proto/go/provider"
 )
 
 const (

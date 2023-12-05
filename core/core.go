@@ -31,12 +31,12 @@ import (
 	"os/signal"
 	"path"
 
-	"git.liero.se/opentelco/go-swpx/config"
-	"git.liero.se/opentelco/go-swpx/shared"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelco.io/go-swpx/config"
+	"go.opentelco.io/go-swpx/shared"
 	"go.temporal.io/sdk/client"
 )
 

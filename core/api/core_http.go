@@ -31,8 +31,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-hclog"
 
-	"git.liero.se/opentelco/go-swpx/core"
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/core"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
 var (

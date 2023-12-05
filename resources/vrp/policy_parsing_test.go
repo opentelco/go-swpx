@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/trafficpolicypb"
+	"go.opentelco.io/go-swpx/proto/go/trafficpolicypb"
 )
 
 func Test_ParsePolicyShaping(t *testing.T) {

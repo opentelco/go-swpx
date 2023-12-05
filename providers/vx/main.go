@@ -42,9 +42,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"git.liero.se/opentelco/go-swpx/proto/go/corepb"
-	"git.liero.se/opentelco/go-swpx/proto/go/providerpb"
-	"git.liero.se/opentelco/go-swpx/shared"
+	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/providerpb"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 var VERSION *version.Version
