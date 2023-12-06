@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.opentelco.io/go-swpx/proto/go/analysispb"
 	"go.opentelco.io/go-swpx/proto/go/corepb"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 )
 
 func Test_analyzeLink(t *testing.T) {
@@ -15,13 +15,13 @@ func Test_analyzeLink(t *testing.T) {
 
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 		}
 
@@ -32,34 +32,34 @@ func Test_analyzeLink(t *testing.T) {
 	t.Run("Link is up", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_up,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_up,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_up,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
@@ -76,34 +76,34 @@ func Test_analyzeLink(t *testing.T) {
 	t.Run("Link is down", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_up,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_up,
 						},
 					},
 				},
@@ -118,34 +118,34 @@ func Test_analyzeLink(t *testing.T) {
 	t.Run("Link is shut", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
@@ -160,34 +160,34 @@ func Test_analyzeLink(t *testing.T) {
 	t.Run("Link is flapping", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_up,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_down,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description:       "GigabitEthernet0/0/1",
-							OperationalStatus: networkelementpb.Port_up,
-							AdminStatus:       networkelementpb.Port_down,
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_down,
 						},
 					},
 				},
@@ -205,13 +205,13 @@ func TestAnalyzeTransceiver(t *testing.T) {
 
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{},
+				Device: &devicepb.Device{},
 			},
 		}
 
@@ -223,17 +223,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 	t.Run("rx and tx AVG is below threshold", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -30.32,
-										Tx: -23.23,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -30.32,
+									Tx: -23.23,
 								},
 							},
 						},
@@ -241,17 +239,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -30.2,
-										Tx: -19.23,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -30.2,
+									Tx: -19.23,
 								},
 							},
 						},
@@ -259,17 +255,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -40.00,
-										Tx: -22.23,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -40.00,
+									Tx: -22.23,
 								},
 							},
 						},
@@ -289,17 +283,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 	t.Run("rx and tx AVG is within threshold", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -13.32,
-										Tx: -13.23,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -13.32,
+									Tx: -13.23,
 								},
 							},
 						},
@@ -307,17 +299,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -13.1,
-										Tx: -14.1,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -13.1,
+									Tx: -14.1,
 								},
 							},
 						},
@@ -325,17 +315,15 @@ func TestAnalyzeTransceiver(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Transceiver: &networkelementpb.Transceiver{
-								Stats: []*networkelementpb.Transceiver_Statistics{
-									{
-										Rx: -15.00,
-										Tx: -13.23,
-									},
+							Transceiver: &devicepb.Transceiver{
+								Stats: &devicepb.Transceiver_Statistics{
+									Rx: -15.00,
+									Tx: -13.23,
 								},
 							},
 						},
@@ -358,12 +346,12 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("input errors increasing", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Input: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 1,
 								},
 							},
@@ -372,13 +360,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Input: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 3,
 								},
 							},
@@ -387,13 +375,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Input: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -415,12 +403,12 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("output errors increasing", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 1,
 								},
 							},
@@ -429,13 +417,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 3,
 								},
 							},
@@ -444,13 +432,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -472,15 +460,15 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("output and input errors increasing", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 1,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 1,
 								},
 							},
@@ -489,16 +477,16 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 3,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 2,
 								},
 							},
@@ -507,16 +495,16 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 8,
 								},
 							},
@@ -543,15 +531,15 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("output & input errors ", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -560,16 +548,16 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -578,16 +566,16 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -611,12 +599,12 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("output  errors ", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -625,13 +613,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -640,13 +628,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 10,
 								},
 							},
@@ -667,12 +655,12 @@ func TestAnalyzeErrors(t *testing.T) {
 	t.Run("no errors ", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 0,
 								},
 							},
@@ -681,13 +669,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 0,
 								},
 							},
@@ -696,13 +684,13 @@ func TestAnalyzeErrors(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Errors: 0,
 								},
 							},
@@ -726,15 +714,15 @@ func TestAnalyzeTraffic(t *testing.T) {
 	t.Run("no traffic", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
 							},
@@ -743,16 +731,16 @@ func TestAnalyzeTraffic(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
 							},
@@ -761,16 +749,16 @@ func TestAnalyzeTraffic(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
 							},
@@ -791,15 +779,15 @@ func TestAnalyzeTraffic(t *testing.T) {
 	t.Run("traffic", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 300,
 								},
 							},
@@ -808,16 +796,16 @@ func TestAnalyzeTraffic(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 400,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 450,
 								},
 							},
@@ -826,16 +814,16 @@ func TestAnalyzeTraffic(t *testing.T) {
 				},
 			},
 			{
-				NetworkElement: &networkelementpb.Element{
-					Interfaces: []*networkelementpb.Port{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
 						{
 
 							Description: "GigabitEthernet0/0/1",
-							Stats: &networkelementpb.Port_Statistics{
-								Output: &networkelementpb.Port_Statistics_Metrics{
+							Stats: &devicepb.Port_Statistics{
+								Output: &devicepb.Port_Statistics_Metrics{
 									Packets: 600,
 								},
-								Input: &networkelementpb.Port_Statistics_Metrics{
+								Input: &devicepb.Port_Statistics_Metrics{
 									Packets: 700,
 								},
 							},

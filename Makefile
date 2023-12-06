@@ -3,7 +3,7 @@ GITTAG := $(shell git describe --tags --abbrev=0)
 goarch := $(shell echo amd64)
 goos :=  $(shell echo linux)
 app_name := swpx
-resources_bin := plugins/resources
+plugin_bin := plugins/resources
 providers_bin := plugins/providers
 bin_path = ./bin
 curpath := $(shell pwd)
@@ -29,11 +29,10 @@ providers:
 	@cd $(providers_dir)/default/; go build -o $(providers_plugin_dir)/default .
 	@cd $(providers_dir)/sait/; go build -o $(providers_plugin_dir)/sait .
 
-
-
+plugins: r_clean r_vrp r_ctc r_generic
 
 r_clean:
-	@rm -f $(resources_bin)/*
+	@rm -f $(plugin_bin)/*
 
 r_generic:
 	# Building R-GENERIC
@@ -58,7 +57,7 @@ core:
 
 clean_all:
 	# Remove old binarys
-	@rm -f $(resources_bin)/*
+	@rm -f $(plugin_bin)/*
 	@rm -f $(providers_bin)/*
 	@rm -f $(app_name)
 

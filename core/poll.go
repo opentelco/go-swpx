@@ -30,8 +30,8 @@ import (
 	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
-// PollNetworkElement sends the request!
-func (c *Core) PollNetworkElement(ctx context.Context, request *corepb.PollRequest) (*corepb.PollResponse, error) {
+// PollDevice sends the request!
+func (c *Core) PollDevice(ctx context.Context, request *corepb.PollRequest) (*corepb.PollResponse, error) {
 
 	c.logger.Debug("polling network element",
 		"hostname", request.Session.Hostname,

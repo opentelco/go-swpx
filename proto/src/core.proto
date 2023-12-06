@@ -24,7 +24,7 @@ syntax = "proto3";
 package core;
 option go_package = "go.opentelco.io/go-swpx/proto/go/corepb";
 
-import "network_element.proto";
+import "device.proto";
 import "analysis.proto";
 import "stanza.proto";
 
@@ -35,8 +35,11 @@ message Error {
 
 // Settings for the request
 message Settings {
+    // provider_plugin is used to locate the provider plugin that should be used to
+    // pre-process the request and post-process the response
     repeated string provider_plugin = 1;
 
+    // what plugin should be used to collect the data from the device
     string resource_plugin = 2;
 
     // recreate_index will recreate the index for the resource through snmp
@@ -82,6 +85,8 @@ message SessionRequest {
 
     // hostname and port are used to locate the resource by a resource plugin
     string hostname = 2;
+
+    // deprecated, use specific RPC for this instead
     string port     = 3;
 
     // network_region is used to send the request to the right pollers
@@ -100,7 +105,7 @@ message SessionRequest {
 message PollRequest {
     SessionRequest session = 1;
 
-    Settings settings      = 2;
+    Settings settings = 2;
 
     enum Type {
         NOT_SET = 0;
@@ -126,17 +131,16 @@ message PollRequest {
 
         // GET_TRANSCEIVER on all ports on a device or on a specific port
         GET_TRANSCEIVER = 6;
-
     }
     Type type = 3;
 }
 
 message PollResponse {
-    networkelement.Element network_element = 2;
-    string physical_port                   = 3;
-    Error error                            = 4;
-    string request_access_id               = 5;
-    string execution_time                  = 6;
+    device.Device device     = 2;
+    string physical_port     = 3;
+    Error error              = 4;
+    string request_access_id = 5;
+    string execution_time    = 6;
 }
 
 // DiscoverRequest is used to discover a network element
@@ -144,23 +148,19 @@ message DiscoverRequest {
     // session is used to locate the network element
     SessionRequest session = 1;
     // settings is used to configure the request
-    Settings settings      = 2;
+    Settings settings = 2;
 }
 
 message DiscoverResponse {
-    networkelement.Element network_element = 2;
+    device.Device device = 2;
 }
-
-message CommandRequest {}
-message CommandResponse {}
-message InformationResponse {}
 
 // DiagnosticRequest is used to run a diagnostic on a network element or a specific port on the network element
 message DiagnosticRequest {
-        // session is used to locate the network element
+    // session is used to locate the network element
     SessionRequest session = 1;
     // settings is used to configure the request
-    Settings settings      = 2;
+    Settings settings = 2;
 
     // how many times the diagnostic should fetch data from the network element
     // the number of times will affect the time of the diagnostic as it will wait
@@ -179,10 +179,10 @@ message CheckAvailabilityResponse {
 
     // response time in ms
     float response_time = 2;
-
 }
-service CoreService {
-    // Discover is used to get basic information about an network element
+service Poller {
+    // Discover is used to get basic information about an network element, used to make a quick check of the device
+    // with a generic request
     rpc Discover(DiscoverRequest) returns (DiscoverResponse);
 
     // CheckAvailability is used to check if a network element is available and responding to requests
@@ -200,35 +200,62 @@ service CoreService {
     // will take aproximately 1 minute to complete.
     rpc Diagnostic(DiagnosticRequest) returns (DiagnosticResponse);
 
-    // SWP Polling call to get technical Information and other information about a network element
-    // the request is sent to the correct poller based on the network_region of the request
-    // the type of the request is used to determine what information to collect from the network element
-    rpc Poll(PollRequest) returns (PollResponse);
+    // GetDeviceInformation returns the technical information about a device
+    rpc DeviceInformation(GetDeviceInformationRequest) returns (DeviceInformationResponse);
+
+    // get basic information about a device
+    rpc BasicDeviceInformation(GetDeviceInformationRequest) returns (DeviceInformationResponse);
+
+    // PortInformation returns information about a port on a device
+    rpc PortInformation(GetPortInformationRequest) returns (PortInformationResponse);
+
+    // Get all basic information about a port on a device
+    rpc BasicPortInformation(GetPortInformationRequest) returns (PortInformationResponse);
 
     // CollectConfig collects the configuration of a network element check for any changes between the stored config and the
     // collected one. Returs a list of changes and the config collected from the network element
     rpc CollectConfig(CollectConfigRequest) returns (CollectConfigResponse);
+
+    // deprecated, use specific RPC:s instead
+    // SWP Polling call to get technical Information and other information about a network element
+    // the request is sent to the correct poller based on the network_region of the request
+    // the type of the request is used to determine what information to collect from the network element
+    rpc Poll(PollRequest) returns (PollResponse);
 }
 
-service CommanderService {
+message GetDeviceInformationRequest {
+    SessionRequest session = 1;
+    Settings settings      = 2;
+}
+
+message DeviceInformationResponse {
+    device.Device device = 1;
+}
+
+message GetPortInformationRequest {
+    SessionRequest session = 1;
+    Settings settings      = 2;
+    string port            = 3;
+}
+
+message PortInformationResponse {
+    device.Port port = 1;
+}
+
+
+service Commander {
     // configure a configuration stanza on a network element
     rpc ConfigureStanza(ConfigureStanzaRequest) returns (stanza.ConfigureResponse);
-
-    rpc TogglePort(CommandRequest) returns (CommandResponse);
-    rpc EnablePortFlapDetection(CommandRequest) returns (CommandResponse);
 }
-
 
 message ConfigureStanzaRequest {
     SessionRequest session = 1;
 
-    Settings settings      = 2;
+    Settings settings = 2;
 
     // the configuration to send to the device, each line is a string in the array
     repeated stanza.ConfigurationLine stanza = 4;
 }
-
-
 
 // provider things
 message ProvideCPERequest {}
@@ -237,7 +264,7 @@ message ProvideAccessRequest {}
 message ProvideAccessResponse {}
 
 // Provider
-service ProviderService {
+service Provider {
     // Ask provider to return a valid CPE for a access
     rpc CPE(ProvideCPERequest) returns (ProvideCPEResponse);
 
@@ -245,20 +272,19 @@ service ProviderService {
     rpc Access(ProvideAccessRequest) returns (ProvideAccessResponse);
 }
 
-
 message CollectConfigRequest {
-    Settings settings = 1;
+    Settings settings      = 1;
     SessionRequest session = 2;
 }
 
-message ConfigChange  {
-    string path = 1;
+message ConfigChange {
+    string path      = 1;
     string old_value = 2;
     string new_value = 3;
 }
 
 message CollectConfigResponse {
-    string config = 1;
+    string config                 = 1;
     repeated ConfigChange changes = 2;
-    Error error   = 3;
+    Error error                   = 3;
 }

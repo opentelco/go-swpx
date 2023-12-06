@@ -11,16 +11,16 @@ import (
 )
 
 type commander struct {
-	service corepb.CommanderServiceServer
+	service corepb.CommanderServer
 
 	core *Core
 
 	logger hclog.Logger
 
-	corepb.UnimplementedCommanderServiceServer
+	corepb.UnimplementedCommanderServer
 }
 
-func NewCommander(core *Core, logger hclog.Logger) (corepb.CommanderServiceServer, error) {
+func NewCommander(core *Core, logger hclog.Logger) (corepb.CommanderServer, error) {
 	return &commander{
 		core:   core,
 		logger: logger,

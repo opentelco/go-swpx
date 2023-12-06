@@ -15,7 +15,7 @@ import (
 	"go.opentelco.io/go-dnc/models/pb/snmpcpb"
 	"go.opentelco.io/go-dnc/models/pb/transportpb"
 	"go.opentelco.io/go-swpx/config"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared"
 	"go.opentelco.io/go-swpx/shared/oids"
@@ -155,7 +155,7 @@ func populateDiscoveryMap(logger hclog.Logger, task *snmpcpb.Task, discoveryMap 
 	}
 }
 
-func getIfXEntryInformation(m *metricpb.Metric, elementInterface *networkelementpb.Port) {
+func getIfXEntryInformation(m *metricpb.Metric, elementInterface *devicepb.Port) {
 
 	i, _ := strconv.Atoi(m.GetValue())
 	switch {
@@ -183,7 +183,7 @@ func getIfXEntryInformation(m *metricpb.Metric, elementInterface *networkelement
 
 }
 
-func getSystemInformation(m *metricpb.Metric, ne *networkelementpb.Element) {
+func getSystemInformation(m *metricpb.Metric, ne *devicepb.Device) {
 	switch m.Oid {
 	case oids.SysContact:
 		ne.Contact = m.GetValue()
@@ -200,16 +200,16 @@ func getSystemInformation(m *metricpb.Metric, ne *networkelementpb.Element) {
 	}
 }
 
-func itemToInterface(v *discoveryItem) *networkelementpb.Port {
-	iface := &networkelementpb.Port{
+func itemToInterface(v *discoveryItem) *devicepb.Port {
+	iface := &devicepb.Port{
 		AggregatedId:      "",
 		Index:             int64(v.Index),
 		Alias:             v.Alias,
 		Description:       v.Descr,
-		Hwaddress:         v.physAddress,
-		Type:              networkelementpb.Port_Type(v.ifType),
-		AdminStatus:       networkelementpb.Port_Status(v.adminStatus),
-		OperationalStatus: networkelementpb.Port_Status(v.operStatus),
+		MacAddress:        v.physAddress,
+		Type:              devicepb.Port_Type(v.ifType),
+		AdminStatus:       devicepb.Port_Status(v.adminStatus),
+		OperationalStatus: devicepb.Port_Status(v.operStatus),
 		LastChanged:       v.lastChange,
 		Speed:             int64(v.highSpeed),
 		Mtu:               int64(v.mtu),

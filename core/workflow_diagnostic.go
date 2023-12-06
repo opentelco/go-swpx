@@ -8,7 +8,7 @@ import (
 
 	"go.opentelco.io/go-swpx/proto/go/analysispb"
 	"go.opentelco.io/go-swpx/proto/go/corepb"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -68,7 +68,7 @@ func DiagnosticWorkflow(ctx workflow.Context, request *corepb.DiagnosticRequest)
 	report := &analysispb.Report{}
 
 	for n, resp := range responses {
-		if resp.NetworkElement == nil {
+		if resp.Device == nil {
 			return nil, fmt.Errorf("diagnosis report was missing for array element: %d", n)
 		}
 	}
@@ -127,14 +127,14 @@ const (
 // has all polls been down
 func analyzeLink(port string, data []*corepb.PollResponse) ([]*analysispb.Analysis, error) {
 	var anyalysis []*analysispb.Analysis
-	linkOK := []networkelementpb.Port_Status{networkelementpb.Port_up, networkelementpb.Port_up}
-	linkDown := []networkelementpb.Port_Status{networkelementpb.Port_up, networkelementpb.Port_down}
-	linkShut := []networkelementpb.Port_Status{networkelementpb.Port_down, networkelementpb.Port_down}
+	linkOK := []devicepb.Port_Status{devicepb.Port_up, devicepb.Port_up}
+	linkDown := []devicepb.Port_Status{devicepb.Port_up, devicepb.Port_down}
+	linkShut := []devicepb.Port_Status{devicepb.Port_down, devicepb.Port_down}
 
-	var statues [][]networkelementpb.Port_Status
+	var statues [][]devicepb.Port_Status
 
 	for _, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +142,7 @@ func analyzeLink(port string, data []*corepb.PollResponse) ([]*analysispb.Analys
 			return nil, fmt.Errorf("no port found for %s", port)
 		}
 
-		statues = append(statues, []networkelementpb.Port_Status{p.AdminStatus, p.OperationalStatus})
+		statues = append(statues, []devicepb.Port_Status{p.AdminStatus, p.OperationalStatus})
 	}
 
 	/*
@@ -234,7 +234,7 @@ func analyzeErrors(port string, data []*corepb.PollResponse) ([]*analysispb.Anal
 	)
 
 	for n, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -331,7 +331,7 @@ func analyzeTraffic(port string, data []*corepb.PollResponse) ([]*analysispb.Ana
 	)
 
 	for n, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -414,7 +414,7 @@ func analyzeTransceiver(port string, data []*corepb.PollResponse) ([]*analysispb
 	)
 
 	for n, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -423,10 +423,8 @@ func analyzeTransceiver(port string, data []*corepb.PollResponse) ([]*analysispb
 			continue
 		}
 
-		for _, stats := range p.Transceiver.Stats {
-			rx[n] = stats.Rx
-			tx[n] = stats.Tx
-		}
+		rx[n] = p.Transceiver.Stats.Rx
+		tx[n] = p.Transceiver.Stats.Tx
 
 	}
 
@@ -487,11 +485,11 @@ func analyzeMacAddressTable(port string, data []*corepb.PollResponse) ([]*analys
 	var anyalysis []*analysispb.Analysis
 
 	var (
-		macAddressTable = make([]*networkelementpb.MACEntry, 0)
+		macAddressTable = make([]*devicepb.MACEntry, 0)
 	)
 
 	for _, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -527,11 +525,11 @@ func analyzeDhcpTable(port string, data []*corepb.PollResponse) ([]*analysispb.A
 	var anyalysis []*analysispb.Analysis
 
 	var (
-		dhcpEntryTable = make([]*networkelementpb.DHCPEntry, 0)
+		dhcpEntryTable = make([]*devicepb.DHCPEntry, 0)
 	)
 
 	for _, d := range data {
-		p, err := getPortFromElement(port, d.NetworkElement)
+		p, err := getPortFromElement(port, d.Device)
 		if err != nil {
 			return nil, err
 		}
@@ -563,8 +561,8 @@ func analyzeDhcpTable(port string, data []*corepb.PollResponse) ([]*analysispb.A
 }
 
 // from the array of interfaces get the affected for the diagnosis
-func getPortFromElement(port string, data *networkelementpb.Element) (*networkelementpb.Port, error) {
-	for _, i := range data.Interfaces {
+func getPortFromElement(port string, data *devicepb.Device) (*devicepb.Port, error) {
+	for _, i := range data.Ports {
 		if i.Description == port {
 			return i, nil
 		}
@@ -623,8 +621,8 @@ func smallest(slice []int64) int64 {
 	return slice[0]
 }
 
-// append *networkelementpb.MACEntry to the slice if it does not exist ( by mac address )
-func appendMacEntry(slice []*networkelementpb.MACEntry, entry *networkelementpb.MACEntry) []*networkelementpb.MACEntry {
+// append *devicepb.MACEntry to the slice if it does not exist ( by mac address )
+func appendMacEntry(slice []*devicepb.MACEntry, entry *devicepb.MACEntry) []*devicepb.MACEntry {
 	for _, s := range slice {
 		if s.HardwareAddress == entry.HardwareAddress {
 			return slice
@@ -633,8 +631,8 @@ func appendMacEntry(slice []*networkelementpb.MACEntry, entry *networkelementpb.
 	return append(slice, entry)
 }
 
-// append *networkelementpb.DHCPEntry to the slice if it does not exist ( by mac address )
-func appendDHCPEntry(slice []*networkelementpb.DHCPEntry, entry *networkelementpb.DHCPEntry) []*networkelementpb.DHCPEntry {
+// append *devicepb.DHCPEntry to the slice if it does not exist ( by mac address )
+func appendDHCPEntry(slice []*devicepb.DHCPEntry, entry *devicepb.DHCPEntry) []*devicepb.DHCPEntry {
 	for _, s := range slice {
 		if s.HardwareAddress == entry.HardwareAddress {
 			return slice

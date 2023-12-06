@@ -6,20 +6,20 @@ import (
 	"strconv"
 	"strings"
 
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 )
 
 const (
 	MacRegex = "^([[:xdigit:]]{2}[:.-]?){5}[[:xdigit:]]{2}$"
 )
 
-func parseMacTable(data string) ([]*networkelementpb.MACEntry, error) {
+func parseMacTable(data string) ([]*devicepb.MACEntry, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	dataRows := strings.Split(data, "\n")
-	rows := make([]*networkelementpb.MACEntry, 0)
+	rows := make([]*devicepb.MACEntry, 0)
 
 	for _, row := range dataRows {
 		fields := strings.Fields(row)
@@ -34,7 +34,7 @@ func parseMacTable(data string) ([]*networkelementpb.MACEntry, error) {
 			return nil, err
 		}
 
-		rows = append(rows, &networkelementpb.MACEntry{
+		rows = append(rows, &devicepb.MACEntry{
 			HardwareAddress: fields[2],
 			Vlan:            int64(vlan),
 			Vendor:          fields[3],

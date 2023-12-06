@@ -9,7 +9,7 @@ import (
 	"go.opentelco.io/go-dnc/models/pb/snmpcpb"
 	"go.opentelco.io/go-dnc/models/pb/transportpb"
 	"go.opentelco.io/go-swpx/config"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared/oids"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -63,7 +63,7 @@ func createTaskSystemInfo(req *resourcepb.Request, conf *config.Snmp) *transport
 	return message
 }
 
-func parseSystemInformation(m *metricpb.Metric, ne *networkelementpb.Element) {
+func parseSystemInformation(m *metricpb.Metric, ne *devicepb.Device) {
 	switch m.Oid {
 	case oids.SysContact:
 		ne.Contact = m.GetValue()

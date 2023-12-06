@@ -19,12 +19,16 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// CoreServiceClient is the client API for CoreService service.
+// PollerClient is the client API for Poller service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CoreServiceClient interface {
-	// Discover is used to get basic information about an network element
+type PollerClient interface {
+	// Discover is used to get basic information about an network element, used to make a quick check of the device
+	// with a generic request
 	Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
+	// Disocver a device and all its ports etc, a plugin with deep discover implemented must be used for this to be
+	// sucessful
+	DeepDiscover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
 	// CheckAvailability is used to check if a network element is available and responding to requests
 	// this does not imply that the network element is working correctly or that it is configured correctly but
 	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
@@ -38,74 +42,132 @@ type CoreServiceClient interface {
 	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
 	// will take aproximately 1 minute to complete.
 	Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error)
+	// GetDeviceInformation returns the technical information about a device
+	DeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
+	// get basic information about a device
+	BasicDeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
+	// PortInformation returns information about a port on a device
+	PortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
+	// Get all basic information about a port on a device
+	BasicPortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
+	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
+	// collected one. Returs a list of changes and the config collected from the network element
+	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
+	// deprecated, use specific RPC:s instead
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
-	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
-	// collected one. Returs a list of changes and the config collected from the network element
-	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
 }
 
-type coreServiceClient struct {
+type pollerClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCoreServiceClient(cc grpc.ClientConnInterface) CoreServiceClient {
-	return &coreServiceClient{cc}
+func NewPollerClient(cc grpc.ClientConnInterface) PollerClient {
+	return &pollerClient{cc}
 }
 
-func (c *coreServiceClient) Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
+func (c *pollerClient) Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
 	out := new(DiscoverResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Discover", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/Discover", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreServiceClient) CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error) {
+func (c *pollerClient) DeepDiscover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
+	out := new(DiscoverResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/DeepDiscover", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error) {
 	out := new(CheckAvailabilityResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/CheckAvailability", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CheckAvailability", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreServiceClient) Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error) {
+func (c *pollerClient) Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error) {
 	out := new(DiagnosticResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Diagnostic", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/Diagnostic", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreServiceClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
-	out := new(PollResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/Poll", in, out, opts...)
+func (c *pollerClient) DeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
+	out := new(DeviceInformationResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/DeviceInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coreServiceClient) CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error) {
+func (c *pollerClient) BasicDeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
+	out := new(DeviceInformationResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/BasicDeviceInformation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) PortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
+	out := new(PortInformationResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/PortInformation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) BasicPortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
+	out := new(PortInformationResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/BasicPortInformation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error) {
 	out := new(CollectConfigResponse)
-	err := c.cc.Invoke(ctx, "/core.CoreService/CollectConfig", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CollectConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CoreServiceServer is the server API for CoreService service.
-// All implementations must embed UnimplementedCoreServiceServer
+func (c *pollerClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
+	out := new(PollResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/Poll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PollerServer is the server API for Poller service.
+// All implementations must embed UnimplementedPollerServer
 // for forward compatibility
-type CoreServiceServer interface {
-	// Discover is used to get basic information about an network element
+type PollerServer interface {
+	// Discover is used to get basic information about an network element, used to make a quick check of the device
+	// with a generic request
 	Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
+	// Disocver a device and all its ports etc, a plugin with deep discover implemented must be used for this to be
+	// sucessful
+	DeepDiscover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
 	// CheckAvailability is used to check if a network element is available and responding to requests
 	// this does not imply that the network element is working correctly or that it is configured correctly but
 	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
@@ -119,450 +181,512 @@ type CoreServiceServer interface {
 	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
 	// will take aproximately 1 minute to complete.
 	Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error)
+	// GetDeviceInformation returns the technical information about a device
+	DeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error)
+	// get basic information about a device
+	BasicDeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error)
+	// PortInformation returns information about a port on a device
+	PortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error)
+	// Get all basic information about a port on a device
+	BasicPortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error)
+	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
+	// collected one. Returs a list of changes and the config collected from the network element
+	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
+	// deprecated, use specific RPC:s instead
 	// SWP Polling call to get technical Information and other information about a network element
 	// the request is sent to the correct poller based on the network_region of the request
 	// the type of the request is used to determine what information to collect from the network element
 	Poll(context.Context, *PollRequest) (*PollResponse, error)
-	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
-	// collected one. Returs a list of changes and the config collected from the network element
-	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
-	mustEmbedUnimplementedCoreServiceServer()
+	mustEmbedUnimplementedPollerServer()
 }
 
-// UnimplementedCoreServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedCoreServiceServer struct {
+// UnimplementedPollerServer must be embedded to have forward compatible implementations.
+type UnimplementedPollerServer struct {
 }
 
-func (UnimplementedCoreServiceServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
+func (UnimplementedPollerServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
 }
-func (UnimplementedCoreServiceServer) CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error) {
+func (UnimplementedPollerServer) DeepDiscover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeepDiscover not implemented")
+}
+func (UnimplementedPollerServer) CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAvailability not implemented")
 }
-func (UnimplementedCoreServiceServer) Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error) {
+func (UnimplementedPollerServer) Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Diagnostic not implemented")
 }
-func (UnimplementedCoreServiceServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
+func (UnimplementedPollerServer) DeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeviceInformation not implemented")
 }
-func (UnimplementedCoreServiceServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
+func (UnimplementedPollerServer) BasicDeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BasicDeviceInformation not implemented")
+}
+func (UnimplementedPollerServer) PortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PortInformation not implemented")
+}
+func (UnimplementedPollerServer) BasicPortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
+}
+func (UnimplementedPollerServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectConfig not implemented")
 }
-func (UnimplementedCoreServiceServer) mustEmbedUnimplementedCoreServiceServer() {}
+func (UnimplementedPollerServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
+}
+func (UnimplementedPollerServer) mustEmbedUnimplementedPollerServer() {}
 
-// UnsafeCoreServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CoreServiceServer will
+// UnsafePollerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PollerServer will
 // result in compilation errors.
-type UnsafeCoreServiceServer interface {
-	mustEmbedUnimplementedCoreServiceServer()
+type UnsafePollerServer interface {
+	mustEmbedUnimplementedPollerServer()
 }
 
-func RegisterCoreServiceServer(s grpc.ServiceRegistrar, srv CoreServiceServer) {
-	s.RegisterService(&CoreService_ServiceDesc, srv)
+func RegisterPollerServer(s grpc.ServiceRegistrar, srv PollerServer) {
+	s.RegisterService(&Poller_ServiceDesc, srv)
 }
 
-func _CoreService_Discover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Poller_Discover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DiscoverRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServiceServer).Discover(ctx, in)
+		return srv.(PollerServer).Discover(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CoreService/Discover",
+		FullMethod: "/core.Poller/Discover",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Discover(ctx, req.(*DiscoverRequest))
+		return srv.(PollerServer).Discover(ctx, req.(*DiscoverRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CoreService_CheckAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Poller_DeepDiscover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiscoverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).DeepDiscover(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/DeepDiscover",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).DeepDiscover(ctx, req.(*DiscoverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_CheckAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SessionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServiceServer).CheckAvailability(ctx, in)
+		return srv.(PollerServer).CheckAvailability(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CoreService/CheckAvailability",
+		FullMethod: "/core.Poller/CheckAvailability",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).CheckAvailability(ctx, req.(*SessionRequest))
+		return srv.(PollerServer).CheckAvailability(ctx, req.(*SessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CoreService_Diagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Poller_Diagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DiagnosticRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServiceServer).Diagnostic(ctx, in)
+		return srv.(PollerServer).Diagnostic(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CoreService/Diagnostic",
+		FullMethod: "/core.Poller/Diagnostic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Diagnostic(ctx, req.(*DiagnosticRequest))
+		return srv.(PollerServer).Diagnostic(ctx, req.(*DiagnosticRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CoreService_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PollRequest)
+func _Poller_DeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeviceInformationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServiceServer).Poll(ctx, in)
+		return srv.(PollerServer).DeviceInformation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CoreService/Poll",
+		FullMethod: "/core.Poller/DeviceInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).Poll(ctx, req.(*PollRequest))
+		return srv.(PollerServer).DeviceInformation(ctx, req.(*GetDeviceInformationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CoreService_CollectConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Poller_BasicDeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeviceInformationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).BasicDeviceInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/BasicDeviceInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).BasicDeviceInformation(ctx, req.(*GetDeviceInformationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_PortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPortInformationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).PortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/PortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).PortInformation(ctx, req.(*GetPortInformationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_BasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPortInformationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).BasicPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/BasicPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).BasicPortInformation(ctx, req.(*GetPortInformationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_CollectConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CollectConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoreServiceServer).CollectConfig(ctx, in)
+		return srv.(PollerServer).CollectConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CoreService/CollectConfig",
+		FullMethod: "/core.Poller/CollectConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoreServiceServer).CollectConfig(ctx, req.(*CollectConfigRequest))
+		return srv.(PollerServer).CollectConfig(ctx, req.(*CollectConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// CoreService_ServiceDesc is the grpc.ServiceDesc for CoreService service.
+func _Poller_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).Poll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/Poll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).Poll(ctx, req.(*PollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Poller_ServiceDesc is the grpc.ServiceDesc for Poller service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var CoreService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.CoreService",
-	HandlerType: (*CoreServiceServer)(nil),
+var Poller_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.Poller",
+	HandlerType: (*PollerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Discover",
-			Handler:    _CoreService_Discover_Handler,
+			Handler:    _Poller_Discover_Handler,
+		},
+		{
+			MethodName: "DeepDiscover",
+			Handler:    _Poller_DeepDiscover_Handler,
 		},
 		{
 			MethodName: "CheckAvailability",
-			Handler:    _CoreService_CheckAvailability_Handler,
+			Handler:    _Poller_CheckAvailability_Handler,
 		},
 		{
 			MethodName: "Diagnostic",
-			Handler:    _CoreService_Diagnostic_Handler,
+			Handler:    _Poller_Diagnostic_Handler,
 		},
 		{
-			MethodName: "Poll",
-			Handler:    _CoreService_Poll_Handler,
+			MethodName: "DeviceInformation",
+			Handler:    _Poller_DeviceInformation_Handler,
+		},
+		{
+			MethodName: "BasicDeviceInformation",
+			Handler:    _Poller_BasicDeviceInformation_Handler,
+		},
+		{
+			MethodName: "PortInformation",
+			Handler:    _Poller_PortInformation_Handler,
+		},
+		{
+			MethodName: "BasicPortInformation",
+			Handler:    _Poller_BasicPortInformation_Handler,
 		},
 		{
 			MethodName: "CollectConfig",
-			Handler:    _CoreService_CollectConfig_Handler,
+			Handler:    _Poller_CollectConfig_Handler,
+		},
+		{
+			MethodName: "Poll",
+			Handler:    _Poller_Poll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "core.proto",
 }
 
-// CommanderServiceClient is the client API for CommanderService service.
+// CommanderClient is the client API for Commander service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CommanderServiceClient interface {
+type CommanderClient interface {
 	// configure a configuration stanza on a network element
 	ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error)
-	TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
-	EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 }
 
-type commanderServiceClient struct {
+type commanderClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCommanderServiceClient(cc grpc.ClientConnInterface) CommanderServiceClient {
-	return &commanderServiceClient{cc}
+func NewCommanderClient(cc grpc.ClientConnInterface) CommanderClient {
+	return &commanderClient{cc}
 }
 
-func (c *commanderServiceClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error) {
+func (c *commanderClient) ConfigureStanza(ctx context.Context, in *ConfigureStanzaRequest, opts ...grpc.CallOption) (*stanzapb.ConfigureResponse, error) {
 	out := new(stanzapb.ConfigureResponse)
-	err := c.cc.Invoke(ctx, "/core.CommanderService/ConfigureStanza", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Commander/ConfigureStanza", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *commanderServiceClient) TogglePort(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
-	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.CommanderService/TogglePort", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *commanderServiceClient) EnablePortFlapDetection(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error) {
-	out := new(CommandResponse)
-	err := c.cc.Invoke(ctx, "/core.CommanderService/EnablePortFlapDetection", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// CommanderServiceServer is the server API for CommanderService service.
-// All implementations must embed UnimplementedCommanderServiceServer
+// CommanderServer is the server API for Commander service.
+// All implementations must embed UnimplementedCommanderServer
 // for forward compatibility
-type CommanderServiceServer interface {
+type CommanderServer interface {
 	// configure a configuration stanza on a network element
 	ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error)
-	TogglePort(context.Context, *CommandRequest) (*CommandResponse, error)
-	EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error)
-	mustEmbedUnimplementedCommanderServiceServer()
+	mustEmbedUnimplementedCommanderServer()
 }
 
-// UnimplementedCommanderServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedCommanderServiceServer struct {
+// UnimplementedCommanderServer must be embedded to have forward compatible implementations.
+type UnimplementedCommanderServer struct {
 }
 
-func (UnimplementedCommanderServiceServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
+func (UnimplementedCommanderServer) ConfigureStanza(context.Context, *ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigureStanza not implemented")
 }
-func (UnimplementedCommanderServiceServer) TogglePort(context.Context, *CommandRequest) (*CommandResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TogglePort not implemented")
-}
-func (UnimplementedCommanderServiceServer) EnablePortFlapDetection(context.Context, *CommandRequest) (*CommandResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EnablePortFlapDetection not implemented")
-}
-func (UnimplementedCommanderServiceServer) mustEmbedUnimplementedCommanderServiceServer() {}
+func (UnimplementedCommanderServer) mustEmbedUnimplementedCommanderServer() {}
 
-// UnsafeCommanderServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CommanderServiceServer will
+// UnsafeCommanderServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CommanderServer will
 // result in compilation errors.
-type UnsafeCommanderServiceServer interface {
-	mustEmbedUnimplementedCommanderServiceServer()
+type UnsafeCommanderServer interface {
+	mustEmbedUnimplementedCommanderServer()
 }
 
-func RegisterCommanderServiceServer(s grpc.ServiceRegistrar, srv CommanderServiceServer) {
-	s.RegisterService(&CommanderService_ServiceDesc, srv)
+func RegisterCommanderServer(s grpc.ServiceRegistrar, srv CommanderServer) {
+	s.RegisterService(&Commander_ServiceDesc, srv)
 }
 
-func _CommanderService_ConfigureStanza_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Commander_ConfigureStanza_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConfigureStanzaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CommanderServiceServer).ConfigureStanza(ctx, in)
+		return srv.(CommanderServer).ConfigureStanza(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.CommanderService/ConfigureStanza",
+		FullMethod: "/core.Commander/ConfigureStanza",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommanderServiceServer).ConfigureStanza(ctx, req.(*ConfigureStanzaRequest))
+		return srv.(CommanderServer).ConfigureStanza(ctx, req.(*ConfigureStanzaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CommanderService_TogglePort_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CommandRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CommanderServiceServer).TogglePort(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/core.CommanderService/TogglePort",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommanderServiceServer).TogglePort(ctx, req.(*CommandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CommanderService_EnablePortFlapDetection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CommandRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CommanderServiceServer).EnablePortFlapDetection(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/core.CommanderService/EnablePortFlapDetection",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommanderServiceServer).EnablePortFlapDetection(ctx, req.(*CommandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// CommanderService_ServiceDesc is the grpc.ServiceDesc for CommanderService service.
+// Commander_ServiceDesc is the grpc.ServiceDesc for Commander service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var CommanderService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.CommanderService",
-	HandlerType: (*CommanderServiceServer)(nil),
+var Commander_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.Commander",
+	HandlerType: (*CommanderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ConfigureStanza",
-			Handler:    _CommanderService_ConfigureStanza_Handler,
-		},
-		{
-			MethodName: "TogglePort",
-			Handler:    _CommanderService_TogglePort_Handler,
-		},
-		{
-			MethodName: "EnablePortFlapDetection",
-			Handler:    _CommanderService_EnablePortFlapDetection_Handler,
+			Handler:    _Commander_ConfigureStanza_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "core.proto",
 }
 
-// ProviderServiceClient is the client API for ProviderService service.
+// ProviderClient is the client API for Provider service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ProviderServiceClient interface {
+type ProviderClient interface {
 	// Ask provider to return a valid CPE for a access
 	CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error)
 	// Ask a provider to return information about a selected access
 	Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error)
 }
 
-type providerServiceClient struct {
+type providerClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewProviderServiceClient(cc grpc.ClientConnInterface) ProviderServiceClient {
-	return &providerServiceClient{cc}
+func NewProviderClient(cc grpc.ClientConnInterface) ProviderClient {
+	return &providerClient{cc}
 }
 
-func (c *providerServiceClient) CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error) {
+func (c *providerClient) CPE(ctx context.Context, in *ProvideCPERequest, opts ...grpc.CallOption) (*ProvideCPEResponse, error) {
 	out := new(ProvideCPEResponse)
-	err := c.cc.Invoke(ctx, "/core.ProviderService/CPE", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Provider/CPE", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *providerServiceClient) Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error) {
+func (c *providerClient) Access(ctx context.Context, in *ProvideAccessRequest, opts ...grpc.CallOption) (*ProvideAccessResponse, error) {
 	out := new(ProvideAccessResponse)
-	err := c.cc.Invoke(ctx, "/core.ProviderService/Access", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Provider/Access", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ProviderServiceServer is the server API for ProviderService service.
-// All implementations must embed UnimplementedProviderServiceServer
+// ProviderServer is the server API for Provider service.
+// All implementations must embed UnimplementedProviderServer
 // for forward compatibility
-type ProviderServiceServer interface {
+type ProviderServer interface {
 	// Ask provider to return a valid CPE for a access
 	CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error)
 	// Ask a provider to return information about a selected access
 	Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error)
-	mustEmbedUnimplementedProviderServiceServer()
+	mustEmbedUnimplementedProviderServer()
 }
 
-// UnimplementedProviderServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedProviderServiceServer struct {
+// UnimplementedProviderServer must be embedded to have forward compatible implementations.
+type UnimplementedProviderServer struct {
 }
 
-func (UnimplementedProviderServiceServer) CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error) {
+func (UnimplementedProviderServer) CPE(context.Context, *ProvideCPERequest) (*ProvideCPEResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CPE not implemented")
 }
-func (UnimplementedProviderServiceServer) Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error) {
+func (UnimplementedProviderServer) Access(context.Context, *ProvideAccessRequest) (*ProvideAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Access not implemented")
 }
-func (UnimplementedProviderServiceServer) mustEmbedUnimplementedProviderServiceServer() {}
+func (UnimplementedProviderServer) mustEmbedUnimplementedProviderServer() {}
 
-// UnsafeProviderServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ProviderServiceServer will
+// UnsafeProviderServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ProviderServer will
 // result in compilation errors.
-type UnsafeProviderServiceServer interface {
-	mustEmbedUnimplementedProviderServiceServer()
+type UnsafeProviderServer interface {
+	mustEmbedUnimplementedProviderServer()
 }
 
-func RegisterProviderServiceServer(s grpc.ServiceRegistrar, srv ProviderServiceServer) {
-	s.RegisterService(&ProviderService_ServiceDesc, srv)
+func RegisterProviderServer(s grpc.ServiceRegistrar, srv ProviderServer) {
+	s.RegisterService(&Provider_ServiceDesc, srv)
 }
 
-func _ProviderService_CPE_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Provider_CPE_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProvideCPERequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProviderServiceServer).CPE(ctx, in)
+		return srv.(ProviderServer).CPE(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.ProviderService/CPE",
+		FullMethod: "/core.Provider/CPE",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServiceServer).CPE(ctx, req.(*ProvideCPERequest))
+		return srv.(ProviderServer).CPE(ctx, req.(*ProvideCPERequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProviderService_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Provider_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProvideAccessRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProviderServiceServer).Access(ctx, in)
+		return srv.(ProviderServer).Access(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.ProviderService/Access",
+		FullMethod: "/core.Provider/Access",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderServiceServer).Access(ctx, req.(*ProvideAccessRequest))
+		return srv.(ProviderServer).Access(ctx, req.(*ProvideAccessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ProviderService_ServiceDesc is the grpc.ServiceDesc for ProviderService service.
+// Provider_ServiceDesc is the grpc.ServiceDesc for Provider service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ProviderService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.ProviderService",
-	HandlerType: (*ProviderServiceServer)(nil),
+var Provider_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "core.Provider",
+	HandlerType: (*ProviderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CPE",
-			Handler:    _ProviderService_CPE_Handler,
+			Handler:    _Provider_CPE_Handler,
 		},
 		{
 			MethodName: "Access",
-			Handler:    _ProviderService_Access_Handler,
+			Handler:    _Provider_Access_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

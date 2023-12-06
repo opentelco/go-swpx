@@ -124,7 +124,7 @@ var TestBulkCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := corepb.NewCoreServiceClient(conn)
+		swpx := corepb.NewPollerClient(conn)
 		wg := &sync.WaitGroup{}
 		startTime := time.Now()
 
@@ -195,7 +195,7 @@ var collectConfigCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := corepb.NewCoreServiceClient(conn)
+		swpx := corepb.NewPollerClient(conn)
 
 		resp, err := swpx.CollectConfig(cmd.Context(), &corepb.CollectConfigRequest{
 			Settings: &corepb.Settings{
@@ -242,7 +242,7 @@ var discoverCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := corepb.NewCoreServiceClient(conn)
+		swpx := corepb.NewPollerClient(conn)
 
 		resp, err := swpx.Discover(cmd.Context(), &corepb.DiscoverRequest{
 			Settings: &corepb.Settings{
@@ -258,7 +258,7 @@ var discoverCmd = &cobra.Command{
 			cmd.PrintErr(err)
 		}
 		if resp != nil {
-			cmd.Println(prettyPrintJSON(resp.NetworkElement))
+			cmd.Println(prettyPrintJSON(resp.Device))
 		} else {
 			fmt.Println("failed to discover")
 		}
@@ -291,7 +291,7 @@ var configureCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := corepb.NewCommanderServiceClient(conn)
+		swpx := corepb.NewCommanderClient(conn)
 
 		stanza := make([]*stanzapb.ConfigurationLine, len(lines))
 		for i, line := range lines {
@@ -349,7 +349,7 @@ var diagnosticCmd = &cobra.Command{
 			cmd.Println("could not connect to swpx: ", err)
 			os.Exit(1)
 		}
-		swpx := corepb.NewCoreServiceClient(conn)
+		swpx := corepb.NewPollerClient(conn)
 
 		resp, err := swpx.Diagnostic(cmd.Context(), &corepb.DiagnosticRequest{
 			Settings: &corepb.Settings{

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"go.opentelco.io/go-dnc/client"
 	"go.opentelco.io/go-swpx/config"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared"
 	"go.opentelco.io/go-swpx/shared/oids"
@@ -56,15 +56,15 @@ func (d *driver) Version() (string, error) {
 
 // TechnicalPortInformation Gets all the technical information for a Port
 // from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-func (d *driver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
-func (d *driver) logAndAppend(err error, errs []*networkelementpb.TransientError, command string) []*networkelementpb.TransientError {
+func (d *driver) logAndAppend(err error, errs []*devicepb.TransientError, command string) []*devicepb.TransientError {
 	d.logger.Error("log and append error from dnc", "error", err.Error())
-	errs = append(errs, &networkelementpb.TransientError{
+	errs = append(errs, &devicepb.TransientError{
 		Message: err.Error(),
-		Level:   networkelementpb.TransientError_WARN,
+		Level:   devicepb.TransientError_WARN,
 		Cause:   command,
 	})
 
@@ -72,9 +72,9 @@ func (d *driver) logAndAppend(err error, errs []*networkelementpb.TransientError
 }
 
 // BasicPortInformation
-func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "index", req.LogicalPortIndex)
-	errs := make([]*networkelementpb.TransientError, 0)
+	errs := make([]*devicepb.TransientError, 0)
 
 	var msgs []*transportpb.Message
 	if req.LogicalPortIndex != 0 {
@@ -86,14 +86,14 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 
 	msgs = append(msgs, createCTCSSHInterfaceTask(req, d.conf))
 
-	ne := &networkelementpb.Element{}
+	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelementpb.Port{
-		Stats: &networkelementpb.Port_Statistics{
-			Input:  &networkelementpb.Port_Statistics_Metrics{},
-			Output: &networkelementpb.Port_Statistics_Metrics{},
+	port := &devicepb.Port{
+		Stats: &devicepb.Port_Statistics{
+			Input:  &devicepb.Port_Statistics_Metrics{},
+			Output: &devicepb.Port_Statistics_Metrics{},
 		},
 	}
 	for _, msg := range msgs {
@@ -111,7 +111,7 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 				"execution_time", reply.ExecutionTime.AsDuration().String(),
 				"size", len(task.Snmpc.Metrics))
 
-			elementInterface.Index = req.LogicalPortIndex
+			port.Index = req.LogicalPortIndex
 
 			for _, m := range task.Snmpc.Metrics {
 				switch {
@@ -119,10 +119,10 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 					getSystemInformation(m, ne)
 
 				case strings.HasPrefix(m.Oid, oids.IfEntryPrefix):
-					d.getIfEntryInformation(m, elementInterface)
+					d.getIfEntryInformation(m, port)
 
 				case strings.HasPrefix(m.Oid, oids.IfXEntryPrefix):
-					getIfXEntryInformation(m, elementInterface)
+					getIfXEntryInformation(m, port)
 				}
 			}
 
@@ -133,7 +133,7 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 				continue
 			}
 
-			if elementInterface.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
+			if port.MacAddressTable, err = parseMacTable(task.Terminal.Payload[0].Data); err != nil {
 				errs = d.logAndAppend(err, errs, task.Terminal.Payload[0].Command)
 			}
 
@@ -141,17 +141,17 @@ func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Reque
 	}
 	// todo: add support for transceiver information
 	// transceiver information is not implemented CTC
-	// if elementInterface.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
+	// if port.Transceiver, err = d.GetTransceiverInformation(ctx, el); err != nil {
 	// 	errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
 	// }
 
-	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
+	ne.Ports = append(ne.Ports, port)
+	ne.TransientErrors = &devicepb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
 // AllPortInformation
-func (d *driver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return nil, fmt.Errorf("[NOT IMPLEMENTED!]")
 }
 
@@ -194,17 +194,17 @@ func (d *driver) MapEntityPhysical(ctx context.Context, req *resourcepb.Request)
 }
 
 // GetTransceiverInformation Get SFP (transceiver) information
-func (d *driver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
+func (d *driver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error) {
 	return nil, status.Error(codes.Unimplemented, "GetTransceiverInformation is unimplemented")
 }
 
 // GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error) {
+func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceivers, error) {
 	return nil, status.Error(codes.Unimplemented, "GetAllTransceiverInformation is unimplemented")
 }
 
-func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
-	return &networkelementpb.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
+func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return &devicepb.Device{}, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
 func main() {

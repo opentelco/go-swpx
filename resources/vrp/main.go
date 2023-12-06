@@ -48,7 +48,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-version"
 
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared"
 )
@@ -84,8 +84,8 @@ func (d *VRPDriver) Version() (string, error) {
 	return fmt.Sprintf("%s@%s", DriverName, VERSION.String()), nil
 }
 
-func (d *VRPDriver) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
-	return &networkelementpb.Element{}, status.Error(codes.Unimplemented, "discover not implemented")
+func (d *VRPDriver) Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return &devicepb.Device{}, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
 // parse a map of description/alias and return the ID
@@ -178,8 +178,8 @@ func (d *VRPDriver) MapEntityPhysical(ctx context.Context, request *resourcepb.R
 
 // GetInterfaceStatistics returns all transceiver information in a array of Transceivers
 // each Transceiver contains the physical port index that can be mapped to the interface if needed
-func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *resourcepb.Request) (*networkelementpb.Transceivers, error) {
-	response := &networkelementpb.Transceivers{}
+func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *resourcepb.Request) (*devicepb.Transceivers, error) {
+	response := &devicepb.Transceivers{}
 
 	vrpMsg := createAllVRPTransceiverMsg(request, d.conf, request.NumInterfaces)
 	msg, err := d.dnc.Put(ctx, vrpMsg)
@@ -204,7 +204,7 @@ func (d *VRPDriver) GetAllTransceiverInformation(ctx context.Context, request *r
 	return response, nil
 }
 
-func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
+func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error) {
 
 	d.logger.Debug("get transceiver information", "host", req.Hostname, "port", req.Port, "phys-index", req.PhysicalPortIndex)
 	vrpMsg := createVRPTransceiverMsg(req, d.conf)
@@ -231,9 +231,9 @@ func (d *VRPDriver) GetTransceiverInformation(ctx context.Context, req *resource
 	return nil, errors.Errorf("Unsupported message type")
 }
 
-func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	d.logger.Info("running ALL port info", "host", req.Hostname, "port", req.Port)
-	ne := &networkelementpb.Element{}
+	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
 
 	sysInfoMsg := createTaskSystemInfo(req, d.conf)
@@ -262,11 +262,11 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Requ
 	populateDiscoveryMap(d.logger, task, discoveryMap)
 
 	for _, discoveryItem := range discoveryMap {
-		ne.Interfaces = append(ne.Interfaces, itemToInterface(discoveryItem))
+		ne.Ports = append(ne.Ports, itemToPort(discoveryItem))
 	}
 
-	sort.Slice(ne.Interfaces, func(i, j int) bool {
-		return ne.Interfaces[i].Description < ne.Interfaces[j].Description
+	sort.Slice(ne.Ports, func(i, j int) bool {
+		return ne.Ports[i].Description < ne.Ports[j].Description
 	})
 
 	return ne, nil
@@ -278,10 +278,10 @@ const (
 	idMacTable  = "mac-table"
 )
 
-func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 
 	d.logger.Info("running technical port info", "host", req.Hostname, "port", req.Port)
-	errs := make([]*networkelementpb.TransientError, 0)
+	errs := make([]*devicepb.TransientError, 0)
 
 	// assembly the messages
 	var msgs []*transportpb.Message
@@ -296,12 +296,12 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcep
 	)
 
 	// create the model
-	ne := &networkelementpb.Element{}
+	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
-	elementInterface := &networkelementpb.Port{
-		Stats: &networkelementpb.Port_Statistics{
-			Input:  &networkelementpb.Port_Statistics_Metrics{},
-			Output: &networkelementpb.Port_Statistics_Metrics{},
+	elementInterface := &devicepb.Port{
+		Stats: &devicepb.Port_Statistics{
+			Input:  &devicepb.Port_Statistics_Metrics{},
+			Output: &devicepb.Port_Statistics_Metrics{},
 		},
 	}
 	var err error
@@ -377,25 +377,25 @@ func (d *VRPDriver) TechnicalPortInformation(ctx context.Context, req *resourcep
 		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
 	}
 
-	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
+	ne.Ports = append(ne.Ports, elementInterface)
+	ne.TransientErrors = &devicepb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
-func (d *VRPDriver) logAndAppend(err error, errs []*networkelementpb.TransientError, command string) []*networkelementpb.TransientError {
+func (d *VRPDriver) logAndAppend(err error, errs []*devicepb.TransientError, command string) []*devicepb.TransientError {
 	d.logger.Error("log and append error from dnc", "error", err.Error(), "command", command)
-	errs = append(errs, &networkelementpb.TransientError{
+	errs = append(errs, &devicepb.TransientError{
 		Message: err.Error(),
-		Level:   networkelementpb.TransientError_WARN,
+		Level:   devicepb.TransientError_WARN,
 		Cause:   command,
 	})
 
 	return errs
 }
 
-func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	d.logger.Info("running basic port info", "host", req.Hostname, "port", req.Port, "region", req.NetworkRegion)
-	errs := make([]*networkelementpb.TransientError, 0)
+	errs := make([]*devicepb.TransientError, 0)
 
 	var msgs []*transportpb.Message
 	if req.LogicalPortIndex != 0 {
@@ -409,14 +409,14 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Re
 
 	msgs = append(msgs, t)
 
-	ne := &networkelementpb.Element{}
+	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
 
 	// Create the model
-	elementInterface := &networkelementpb.Port{
-		Stats: &networkelementpb.Port_Statistics{
-			Input:  &networkelementpb.Port_Statistics_Metrics{},
-			Output: &networkelementpb.Port_Statistics_Metrics{},
+	elementInterface := &devicepb.Port{
+		Stats: &devicepb.Port_Statistics{
+			Input:  &devicepb.Port_Statistics_Metrics{},
+			Output: &devicepb.Port_Statistics_Metrics{},
 		},
 	}
 	var err error
@@ -470,8 +470,8 @@ func (d *VRPDriver) BasicPortInformation(ctx context.Context, req *resourcepb.Re
 		errs = d.logAndAppend(err, errs, "GetTransceiverInformation")
 	}
 
-	ne.Interfaces = append(ne.Interfaces, elementInterface)
-	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
+	ne.Ports = append(ne.Ports, elementInterface)
+	ne.TransientErrors = &devicepb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 

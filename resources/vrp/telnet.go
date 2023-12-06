@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/trafficpolicypb"
 )
 
@@ -47,13 +47,13 @@ var (
 	reDhcpTableEntry = regexp.MustCompile(`(?P<ipAddress>(^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))\s+(?P<macAddress>([0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}\-[0-9aA-fF]{1,4}))\s+(?P<outerVlan>[0-9]{1,4})\s+/(?P<innerVlan>[0-9-]{1,4})\s+/(?P<mappedVlan>[0-9-]{1,4})\s+(?P<ifAlias>\w+[0-9]/[0-9]/[0-9]{1,2})\s+(?P<timestamp>.+)$`)
 )
 
-func parseMacTable(data string) ([]*networkelementpb.MACEntry, error) {
+func parseMacTable(data string) ([]*devicepb.MACEntry, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	dataRows := strings.Split(data, "\n")
-	rows := make([]*networkelementpb.MACEntry, 0)
+	rows := make([]*devicepb.MACEntry, 0)
 
 	for _, row := range dataRows {
 		fields := strings.Fields(row)
@@ -68,7 +68,7 @@ func parseMacTable(data string) ([]*networkelementpb.MACEntry, error) {
 			return nil, err
 		}
 
-		rows = append(rows, &networkelementpb.MACEntry{
+		rows = append(rows, &devicepb.MACEntry{
 			HardwareAddress: fields[0],
 			Vlan:            int64(vlan),
 		})
@@ -90,13 +90,13 @@ func isMacAddressRow(fields []string) bool {
 	return match
 }
 
-func parseIPTable(data string) ([]*networkelementpb.DHCPEntry, error) {
+func parseIPTable(data string) ([]*devicepb.DHCPEntry, error) {
 	if data == "" {
 		return nil, fmt.Errorf("no data found")
 	}
 
 	dataRows := strings.Split(data, "\n")
-	rows := make([]*networkelementpb.DHCPEntry, 0)
+	rows := make([]*devicepb.DHCPEntry, 0)
 
 	for _, row := range dataRows {
 
@@ -108,7 +108,7 @@ func parseIPTable(data string) ([]*networkelementpb.DHCPEntry, error) {
 			timestamp := matches[reDhcpTableEntry.SubexpIndex("timestamp")]
 			vlan, _ := strconv.Atoi(vlanStr)
 
-			rows = append(rows, &networkelementpb.DHCPEntry{
+			rows = append(rows, &devicepb.DHCPEntry{
 				IpAddress:       ip,
 				HardwareAddress: mac,
 				Vlan:            int64(vlan),

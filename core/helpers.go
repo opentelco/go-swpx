@@ -67,7 +67,7 @@ func providerPollPostProcess(ctx context.Context, selectedProviders []shared.Pro
 			if err != nil {
 				return nil
 			}
-			response.NetworkElement = nr.NetworkElement
+			response.Device = nr.Device
 		}
 	}
 	return nil

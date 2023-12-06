@@ -218,7 +218,7 @@ func (c *Core) handleGetTechnicalInformationPort(ctx context.Context, msg *corep
 		c.logger.Error(err.Error())
 		return nil, err
 	}
-	resp.NetworkElement = ne
+	resp.Device = ne
 
 	return &resp, nil
 }
@@ -339,7 +339,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *corepb.Po
 		c.logger.Error(err.Error())
 		return nil, err
 	}
-	resp.NetworkElement = ne
+	resp.Device = ne
 
 	return &resp, nil
 }
@@ -348,7 +348,7 @@ func (c *Core) handleGetBasicInformationPort(ctx context.Context, msg *corepb.Po
 func (c *Core) handleGetPasicInformationElement(msg *corepb.PollRequest, resp *corepb.PollResponse, plugin shared.Resource) error {
 	// resourcepbConf := shared.Conf2resourcepb(conf)
 	// resourcepbConf.Request = c.createRequestConfig(msg, conf) // set deadline
-	// req := &resource.NetworkElement{
+	// req := &resource.Device{
 	// 	Interface: "",
 	// 	Hostname:  msg.Hostname,
 	// 	Conf:      resourcepbConf,
@@ -372,7 +372,7 @@ func (c *Core) handleGetPasicInformationElement(msg *corepb.PollRequest, resp *c
 	// 		matchingInterfaces++
 	// 	}
 	// }
-	// allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.NetworkElementWrapper{
+	// allPortInformation, err = plugin.GetAllTransceiverInformation(msg.ctx, &resource.DeviceWrapper{
 	// 	Element:        req,
 	// 	NumInterfaces:  matchingInterfaces,
 	// 	FullElement:    allPortInformation,
@@ -382,7 +382,7 @@ func (c *Core) handleGetPasicInformationElement(msg *corepb.PollRequest, resp *c
 	// 	c.logger.Error("error fetching transceiver information: ", err)
 	// }
 
-	// resp.NetworkElement = allPortInformation
+	// resp.Device = allPortInformation
 
 	return nil
 }

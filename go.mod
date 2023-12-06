@@ -19,6 +19,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	go.mongodb.org/mongo-driver v1.12.0
+	go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417
 	go.temporal.io/sdk v1.25.1
 	go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6
 	go.vxfiber.dev/vx-bouncer v1.5.19
@@ -31,7 +32,6 @@ require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/ajg/form v1.5.1 // indirect
-	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -91,7 +91,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.17.0 // indirect
 	github.com/stretchr/objx v0.5.1 // indirect
@@ -101,7 +100,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
-	go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417 // indirect
 	go.temporal.io/api v1.26.0 // indirect
 	go.temporal.io/server v1.22.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect

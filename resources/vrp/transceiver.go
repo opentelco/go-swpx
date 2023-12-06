@@ -12,7 +12,7 @@ import (
 	"go.opentelco.io/go-dnc/models/pb/snmpcpb"
 	"go.opentelco.io/go-dnc/models/pb/transportpb"
 	"go.opentelco.io/go-swpx/config"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared/oids"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -92,7 +92,7 @@ func createVRPTransceiverMsg(req *resourcepb.Request, conf *config.ResourceVRP) 
 	return message
 }
 
-func (d *VRPDriver) parseTransceiverMessage(task *snmpcpb.Task, startIndex int) *networkelementpb.Transceiver {
+func (d *VRPDriver) parseTransceiverMessage(task *snmpcpb.Task, startIndex int) *devicepb.Transceiver {
 	tempInt, _ := strconv.Atoi(task.Metrics[startIndex+1].GetValue())
 	voltInt, _ := strconv.Atoi(task.Metrics[startIndex+2].GetValue())
 	curInt, _ := strconv.Atoi(task.Metrics[startIndex+3].GetValue())
@@ -106,16 +106,14 @@ func (d *VRPDriver) parseTransceiverMessage(task *snmpcpb.Task, startIndex int) 
 		return nil
 	}
 
-	val := &networkelementpb.Transceiver{
+	val := &devicepb.Transceiver{
 		SerialNumber: strings.Trim(task.Metrics[startIndex+0].GetValue(), " "),
-		Stats: []*networkelementpb.Transceiver_Statistics{
-			{
-				Temp:    float64(tempInt),
-				Voltage: float64(voltInt) / 1000,
-				Current: float64(curInt) / 1000,
-				Rx:      convertToDb(int64(rxInt)),
-				Tx:      convertToDb(int64(txInt)),
-			},
+		Stats: &devicepb.Transceiver_Statistics{
+			Temp:    float64(tempInt),
+			Voltage: float64(voltInt) / 1000,
+			Current: float64(curInt) / 1000,
+			Rx:      convertToDb(int64(rxInt)),
+			Tx:      convertToDb(int64(txInt)),
 		},
 		PartNumber: task.Metrics[startIndex+6].GetValue(),
 	}

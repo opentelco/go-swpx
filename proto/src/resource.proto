@@ -24,7 +24,7 @@ syntax = "proto3";
 
 option go_package = "go.opentelco.io/go-swpx/proto/go/resourcepb";
 
-import "network_element.proto";
+import "device.proto";
 import "stanza.proto";
 import "google/protobuf/empty.proto";
 
@@ -81,7 +81,7 @@ service Resource {
     rpc Version(google.protobuf.Empty) returns (VersionResponse);
 
     // discover the device, type version and other basic information about the device
-    rpc Discover(Request) returns (networkelement.Element);
+    rpc Discover(Request) returns (device.Device);
 
     // Map the interfaces with ifIndex and description
     rpc MapInterface(Request) returns (PortIndex);
@@ -89,19 +89,19 @@ service Resource {
     // Map the interace description and the environemnt index
     rpc MapEntityPhysical(Request) returns (PortIndex);
 
-    rpc BasicPortInformation(Request) returns (networkelement.Element);
+    rpc BasicPortInformation(Request) returns (device.Device);
 
     // Get technical information about a port
-    rpc TechnicalPortInformation(Request) returns (networkelement.Element);
+    rpc TechnicalPortInformation(Request) returns (device.Device);
 
     // Get technical information about all ports TODO: rename
-    rpc AllPortInformation(Request) returns (networkelement.Element);
+    rpc AllPortInformation(Request) returns (device.Device);
 
     // Get transceiver information about a interface
-    rpc GetTransceiverInformation(Request) returns (networkelement.Transceiver);
+    rpc GetTransceiverInformation(Request) returns (device.Transceiver);
 
     // Get transceiver information about all interfaces
-    rpc GetAllTransceiverInformation(Request) returns (networkelement.Transceivers);
+    rpc GetAllTransceiverInformation(Request) returns (device.Transceivers);
 
     // Get the running config and return it
     rpc GetRunningConfig(GetRunningConfigParameters) returns (GetRunningConfigResponse);

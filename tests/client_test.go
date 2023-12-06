@@ -23,7 +23,7 @@ func Test_Grpc(t *testing.T) {
 
 	}
 
-	client := corepb.NewCoreServiceClient(conn)
+	client := corepb.NewPollerClient(conn)
 	r, err := client.Poll(ctx, &corepb.PollRequest{
 		Settings: &corepb.Settings{
 			ProviderPlugin: []string{"vx"},
@@ -44,7 +44,7 @@ func Test_Grpc(t *testing.T) {
 
 	fmt.Printf("result: %+v", r)
 
-	ne := r.NetworkElement
+	ne := r.Device
 	b, err := protojson.MarshalOptions{
 		Multiline:       false,
 		Indent:          "  ",

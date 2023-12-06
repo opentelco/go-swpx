@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"go.opentelco.io/go-swpx/proto/go/corepb"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
 	"go.opentelco.io/go-swpx/proto/go/providerpb"
 	"go.opentelco.io/go-swpx/shared"
 )
@@ -74,21 +73,21 @@ func (p *Provider) Name() (string, error) {
 
 func (p *Provider) ProcessPollResponse(ctx context.Context, r *corepb.PollResponse) (*corepb.PollResponse, error) {
 	changes := 0
-	if r.NetworkElement == nil {
+	if r.Device == nil {
 		p.logger.Warn("network element is empt ")
 		return r, nil
 	}
-	for ri, i := range r.NetworkElement.Interfaces {
-		for _, d := range i.DhcpTable {
-			if d.Vlan == SDD_VLAN {
-				p.logger.Debug("found SDD on interface", "interface", i.Description, "sdd-ipAddr", d.IpAddress, "sdd-mac", d.HardwareAddress)
-				r.NetworkElement.Interfaces[ri].ConnectedSdd = &networkelementpb.Element{BridgeMacAddress: d.HardwareAddress, Hostname: d.IpAddress}
-				changes++
-			}
-		}
-	}
 
-	doAnalysis(r.NetworkElement, &changes)
+	// attach device
+	// for ri, i := range r.Device.Interfaces {
+	// 	for _, d := range i.DhcpTable {
+	// 		if d.Vlan == SDD_VLAN {
+	// 			p.logger.Debug("found SDD on interface", "interface", i.Description, "sdd-ipAddr", d.IpAddress, "sdd-mac", d.HardwareAddress)
+	// 			r.Device.Interfaces[ri].ConnectedSdd = &networkelementpb.Element{BridgeMacAddress: d.HardwareAddress, Hostname: d.IpAddress}
+	// 			changes++
+	// 		}
+	// 	}
+	// }
 
 	p.logger.Named("post-handler").Debug("processing response", "changes", changes)
 	return r, nil
@@ -100,8 +99,8 @@ func (p *Provider) ResolveSessionRequest(ctx context.Context, request *corepb.Se
 	if request.AccessId != "" {
 		access, ok := translationMap[request.AccessId]
 		if ok {
-			p.logger.Named("pre-handler").Info("found access ID on provider", "access_id", request.AccessId, "network_element", access.NetworkElement, "port", access.Interface)
-			request.Hostname = access.NetworkElement
+			p.logger.Named("pre-handler").Info("found access ID on provider", "access_id", request.AccessId, "network_element", access.Device, "port", access.Interface)
+			request.Hostname = access.Device
 			request.Port = access.Interface
 
 		} else {

@@ -9,17 +9,17 @@ import (
 )
 
 type commanderGrpcImpl struct {
-	service corepb.CommanderServiceServer
+	service corepb.CommanderServer
 
-	corepb.UnimplementedCommanderServiceServer
+	corepb.UnimplementedCommanderServer
 }
 
-func NewCommanderGrpc(service corepb.CommanderServiceServer, srv *grpc.Server) {
+func NewCommanderGrpc(service corepb.CommanderServer, srv *grpc.Server) {
 	impl := &commanderGrpcImpl{
 		service: service,
 	}
 
-	corepb.RegisterCommanderServiceServer(srv, impl)
+	corepb.RegisterCommanderServer(srv, impl)
 
 }
 

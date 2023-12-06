@@ -27,7 +27,7 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	"go.opentelco.io/go-swpx/config"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/proto/go/stanzapb"
 	"google.golang.org/grpc"
@@ -41,17 +41,17 @@ type Resource interface {
 	Version() (string, error)
 
 	// discover the network element, simple lookup on the device
-	Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error)
+	Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
 	// TechnicalPortInformation Gets all the technical information for a Port
 	// from interface name/descr a SNMP index must be found. This functions helps to solve this problem
-	TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error)
+	TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
 	// BasicPortInformation
-	BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error)
+	BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
 	// AllPortInformation
-	AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error)
+	AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
 	// MapInterface Map interfaces (IF-MIB) from device with the swpx model
 	MapInterface(ctx context.Context, req *resourcepb.Request) (*resourcepb.PortIndex, error)
@@ -60,10 +60,10 @@ type Resource interface {
 	MapEntityPhysical(ctx context.Context, req *resourcepb.Request) (*resourcepb.PortIndex, error)
 
 	// GetTransceiverInformation Get SFP (transceiver) information
-	GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error)
+	GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error)
 
 	// GetAllTransceiverInformation Maps transceivers to corresponding interfaces using physical port information in the wrapper
-	GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error)
+	GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceivers, error)
 
 	GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error)
 
@@ -76,7 +76,7 @@ type ResourceGRPCClient struct {
 	conf   *config.Configuration
 }
 
-func (rpc *ResourceGRPCClient) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCClient) Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.client.Discover(ctx, req)
 }
 
@@ -89,24 +89,24 @@ func (rpc *ResourceGRPCClient) MapEntityPhysical(ctx context.Context, req *resou
 	return rpc.client.MapEntityPhysical(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.client.AllPortInformation(ctx, req)
 }
 
 // TechnicalPortInformation is the client implementation
-func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.client.TechnicalPortInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.client.BasicPortInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
+func (rpc *ResourceGRPCClient) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error) {
 	return rpc.client.GetTransceiverInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error) {
+func (rpc *ResourceGRPCClient) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceivers, error) {
 	return rpc.client.GetAllTransceiverInformation(ctx, req)
 }
 
@@ -145,7 +145,7 @@ func (rpc *ResourceGRPCServer) Version(ctx context.Context, _ *emptypb.Empty) (*
 	return &resourcepb.VersionResponse{Version: res}, err
 }
 
-func (rpc *ResourceGRPCServer) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCServer) Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.Impl.Discover(ctx, req)
 }
 
@@ -159,25 +159,25 @@ func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, req *resou
 }
 
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.Impl.TechnicalPortInformation(ctx, req)
 }
 
 // BasicPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCServer) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.Impl.BasicPortInformation(ctx, req)
 }
 
 // AllPortInformation is a lazy interface to get all information needed for a technical info call.
-func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (rpc *ResourceGRPCServer) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.Impl.AllPortInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
+func (rpc *ResourceGRPCServer) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error) {
 	return rpc.Impl.GetTransceiverInformation(ctx, req)
 }
 
-func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error) {
+func (rpc *ResourceGRPCServer) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceivers, error) {
 	return rpc.Impl.GetAllTransceiverInformation(ctx, req)
 }
 

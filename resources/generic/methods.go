@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"go.opentelco.io/go-dnc/models/pb/transportpb"
-	"go.opentelco.io/go-swpx/proto/go/networkelementpb"
+	"go.opentelco.io/go-swpx/proto/go/devicepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared/oids"
 	"google.golang.org/grpc/codes"
@@ -16,11 +16,11 @@ func (d *driver) Version() (string, error) {
 	return VERSION.String(), nil
 }
 
-func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
-	errs := make([]*networkelementpb.TransientError, 0)
+func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	errs := make([]*devicepb.TransientError, 0)
 	var msgs []*transportpb.Message
 	msgs = append(msgs, createTaskSystemInfo(req, &d.conf.Snmp))
-	ne := &networkelementpb.Element{}
+	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
 
 	for _, msg := range msgs {
@@ -47,19 +47,19 @@ func (d *driver) Discover(ctx context.Context, req *resourcepb.Request) (*networ
 			}
 		}
 	}
-	ne.TransientErrors = &networkelementpb.TransientErrors{Errors: errs}
+	ne.TransientErrors = &devicepb.TransientErrors{Errors: errs}
 	return ne, nil
 }
 
-func (d *driver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
-func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
-func (d *driver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Element, error) {
+func (d *driver) AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
@@ -71,11 +71,11 @@ func (d *driver) MapEntityPhysical(ctx context.Context, req *resourcepb.Request)
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
-func (d *driver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceiver, error) {
+func (d *driver) GetTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceiver, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 
-func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*networkelementpb.Transceivers, error) {
+func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Transceivers, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
 

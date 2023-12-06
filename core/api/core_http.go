@@ -141,7 +141,7 @@ func (s *PollService) Poll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send the request
-	resp, err := s.core.PollNetworkElement(ctx, request)
+	resp, err := s.core.PollDevice(ctx, request)
 	if err != nil {
 		render.JSON(w, r, NewResponse(ResponseStatusNotFound, err))
 		return

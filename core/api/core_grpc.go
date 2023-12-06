@@ -18,7 +18,7 @@ type coreGrpcImpl struct {
 	grpc   *grpc.Server
 	logger hclog.Logger
 
-	corepb.UnimplementedCoreServiceServer
+	corepb.UnimplementedPollerServer
 }
 
 var automatedOkList = []string{
@@ -57,12 +57,12 @@ func (s *coreGrpcImpl) Poll(ctx context.Context, request *corepb.PollRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "network_region is required")
 	}
 
-	resp, err := s.core.PollNetworkElement(ctx, request)
+	resp, err := s.core.PollDevice(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	if resp == nil || resp.NetworkElement == nil {
+	if resp == nil || resp.Device == nil {
 		return nil, status.Error(codes.NotFound, "response is empty, no data from go-dnc")
 	}
 	resp.ExecutionTime = time.Since(start).String()
@@ -89,5 +89,5 @@ func NewGrpc(core *core.Core, srv *grpc.Server, logger hclog.Logger) {
 		core:   core,
 		logger: logger,
 	}
-	corepb.RegisterCoreServiceServer(srv, instance)
+	corepb.RegisterPollerServer(srv, instance)
 }

@@ -30,13 +30,13 @@ func (a *Activities) Poll(ctx context.Context, request *corepb.PollRequest) (*co
 		return nil, temporal.NewNonRetryableApplicationError("network_region is required", TemporalErrTypeRegionRequired, nil)
 	}
 
-	resp, err := a.core.PollNetworkElement(ctx, request)
+	resp, err := a.core.PollDevice(ctx, request)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if resp == nil || resp.NetworkElement == nil {
+	if resp == nil || resp.Device == nil {
 		return nil, temporal.NewNonRetryableApplicationError("failed to get data", TemporalErrTypePollFailed, nil)
 	}
 	resp.ExecutionTime = time.Since(start).String()

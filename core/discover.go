@@ -55,7 +55,7 @@ func (c *Core) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*
 
 	// compare with stored config from database
 	return &corepb.DiscoverResponse{
-		NetworkElement: resp,
+		Device: resp,
 	}, nil
 
 }

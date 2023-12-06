@@ -1,7 +1,7 @@
 package main
 
 type Access struct {
-	NetworkElement string
+	Device         string
 	Interface      string
 	ResourcePlugin string
 	SNMPCommunity  string
@@ -11,21 +11,21 @@ type Access struct {
 
 var translationMap = map[string]Access{
 	"5f024967cf1c": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/1",
 		ResourcePlugin: "vrp",
 		Username:       "root",
 		Password:       "qwerty1234",
 	},
 	"e2a4a1da985e": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/2",
 		ResourcePlugin: "vrp",
 		Username:       "root",
 		Password:       "qwerty1234",
 	},
 	"83d636a256a6": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/3",
 		ResourcePlugin: "vrp",
 
@@ -33,7 +33,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"455ee346b701": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/4",
 		ResourcePlugin: "vrp",
 
@@ -41,7 +41,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"576655b914e7": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/5",
 		ResourcePlugin: "vrp",
 
@@ -49,7 +49,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"abc21bf112c6": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/6",
 		ResourcePlugin: "vrp",
 
@@ -57,7 +57,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"27c509a2c3a7": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/7",
 		ResourcePlugin: "vrp",
 
@@ -65,7 +65,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"df70884ef103": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/8",
 		ResourcePlugin: "vrp",
 
@@ -73,7 +73,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"2b9fc2048a8c": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/9",
 		ResourcePlugin: "vrp",
 
@@ -81,7 +81,7 @@ var translationMap = map[string]Access{
 		Password: "qwerty1234",
 	},
 	"abb77d79ad5d": Access{
-		NetworkElement: "10.5.5.100",
+		Device:         "10.5.5.100",
 		Interface:      "GigabitEthernet0/0/10",
 		ResourcePlugin: "vrp",
 
