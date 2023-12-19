@@ -24,11 +24,14 @@ func (c *Core) doPollRequest(ctx context.Context, request *corepb.PollRequest) (
 		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
-	if request.Settings.ResourcePlugin == "" {
-		request.Settings.ResourcePlugin, err = c.resolveResourcePlugin(ctx, request.Session, selectedProviders)
-		if err != nil {
-			return nil, fmt.Errorf("could not resolve resource plugin: %w", err)
+	var plugin shared.Resource
+	plugin, err = c.resolveResourcePlugin(ctx, request.Session, request.Settings, selectedProviders)
+	if err != nil {
+		response.Error = &corepb.Error{
+			Message: "selected driver is missing/does not exist",
+			Code:    ErrCodeInvalidResource,
 		}
+		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
 	}
 
 	request.Session, err = c.resolveSession(ctx, request.Session, selectedProviders)
@@ -38,20 +41,7 @@ func (c *Core) doPollRequest(ctx context.Context, request *corepb.PollRequest) (
 
 	c.logger.Debug("request processed",
 		"hostname", request.Session.Hostname,
-		"resource-plugin", request.Settings.ResourcePlugin,
 	)
-
-	// select resource-plugin to send the requests to
-
-	plugin := c.resources[request.Settings.ResourcePlugin]
-	if plugin == nil {
-		c.logger.Error("selected driver is not a installed resource-driver-plugin", "selected-driver", request.Settings.ResourcePlugin)
-		response.Error = &corepb.Error{
-			Message: "selected driver is missing/does not exist",
-			Code:    ErrCodeInvalidResource,
-		}
-		return nil, NewError(response.Error.Message, ErrorCode(response.Error.Code))
-	}
 
 	// implementation of different requests that SWP-X can handle right now
 	switch request.Type {
@@ -131,7 +121,6 @@ func (c *Core) handleGetTechnicalInformationPort(ctx context.Context, msg *corep
 			)
 
 			resp.PhysicalPort = cachedInterface.Port
-
 			req.PhysicalPortIndex = cachedInterface.PhysicalEntityIndex
 			req.LogicalPortIndex = cachedInterface.InterfaceIndex
 		}

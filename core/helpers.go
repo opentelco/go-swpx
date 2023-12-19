@@ -2,9 +2,12 @@ package core
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
 
 	"go.opentelco.io/go-swpx/proto/go/corepb"
+	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/shared"
 )
 
@@ -31,19 +34,27 @@ func (c *Core) selectProviders(ctx context.Context, settings *corepb.Settings) (
 	return selectedProviders, nil
 }
 
-func (c *Core) resolveResourcePlugin(ctx context.Context, sess *corepb.SessionRequest, selectedProviders []shared.Provider) (string, error) {
+// provider pre-process the request with the selected providers to resolve the resource plugin
+func (c *Core) resolveResourcePlugin(ctx context.Context, sess *corepb.SessionRequest, settings *corepb.Settings, selectedProviders []shared.Provider) (shared.Resource, error) {
 	for _, provider := range selectedProviders {
 		rp, err := provider.ResolveResourcePlugin(ctx, sess)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		if rp != nil {
-			return rp.ResourcePlugin, nil
+		if rp != nil && rp.ResourcePlugin != "" {
+			return c.resources.Get(rp.ResourcePlugin)
 		}
 	}
-	return "", nil
+
+	fmt.Println("settings.ResourcePlugin", settings.ResourcePlugin)
+	if settings.ResourcePlugin == "" {
+		return nil, errors.New("resource plugin not set nor could it be resolved")
+	}
+
+	return c.resources.Get(settings.ResourcePlugin)
 }
 
+// provider pre-process the request with the selected providers to resolve the session
 func (c *Core) resolveSession(ctx context.Context, sess *corepb.SessionRequest, selectedProviders []shared.Provider) (*corepb.SessionRequest, error) {
 	for _, provider := range selectedProviders {
 		s, err := provider.ResolveSessionRequest(ctx, sess)
@@ -71,4 +82,14 @@ func providerPollPostProcess(ctx context.Context, selectedProviders []shared.Pro
 		}
 	}
 	return nil
+}
+
+// assemblyResourceRequest creates a resource request from a session request and settings
+func assemblyResourceRequest(session *corepb.SessionRequest, settings *corepb.Settings) *resourcepb.Request {
+	return &resourcepb.Request{
+		NetworkRegion: session.NetworkRegion,
+		Hostname:      session.Hostname,
+		Port:          session.Port,
+		Timeout:       settings.Timeout,
+	}
 }

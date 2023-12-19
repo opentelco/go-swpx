@@ -8,6 +8,7 @@ package corepb
 
 import (
 	context "context"
+	analysispb "go.opentelco.io/go-swpx/proto/go/analysispb"
 	stanzapb "go.opentelco.io/go-swpx/proto/go/stanzapb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -26,30 +27,33 @@ type PollerClient interface {
 	// Discover is used to get basic information about an network element, used to make a quick check of the device
 	// with a generic request
 	Discover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
-	// Disocver a device and all its ports etc, a plugin with deep discover implemented must be used for this to be
-	// sucessful
-	DeepDiscover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error)
 	// CheckAvailability is used to check if a network element is available and responding to requests
 	// this does not imply that the network element is working correctly or that it is configured correctly but
 	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
 	// the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
 	CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error)
-	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+	// RunDiagnostic is used to run a diagnostic on a network element or a specific port on the network element
 	// It will collect data from the network element and then wait for a period of time and collect data again
 	// and return the difference between the two collections of data to the client. The data will also be analyzed
 	// by the poller and Report of the diagnostic will be returned to the client.
 	// the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
 	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
 	// will take aproximately 1 minute to complete.
-	Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error)
+	RunDiagnostic(ctx context.Context, in *RunDiagnosticRequest, opts ...grpc.CallOption) (*RunDiagnosticResponse, error)
+	// GetDiagnostic returns the report of a diagnostic that has been run on a network element or a specific port on the network element
+	GetDiagnostic(ctx context.Context, in *GetDiagnosticRequest, opts ...grpc.CallOption) (*analysispb.Report, error)
+	// ListDiagnostics returns a list of diagnostics that has been run on a network element or a specific port on the network element
+	ListDiagnostics(ctx context.Context, in *ListDiagnosticsRequest, opts ...grpc.CallOption) (*ListDiagnosticsResponse, error)
 	// GetDeviceInformation returns the technical information about a device
-	DeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
+	// port etc is not considered in this request
+	CollectDeviceInformation(ctx context.Context, in *CollectDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
 	// get basic information about a device
-	BasicDeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
+	// port etc is not considered in this request
+	CollectBasicDeviceInformation(ctx context.Context, in *CollectBasicDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error)
 	// PortInformation returns information about a port on a device
-	PortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
+	CollectPortInformation(ctx context.Context, in *CollectPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
 	// Get all basic information about a port on a device
-	BasicPortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
+	CollectBasicPortInformation(ctx context.Context, in *CollectBasicPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
 	// collected one. Returs a list of changes and the config collected from the network element
 	CollectConfig(ctx context.Context, in *CollectConfigRequest, opts ...grpc.CallOption) (*CollectConfigResponse, error)
@@ -77,15 +81,6 @@ func (c *pollerClient) Discover(ctx context.Context, in *DiscoverRequest, opts .
 	return out, nil
 }
 
-func (c *pollerClient) DeepDiscover(ctx context.Context, in *DiscoverRequest, opts ...grpc.CallOption) (*DiscoverResponse, error) {
-	out := new(DiscoverResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/DeepDiscover", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *pollerClient) CheckAvailability(ctx context.Context, in *SessionRequest, opts ...grpc.CallOption) (*CheckAvailabilityResponse, error) {
 	out := new(CheckAvailabilityResponse)
 	err := c.cc.Invoke(ctx, "/core.Poller/CheckAvailability", in, out, opts...)
@@ -95,45 +90,63 @@ func (c *pollerClient) CheckAvailability(ctx context.Context, in *SessionRequest
 	return out, nil
 }
 
-func (c *pollerClient) Diagnostic(ctx context.Context, in *DiagnosticRequest, opts ...grpc.CallOption) (*DiagnosticResponse, error) {
-	out := new(DiagnosticResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/Diagnostic", in, out, opts...)
+func (c *pollerClient) RunDiagnostic(ctx context.Context, in *RunDiagnosticRequest, opts ...grpc.CallOption) (*RunDiagnosticResponse, error) {
+	out := new(RunDiagnosticResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/RunDiagnostic", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pollerClient) DeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
+func (c *pollerClient) GetDiagnostic(ctx context.Context, in *GetDiagnosticRequest, opts ...grpc.CallOption) (*analysispb.Report, error) {
+	out := new(analysispb.Report)
+	err := c.cc.Invoke(ctx, "/core.Poller/GetDiagnostic", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) ListDiagnostics(ctx context.Context, in *ListDiagnosticsRequest, opts ...grpc.CallOption) (*ListDiagnosticsResponse, error) {
+	out := new(ListDiagnosticsResponse)
+	err := c.cc.Invoke(ctx, "/core.Poller/ListDiagnostics", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pollerClient) CollectDeviceInformation(ctx context.Context, in *CollectDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
 	out := new(DeviceInformationResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/DeviceInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CollectDeviceInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pollerClient) BasicDeviceInformation(ctx context.Context, in *GetDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
+func (c *pollerClient) CollectBasicDeviceInformation(ctx context.Context, in *CollectBasicDeviceInformationRequest, opts ...grpc.CallOption) (*DeviceInformationResponse, error) {
 	out := new(DeviceInformationResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/BasicDeviceInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CollectBasicDeviceInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pollerClient) PortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
+func (c *pollerClient) CollectPortInformation(ctx context.Context, in *CollectPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
 	out := new(PortInformationResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/PortInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CollectPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *pollerClient) BasicPortInformation(ctx context.Context, in *GetPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
+func (c *pollerClient) CollectBasicPortInformation(ctx context.Context, in *CollectBasicPortInformationRequest, opts ...grpc.CallOption) (*PortInformationResponse, error) {
 	out := new(PortInformationResponse)
-	err := c.cc.Invoke(ctx, "/core.Poller/BasicPortInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.Poller/CollectBasicPortInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,30 +178,33 @@ type PollerServer interface {
 	// Discover is used to get basic information about an network element, used to make a quick check of the device
 	// with a generic request
 	Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
-	// Disocver a device and all its ports etc, a plugin with deep discover implemented must be used for this to be
-	// sucessful
-	DeepDiscover(context.Context, *DiscoverRequest) (*DiscoverResponse, error)
 	// CheckAvailability is used to check if a network element is available and responding to requests
 	// this does not imply that the network element is working correctly or that it is configured correctly but
 	// that it is responding to requests and that the poller can connect to it over SNMP/ICMP
 	// the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
 	CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error)
-	// Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+	// RunDiagnostic is used to run a diagnostic on a network element or a specific port on the network element
 	// It will collect data from the network element and then wait for a period of time and collect data again
 	// and return the difference between the two collections of data to the client. The data will also be analyzed
 	// by the poller and Report of the diagnostic will be returned to the client.
 	// the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
 	// connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
 	// will take aproximately 1 minute to complete.
-	Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error)
+	RunDiagnostic(context.Context, *RunDiagnosticRequest) (*RunDiagnosticResponse, error)
+	// GetDiagnostic returns the report of a diagnostic that has been run on a network element or a specific port on the network element
+	GetDiagnostic(context.Context, *GetDiagnosticRequest) (*analysispb.Report, error)
+	// ListDiagnostics returns a list of diagnostics that has been run on a network element or a specific port on the network element
+	ListDiagnostics(context.Context, *ListDiagnosticsRequest) (*ListDiagnosticsResponse, error)
 	// GetDeviceInformation returns the technical information about a device
-	DeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error)
+	// port etc is not considered in this request
+	CollectDeviceInformation(context.Context, *CollectDeviceInformationRequest) (*DeviceInformationResponse, error)
 	// get basic information about a device
-	BasicDeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error)
+	// port etc is not considered in this request
+	CollectBasicDeviceInformation(context.Context, *CollectBasicDeviceInformationRequest) (*DeviceInformationResponse, error)
 	// PortInformation returns information about a port on a device
-	PortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error)
+	CollectPortInformation(context.Context, *CollectPortInformationRequest) (*PortInformationResponse, error)
 	// Get all basic information about a port on a device
-	BasicPortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error)
+	CollectBasicPortInformation(context.Context, *CollectBasicPortInformationRequest) (*PortInformationResponse, error)
 	// CollectConfig collects the configuration of a network element check for any changes between the stored config and the
 	// collected one. Returs a list of changes and the config collected from the network element
 	CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error)
@@ -207,26 +223,29 @@ type UnimplementedPollerServer struct {
 func (UnimplementedPollerServer) Discover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discover not implemented")
 }
-func (UnimplementedPollerServer) DeepDiscover(context.Context, *DiscoverRequest) (*DiscoverResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeepDiscover not implemented")
-}
 func (UnimplementedPollerServer) CheckAvailability(context.Context, *SessionRequest) (*CheckAvailabilityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAvailability not implemented")
 }
-func (UnimplementedPollerServer) Diagnostic(context.Context, *DiagnosticRequest) (*DiagnosticResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Diagnostic not implemented")
+func (UnimplementedPollerServer) RunDiagnostic(context.Context, *RunDiagnosticRequest) (*RunDiagnosticResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunDiagnostic not implemented")
 }
-func (UnimplementedPollerServer) DeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeviceInformation not implemented")
+func (UnimplementedPollerServer) GetDiagnostic(context.Context, *GetDiagnosticRequest) (*analysispb.Report, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiagnostic not implemented")
 }
-func (UnimplementedPollerServer) BasicDeviceInformation(context.Context, *GetDeviceInformationRequest) (*DeviceInformationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BasicDeviceInformation not implemented")
+func (UnimplementedPollerServer) ListDiagnostics(context.Context, *ListDiagnosticsRequest) (*ListDiagnosticsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDiagnostics not implemented")
 }
-func (UnimplementedPollerServer) PortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PortInformation not implemented")
+func (UnimplementedPollerServer) CollectDeviceInformation(context.Context, *CollectDeviceInformationRequest) (*DeviceInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectDeviceInformation not implemented")
 }
-func (UnimplementedPollerServer) BasicPortInformation(context.Context, *GetPortInformationRequest) (*PortInformationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BasicPortInformation not implemented")
+func (UnimplementedPollerServer) CollectBasicDeviceInformation(context.Context, *CollectBasicDeviceInformationRequest) (*DeviceInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectBasicDeviceInformation not implemented")
+}
+func (UnimplementedPollerServer) CollectPortInformation(context.Context, *CollectPortInformationRequest) (*PortInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectPortInformation not implemented")
+}
+func (UnimplementedPollerServer) CollectBasicPortInformation(context.Context, *CollectBasicPortInformationRequest) (*PortInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CollectBasicPortInformation not implemented")
 }
 func (UnimplementedPollerServer) CollectConfig(context.Context, *CollectConfigRequest) (*CollectConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectConfig not implemented")
@@ -265,24 +284,6 @@ func _Poller_Discover_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_DeepDiscover_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DiscoverRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PollerServer).DeepDiscover(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/core.Poller/DeepDiscover",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).DeepDiscover(ctx, req.(*DiscoverRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Poller_CheckAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SessionRequest)
 	if err := dec(in); err != nil {
@@ -301,92 +302,128 @@ func _Poller_CheckAvailability_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_Diagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DiagnosticRequest)
+func _Poller_RunDiagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunDiagnosticRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PollerServer).Diagnostic(ctx, in)
+		return srv.(PollerServer).RunDiagnostic(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Poller/Diagnostic",
+		FullMethod: "/core.Poller/RunDiagnostic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).Diagnostic(ctx, req.(*DiagnosticRequest))
+		return srv.(PollerServer).RunDiagnostic(ctx, req.(*RunDiagnosticRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_DeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDeviceInformationRequest)
+func _Poller_GetDiagnostic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiagnosticRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PollerServer).DeviceInformation(ctx, in)
+		return srv.(PollerServer).GetDiagnostic(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Poller/DeviceInformation",
+		FullMethod: "/core.Poller/GetDiagnostic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).DeviceInformation(ctx, req.(*GetDeviceInformationRequest))
+		return srv.(PollerServer).GetDiagnostic(ctx, req.(*GetDiagnosticRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_BasicDeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDeviceInformationRequest)
+func _Poller_ListDiagnostics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDiagnosticsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PollerServer).BasicDeviceInformation(ctx, in)
+		return srv.(PollerServer).ListDiagnostics(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Poller/BasicDeviceInformation",
+		FullMethod: "/core.Poller/ListDiagnostics",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).BasicDeviceInformation(ctx, req.(*GetDeviceInformationRequest))
+		return srv.(PollerServer).ListDiagnostics(ctx, req.(*ListDiagnosticsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_PortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPortInformationRequest)
+func _Poller_CollectDeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectDeviceInformationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PollerServer).PortInformation(ctx, in)
+		return srv.(PollerServer).CollectDeviceInformation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Poller/PortInformation",
+		FullMethod: "/core.Poller/CollectDeviceInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).PortInformation(ctx, req.(*GetPortInformationRequest))
+		return srv.(PollerServer).CollectDeviceInformation(ctx, req.(*CollectDeviceInformationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Poller_BasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPortInformationRequest)
+func _Poller_CollectBasicDeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectBasicDeviceInformationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PollerServer).BasicPortInformation(ctx, in)
+		return srv.(PollerServer).CollectBasicDeviceInformation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.Poller/BasicPortInformation",
+		FullMethod: "/core.Poller/CollectBasicDeviceInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PollerServer).BasicPortInformation(ctx, req.(*GetPortInformationRequest))
+		return srv.(PollerServer).CollectBasicDeviceInformation(ctx, req.(*CollectBasicDeviceInformationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_CollectPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectPortInformationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).CollectPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/CollectPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).CollectPortInformation(ctx, req.(*CollectPortInformationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Poller_CollectBasicPortInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CollectBasicPortInformationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PollerServer).CollectBasicPortInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.Poller/CollectBasicPortInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PollerServer).CollectBasicPortInformation(ctx, req.(*CollectBasicPortInformationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -439,32 +476,36 @@ var Poller_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Poller_Discover_Handler,
 		},
 		{
-			MethodName: "DeepDiscover",
-			Handler:    _Poller_DeepDiscover_Handler,
-		},
-		{
 			MethodName: "CheckAvailability",
 			Handler:    _Poller_CheckAvailability_Handler,
 		},
 		{
-			MethodName: "Diagnostic",
-			Handler:    _Poller_Diagnostic_Handler,
+			MethodName: "RunDiagnostic",
+			Handler:    _Poller_RunDiagnostic_Handler,
 		},
 		{
-			MethodName: "DeviceInformation",
-			Handler:    _Poller_DeviceInformation_Handler,
+			MethodName: "GetDiagnostic",
+			Handler:    _Poller_GetDiagnostic_Handler,
 		},
 		{
-			MethodName: "BasicDeviceInformation",
-			Handler:    _Poller_BasicDeviceInformation_Handler,
+			MethodName: "ListDiagnostics",
+			Handler:    _Poller_ListDiagnostics_Handler,
 		},
 		{
-			MethodName: "PortInformation",
-			Handler:    _Poller_PortInformation_Handler,
+			MethodName: "CollectDeviceInformation",
+			Handler:    _Poller_CollectDeviceInformation_Handler,
 		},
 		{
-			MethodName: "BasicPortInformation",
-			Handler:    _Poller_BasicPortInformation_Handler,
+			MethodName: "CollectBasicDeviceInformation",
+			Handler:    _Poller_CollectBasicDeviceInformation_Handler,
+		},
+		{
+			MethodName: "CollectPortInformation",
+			Handler:    _Poller_CollectPortInformation_Handler,
+		},
+		{
+			MethodName: "CollectBasicPortInformation",
+			Handler:    _Poller_CollectBasicPortInformation_Handler,
 		},
 		{
 			MethodName: "CollectConfig",

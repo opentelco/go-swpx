@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.mongodb.org/mongo-driver v1.12.0
 	go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417
+	go.temporal.io/api v1.26.0
 	go.temporal.io/sdk v1.25.1
 	go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6
 	go.vxfiber.dev/vx-bouncer v1.5.19
@@ -100,7 +101,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
-	go.temporal.io/api v1.26.0 // indirect
 	go.temporal.io/server v1.22.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

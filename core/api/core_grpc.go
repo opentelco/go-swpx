@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"go.opentelco.io/go-swpx/core"
+	"go.opentelco.io/go-swpx/proto/go/analysispb"
 	"go.opentelco.io/go-swpx/proto/go/corepb"
 )
 
@@ -41,8 +42,25 @@ func (s *coreGrpcImpl) Discover(ctx context.Context, request *corepb.DiscoverReq
 	return s.core.Discover(ctx, request)
 }
 
-func (s *coreGrpcImpl) Diagnostic(ctx context.Context, request *corepb.DiagnosticRequest) (*corepb.DiagnosticResponse, error) {
-	return s.core.Diagnostic(ctx, request)
+func (s *coreGrpcImpl) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticRequest) (*corepb.RunDiagnosticResponse, error) {
+	return s.core.RunDiagnostic(ctx, request)
+}
+
+func (s *coreGrpcImpl) GetDiagnostic(ctx context.Context, request *corepb.GetDiagnosticRequest) (*analysispb.Report, error) {
+	return s.core.GetDiagnostic(ctx, request)
+}
+
+func (s *coreGrpcImpl) ListDiagnostics(ctx context.Context, req *corepb.ListDiagnosticsRequest) (*corepb.ListDiagnosticsResponse, error) {
+
+	return s.core.ListDiagnostics(ctx, req)
+}
+
+func (s *coreGrpcImpl) CollectDeviceInformation(context.Context, *corepb.CollectDeviceInformationRequest) (*corepb.DeviceInformationResponse, error) {
+	return nil, nil
+}
+
+func (s *coreGrpcImpl) CollectBasicDeviceInformation(ctx context.Context, req *corepb.CollectBasicDeviceInformationRequest) (*corepb.DeviceInformationResponse, error) {
+	return s.core.CollectBasicDeviceInformation(ctx, req)
 }
 
 // Request to SWP-core

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.4
-// source: provider.proto
+// source: plugin_provider.proto
 
 package providerpb
 
@@ -261,5 +261,5 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "provider.proto",
+	Metadata: "plugin_provider.proto",
 }

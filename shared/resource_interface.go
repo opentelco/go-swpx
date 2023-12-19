@@ -50,6 +50,9 @@ type Resource interface {
 	// BasicPortInformation
 	BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
+	// GetDeviceInformation returns the device information from the device,
+	GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
+
 	// AllPortInformation
 	AllPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error)
 
@@ -96,6 +99,10 @@ func (rpc *ResourceGRPCClient) AllPortInformation(ctx context.Context, req *reso
 // TechnicalPortInformation is the client implementation
 func (rpc *ResourceGRPCClient) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.client.TechnicalPortInformation(ctx, req)
+}
+
+func (rpc *ResourceGRPCClient) GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return rpc.client.GetDeviceInformation(ctx, req)
 }
 
 func (rpc *ResourceGRPCClient) BasicPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
@@ -161,6 +168,10 @@ func (rpc *ResourceGRPCServer) MapEntityPhysical(ctx context.Context, req *resou
 // TechnicalPortInformation is a lazy interface to get all information needed for a technical info call.
 func (rpc *ResourceGRPCServer) TechnicalPortInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
 	return rpc.Impl.TechnicalPortInformation(ctx, req)
+}
+
+func (rpc *ResourceGRPCServer) GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return rpc.Impl.GetDeviceInformation(ctx, req)
 }
 
 // BasicPortInformation is a lazy interface to get all information needed for a technical info call.

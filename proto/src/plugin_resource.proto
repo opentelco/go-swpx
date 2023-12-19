@@ -97,6 +97,9 @@ service Resource {
     // Get technical information about all ports TODO: rename
     rpc AllPortInformation(Request) returns (device.Device);
 
+    //
+    rpc GetDeviceInformation(Request) returns (device.Device);
+
     // Get transceiver information about a interface
     rpc GetTransceiverInformation(Request) returns (device.Transceiver);
 

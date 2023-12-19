@@ -14,19 +14,40 @@
  * -----
  */
 
-
-
 syntax = "proto3";
 package analysis;
 option go_package = "go.opentelco.io/go-swpx/proto/go/analysispb";
 
+import "google/protobuf/timestamp.proto";
 
 message Report {
-    repeated Analysis analysis = 1;
+    // the id of the report (workflow id)
+    string id = 1;
+
+    // the report is the result of the analysis
+    repeated Analysis analysis = 2;
+
+    Status status = 3;
+    enum Status {
+        STATUS_NOT_SET    = 0;
+        STATUS_RUNNING    = 1;
+        STATUS_COMPLETED  = 2;
+        STATUS_FAILED     = 3;
+        STATUS_CANCELED   = 4;
+        STATUS_TERMINATED = 5;
+    }
+
+    // started is the time when the report was started
+    google.protobuf.Timestamp started = 4;
+
+    // completed is the time when the report was completed
+    google.protobuf.Timestamp completed = 5;
+
+    // the report is the result of the analysis
+    optional string error = 6;
 }
 
 message Analysis {
-
     enum Type {
         TYPE_NOT_SET = 0;
 
@@ -56,15 +77,23 @@ message Analysis {
 
         // analysis of the dhcp snooping lease table
         TYPE_DHCP_LEASE = 7;
-
-
     }
     Type type = 1;
 
     enum Result {
         RESULT_NOT_SET = 0;
+
+        // Something is wrong with the analysed access (switch and port)
+        // either the end customer needs to make some changes or a ticket needs to be created
+        // before a ticket is created troubleshooting should be done by the end customer
         RESULT_ERROR = 1;
+
+        // Something could be wrong with the analysed access (switch and port) but most likely not
+        // the result could indicate a problem but the impact is uncertain or low. Creating a trouble ticket
+        // is not recommended based on a Warning result
         RESULT_WARNING = 2;
+
+        // the analysis is ok, no problem found with the analysed access (switch and port)
         RESULT_OK = 3;
     }
 
@@ -79,4 +108,7 @@ message Analysis {
 
     // threshold is the value that the value is compared to
     string threshold = 5;
+
+    // what the analysis is about, why we analyse this etc
+    string description = 6;
 }

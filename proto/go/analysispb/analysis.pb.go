@@ -24,6 +24,7 @@ package analysispb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -34,6 +35,64 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type Report_Status int32
+
+const (
+	Report_STATUS_NOT_SET    Report_Status = 0
+	Report_STATUS_RUNNING    Report_Status = 1
+	Report_STATUS_COMPLETED  Report_Status = 2
+	Report_STATUS_FAILED     Report_Status = 3
+	Report_STATUS_CANCELED   Report_Status = 4
+	Report_STATUS_TERMINATED Report_Status = 5
+)
+
+// Enum value maps for Report_Status.
+var (
+	Report_Status_name = map[int32]string{
+		0: "STATUS_NOT_SET",
+		1: "STATUS_RUNNING",
+		2: "STATUS_COMPLETED",
+		3: "STATUS_FAILED",
+		4: "STATUS_CANCELED",
+		5: "STATUS_TERMINATED",
+	}
+	Report_Status_value = map[string]int32{
+		"STATUS_NOT_SET":    0,
+		"STATUS_RUNNING":    1,
+		"STATUS_COMPLETED":  2,
+		"STATUS_FAILED":     3,
+		"STATUS_CANCELED":   4,
+		"STATUS_TERMINATED": 5,
+	}
+)
+
+func (x Report_Status) Enum() *Report_Status {
+	p := new(Report_Status)
+	*p = x
+	return p
+}
+
+func (x Report_Status) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Report_Status) Descriptor() protoreflect.EnumDescriptor {
+	return file_analysis_proto_enumTypes[0].Descriptor()
+}
+
+func (Report_Status) Type() protoreflect.EnumType {
+	return &file_analysis_proto_enumTypes[0]
+}
+
+func (x Report_Status) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Report_Status.Descriptor instead.
+func (Report_Status) EnumDescriptor() ([]byte, []int) {
+	return file_analysis_proto_rawDescGZIP(), []int{0, 0}
+}
 
 type Analysis_Type int32
 
@@ -96,11 +155,11 @@ func (x Analysis_Type) String() string {
 }
 
 func (Analysis_Type) Descriptor() protoreflect.EnumDescriptor {
-	return file_analysis_proto_enumTypes[0].Descriptor()
+	return file_analysis_proto_enumTypes[1].Descriptor()
 }
 
 func (Analysis_Type) Type() protoreflect.EnumType {
-	return &file_analysis_proto_enumTypes[0]
+	return &file_analysis_proto_enumTypes[1]
 }
 
 func (x Analysis_Type) Number() protoreflect.EnumNumber {
@@ -116,9 +175,16 @@ type Analysis_Result int32
 
 const (
 	Analysis_RESULT_NOT_SET Analysis_Result = 0
-	Analysis_RESULT_ERROR   Analysis_Result = 1
+	// Something is wrong with the analysed access (switch and port)
+	// either the end customer needs to make some changes or a ticket needs to be created
+	// before a ticket is created troubleshooting should be done by the end customer
+	Analysis_RESULT_ERROR Analysis_Result = 1
+	// Something could be wrong with the analysed access (switch and port) but most likely not
+	// the result could indicate a problem but the impact is uncertain or low. Creating a trouble ticket
+	// is not recommended based on a Warning result
 	Analysis_RESULT_WARNING Analysis_Result = 2
-	Analysis_RESULT_OK      Analysis_Result = 3
+	// the analysis is ok, no problem found with the analysed access (switch and port)
+	Analysis_RESULT_OK Analysis_Result = 3
 )
 
 // Enum value maps for Analysis_Result.
@@ -148,11 +214,11 @@ func (x Analysis_Result) String() string {
 }
 
 func (Analysis_Result) Descriptor() protoreflect.EnumDescriptor {
-	return file_analysis_proto_enumTypes[1].Descriptor()
+	return file_analysis_proto_enumTypes[2].Descriptor()
 }
 
 func (Analysis_Result) Type() protoreflect.EnumType {
-	return &file_analysis_proto_enumTypes[1]
+	return &file_analysis_proto_enumTypes[2]
 }
 
 func (x Analysis_Result) Number() protoreflect.EnumNumber {
@@ -169,7 +235,17 @@ type Report struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Analysis []*Analysis `protobuf:"bytes,1,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
+	// the id of the report (workflow id)
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" bson:"_id"`
+	// the report is the result of the analysis
+	Analysis []*Analysis   `protobuf:"bytes,2,rep,name=analysis,proto3" json:"analysis,omitempty" bson:"analysis"`
+	Status   Report_Status `protobuf:"varint,3,opt,name=status,proto3,enum=analysis.Report_Status" json:"status,omitempty" bson:"status"`
+	// started is the time when the report was started
+	Started *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=started,proto3" json:"started,omitempty" bson:"started"`
+	// completed is the time when the report was completed
+	Completed *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=completed,proto3" json:"completed,omitempty" bson:"completed"`
+	// the report is the result of the analysis
+	Error *string `protobuf:"bytes,6,opt,name=error,proto3,oneof" json:"error,omitempty" bson:"error"`
 }
 
 func (x *Report) Reset() {
@@ -204,11 +280,46 @@ func (*Report) Descriptor() ([]byte, []int) {
 	return file_analysis_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *Report) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 func (x *Report) GetAnalysis() []*Analysis {
 	if x != nil {
 		return x.Analysis
 	}
 	return nil
+}
+
+func (x *Report) GetStatus() Report_Status {
+	if x != nil {
+		return x.Status
+	}
+	return Report_STATUS_NOT_SET
+}
+
+func (x *Report) GetStarted() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Started
+	}
+	return nil
+}
+
+func (x *Report) GetCompleted() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Completed
+	}
+	return nil
+}
+
+func (x *Report) GetError() string {
+	if x != nil && x.Error != nil {
+		return *x.Error
+	}
+	return ""
 }
 
 type Analysis struct {
@@ -298,11 +409,35 @@ var File_analysis_proto protoreflect.FileDescriptor
 
 var file_analysis_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x08, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x22, 0x38, 0x0a, 0x06, 0x52, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x12, 0x2e, 0x0a, 0x08, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69,
-	0x73, 0x2e, 0x41, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x52, 0x08, 0x61, 0x6e, 0x61, 0x6c,
-	0x79, 0x73, 0x69, 0x73, 0x22, 0xbc, 0x03, 0x0a, 0x08, 0x41, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69,
+	0x12, 0x08, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x96, 0x03, 0x0a, 0x06,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x2e, 0x0a, 0x08, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73,
+	0x69, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x61, 0x6e, 0x61, 0x6c, 0x79,
+	0x73, 0x69, 0x73, 0x2e, 0x41, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x52, 0x08, 0x61, 0x6e,
+	0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x12, 0x2f, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x17, 0x2e, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69,
+	0x73, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
+	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x34, 0x0a, 0x07, 0x73, 0x74, 0x61, 0x72, 0x74,
+	0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x52, 0x07, 0x73, 0x74, 0x61, 0x72, 0x74, 0x65, 0x64, 0x12, 0x38, 0x0a,
+	0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x63, 0x6f,
+	0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x12, 0x19, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72,
+	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x88,
+	0x01, 0x01, 0x22, 0x85, 0x01, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a,
+	0x0e, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4e, 0x4f, 0x54, 0x5f, 0x53, 0x45, 0x54, 0x10,
+	0x00, 0x12, 0x12, 0x0a, 0x0e, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x52, 0x55, 0x4e, 0x4e,
+	0x49, 0x4e, 0x47, 0x10, 0x01, 0x12, 0x14, 0x0a, 0x10, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f,
+	0x43, 0x4f, 0x4d, 0x50, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x02, 0x12, 0x11, 0x0a, 0x0d, 0x53,
+	0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x46, 0x41, 0x49, 0x4c, 0x45, 0x44, 0x10, 0x03, 0x12, 0x13,
+	0x0a, 0x0f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x43, 0x41, 0x4e, 0x43, 0x45, 0x4c, 0x45,
+	0x44, 0x10, 0x04, 0x12, 0x15, 0x0a, 0x11, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x54, 0x45,
+	0x52, 0x4d, 0x49, 0x4e, 0x41, 0x54, 0x45, 0x44, 0x10, 0x05, 0x42, 0x08, 0x0a, 0x06, 0x5f, 0x65,
+	0x72, 0x72, 0x6f, 0x72, 0x22, 0xbc, 0x03, 0x0a, 0x08, 0x41, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69,
 	0x73, 0x12, 0x2b, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32,
 	0x17, 0x2e, 0x61, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x2e, 0x41, 0x6e, 0x61, 0x6c, 0x79,
 	0x73, 0x69, 0x73, 0x2e, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x31,
@@ -348,23 +483,28 @@ func file_analysis_proto_rawDescGZIP() []byte {
 	return file_analysis_proto_rawDescData
 }
 
-var file_analysis_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_analysis_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_analysis_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_analysis_proto_goTypes = []interface{}{
-	(Analysis_Type)(0),   // 0: analysis.Analysis.Type
-	(Analysis_Result)(0), // 1: analysis.Analysis.Result
-	(*Report)(nil),       // 2: analysis.Report
-	(*Analysis)(nil),     // 3: analysis.Analysis
+	(Report_Status)(0),            // 0: analysis.Report.Status
+	(Analysis_Type)(0),            // 1: analysis.Analysis.Type
+	(Analysis_Result)(0),          // 2: analysis.Analysis.Result
+	(*Report)(nil),                // 3: analysis.Report
+	(*Analysis)(nil),              // 4: analysis.Analysis
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_analysis_proto_depIdxs = []int32{
-	3, // 0: analysis.Report.analysis:type_name -> analysis.Analysis
-	0, // 1: analysis.Analysis.type:type_name -> analysis.Analysis.Type
-	1, // 2: analysis.Analysis.result:type_name -> analysis.Analysis.Result
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	4, // 0: analysis.Report.analysis:type_name -> analysis.Analysis
+	0, // 1: analysis.Report.status:type_name -> analysis.Report.Status
+	5, // 2: analysis.Report.started:type_name -> google.protobuf.Timestamp
+	5, // 3: analysis.Report.completed:type_name -> google.protobuf.Timestamp
+	1, // 4: analysis.Analysis.type:type_name -> analysis.Analysis.Type
+	2, // 5: analysis.Analysis.result:type_name -> analysis.Analysis.Result
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_analysis_proto_init() }
@@ -398,12 +538,13 @@ func file_analysis_proto_init() {
 			}
 		}
 	}
+	file_analysis_proto_msgTypes[0].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_analysis_proto_rawDesc,
-			NumEnums:      2,
+			NumEnums:      3,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,

@@ -21,7 +21,7 @@ func createTemporalWorker(tc client.Client, c *Core) worker.Worker {
 		BackgroundActivityContext: context.WithValue(context.Background(), TemporalClientContextKey, tc),
 	})
 	w.RegisterWorkflowWithOptions(
-		DiagnosticWorkflow,
+		RunDiagnosticWorkflow,
 		workflow.RegisterOptions{
 			// Name: "",
 		})

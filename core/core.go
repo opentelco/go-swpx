@@ -25,7 +25,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -270,7 +269,7 @@ func (c *Core) LoadProviderPlugins(availableProviders map[string]*plugin.Client)
 func (c *Core) LoadPlugins(pluginPath string, pluginType string) (map[string]*plugin.Client, error) {
 	loadedPlugins := make(map[string]*plugin.Client)
 	c.logger.Debug("searching for plugins", "path", pluginPath)
-	plugs, err := ioutil.ReadDir(pluginPath)
+	plugs, err := os.ReadDir(pluginPath)
 	if err != nil {
 		return loadedPlugins, err
 	}

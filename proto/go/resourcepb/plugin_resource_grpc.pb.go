@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.23.4
-// source: resource.proto
+// source: plugin_resource.proto
 
 package resourcepb
 
@@ -38,6 +38,8 @@ type ResourceClient interface {
 	TechnicalPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Device, error)
 	// Get technical information about all ports TODO: rename
 	AllPortInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Device, error)
+	//
+	GetDeviceInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Device, error)
 	// Get transceiver information about a interface
 	GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Transceiver, error)
 	// Get transceiver information about all interfaces
@@ -130,6 +132,15 @@ func (c *resourceClient) AllPortInformation(ctx context.Context, in *Request, op
 	return out, nil
 }
 
+func (c *resourceClient) GetDeviceInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Device, error) {
+	out := new(devicepb.Device)
+	err := c.cc.Invoke(ctx, "/resource.Resource/GetDeviceInformation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceClient) GetTransceiverInformation(ctx context.Context, in *Request, opts ...grpc.CallOption) (*devicepb.Transceiver, error) {
 	out := new(devicepb.Transceiver)
 	err := c.cc.Invoke(ctx, "/resource.Resource/GetTransceiverInformation", in, out, opts...)
@@ -183,6 +194,8 @@ type ResourceServer interface {
 	TechnicalPortInformation(context.Context, *Request) (*devicepb.Device, error)
 	// Get technical information about all ports TODO: rename
 	AllPortInformation(context.Context, *Request) (*devicepb.Device, error)
+	//
+	GetDeviceInformation(context.Context, *Request) (*devicepb.Device, error)
 	// Get transceiver information about a interface
 	GetTransceiverInformation(context.Context, *Request) (*devicepb.Transceiver, error)
 	// Get transceiver information about all interfaces
@@ -229,6 +242,9 @@ func (UnimplementedResourceServer) TechnicalPortInformation(context.Context, *Re
 }
 func (UnimplementedResourceServer) AllPortInformation(context.Context, *Request) (*devicepb.Device, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllPortInformation not implemented")
+}
+func (UnimplementedResourceServer) GetDeviceInformation(context.Context, *Request) (*devicepb.Device, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceInformation not implemented")
 }
 func (UnimplementedResourceServer) GetTransceiverInformation(context.Context, *Request) (*devicepb.Transceiver, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTransceiverInformation not implemented")
@@ -381,6 +397,24 @@ func _Resource_AllPortInformation_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Resource_GetDeviceInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceServer).GetDeviceInformation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resource.Resource/GetDeviceInformation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceServer).GetDeviceInformation(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Resource_GetTransceiverInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
@@ -489,6 +523,10 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Resource_AllPortInformation_Handler,
 		},
 		{
+			MethodName: "GetDeviceInformation",
+			Handler:    _Resource_GetDeviceInformation_Handler,
+		},
+		{
 			MethodName: "GetTransceiverInformation",
 			Handler:    _Resource_GetTransceiverInformation_Handler,
 		},
@@ -506,5 +544,5 @@ var Resource_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "resource.proto",
+	Metadata: "plugin_resource.proto",
 }

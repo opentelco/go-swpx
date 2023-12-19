@@ -14,7 +14,6 @@ import (
 )
 
 func init() {
-	TestRootCmd.AddCommand(TestBulkCmd)
 
 	TestBulkCmd.Flags().StringP("target", "t", "", "the target to test")
 	if err := TestBulkCmd.MarkFlagRequired("target"); err != nil {
@@ -28,6 +27,17 @@ func init() {
 	TestBulkCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
 	TestBulkCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
 	TestBulkCmd.Flags().StringP("resource", "r", "", "specify which resource plugin to use")
+	TestRootCmd.AddCommand(TestBulkCmd)
+
+	// get info
+	TestDeviceInfo.Flags().StringP("target", "t", "", "the target to test")
+	if err := TestDeviceInfo.MarkFlagRequired("target"); err != nil {
+		panic(err)
+	}
+	TestDeviceInfo.Flags().String("ttl", "90s", "how long will we wait on each request")
+	TestDeviceInfo.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
+	TestDeviceInfo.Flags().StringP("resource", "r", "", "specify which resource plugin to use")
+	TestRootCmd.AddCommand(TestDeviceInfo)
 
 	// collect
 	collectConfigCmd.Flags().String("ttl", "90s", "how long will we wait on each request")
@@ -66,20 +76,29 @@ func init() {
 
 	// -
 
-	diagnosticCmd.Flags().Int32("poll", 2, "how many times diagnostic should poll the device for data (10s between polls)")
-	diagnosticCmd.Flags().StringP("target", "t", "", "the target to test")
-	if err := diagnosticCmd.MarkFlagRequired("target"); err != nil {
+	diagnosticRunCmd.Flags().Int32("poll", 2, "how many times diagnostic should poll the device for data (10s between polls)")
+	diagnosticRunCmd.Flags().StringP("target", "t", "", "the target to test")
+	if err := diagnosticRunCmd.MarkFlagRequired("target"); err != nil {
 		panic(err)
 	}
 
-	diagnosticCmd.Flags().StringP("port", "p", "GigabitEthernet0/0/1", "the port to check for")
-	if err := diagnosticCmd.MarkFlagRequired("port"); err != nil {
+	diagnosticRunCmd.Flags().StringP("port", "p", "GigabitEthernet0/0/1", "the port to check for")
+	if err := diagnosticRunCmd.MarkFlagRequired("port"); err != nil {
 		panic(err)
 	}
 
-	diagnosticCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
-	diagnosticCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
-	diagnosticCmd.Flags().String("region", "default", "specify which region to poll the device in")
+	diagnosticRunCmd.Flags().StringSlice("providers", []string{""}, "specify which provider plugins to use")
+	diagnosticRunCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
+	diagnosticRunCmd.Flags().String("region", "default", "specify which region to poll the device in")
+	diagnosticRunCmd.Flags().StringP("fingerprint", "f", "", "specify which fingerprint to use")
+
+	diagnosticListCmd.Flags().Int64("limit", 10, "how many to fetch")
+	diagnosticListCmd.Flags().Int64("offset", 0, "how many to skip")
+
+	diagnosticCmd.AddCommand(diagnosticRunCmd)
+	diagnosticCmd.AddCommand(diagnosticGetCmd)
+	diagnosticCmd.AddCommand(diagnosticListCmd)
+
 	TestRootCmd.AddCommand(diagnosticCmd)
 
 	Root.AddCommand(TestRootCmd)
@@ -92,6 +111,54 @@ var TestRootCmd = &cobra.Command{
 	Short: "run some testing",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
+	},
+}
+
+// Test is a testing command that should be removed..
+var TestDeviceInfo = &cobra.Command{
+	Use:     "basic-device-info",
+	Aliases: []string{"bdi"},
+	Short:   "get basic device information from the poller",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		target, _ := cmd.Flags().GetString("target")
+		ttlString, _ := cmd.Flags().GetString("ttl")
+		providers, _ := cmd.Flags().GetStringSlice("providers")
+		resource, _ := cmd.Flags().GetString("resource")
+
+		cmd.Println("selected providers: ", providers)
+
+		_, err := time.ParseDuration(ttlString)
+		if err != nil {
+			cmd.Println("could not parse ttl: ", err)
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := corepb.NewPollerClient(conn)
+
+		resp, err := swpx.CollectBasicDeviceInformation(cmd.Context(), &corepb.CollectBasicDeviceInformationRequest{
+			Settings: &corepb.Settings{
+				ProviderPlugin: providers,
+				ResourcePlugin: resource,
+				RecreateIndex:  true,
+				Timeout:        ttlString,
+				CacheTtl:       "0s",
+			},
+			Session: &corepb.SessionRequest{
+				Hostname: target,
+			},
+		})
+		if err != nil {
+			cmd.Printf("could not get device info for: %s,  reason: %s\n", target, err)
+		}
+
+		bs, _ := json.MarshalIndent(resp, "", "  ")
+		cmd.Println(string(bs))
 	},
 }
 
@@ -326,6 +393,14 @@ var configureCmd = &cobra.Command{
 
 var diagnosticCmd = &cobra.Command{
 	Use:   "diagnostic",
+	Short: "run and get diagnostic on network elements port",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
+var diagnosticRunCmd = &cobra.Command{
+	Use:   "run",
 	Short: "run diagnostic on network elements port",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -336,6 +411,7 @@ var diagnosticCmd = &cobra.Command{
 		resource, _ := cmd.Flags().GetString("resource")
 		region, _ := cmd.Flags().GetString("resource")
 		port, _ := cmd.Flags().GetString("port")
+		fp, _ := cmd.Flags().GetString("fingerprint")
 
 		if pollTimes < 2 {
 			cmd.Println("poll must be 2 or more")
@@ -351,7 +427,7 @@ var diagnosticCmd = &cobra.Command{
 		}
 		swpx := corepb.NewPollerClient(conn)
 
-		resp, err := swpx.Diagnostic(cmd.Context(), &corepb.DiagnosticRequest{
+		resp, err := swpx.RunDiagnostic(cmd.Context(), &corepb.RunDiagnosticRequest{
 			Settings: &corepb.Settings{
 				ProviderPlugin: providers,
 				ResourcePlugin: resource,
@@ -362,8 +438,84 @@ var diagnosticCmd = &cobra.Command{
 				Port:          port,
 				NetworkRegion: region,
 			},
-			PollTimes: pollTimes,
+			PollTimes:   pollTimes,
+			Fingerprint: fp,
 		})
+		if err != nil {
+			cmd.PrintErr(err)
+		}
+		if resp != nil {
+			cmd.Println(prettyPrintJSON(resp))
+		}
+
+	},
+}
+
+var diagnosticGetCmd = &cobra.Command{
+	Use:   "get [id]",
+	Short: "get diagnostic",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		id := args[0]
+		if id == "" {
+			cmd.Println("id cannot be empty")
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := corepb.NewPollerClient(conn)
+
+		resp, err := swpx.GetDiagnostic(cmd.Context(), &corepb.GetDiagnosticRequest{
+			Id: id,
+		})
+		if err != nil {
+			cmd.PrintErr(err)
+		}
+		if resp != nil {
+			cmd.Println(prettyPrintJSON(resp))
+		}
+
+	},
+}
+
+var diagnosticListCmd = &cobra.Command{
+	Use:   "list [fingerprint]",
+	Short: "list diagnostic",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		limit, _ := cmd.Flags().GetInt64("limit")
+		offset, _ := cmd.Flags().GetInt64("offset")
+
+		id := args[0]
+		if id == "" {
+			cmd.Println("fingerprint cannot be empty")
+			os.Exit(1)
+		}
+
+		conn, err := grpc.Dial("127.0.0.1:1338", grpc.WithInsecure())
+		if err != nil {
+			cmd.Println("could not connect to swpx: ", err)
+			os.Exit(1)
+		}
+		swpx := corepb.NewPollerClient(conn)
+
+		params := &corepb.ListDiagnosticsRequest{
+			Fingerprint: id,
+		}
+		if limit != 0 {
+			params.Limit = limit
+		}
+		if offset != 0 {
+			params.Offset = offset
+		}
+
+		resp, err := swpx.ListDiagnostics(cmd.Context(), params)
 		if err != nil {
 			cmd.PrintErr(err)
 		}

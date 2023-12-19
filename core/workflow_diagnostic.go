@@ -15,7 +15,7 @@ import (
 
 var coreActivities = Activities{}
 
-func DiagnosticWorkflow(ctx workflow.Context, request *corepb.DiagnosticRequest) (*corepb.DiagnosticResponse, error) {
+func RunDiagnosticWorkflow(ctx workflow.Context, request *corepb.RunDiagnosticRequest) (*analysispb.Report, error) {
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Diagnostic workflow started")
@@ -115,7 +115,7 @@ func DiagnosticWorkflow(ctx workflow.Context, request *corepb.DiagnosticRequest)
 	}
 	report.Analysis = append(report.Analysis, r...)
 
-	return &corepb.DiagnosticResponse{Report: report}, nil
+	return report, nil
 }
 
 const (
@@ -200,7 +200,7 @@ func analyzeLink(port string, data []*corepb.PollResponse) ([]*analysispb.Analys
 	}
 	if !linkIsShut {
 		anyalysis = append(anyalysis, &analysispb.Analysis{
-			Result:    analysispb.Analysis_RESULT_OK,
+			Result:    analysispb.Analysis_RESULT_ERROR,
 			Type:      analysispb.Analysis_TYPE_LINK,
 			Note:      "Link has been shut throughout the whole diagnosis, please check the port configuration",
 			Value:     []string{"Down/Down"},
@@ -294,6 +294,7 @@ func analyzeErrors(port string, data []*corepb.PollResponse) ([]*analysispb.Anal
 		return anyalysis, nil
 	}
 
+	// check if we have had any errors (ever) could be old errors.
 	if biggest(inputErrors) > 0 {
 		anyalysis = append(anyalysis, &analysispb.Analysis{
 			Result:    analysispb.Analysis_RESULT_WARNING,
@@ -554,7 +555,7 @@ func analyzeDhcpTable(port string, data []*corepb.PollResponse) ([]*analysispb.A
 		anyalysis = append(anyalysis, &analysispb.Analysis{
 			Result: analysispb.Analysis_RESULT_OK,
 			Type:   analysispb.Analysis_TYPE_DHCP_LEASE,
-			Note:   fmt.Sprintf("found %d mac address with IP Lease on port", len(dhcpEntryTable)),
+			Note:   fmt.Sprintf("found %d mac address with IP lease on port", len(dhcpEntryTable)),
 		})
 	}
 	return anyalysis, nil

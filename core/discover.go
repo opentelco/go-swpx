@@ -6,6 +6,7 @@ import (
 
 	"go.opentelco.io/go-swpx/proto/go/corepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 // Discover will do basic discovery of a device and return basic info about it
@@ -19,11 +20,10 @@ func (c *Core) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*
 		return nil, err
 	}
 
-	if request.Settings.ResourcePlugin == "" {
-		request.Settings.ResourcePlugin, err = c.resolveResourcePlugin(ctx, request.Session, selectedProviders)
-		if err != nil {
-			return nil, fmt.Errorf("could not resolve resource plugin: %w", err)
-		}
+	var plugin shared.Resource
+	plugin, err = c.resolveResourcePlugin(ctx, request.Session, request.Settings, selectedProviders)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve resource plugin: %w", err)
 	}
 
 	request.Session, err = c.resolveSession(ctx, request.Session, selectedProviders)
@@ -38,11 +38,6 @@ func (c *Core) Discover(ctx context.Context, request *corepb.DiscoverRequest) (*
 
 	// select resource-plugin to send the requests to
 	c.logger.Info("selected resource plugin", "plugin", request.Settings.ResourcePlugin)
-
-	plugin := c.resources[request.Settings.ResourcePlugin]
-	if plugin == nil {
-		return nil, NewError("selected resource plugin is missing/does not exist", ErrCodeInvalidResource)
-	}
 
 	resp, err := plugin.Discover(ctx, &resourcepb.Request{
 		NetworkRegion: request.Session.NetworkRegion,

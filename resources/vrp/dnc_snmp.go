@@ -31,7 +31,7 @@ func createPhysicalPortIndex(request *resourcepb.Request, conf *config.ResourceV
 		},
 		Type: snmpcpb.Type_BULKWALK,
 		Oids: []*snmpcpb.Oid{
-			{Oid: oids.IfEntPhysicalName, Name: "ifPhysAddress", Type: metricpb.MetricType_STRING},
+			{Oid: oids.IfEntPhysicalName, Name: "IfEntPhysicalName", Type: metricpb.MetricType_STRING},
 		},
 	}
 
@@ -205,15 +205,16 @@ func createAllPortsMsg(req *resourcepb.Request, conf *config.ResourceVRP) *trans
 		},
 		Type: snmpcpb.Type_BULKWALK,
 		Oids: []*snmpcpb.Oid{
-			{Oid: oids.IfDescr, Name: "ifDescr", Type: metricpb.MetricType_STRING},
+			{Oid: oids.IfIndex, Name: "ifIndex", Type: metricpb.MetricType_INT},
+			{Oid: oids.IfEntPhysicalName, Name: "IfEntPhysicalName", Type: metricpb.MetricType_STRING},
 			{Oid: oids.IfAlias, Name: "ifAlias", Type: metricpb.MetricType_STRING},
+			{Oid: oids.IfDescr, Name: "ifDescr", Type: metricpb.MetricType_STRING},
 			{Oid: oids.IfType, Name: "ifType", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfMtu, Name: "ifMtu", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfPhysAddress, Name: "ifPhysAddress", Type: metricpb.MetricType_HWADDR},
 			{Oid: oids.IfAdminStatus, Name: "ifAdminStatus", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfOperStatus, Name: "ifOperStatus", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metricpb.MetricType_TIMETICKS},
-
 			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metricpb.MetricType_INT},
 		},
 	}

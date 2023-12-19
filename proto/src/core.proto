@@ -156,9 +156,10 @@ message DiscoverResponse {
 }
 
 // DiagnosticRequest is used to run a diagnostic on a network element or a specific port on the network element
-message DiagnosticRequest {
+message RunDiagnosticRequest {
     // session is used to locate the network element
     SessionRequest session = 1;
+
     // settings is used to configure the request
     Settings settings = 2;
 
@@ -166,11 +167,43 @@ message DiagnosticRequest {
     // the number of times will affect the time of the diagnostic as it will wait
     // 10 seconds between each pol, minimum 3 times
     int32 poll_times = 3;
+
+    // fingerprint is used to identify the diagnostic, can be a ID or a name
+    // for example the subscription_id for the customers subscription
+    string fingerprint = 4;
 }
 
-// DiagnosticResponse is used to return the result of a diagnostic
-message DiagnosticResponse {
-    analysis.Report report = 1;
+message RunDiagnosticResponse {
+    // the id of the diagnostic that was run
+    string id = 1;
+
+    // number of expecetd analysis to be done
+    int32 expected_analysis = 2;
+
+    // expected duration of the diagnostic in seconds
+    int32 expected_duration = 3;
+}
+
+message GetDiagnosticRequest {
+    // id of the diagnostic to get
+    string id = 1;
+}
+
+message ListDiagnosticsRequest {
+    // fingerprint is used to identify the diagnostic, can be a ID or a name
+    // for example the subscription_id for the customers subscription
+    string fingerprint = 1;
+
+    int64 offset = 2;
+    int64 limit  = 3;
+}
+
+message ListDiagnosticsResponse {
+    // the diagnostics that was found
+    repeated analysis.Report diagnostics = 1;
+    int64 offset = 2;
+    int64 limit  = 3;
+    int64 total  = 4;
 }
 
 message CheckAvailabilityResponse {
@@ -180,6 +213,8 @@ message CheckAvailabilityResponse {
     // response time in ms
     float response_time = 2;
 }
+
+
 service Poller {
     // Discover is used to get basic information about an network element, used to make a quick check of the device
     // with a generic request
@@ -191,26 +226,34 @@ service Poller {
     // the availability also verifys checking that hostname is resolvable (if hostname is used in the request)
     rpc CheckAvailability(SessionRequest) returns (CheckAvailabilityResponse);
 
-    // Diagnostic is used to run a diagnostic on a network element or a specific port on the network element
+    // RunDiagnostic is used to run a diagnostic on a network element or a specific port on the network element
     // It will collect data from the network element and then wait for a period of time and collect data again
     // and return the difference between the two collections of data to the client. The data will also be analyzed
     // by the poller and Report of the diagnostic will be returned to the client.
     // the diagnostic will be run the number of times specified in the request and the time between each poll is 10 seconds.
     // connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
     // will take aproximately 1 minute to complete.
-    rpc Diagnostic(DiagnosticRequest) returns (DiagnosticResponse);
+    rpc RunDiagnostic(RunDiagnosticRequest) returns (RunDiagnosticResponse);
+
+    // GetDiagnostic returns the report of a diagnostic that has been run on a network element or a specific port on the network element
+    rpc GetDiagnostic(GetDiagnosticRequest) returns (analysis.Report);
+
+    // ListDiagnostics returns a list of diagnostics that has been run on a network element or a specific port on the network element
+    rpc ListDiagnostics(ListDiagnosticsRequest) returns (ListDiagnosticsResponse);
 
     // GetDeviceInformation returns the technical information about a device
-    rpc DeviceInformation(GetDeviceInformationRequest) returns (DeviceInformationResponse);
+    // port etc is not considered in this request
+    rpc CollectDeviceInformation(CollectDeviceInformationRequest) returns (DeviceInformationResponse);
 
     // get basic information about a device
-    rpc BasicDeviceInformation(GetDeviceInformationRequest) returns (DeviceInformationResponse);
+    // port etc is not considered in this request
+    rpc CollectBasicDeviceInformation(CollectBasicDeviceInformationRequest) returns (DeviceInformationResponse);
 
     // PortInformation returns information about a port on a device
-    rpc PortInformation(GetPortInformationRequest) returns (PortInformationResponse);
+    rpc CollectPortInformation(CollectPortInformationRequest) returns (PortInformationResponse);
 
     // Get all basic information about a port on a device
-    rpc BasicPortInformation(GetPortInformationRequest) returns (PortInformationResponse);
+    rpc CollectBasicPortInformation(CollectBasicPortInformationRequest) returns (PortInformationResponse);
 
     // CollectConfig collects the configuration of a network element check for any changes between the stored config and the
     // collected one. Returs a list of changes and the config collected from the network element
@@ -223,7 +266,12 @@ service Poller {
     rpc Poll(PollRequest) returns (PollResponse);
 }
 
-message GetDeviceInformationRequest {
+message CollectDeviceInformationRequest {
+    SessionRequest session = 1;
+    Settings settings      = 2;
+}
+
+message CollectBasicDeviceInformationRequest {
     SessionRequest session = 1;
     Settings settings      = 2;
 }
@@ -232,7 +280,13 @@ message DeviceInformationResponse {
     device.Device device = 1;
 }
 
-message GetPortInformationRequest {
+message CollectPortInformationRequest {
+    SessionRequest session = 1;
+    Settings settings      = 2;
+    string port            = 3;
+}
+
+message CollectBasicPortInformationRequest {
     SessionRequest session = 1;
     Settings settings      = 2;
     string port            = 3;

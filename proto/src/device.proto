@@ -25,7 +25,6 @@ package device;
 
 import "google/protobuf/timestamp.proto";
 import "traffic_policy.proto";
-import "analysis.proto";
 
 option go_package = "go.opentelco.io/go-swpx/proto/go/devicepb";
 
@@ -119,16 +118,18 @@ message TransientError {
 message Port {
     string aggregated_id = 1;
 
-    // snmp index
+    // snmp index (IF-MIB)
     int64 index = 2;
+    // snmp physical index (IF-ENTITY-MIB)
+    int64 index_physical = 3;
 
     // Vendor specific alias of port. GigabitEthernt ...
-    string alias = 3;
+    string alias = 4;
 
     // configured description
-    string description = 4;
+    string description = 5;
 
-    string mac_address = 5;
+    string mac_address = 6;
 
     // types from the SNMP IF-MIB
     enum Type {
@@ -406,7 +407,7 @@ message Port {
         aluGponPhysicalUni            = 271;
         vmwareNicTeam                 = 272;
     }
-    Type type = 6;
+    Type type = 7;
 
     enum Status {
         unset          = 0;
@@ -419,10 +420,10 @@ message Port {
         lowerLayerDown = 7;
     }
 
-    Status admin_status       = 7;  // the desired state of the port
-    Status operational_status = 8;  // the current state of the port
+    Status admin_status       = 8;  // the desired state of the port
+    Status operational_status = 9;  // the current state of the port
 
-    google.protobuf.Timestamp last_changed = 9;
+    google.protobuf.Timestamp last_changed = 10;
 
     int64 speed   = 11;
     string duplex = 12;
@@ -461,15 +462,15 @@ message Port {
 }
 
 message Neighbor {
-    string connected_port_type       = 1;
+    string connected_port_type     = 1;
     string remote_port             = 2;
-    string remote_hostname              = 3;
-    string remote_mgmt_ip_address       = 4;
+    string remote_hostname         = 3;
+    string remote_mgmt_ip_address  = 4;
     string remote_port_description = 5;
-    string chassis_id                   = 6;
-    string pvid                         = 7;
-    bool lagg                           = 8;
-    string timestamp                    = 9;
+    string chassis_id              = 6;
+    string pvid                    = 7;
+    bool lagg                      = 8;
+    string timestamp               = 9;
 }
 
 message Aggregation {

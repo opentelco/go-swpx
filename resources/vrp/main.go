@@ -236,22 +236,9 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Requ
 	ne := &devicepb.Device{}
 	ne.Hostname = req.Hostname
 
-	sysInfoMsg := createTaskSystemInfo(req, d.conf)
-	sysInfoMsg, err := d.dnc.Put(ctx, sysInfoMsg)
-	if err != nil {
-		d.logger.Error("could not complete AllPortInformation", "error", err)
-		return nil, err
-	}
-
-	sysInfoTask := sysInfoMsg.Task.GetSnmpc()
-	for _, m := range sysInfoTask.Metrics {
-		if strings.HasPrefix(m.Oid, oids.SysPrefix) {
-			getSystemInformation(m, ne)
-		}
-	}
-
 	portsMsg := createAllPortsMsg(req, d.conf)
-	portsMsg, err = d.dnc.Put(ctx, portsMsg)
+
+	portsMsg, err := d.dnc.Put(ctx, portsMsg)
 	if err != nil {
 		d.logger.Error(err.Error())
 		return nil, err
@@ -265,8 +252,25 @@ func (d *VRPDriver) AllPortInformation(ctx context.Context, req *resourcepb.Requ
 		ne.Ports = append(ne.Ports, itemToPort(discoveryItem))
 	}
 
+	/*
+	  Map the physical port index to the logical port index
+	*/
+	mapEntityResult, err := d.MapEntityPhysical(ctx, req)
+	if err != nil {
+		d.logger.Error("could not complete AllPortInformation", "error", err)
+		return nil, err
+	}
+
+	d.logger.Info("mapEntityResult", "mapEntityResult", mapEntityResult)
+
+	for _, port := range ne.Ports {
+		if p, ok := mapEntityResult.Ports[port.Description]; ok {
+			port.IndexPhysical = p.Index
+		}
+	}
+
 	sort.Slice(ne.Ports, func(i, j int) bool {
-		return ne.Ports[i].Description < ne.Ports[j].Description
+		return ne.Ports[i].Index < ne.Ports[j].Index
 	})
 
 	return ne, nil

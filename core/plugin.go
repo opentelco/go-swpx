@@ -23,6 +23,7 @@
 package core
 
 import (
+	"fmt"
 	"sync"
 
 	"go.opentelco.io/go-swpx/shared"
@@ -40,7 +41,17 @@ func (p providerMap) Slice() (ps []shared.Provider) {
 // sorters
 type resourceMap map[string]shared.Resource
 
-var ()
+// get the resource plugin from the map (resource
+func (r resourceMap) Get(name string) (shared.Resource, error) {
+	if name == "" {
+		return nil, fmt.Errorf("resource plugin name is empty, cannot load plugin")
+	}
+	p, ok := r[name]
+	if !ok {
+		return nil, fmt.Errorf("resource plugin <%s> not found", name)
+	}
+	return p, nil
+}
 
 // ResourcePlugins is the container for resource plugins
 type ResourcePlugins struct {

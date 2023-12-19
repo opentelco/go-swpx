@@ -8,6 +8,7 @@ import (
 	"go.opentelco.io/go-swpx/proto/go/corepb"
 	"go.opentelco.io/go-swpx/proto/go/resourcepb"
 	"go.opentelco.io/go-swpx/proto/go/stanzapb"
+	"go.opentelco.io/go-swpx/shared"
 )
 
 type commander struct {
@@ -33,11 +34,10 @@ func (c *commander) ConfigureStanza(ctx context.Context, req *corepb.ConfigureSt
 		return nil, err
 	}
 
-	if req.Settings.ResourcePlugin == "" {
-		req.Settings.ResourcePlugin, err = c.core.resolveResourcePlugin(ctx, req.Session, selectedProviders)
-		if err != nil {
-			return nil, fmt.Errorf("ConfigureStanza: could not resolve resource plugin: %w", err)
-		}
+	var plugin shared.Resource
+	plugin, err = c.core.resolveResourcePlugin(ctx, req.Session, req.Settings, selectedProviders)
+	if err != nil {
+		return nil, fmt.Errorf("ConfigureStanza: could not resolve resource plugin: %w", err)
 	}
 
 	req.Session, err = c.core.resolveSession(ctx, req.Session, selectedProviders)
@@ -52,11 +52,6 @@ func (c *commander) ConfigureStanza(ctx context.Context, req *corepb.ConfigureSt
 
 	// select resource-plugin to send the requests to
 	c.logger.Info("ConfigureStanza: selected resource plugin", "plugin", req.Settings.ResourcePlugin)
-
-	plugin := c.core.resources[req.Settings.ResourcePlugin]
-	if plugin == nil {
-		return nil, NewError("ConfigureStanza: selected resource plugin is missing/does not exist", ErrCodeInvalidResource)
-	}
 
 	res, err := plugin.ConfigureStanza(ctx, &resourcepb.ConfigureStanzaRequest{
 		Hostname:      req.Session.Hostname,
