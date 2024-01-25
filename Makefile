@@ -86,7 +86,9 @@ t:
 	@echo current tag is: ${GITTAG}
 
 docker:
-	docker build -t registry.opentelco.io/go-swpx:${GITTAG} .
+	docker build  \
+	--build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
+	-t registry.opentelco.io/go-swpx:${GITTAG} .
 	docker push registry.opentelco.io/go-swpx:${GITTAG}
 
 vxdocker:

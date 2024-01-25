@@ -161,8 +161,8 @@ github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:C
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.13.6/go.mod h1:/3/Vjq9QcHkK5uEr5lBEmyoZ1iFhe47etQ6QUkpK6sk=
-github.com/klauspost/compress v1.17.0 h1:Rnbp4K9EjcDuVuHtd0dgA4qNuv9yKDYKK1ulpJwgrqM=
-github.com/klauspost/compress v1.17.0/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
+github.com/klauspost/compress v1.17.4 h1:Ej5ixsIri7BrIjBkRZLTo6ghwrEtHFk7ijlczPW4fZ4=
+github.com/klauspost/compress v1.17.4/go.mod h1:/dCuZOvVtNoHsyb+cuJD3itjs3NbnF6KH9zAO4BDxPM=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
@@ -302,8 +302,8 @@ github.com/zclconf/go-cty v1.14.1/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgr
 go.mongodb.org/mongo-driver v1.0.0-rc1/go.mod h1:u7ryQJ+DOzQmeO7zB6MHyr8jkEQvC8vH7qLUO4lqsUM=
 go.mongodb.org/mongo-driver v1.12.0 h1:aPx33jmn/rQuJXPQLZQ8NtfPQG8CaqgLThFtqRb0PiE=
 go.mongodb.org/mongo-driver v1.12.0/go.mod h1:AZkxhPnFJUoH7kZlFkVKucV20K387miPfm7oimrSmK0=
-go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417 h1:bo9GKhjnaEVwj+GXsVg+bCXE6wKvDXB2GR+O77/PsRw=
-go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417/go.mod h1:s2grlJzcwNZyx4jLfIlMQWiOA+SW7WGmaOJIWrnsAS8=
+go.opentelco.io/go-dnc v1.0.7-0.20240125225752-592f51cc9640 h1:g+hzGjw0HcYTEaeGmoOfGOzpiWSBZjQXSAntpCZHuME=
+go.opentelco.io/go-dnc v1.0.7-0.20240125225752-592f51cc9640/go.mod h1:mGcpuop0v4GUcpZ6voiLxu0NEzWYXO/XHjGA++puGuM=
 go.temporal.io/api v1.26.0 h1:N4V0Daqa0qqK5+9LELSZV7clBYrwB4l33iaFfKgycPk=
 go.temporal.io/api v1.26.0/go.mod h1:uVAcpQJ6bM4mxZ3m7vSHU65fHjrwy9ktGQMtsNfMZQQ=
 go.temporal.io/sdk v1.25.1 h1:jC9l9vHHz5OJ7PR6OjrpYSN4+uEG0bLe5rdF9nlMSGk=
@@ -318,8 +318,8 @@ go.uber.org/multierr v1.6.0/go.mod h1:cdWPpRnG4AhwMwsgIHip0KRBQjJy5kYEpYjJxpXp9i
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=
 go.uber.org/multierr v1.11.0/go.mod h1:20+QtiLqy0Nd6FdQB9TLXag12DsQkrbs3htMFfDN80Y=
 go.uber.org/zap v1.18.1/go.mod h1:xg/QME4nWcxGxrpdeYfq7UvYrLh66cuVKdrbD1XF/NI=
-go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6 h1:Px2C8ZpSKwMVuZhrKJlvY1vF22DbdG/3Aa8wy8ICDYs=
-go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6/go.mod h1:KdG3DtFlm3facslKh7tKfg8prebFvNS0OWgl2IdwquU=
+go.vxfiber.dev/proto-go v0.0.0-20240117100859-bbe9dd0badba h1:mRoJtuEc0qmQJRXBcQ9tzDQjU56u0Y4uQJU89Yg6aQE=
+go.vxfiber.dev/proto-go v0.0.0-20240117100859-bbe9dd0badba/go.mod h1:KdG3DtFlm3facslKh7tKfg8prebFvNS0OWgl2IdwquU=
 go.vxfiber.dev/vx-bouncer v1.5.19 h1:LlIFMa0jUW7PlOUmtP6v9hpTqHsrZ4Tgdjr/BOzsQa0=
 go.vxfiber.dev/vx-bouncer v1.5.19/go.mod h1:ZDrA/jo1ZRFj7tOvwBHG5uEZJwkDHmzIB6i0FrcztdE=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

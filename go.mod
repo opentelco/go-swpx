@@ -19,10 +19,10 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	go.mongodb.org/mongo-driver v1.12.0
-	go.opentelco.io/go-dnc v1.0.7-0.20231205215510-bb2f50a77417
+	go.opentelco.io/go-dnc v1.0.7-0.20240125225752-592f51cc9640
 	go.temporal.io/api v1.26.0
 	go.temporal.io/sdk v1.25.1
-	go.vxfiber.dev/proto-go v0.0.0-20230628085320-90d3a5f980d6
+	go.vxfiber.dev/proto-go v0.0.0-20240117100859-bbe9dd0badba
 	go.vxfiber.dev/vx-bouncer v1.5.19
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
@@ -65,7 +65,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/klauspost/compress v1.17.0 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
