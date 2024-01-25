@@ -73,6 +73,47 @@ func Test_analyzeLink(t *testing.T) {
 
 	})
 
+	t.Run("Link is up (one result)", func(t *testing.T) {
+		data := []*corepb.PollResponse{
+			{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
+						{
+							Description:       "GigabitEthernet0/0/1",
+							OperationalStatus: devicepb.Port_up,
+							AdminStatus:       devicepb.Port_up,
+						},
+					},
+				},
+			},
+		}
+		report, err := analyzeLink("GigabitEthernet0/0/1", data)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(report))
+		assert.Equal(t, analysispb.Analysis_RESULT_OK, report[0].Result)
+	})
+
+	t.Run("Link is down (one result)", func(t *testing.T) {
+		data := []*corepb.PollResponse{
+			{
+				Device: &devicepb.Device{
+					Ports: []*devicepb.Port{
+						{
+							Description:       "GigabitEthernet0/0/1",
+							OperationalStatus: devicepb.Port_down,
+							AdminStatus:       devicepb.Port_down,
+						},
+					},
+				},
+			},
+		}
+
+		report, err := analyzeLink("GigabitEthernet0/0/1", data)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(report))
+		assert.Equal(t, analysispb.Analysis_RESULT_ERROR, report[0].Result)
+	})
+
 	t.Run("Link is down", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{
@@ -280,6 +321,7 @@ func TestAnalyzeTransceiver(t *testing.T) {
 		assert.Equal(t, analysispb.Analysis_RESULT_WARNING, report[1].Result)
 		assert.Contains(t, report[1].Note, "below threshold")
 	})
+
 	t.Run("rx and tx AVG is within threshold", func(t *testing.T) {
 		data := []*corepb.PollResponse{
 			{

@@ -82,3 +82,7 @@ func (d *driver) GetAllTransceiverInformation(ctx context.Context, req *resource
 func (d *driver) GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "discover not implemented")
 }
+
+func (d *driver) GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return nil, status.Error(codes.Unimplemented, "discover not implemented")
+}

@@ -91,6 +91,7 @@ func init() {
 	diagnosticRunCmd.Flags().StringP("resource", "r", "generic", "specify which resource plugin to use")
 	diagnosticRunCmd.Flags().String("region", "default", "specify which region to poll the device in")
 	diagnosticRunCmd.Flags().StringP("fingerprint", "f", "", "specify which fingerprint to use")
+	diagnosticRunCmd.Flags().Bool("quick", false, "run a quick diagnostic")
 
 	diagnosticListCmd.Flags().Int64("limit", 10, "how many to fetch")
 	diagnosticListCmd.Flags().Int64("offset", 0, "how many to skip")
@@ -412,6 +413,7 @@ var diagnosticRunCmd = &cobra.Command{
 		region, _ := cmd.Flags().GetString("resource")
 		port, _ := cmd.Flags().GetString("port")
 		fp, _ := cmd.Flags().GetString("fingerprint")
+		quick, _ := cmd.Flags().GetBool("quick")
 
 		if pollTimes < 2 {
 			cmd.Println("poll must be 2 or more")
@@ -427,25 +429,50 @@ var diagnosticRunCmd = &cobra.Command{
 		}
 		swpx := corepb.NewPollerClient(conn)
 
-		resp, err := swpx.RunDiagnostic(cmd.Context(), &corepb.RunDiagnosticRequest{
-			Settings: &corepb.Settings{
-				ProviderPlugin: providers,
-				ResourcePlugin: resource,
-				Timeout:        ttlString,
-			},
-			Session: &corepb.SessionRequest{
-				Hostname:      target,
-				Port:          port,
-				NetworkRegion: region,
-			},
-			PollTimes:   pollTimes,
-			Fingerprint: fp,
-		})
-		if err != nil {
-			cmd.PrintErr(err)
-		}
-		if resp != nil {
-			cmd.Println(prettyPrintJSON(resp))
+		if quick {
+			resp, err := swpx.RunQuickDiagnostic(cmd.Context(), &corepb.RunDiagnosticRequest{
+				Settings: &corepb.Settings{
+					ProviderPlugin: providers,
+					ResourcePlugin: resource,
+					Timeout:        ttlString,
+				},
+				Session: &corepb.SessionRequest{
+					Hostname:      target,
+					Port:          port,
+					NetworkRegion: region,
+				},
+				PollTimes:   pollTimes,
+				Fingerprint: fp,
+			})
+			if err != nil {
+				cmd.PrintErr(err)
+			}
+			if resp != nil {
+				cmd.Println(prettyPrintJSON(resp))
+			}
+
+		} else {
+
+			resp, err := swpx.RunDiagnostic(cmd.Context(), &corepb.RunDiagnosticRequest{
+				Settings: &corepb.Settings{
+					ProviderPlugin: providers,
+					ResourcePlugin: resource,
+					Timeout:        ttlString,
+				},
+				Session: &corepb.SessionRequest{
+					Hostname:      target,
+					Port:          port,
+					NetworkRegion: region,
+				},
+				PollTimes:   pollTimes,
+				Fingerprint: fp,
+			})
+			if err != nil {
+				cmd.PrintErr(err)
+			}
+			if resp != nil {
+				cmd.Println(prettyPrintJSON(resp))
+			}
 		}
 
 	},

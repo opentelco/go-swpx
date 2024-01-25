@@ -572,3 +572,7 @@ func validateEOLTimeout(reqTimeout string, defaultDuration time.Duration) time.D
 	return dur
 
 }
+
+func (d *VRPDriver) GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return nil, status.Error(codes.Unimplemented, "discover not implemented")
+}

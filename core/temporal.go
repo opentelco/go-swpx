@@ -25,6 +25,11 @@ func createTemporalWorker(tc client.Client, c *Core) worker.Worker {
 		workflow.RegisterOptions{
 			// Name: "",
 		})
+	w.RegisterWorkflowWithOptions(
+		RunQuickDiagnosticWorkflow,
+		workflow.RegisterOptions{
+			// Name: "",
+		})
 
 	// w.RegisterWorkflowWithOptions(
 	// 	MutexWorkflow,

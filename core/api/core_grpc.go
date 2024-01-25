@@ -46,6 +46,10 @@ func (s *coreGrpcImpl) RunDiagnostic(ctx context.Context, request *corepb.RunDia
 	return s.core.RunDiagnostic(ctx, request)
 }
 
+func (s *coreGrpcImpl) RunQuickDiagnostic(ctx context.Context, request *corepb.RunDiagnosticRequest) (*corepb.RunDiagnosticResponse, error) {
+	return s.core.RunQuickDiagnostic(ctx, request)
+}
+
 func (s *coreGrpcImpl) GetDiagnostic(ctx context.Context, request *corepb.GetDiagnosticRequest) (*analysispb.Report, error) {
 	return s.core.GetDiagnostic(ctx, request)
 }

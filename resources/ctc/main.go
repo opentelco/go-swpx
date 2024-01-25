@@ -251,3 +251,7 @@ func main() {
 func (d *driver) GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error) {
 	return nil, nil
 }
+
+func (d *driver) GetDeviceInformation(ctx context.Context, req *resourcepb.Request) (*devicepb.Device, error) {
+	return nil, status.Error(codes.Unimplemented, "discover not implemented")
+}

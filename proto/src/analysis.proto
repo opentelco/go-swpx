@@ -45,6 +45,21 @@ message Report {
 
     // the report is the result of the analysis
     optional string error = 6;
+
+    // type of report, Quick or Detailed
+    Type type = 7;
+
+    // the different types of the report
+    enum Type {
+        // the type is not set
+        TYPE_NOT_SET = 0;
+
+        // the type is quick, the analysis is done in a short time aprox 5-10 seconds
+        TYPE_QUICK = 1;
+
+        // the type is detailed, the analysis is done in a longer time aprox 40-60 seconds
+        TYPE_DETAILED = 2;
+    }
 }
 
 message Analysis {

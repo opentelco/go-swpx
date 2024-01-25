@@ -173,6 +173,10 @@ message RunDiagnosticRequest {
     string fingerprint = 4;
 }
 
+
+
+
+
 message RunDiagnosticResponse {
     // the id of the diagnostic that was run
     string id = 1;
@@ -234,6 +238,9 @@ service Poller {
     // connecting to a device can take up to one minute depending on the device and protocol used so a standard diagnostic
     // will take aproximately 1 minute to complete.
     rpc RunDiagnostic(RunDiagnosticRequest) returns (RunDiagnosticResponse);
+
+    // Run a diagnostic but a quick diagnostic. This will only collect data from the network element once and then return
+    rpc RunQuickDiagnostic(RunDiagnosticRequest) returns (RunDiagnosticResponse);
 
     // GetDiagnostic returns the report of a diagnostic that has been run on a network element or a specific port on the network element
     rpc GetDiagnostic(GetDiagnosticRequest) returns (analysis.Report);

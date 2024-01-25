@@ -323,6 +323,8 @@ const (
 	thresholdOutputPkt = 200
 )
 
+// check if the traffic has increased with atleast X bits and return OK if it has
+// if no data has been received or sent on the port, return warning
 func analyzeTraffic(port string, data []*corepb.PollResponse) ([]*analysispb.Analysis, error) {
 	var anyalysis []*analysispb.Analysis
 
@@ -341,14 +343,14 @@ func analyzeTraffic(port string, data []*corepb.PollResponse) ([]*analysispb.Ana
 			continue
 		}
 
-		// if the port has no stats, set the errors to 0
+		// if the port has no stats, set the data to 0
 		if p.Stats.Input == nil {
 			input[n] = 0
 		} else {
 			input[n] = p.Stats.Input.Bits
 		}
 
-		// if the port has no stats, set the errors to 0
+		// if the port has no stats, set the data to 0
 		if p.Stats.Output == nil {
 			output[n] = 0
 		} else {
@@ -482,6 +484,7 @@ func analyzeTransceiver(port string, data []*corepb.PollResponse) ([]*analysispb
 	return anyalysis, nil
 }
 
+// if no mac address, return error
 func analyzeMacAddressTable(port string, data []*corepb.PollResponse) ([]*analysispb.Analysis, error) {
 	var anyalysis []*analysispb.Analysis
 
@@ -522,6 +525,7 @@ func analyzeMacAddressTable(port string, data []*corepb.PollResponse) ([]*analys
 	return anyalysis, nil
 }
 
+// if no ip lease, return error
 func analyzeDhcpTable(port string, data []*corepb.PollResponse) ([]*analysispb.Analysis, error) {
 	var anyalysis []*analysispb.Analysis
 

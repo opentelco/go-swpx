@@ -34,6 +34,24 @@ func (c *Core) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticR
 	return &corepb.RunDiagnosticResponse{Id: wr.GetID()}, nil
 }
 
+func (c *Core) RunQuickDiagnostic(ctx context.Context, request *corepb.RunDiagnosticRequest) (*corepb.RunDiagnosticResponse, error) {
+	opts := client.StartWorkflowOptions{
+		TaskQueue: TemporalTaskQueue,
+	}
+	if request.Fingerprint != "" {
+		opts.SearchAttributes = map[string]interface{}{"transaction_id": request.Fingerprint}
+	}
+
+	wr, err := c.tc.ExecuteWorkflow(ctx, opts, RunQuickDiagnosticWorkflow, request)
+
+	if err != nil {
+		c.logger.Error("error executing workflow", "error", err)
+		return nil, err
+	}
+
+	return &corepb.RunDiagnosticResponse{Id: wr.GetID()}, nil
+}
+
 func (c *Core) ListDiagnostics(ctx context.Context, req *corepb.ListDiagnosticsRequest) (*corepb.ListDiagnosticsResponse, error) {
 
 	params := &workflowservice.ListWorkflowExecutionsRequest{
