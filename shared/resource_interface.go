@@ -71,6 +71,22 @@ type Resource interface {
 	GetRunningConfig(ctx context.Context, req *resourcepb.GetRunningConfigParameters) (*resourcepb.GetRunningConfigResponse, error)
 
 	ConfigureStanza(ctx context.Context, req *resourcepb.ConfigureStanzaRequest) (*stanzapb.ConfigureResponse, error)
+
+	/*
+			New use case based functions instead of the earlier functiosn that "got all, any or nothing	"
+			The following are more precise functions that can be used to get specific information from a device
+
+		// GetMacTable Get MAC table from device, returns a list of ports with MAC addresses if found
+		GetMacTable(ctx context.Context, req *resourcepb.Request) ([]*devicepb.Port, error)
+
+		// Get DHCP Table from a device, returns a list of ports with DHCP information if found
+		GetDhcpTable(ctx context.Context, req *resourcepb.Request) ([]*devicepb.Port, error)
+
+		// GetPortInformation Get port information from a device, returns a list of ports with information if found
+		// Expected values to fetch are: Description, AdminStatus, OperStatus, Speed, Duplex, MTU, Traffic, Errors and LastChange
+		// Basic information from the first part of the IF-MIB. Usually a quick request over SNMP
+		GetPortInformation(ctx context.Context, req *resourcepb.Request) ([]*devicepb.Port, error)
+	*/
 }
 
 // Here is an implementation that talks over RPC

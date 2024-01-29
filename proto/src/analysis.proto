@@ -60,6 +60,9 @@ message Report {
         // the type is detailed, the analysis is done in a longer time aprox 40-60 seconds
         TYPE_DETAILED = 2;
     }
+
+    // the fingerprint is the fingerprint used to identify the report
+    optional string fingerprint = 8;
 }
 
 message Analysis {

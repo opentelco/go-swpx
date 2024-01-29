@@ -242,7 +242,6 @@ func createMsg(req *resourcepb.Request, conf *config.ResourceCTC) *transportpb.M
 			{Oid: oids.IfLastChange, Name: "ifLastChange", Type: metricpb.MetricType_TIMETICKS},
 			{Oid: oids.IfInErrors, Name: "ifInErrors", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfOutErrors, Name: "ifOutErrors", Type: metricpb.MetricType_INT},
-
 			{Oid: oids.IfHighSpeed, Name: "ifHighSpeed", Type: metricpb.MetricType_INT},
 			{Oid: oids.IfHCOutUcastPkts, Name: "ifHCOutUcastPkts", Type: metricpb.MetricType_INT},
 		},

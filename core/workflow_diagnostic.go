@@ -114,6 +114,7 @@ func RunDiagnosticWorkflow(ctx workflow.Context, request *corepb.RunDiagnosticRe
 		return nil, err
 	}
 	report.Analysis = append(report.Analysis, r...)
+	report.Type = analysispb.Report_TYPE_DETAILED
 
 	return report, nil
 }

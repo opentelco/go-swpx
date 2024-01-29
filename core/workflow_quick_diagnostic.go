@@ -86,6 +86,6 @@ func RunQuickDiagnosticWorkflow(ctx workflow.Context, request *corepb.RunDiagnos
 		return nil, err
 	}
 	report.Analysis = append(report.Analysis, r...)
-
+	report.Type = analysispb.Report_TYPE_QUICK
 	return report, nil
 }

@@ -13,6 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var fingerprintSearchAttributeKey = "transaction_id"
+
 func (c *Core) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticRequest) (*corepb.RunDiagnosticResponse, error) {
 
 	c.logger.Info("Diagnostic request received")
@@ -21,7 +23,7 @@ func (c *Core) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticR
 		TaskQueue: TemporalTaskQueue,
 	}
 	if request.Fingerprint != "" {
-		opts.SearchAttributes = map[string]interface{}{"transaction_id": request.Fingerprint}
+		opts.SearchAttributes = map[string]interface{}{fingerprintSearchAttributeKey: request.Fingerprint}
 	}
 
 	wr, err := c.tc.ExecuteWorkflow(ctx, opts, RunDiagnosticWorkflow, request)
@@ -39,7 +41,7 @@ func (c *Core) RunQuickDiagnostic(ctx context.Context, request *corepb.RunDiagno
 		TaskQueue: TemporalTaskQueue,
 	}
 	if request.Fingerprint != "" {
-		opts.SearchAttributes = map[string]interface{}{"transaction_id": request.Fingerprint}
+		opts.SearchAttributes = map[string]interface{}{fingerprintSearchAttributeKey: request.Fingerprint}
 	}
 
 	wr, err := c.tc.ExecuteWorkflow(ctx, opts, RunQuickDiagnosticWorkflow, request)
@@ -121,6 +123,14 @@ func (c *Core) GetDiagnostic(ctx context.Context, request *corepb.GetDiagnosticR
 
 func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowExecutionInfo) (*analysispb.Report, error) {
 	report := &analysispb.Report{}
+	tid, ok := e.SearchAttributes.IndexedFields[fingerprintSearchAttributeKey]
+	if ok {
+		if tid.GetData() != nil {
+			fingerprint := string(tid.GetData())
+			report.Fingerprint = &fingerprint
+		}
+	}
+
 	switch e.Status {
 	case enums.WORKFLOW_EXECUTION_STATUS_RUNNING:
 		report.Started = timestamppb.New(*e.StartTime)
