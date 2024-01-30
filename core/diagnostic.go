@@ -136,6 +136,8 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 		}
 	}
 
+	report.Id = e.Execution.WorkflowId
+
 	switch e.Type.Name {
 	case "RunDiagnosticWorkflow":
 		report.Type = analysispb.Report_TYPE_DETAILED
@@ -145,9 +147,11 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 		report.Type = analysispb.Report_TYPE_NOT_SET
 	}
 
+	report.Started = timestamppb.New(*e.StartTime)
+
 	switch e.Status {
 	case enums.WORKFLOW_EXECUTION_STATUS_RUNNING:
-		report.Started = timestamppb.New(*e.StartTime)
+
 		report.Status = analysispb.Report_STATUS_RUNNING
 
 	case enums.WORKFLOW_EXECUTION_STATUS_COMPLETED:
@@ -155,7 +159,6 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 		if err != nil {
 			return nil, err
 		}
-		report.Started = timestamppb.New(*e.StartTime)
 		report.Status = analysispb.Report_STATUS_COMPLETED
 		report.Completed = timestamppb.New(*e.CloseTime)
 
@@ -165,19 +168,20 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 			msg := "the diagnostic failed, please try again or contact support for more information"
 			report.Error = &msg
 		}
-		report.Started = timestamppb.New(*e.StartTime)
 		report.Status = analysispb.Report_STATUS_FAILED
 		report.Completed = timestamppb.New(*e.CloseTime)
 
 	case enums.WORKFLOW_EXECUTION_STATUS_CANCELED:
-		report.Started = timestamppb.New(*e.StartTime)
 		report.Status = analysispb.Report_STATUS_CANCELED
 		report.Completed = timestamppb.New(*e.CloseTime)
 
 	case enums.WORKFLOW_EXECUTION_STATUS_TERMINATED:
-		report.Started = timestamppb.New(*e.StartTime)
 		report.Status = analysispb.Report_STATUS_TERMINATED
 		report.Completed = timestamppb.New(*e.CloseTime)
+	default:
+		report.Status = analysispb.Report_STATUS_NOT_SET
+		report.Completed = timestamppb.New(*e.CloseTime)
+
 	}
 
 	return report, nil
