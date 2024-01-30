@@ -136,6 +136,15 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 		}
 	}
 
+	switch e.Type.Name {
+	case "RunDiagnosticWorkflow":
+		report.Type = analysispb.Report_TYPE_DETAILED
+	case "RunQuickDiagnosticWorkflow":
+		report.Type = analysispb.Report_TYPE_QUICK
+	default:
+		report.Type = analysispb.Report_TYPE_NOT_SET
+	}
+
 	switch e.Status {
 	case enums.WORKFLOW_EXECUTION_STATUS_RUNNING:
 		report.Started = timestamppb.New(*e.StartTime)
