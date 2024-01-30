@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"go.opentelco.io/go-swpx/proto/go/analysispb"
@@ -126,7 +127,11 @@ func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowE
 	tid, ok := e.SearchAttributes.IndexedFields[fingerprintSearchAttributeKey]
 	if ok {
 		if tid.GetData() != nil {
-			fingerprint := string(tid.GetData())
+			var fingerprint string
+			err := json.Unmarshal(tid.GetData(), &fingerprint) // just to sanitize the data
+			if err != nil {
+				return nil, fmt.Errorf("could not marshal fingerprint: %w", err)
+			}
 			report.Fingerprint = &fingerprint
 		}
 	}
