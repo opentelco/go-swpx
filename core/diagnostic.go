@@ -17,7 +17,6 @@ import (
 var fingerprintSearchAttributeKey = "transaction_id"
 
 func (c *Core) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticRequest) (*corepb.RunDiagnosticResponse, error) {
-
 	c.logger.Info("Diagnostic request received")
 
 	opts := client.StartWorkflowOptions{
@@ -28,7 +27,6 @@ func (c *Core) RunDiagnostic(ctx context.Context, request *corepb.RunDiagnosticR
 	}
 
 	wr, err := c.tc.ExecuteWorkflow(ctx, opts, RunDiagnosticWorkflow, request)
-
 	if err != nil {
 		c.logger.Error("Error executing workflow", "error", err)
 		return nil, err
@@ -56,7 +54,6 @@ func (c *Core) RunQuickDiagnostic(ctx context.Context, request *corepb.RunDiagno
 }
 
 func (c *Core) ListDiagnostics(ctx context.Context, req *corepb.ListDiagnosticsRequest) (*corepb.ListDiagnosticsResponse, error) {
-
 	params := &workflowservice.ListWorkflowExecutionsRequest{
 		Namespace: c.config.Temporal.Namespace,
 		Query:     "transaction_id='" + req.Fingerprint + "'",
@@ -102,28 +99,19 @@ func (c *Core) ListDiagnostics(ctx context.Context, req *corepb.ListDiagnosticsR
 }
 
 func (c *Core) GetDiagnostic(ctx context.Context, request *corepb.GetDiagnosticRequest) (*analysispb.Report, error) {
-
-	params := &workflowservice.ListWorkflowExecutionsRequest{
-		Namespace: c.config.Temporal.Namespace,
-		Query:     "WorkflowId='" + request.Id + "'",
-	}
-
-	res, err := c.tc.ListWorkflow(ctx, params)
+	wfe, err := c.tc.DescribeWorkflowExecution(ctx, request.Id, "")
 	if err != nil {
 		return nil, err
 	}
 
-	if len(res.Executions) == 0 {
-		return nil, fmt.Errorf("no workflow found")
-	}
-
-	wfResult := res.Executions[0]
-	return parseExecution(ctx, c.tc, wfResult)
+	return parseExecution(ctx, c.tc, wfe.WorkflowExecutionInfo)
 
 }
 
 func parseExecution(ctx context.Context, tc client.Client, e *workflow.WorkflowExecutionInfo) (*analysispb.Report, error) {
-	report := &analysispb.Report{}
+	report := &analysispb.Report{
+		Id: e.Execution.WorkflowId,
+	}
 	tid, ok := e.SearchAttributes.IndexedFields[fingerprintSearchAttributeKey]
 	if ok {
 		if tid.GetData() != nil {
